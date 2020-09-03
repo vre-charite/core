@@ -176,7 +176,7 @@ function SelfRegistration(props) {
                   label={
                     <span>
                       Password&nbsp;
-                      <Tooltip title="The password should be 8-16 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 symbol">
+                      <Tooltip title="Project code (8~16 digits) should contain the following: 1 Uppercase, 1 Lowercase letters, 1 number and 1 Special character(@#$!%*?&^). ">
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </span>

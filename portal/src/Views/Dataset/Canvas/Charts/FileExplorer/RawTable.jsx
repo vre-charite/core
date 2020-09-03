@@ -96,7 +96,6 @@ function RawTable(props) {
     clearFilters();
     setSearchedColumn('dataIndex');
     setSearchText('');
-    console.log(searchText);
     getRawFilesAndUpdateUI(
       props.projectId,
       pageSize,
@@ -206,7 +205,7 @@ function RawTable(props) {
       width: '15%',
       ...getColumnSearchProps('owner'),
     },
-    props.currentDataset && props.currentDataset.container_name === 'GENERATE'
+    props.currentDataset && props.currentDataset.code === 'generate'
       ? {
           title: 'Generate ID',
           dataIndex: 'generateID',
@@ -223,8 +222,8 @@ function RawTable(props) {
       sorter: true,
       width: '20%',
       render: (text, record) => {
-        return text && moment(text).format('YYYY-MM-DD')
-      }
+        return text && moment(text).format('YYYY-MM-DD');
+      },
     },
     {
       title: 'File Size',
@@ -321,6 +320,7 @@ function RawTable(props) {
     if (param2.fileName && param2.fileName.length > 0) isSearchingFile = true;
     if (param2.generateID && param2.generateID.length > 0)
       isSearchingFile = true;
+    if (param2.owner && param2.owner.length > 0) isSearchingFile = true;
 
     if (!isSearchingFile) {
       getRawFilesAndUpdateUI(

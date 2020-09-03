@@ -1,7 +1,11 @@
 import React, { Component } from 'react';
 import { Card, Col, Row } from 'antd';
-import { Form, Input, Button, Checkbox, message,Modal } from 'antd';
-import { UserOutlined, LockOutlined,ExclamationCircleOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Checkbox, message, Modal } from 'antd';
+import {
+  UserOutlined,
+  LockOutlined,
+  ExclamationCircleOutlined,
+} from '@ant-design/icons';
 import { instanceOf } from 'prop-types';
 import { withCookies, Cookies } from 'react-cookie';
 import {
@@ -23,12 +27,14 @@ import {
   setPersonalDatasetIdCreator,
   setContainersPermissionCreator,
   setUserRoleCreator,
-  setRefreshModal,setIsLoginCreator
+  setRefreshModal,
+  setIsLoginCreator,
 } from '../../Redux/actions';
 import {
   objectKeysToCamelCase,
   apiErrorHandling,
-  headerUpdate,loginChannel
+  headerUpdate,
+  loginChannel,
 } from '../../Utility';
 import {
   getDatasetsAPI,
@@ -41,7 +47,7 @@ import {
 import jwt_decode from 'jwt-decode';
 import moment from 'moment';
 import { reject } from 'async';
-const {confirm} = Modal;
+const { confirm } = Modal;
 function getCookie(cname) {
   var name = cname + '=';
   var decodedCookie = decodeURIComponent(document.cookie);
@@ -64,31 +70,34 @@ class Auth extends Component {
   };
 
   onFinish = async (values) => {
-    try{
-      await new Promise((resolve,reject)=>{
-        const {uploadList,allCookies } = this.props;
-        const uploadingList = uploadList.filter(item=>item.status==='uploading');
-        if(uploadingList.length===0||allCookies.username===values.username){
+    try {
+      await new Promise((resolve, reject) => {
+        const { uploadList, allCookies } = this.props;
+        const uploadingList = uploadList.filter(
+          (item) => item.status === 'uploading',
+        );
+        if (
+          uploadingList.length === 0 ||
+          allCookies.username === values.username
+        ) {
           resolve();
           return;
         }
         confirm({
           title: `Are you sure to log in as ${values.username}?`,
           icon: <ExclamationCircleOutlined />,
-          content:
-            `The file uploading is still in progress in another tab. Progress will be lost if you login as ${values.username}`,
+          content: `The file uploading is still in progress in another tab. Progress will be lost if you login as ${values.username}`,
           onOk() {
-            resolve()
+            resolve();
           },
           onCancel() {
-            reject()
+            reject();
           },
-        })
-      })
-    }catch(err){
+        });
+      });
+    } catch (err) {
       return;
     }
-
 
     login(values)
       .then((res) => {
@@ -105,7 +114,7 @@ class Auth extends Component {
         this.props.history.push('/uploader');
         message.success(`Welcome back, ${values.username}`);
 
-/*         setInterval(() => {
+        /*         setInterval(() => {
           const token = getCookie('access_token');
           try {
             if (token) {
@@ -161,21 +170,71 @@ class Auth extends Component {
   render() {
     return (
       <div className={styles.bg}>
-        <Card className={styles.card} bodyStyle={{ padding: '10% 10%' }}>
+        <Card
+          className={styles.card}
+          bodyStyle={{ padding: '10%', height: '100%' }}
+        >
+          <div className={styles.bgImage}></div>
           <Row style={{ height: '100%' }}>
             <Col span={12} className={styles.intro}>
               <div className={styles.text}>
-                <p className={styles.title}>Welcome to Clinic Charité</p>
+                <p className={styles.title}>Welcome to VRE!</p>
                 <p className={styles.content}>
-                  The Charité is a maximum care hospital that enables treatment
-                  of a wide variety of diseases. Around 100 clinics and
-                  institutes cover the entire spectrum of modern medicine: from
-                  ophthalmology to dentistry, all medical specialties are
-                  represented.
+                  The{' '}
+                  <a
+                    href="https://www.bihealth.org/en/research/translation-hubs/digital-medicine/bihcharite-virtual-research-environment/"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    style={{ color: 'white', textDecoration: 'underline' }}
+                  >
+                    Virtual Research Environment (VRE)
+                  </a>{' '}
+                  supports researchers to follow the FAIR Data Principles by
+                  offering functionalities to make research data findable,
+                  accessible, interoperable and reusable. It integrates with the
+                  Charité Health Data Platform systems (HDP) and provides
+                  customizable workbenches for data modelling and data analysis.
                 </p>
-                <Button type="ghost" className={styles.btn}>
+
+                {/* <Button type="ghost" className={styles.btn}>
                   Learn More
-                </Button>
+                </Button> */}
+                <div className={styles.logos}>
+                  <a
+                    href="https://www.bihealth.org/en/"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    <img
+                      src={require('../../Images/logo-bih-alt.png')}
+                      className={styles.icon}
+                      alt="icon"
+                    />
+                  </a>
+                  <a
+                    href="https://www.charite.de/en/"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    <img
+                      src={require('../../Images/logo-charite-alt.png')}
+                      className={styles.icon}
+                      alt="icon"
+                    />
+                  </a>
+                  <a
+                    href="https://indocresearch.org/"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    <img
+                      src={require('../../Images/logo-indoc-alt.png')}
+                      className={styles.icon}
+                      alt="icon"
+                      style={{ maxWidth: '80px' }}
+                    />
+                  </a>
+                </div>
               </div>
             </Col>
             <Col span={12}>
@@ -184,7 +243,7 @@ class Auth extends Component {
                 bodyStyle={{ textAlign: 'center', padding: '30px' }}
               >
                 <img
-                  src={require('../../Images/indoc-icon.png')}
+                  src={require('../../Images/vre-logo.png')}
                   className={styles.icon}
                   alt="icon"
                 />
@@ -260,7 +319,7 @@ class Auth extends Component {
 
 export default withRouter(
   withCookies(
-    connect(state=>({uploadList:state.uploadList}), {
+    connect((state) => ({ uploadList: state.uploadList }), {
       AddDatasetCreator,
       setUserListCreator,
       setTagsCreator,
@@ -268,7 +327,8 @@ export default withRouter(
       setPersonalDatasetIdCreator,
       setContainersPermissionCreator,
       setUserRoleCreator,
-      setRefreshModal,setIsLoginCreator
+      setRefreshModal,
+      setIsLoginCreator,
     })(Auth),
   ),
 );

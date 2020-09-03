@@ -167,7 +167,7 @@ const GreenRoomUploader = ({
               placeholder="Please input the project name"
             ></Input>
           </Form.Item> */}
-          {currentDataset && currentDataset.container_name === 'GENERATE' ? (
+          {currentDataset && currentDataset.code === 'generate' ? (
             <>
               <Form.Item
                 //label="Generate ID"

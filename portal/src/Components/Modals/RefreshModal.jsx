@@ -70,7 +70,7 @@ function CreateDatasetModal({
         let exp = jwt_decode(token).exp;
         let remain = exp - moment().unix();
         if (remain <= 0) {
-
+          console.log('logout in refreshModal.jsx, remain <= 0')
           logout();
           setRefreshModal(false);
         }else if(remain>60){
@@ -80,6 +80,7 @@ function CreateDatasetModal({
           setTimer(remain);
         }
       }else{ 
+        console.log('logout in refreshModal.jsx, no token')
         logout();
 
       }

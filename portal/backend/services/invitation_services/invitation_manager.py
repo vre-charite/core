@@ -51,7 +51,7 @@ class SrvInvitationManager(metaclass=MetaService):
         raw_data_str = invitation.email + str(invitation.project_id)
         invitation_code_generated = md5(raw_data_str.encode('utf-8')).hexdigest()
         invitataion_link = ConfigClass.INVITATION_URL_PREFIX + '/' + invitation_code_generated
-        form_data = invitation.form_dict
+        form_data = invitation.to_dict
         form_data_json = json.dumps(form_data)
         now_utc_dt = helper_now_utc()
         expiry_dt = now_utc_dt + timedelta(days=ConfigClass.INVITATION_EXPIRY_DAYS)

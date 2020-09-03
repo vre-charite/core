@@ -161,7 +161,7 @@ function Description(props) {
             </Descriptions.Item>
           </Descriptions>
 
-          {currentContainer['permission'] !== 'admin' ? null : editView ? (
+          { !currentContainer || (currentContainer['permission'] !== 'admin' )? null : editView ? (
             <div style={{ marginTop: '20px', float: 'right' }}>
               <Button type="link" onClick={(e) => setEditView(false)}>
                 Cancel

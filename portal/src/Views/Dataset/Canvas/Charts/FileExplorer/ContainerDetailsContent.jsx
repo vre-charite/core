@@ -219,6 +219,7 @@ const ContainerDetailsContent = (props) => {
     if (param2.fileName && param2.fileName.length > 0) isSearchingFile = true;
     if (param2.generateID && param2.generateID.length > 0)
       isSearchingFile = true;
+    if (param2.owner && param2.owner.length > 0) isSearchingFile = true;
 
     if (!isSearchingFile) {
       updateProcessedFiles(
@@ -271,7 +272,7 @@ const ContainerDetailsContent = (props) => {
       width: '15%',
       ...getColumnSearchProps('owner'),
     },
-    props.currentDataset && props.currentDataset.container_name === 'GENERATE'
+    props.currentDataset && props.currentDataset.code === 'generate'
       ? {
           title: 'Generate ID',
           dataIndex: 'generateID',

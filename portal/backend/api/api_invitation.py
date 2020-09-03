@@ -75,7 +75,7 @@ class APIInvitation(metaclass=MetaAPI):
                     form_data = json.loads(invitation_find[1])
                     invitation_form = InvitationForm(form_data)
                     my_res.set_code(EAPIResponseCode.success)
-                    my_res.set_result(invitation_form.form_dict)
+                    my_res.set_result(invitation_form.to_dict)
                 else:
                     my_res.set_code(EAPIResponseCode.not_found),
                     my_res.set_error_msg(

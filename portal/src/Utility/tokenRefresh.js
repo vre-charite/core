@@ -37,13 +37,15 @@ function clearCookies() {
   }
 }
 
-function checkToken(token) {
+function checkToken(token,setRefreshModal) {
   if (token) {
     var exp = jwt_decode(token).exp;
-    const diff = exp - moment().unix() < 59; // expired after 1 min
+    const diff = exp - moment().unix() < 59 ; // expired 
 
     if (diff) {
-      logout();
+      console.log('logout in tokenRefresh.js, diff')
+      setRefreshModal(true);
+      //logout();
     }
   }
 }

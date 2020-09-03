@@ -66,6 +66,7 @@ function errorHandler(error) {
           message.error(
             'The session is expired or token is invalid. Please log in again',
           );
+          console.log('logout in config.js since 401')
           logout(cookies.get('username'));
         }
 
@@ -126,6 +127,7 @@ const serverAxios = axios.create({
 // serverAxios.defaults.withCredentials = true;
 serverAxios.defaults.headers.post['Content-Type'] = 'application/json';
 serverAxios.defaults.timeout = 10000;
+
 if (token) {
   serverAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 }

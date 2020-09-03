@@ -46,7 +46,7 @@ import jwt_decode from 'jwt-decode';
 import moment from 'moment';
 import RefreshModel from './Components/Modals/RefreshModal';
 import { namespace, ErrorMessager } from './ErrorMessages';
-const clearIds = [];
+let clearIds = [];
 message.config({
   maxCount: 2,
 });
@@ -66,6 +66,7 @@ function getCookie(cname) {
   }
   return undefined;
 }
+
 
 class App extends Component {
   constructor(props) {
@@ -90,7 +91,7 @@ class App extends Component {
      
 
       const token = getCookie('access_token');
-      checkToken(token);
+      checkToken(token,this.props.setRefreshModal);
 
       getDatasetsAPI({ type: 'usecase' })
         .then((res) => {
@@ -152,7 +153,7 @@ class App extends Component {
 
   listenBroadcast = () => {
     logoutChannel.onmessage = (msg) => {
-      console.log(msg, 'logoutChannel');
+      console.log('logout in app.js, listen logout')
       logout();
     };
     loginChannel.onmessage = (username) => {
@@ -164,6 +165,7 @@ class App extends Component {
         return;
       }
       if (cookieUsername !== undefined && username !== cookieUsername) {
+        console.log('logout in app.js, listen login')
         logout(false); //should not use this logout, since it will clean the cookies
       }
       if (username === cookieUsername) {
@@ -192,12 +194,17 @@ class App extends Component {
   }
 
   updatePendingStatus = (arr) => {
-    clearInterval(this.props.clearId);
-   
-    console.log(clearIds,'clearIds');
+    clearInterval(this.props.clearId); //don't know why this doesn't work
+    
+
     const pendingArr = arr.filter((item) => item.status === 'pending');
     console.log(pendingArr,pendingArr.length);
     if (pendingArr.length === 0) {
+      //make sure clear all interval ids
+      clearIds.forEach(element => {
+          clearInterval(element);
+      });
+      clearIds = [];
       return;
     }
 

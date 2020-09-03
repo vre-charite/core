@@ -54,59 +54,58 @@ function CreateDatasetModal({
   };
 
   const submitForm = () => {
-    const values = form.getFieldsValue();
-    const metadatas = {};
-    values.metadatas &&
-      values.metadatas.forEach(({ key, value }) => {
-        metadatas[key] = value;
-      });
-    toggleSubmitting(true);
-
-    const isValidCode = /^[a-zA-Z0-9]{1,32}$/g.test(values.code);
-
-    if (!isValidCode) {
-      toggleSubmitting(false);
-
-      return;
-    }
-
-    createProjectAPI({
-      dataset_name: values.name,
-      code: values.code,
-      tags: values.tags,
-      admin: [username],
-      type: 'Usecase',
-      metadatas,
-      description: values.description,
-    })
-      .then((res) => {
-        UpdateDatasetCreator(res.data.result, 'All Projects');
-        toggleSubmitting(false);
-        const newContainer = res.data.result.find(
-          (item) => item.code === values.code,
-        );
-        setContainersPermissionCreator([
-          ...containersPermission,
-          {
-            container_id: newContainer.id,
-            container_name: values.name,
-            permission: 'admin',
-          },
-        ]);
-        cancel();
-        form.resetFields();
-        message.success('Project created successfully.');
-      })
-      .catch((err) => {
-        console.log(err);
-        toggleSubmitting(false);
-        //message.error(err);
-        const errorMessage = new ErrorMessager(namespace.landing.createProject);
-        if (err.response) {
-          errorMessage.triggerMsg(err.response.status, null, {
-            projectName: values.name,
+    form
+      .validateFields()
+      .then((values) => {
+        const metadatas = {};
+        values.metadatas &&
+          values.metadatas.forEach(({ key, value }) => {
+            metadatas[key] = value;
           });
-        }
+
+        createProjectAPI({
+          dataset_name: values.name,
+          code: values.code,
+          tags: values.tags,
+          admin: [username],
+          type: 'Usecase',
+          metadatas,
+          description: values.description,
+        })
+          .then((res) => {
+            UpdateDatasetCreator(res.data.result, 'All Projects');
+            toggleSubmitting(false);
+            const newContainer = res.data.result.find(
+              (item) => item.code === values.code,
+            );
+            setContainersPermissionCreator([
+              ...containersPermission,
+              {
+                container_id: newContainer.id,
+                container_name: values.name,
+                permission: 'admin',
+              },
+            ]);
+            cancel();
+            form.resetFields();
+            message.success('Project created successfully.');
+          })
+          .catch((err) => {
+            console.log(err);
+            toggleSubmitting(false);
+            //message.error(err);
+            const errorMessage = new ErrorMessager(
+              namespace.landing.createProject,
+            );
+            if (err.response) {
+              errorMessage.triggerMsg(err.response.status, null, {
+                projectName: values.name,
+              });
+            }
+          });
+      })
+      .catch((info) => {
+        console.log('Validate Failed:', info);
       });
   };
   return (
@@ -149,7 +148,7 @@ function CreateDatasetModal({
             <span>
               Project Code&nbsp;
               <Tooltip
-                title="Project code should only contains letters, numbers and within 32
+                title="Project code should only contains lowercase letters, numbers and within 32
             digits."
               >
                 <QuestionCircleOutlined />
@@ -169,7 +168,7 @@ function CreateDatasetModal({
               {
                 pattern: new RegExp(/^[a-z0-9]{1,32}$/g), // Format BXT-1234
                 message:
-                  'Project code should only contains letters and numbers.',
+                  'Project code should only contains lowercase letters and numbers and within 32 digits.',
               },
             ]}
           >

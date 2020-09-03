@@ -672,6 +672,7 @@ class user_dataset_query(Resource):
                         temp = {
                             "container_id": x['id'],
                             "container_name": x['name'],
+                            "code": x['code'],
                             "permission": "admin"
                         }
                         result.append(temp)
@@ -703,6 +704,7 @@ class user_dataset_query(Resource):
                 temp = {
                     "container_id": x['end_node']['id'],
                     "container_name": x['end_node']['name'],
+                    "code": x['end_node']['code'],
                     "permission": x['r']['type']
                 }
                 result.append(temp)

@@ -9,20 +9,29 @@
   height: 100vh;
   max-height: 70vh;
   min-height: 550px;
-  width: 60vw;
+  width: 65vw;
   position: absolute !important;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-
-  background: url("../../Images/tech.png") !important;
-  background-repeat: no-repeat !important;
-  background-size: 50% !important;
-  background-attachment: fixed;
-  background-position: left bottom !important;
+  @media only screen and (max-width: 1320px) {
+    width: 95vw;
+  }
 
   box-shadow: 0 30px 60px 0 rgba(0, 0, 0, 0.15);
   transition: 0.3s;
+  .bgImage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 50%;
+    background-color: #537895;
+    background: url('../../Images/tech.png');
+    background-repeat: no-repeat;
+    background-size: cover !important;
+    background-position: left bottom;
+  }
 }
 
 .card:hover {
@@ -30,7 +39,7 @@
 }
 
 .form {
- /*  background: wheat; */
+  /*  background: wheat; */
 }
 
 .icon {
@@ -58,13 +67,14 @@
 
 .intro {
   color: white;
-  font-family: Georgia, "Times New Roman", Times, serif;
+  font-family: Georgia, 'Times New Roman', Times, serif;
   // padding: 60px 30px;
-  padding-left: 30px;
+  // padding-left: 30px;
   padding-right: 30px;
   .text {
     position: absolute;
     top: 50%;
+    padding-right: 20px;
     transform: translateY(-50%);
   }
   .title {
@@ -80,5 +90,12 @@
   .btn {
     color: white !important;
     margin-top: 40px;
+  }
+  .logos {
+    img {
+      max-width: 90px;
+      height: auto;
+      margin-right: 20px;
+    }
   }
 }

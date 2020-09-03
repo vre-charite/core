@@ -320,9 +320,9 @@ class AppHeader extends Component {
           <Menu.Item key="logo" style={{ marginRight: '27px' }}>
             <Link to="/">
               <img
-                src={require('../../Images/indoc-icon.png')}
+                src={require('../../Images/vre-logo.png')}
                 style={{ height: '40px' }}
-                alt="icon"
+                alt="indoc-icon"
               />
             </Link>
           </Menu.Item>

@@ -145,7 +145,7 @@ function UploaderHistory(props) {
     let dataset = _.find(datasetList[0].datasetList, (i) => {
       return i['id'] === parseInt(datasetId);
     });
-    return dataset['name'] === 'GENERATE';
+    return dataset['code'] === 'generate';
   };
 
   const getColumnSearchProps = (dataIndex) => ({

@@ -119,20 +119,19 @@ async function fileUpload(data, resolve, reject) {
               uploadedSize += chunk.size;
     
               if ((uploadedSize / totalSize) === 1) {
-                const formData = new FormData();
-                formData.append('resumableIdentifier', file.uid + uuid);
-                formData.append('resumableFilename', file.name);
-                formData.append('resumableTotalChunks', chunks.length);
-                formData.append('resumableTotalSize', file.size);
-                formData.append('uploader', uploader);
+                // const formData = new FormData();
+                // formData.append('resumableIdentifier', file.uid + uuid);
+                // formData.append('resumableFilename', file.name);
+                // formData.append('resumableTotalChunks', chunks.length);
+                // formData.append('resumableTotalSize', file.size);
+                // formData.append('uploader', uploader);
                 
-                if (generateID) formData.append('generateID', generateID);
+                // if (generateID) formData.append('generateID', generateID);
     
-                const result = await combineChunks(datasetId, formData);
-                console.log(result);
-                if (result.status === 200 && result.data && result.data.result && result.data.result.task_id) {
-                  taskId = result.data.result.task_id;
-                } 
+                // const result = await combineChunks(datasetId, formData);
+                // if (result.status === 200 && result.data && result.data.result && result.data.result.task_id) {
+                //   taskId = result.data.result.task_id;
+                // } 
               } else {
                 updateUploadItemDispatcher({
                   uploadKey,
@@ -146,7 +145,7 @@ async function fileUpload(data, resolve, reject) {
               // If anything wrong with the file itself(e.g. repeated file name/illegal file name)
               // The upload should stop
               console.log(err);
-              if (err.code === 'ECONNABORTED' || err.response.status === 401) {
+              if (err.code === 'ECONNABORTED' || err.response.status === 401 || err.response.status === 403) {
                 return retry(chunk, index, 1); // Max retry times is 1
               } else {
                 /* if (err.response) {
@@ -167,8 +166,21 @@ async function fileUpload(data, resolve, reject) {
           concurrency: 3,
         },
       )
-        .then(function (res) {
+        .then(async function (res) {
           resolve();
+          const formData = new FormData();
+          formData.append('resumableIdentifier', file.uid + uuid);
+          formData.append('resumableFilename', file.name);
+          formData.append('resumableTotalChunks', chunks.length);
+          formData.append('resumableTotalSize', file.size);
+          formData.append('uploader', uploader);
+          
+          if (generateID) formData.append('generateID', generateID);
+
+          const result = await combineChunks(datasetId, formData);
+          if (result.status === 200 && result.data && result.data.result && result.data.result.task_id) {
+            taskId = result.data.result.task_id;
+          } 
           if (!taskId) {
             throw new Error(`the task Id doesn't exist`);
           }
