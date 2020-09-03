@@ -1,0 +1,80 @@
+{
+  "name": "portal",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "/vre",
+  "dependencies": {
+    "@antv/graphin": "^1.4.1",
+    "@antv/graphin-components": "^1.4.1",
+    "@sentry/react": "^5.20.1",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "animate.css": "^4.1.0",
+    "antd": "^4.2.0",
+    "async": "^3.2.0",
+    "axios": "^0.19.2",
+    "bizcharts": "^3.5.8",
+    "broadcast-channel": "^3.1.0",
+    "commitizen": "^4.1.2",
+    "crypto": "^1.0.1",
+    "detect-browser": "^5.1.1",
+    "faker": "^4.1.0",
+    "guacamole-common-js": "^1.1.0-b",
+    "history": "^4.9.0",
+    "js-file-download": "^0.4.12",
+    "jwt-decode": "^2.2.0",
+    "leven": "^3.1.0",
+    "node-sass": "^4.14.1",
+    "password-validator": "^5.1.0",
+    "pm2": "^4.4.0",
+    "react": "^16.13.1",
+    "react-beautiful-dnd": "^13.0.0",
+    "react-contextmenu": "^2.14.0",
+    "react-cookie": "^4.0.3",
+    "react-dom": "^16.13.1",
+    "react-full-screen": "^0.2.4",
+    "react-grid-layout": "^0.18.3",
+    "react-highlight-words": "^0.16.0",
+    "react-jvectormap": "0.0.16",
+    "react-redux": "^7.2.0",
+    "react-router-dom": "^5.1.2",
+    "react-scripts": "3.4.1",
+    "redux": "^4.0.5",
+    "redux-persist": "^6.0.0",
+    "redux-persist-transform-filter": "0.0.20",
+    "redux-state-sync": "^3.1.2",
+    "universal-cookie": "^4.0.3",
+    "uuid": "^8.3.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build-dev": "export REACT_APP_ENV=dev; react-scripts build",
+    "build-staging": "export REACT_APP_ENV=staging; react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "cz-conventional-changelog": "^3.2.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}

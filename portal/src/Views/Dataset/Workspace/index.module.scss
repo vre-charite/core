@@ -1,0 +1,10 @@
+.guacaView{
+    
+    div{
+        z-index: 10 !important;
+    }
+
+    canvas{
+        z-index: 11;
+    }
+}
