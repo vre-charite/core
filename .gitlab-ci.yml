@@ -53,7 +53,7 @@ build-bff:
     - VRE-Deployment
   only:
     changes:
-      - kubernetes/dev-bff-deployment.yaml
+      - kubernetes/bff-deployment.yaml
       - portal/backend/*
       - portal/backend/*/*
       - portal/backend/*/*/*
@@ -63,16 +63,16 @@ build-bff:
       - portal/backend/*/*/*/*/*/*/*
   script:
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-    - docker build -t ${BFF_CONTAINER_IMAGE} portal/.
+    - docker build -t ${BFF_CONTAINER_IMAGE} portal/backend/.
     - docker push ${BFF_CONTAINER_IMAGE}
 
-deploy-portal:
+deploy-bff:
   stage: deploy
   tags:
     - VRE-Deployment
   only:
     changes:
-      - kubernetes/dev-bff-deployment.yaml
+      - kubernetes/bff-deployment.yaml
       - portal/backend/*
       - portal/backend/*/*
       - portal/backend/*/*/*
