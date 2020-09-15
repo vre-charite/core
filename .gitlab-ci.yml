@@ -1,0 +1,84 @@
+image: docker:latest
+
+variables:
+  REGISTRY: 10.32.42.225:5000
+  PORTAL_CONTAINER_IMAGE: ${REGISTRY}/portal:${CI_COMMIT_SHORT_SHA}
+  BFF_CONTAINER_IMAGE: ${REGISTRY}/bff:${CI_COMMIT_SHORT_SHA}
+
+build-portal:
+  stage: build
+  tags:
+    - VRE-Deployment
+  only:
+    changes:
+      - kubernetes/portal-deployment.yaml
+      - portal/public/*
+      - portal/src/*
+      - portal/src/*/*
+      - portal/src/*/*/*
+      - portal/src/*/*/*/*
+      - portal/src/*/*/*/*/*
+      - portal/*.json
+      - portal/yarn.lock
+  script:
+    - export PORTAL_ENV=build-charite
+    - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build -t ${PORTAL_CONTAINER_IMAGE} --build-arg PORTAL_ENV portal/.
+    - docker push ${PORTAL_CONTAINER_IMAGE}
+
+deploy-portal:
+  stage: deploy
+  tags:
+    - VRE-Deployment
+  only:
+    changes:
+      - kubernetes/portal-deployment.yaml
+      - portal/public/*
+      - portal/src/*
+      - portal/src/*/*
+      - portal/src/*/*/*
+      - portal/src/*/*/*/*
+      - portal/src/*/*/*/*/*
+      - portal/*.json
+      - portal/yarn.lock
+  script:
+    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/portal-deployment.yaml
+    - kubectl apply -f kubernetes/portal-deployment.yaml
+
+
+build-bff:
+  stage: build
+  tags:
+    - VRE-Deployment
+  only:
+    changes:
+      - kubernetes/dev-bff-deployment.yaml
+      - portal/backend/*
+      - portal/backend/*/*
+      - portal/backend/*/*/*
+      - portal/backend/*/*/*/*
+      - portal/backend/*/*/*/*/*
+      - portal/backend/*/*/*/*/*/*
+      - portal/backend/*/*/*/*/*/*/*
+  script:
+    - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build -t ${BFF_CONTAINER_IMAGE} portal/.
+    - docker push ${BFF_CONTAINER_IMAGE}
+
+deploy-portal:
+  stage: deploy
+  tags:
+    - VRE-Deployment
+  only:
+    changes:
+      - kubernetes/dev-bff-deployment.yaml
+      - portal/backend/*
+      - portal/backend/*/*
+      - portal/backend/*/*/*
+      - portal/backend/*/*/*/*
+      - portal/backend/*/*/*/*/*
+      - portal/backend/*/*/*/*/*/*
+      - portal/backend/*/*/*/*/*/*/*
+  script:
+    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/bff-deployment.yaml
+    - kubectl apply -f kubernetes/bff-deployment.yaml

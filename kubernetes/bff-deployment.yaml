@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bff
+  namespace: utility
+  labels:
+    app: bff
+    env: charite
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bff
+      env: charite
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: bff
+        env: charite
+    spec:
+      containers:
+        - name: bff
+          image: 10.32.42.225:5000/bff:<VERSION>
+          ports:
+            - containerPort: 5060
+          env:
+          - name: env
+            value: "charite"
+          readinessProbe:
+            tcpSocket:
+              port: 5060
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "1000Mi"
+              cpu: "1"
+            limits:
+              memory: "1000Mi"
+              cpu: "1"
+      nodeSelector:
+        namespace: utility
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bff
+  namespace: utility
+  labels:
+    app: bff
+    env: charite
+spec:
+  ports:
+  - name: bff
+    port: 5060
+    targetPort: 5060
+  selector:
+    app: bff
+    env: charite
+  type: ClusterIP
+

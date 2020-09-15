@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal
+  namespace: utility
+  labels:
+    app: portal
+    env: charite
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: portal
+      env: charite
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: portal
+        env: charite
+    spec:
+      containers:
+        - name: notification
+          image: 10.32.42.225:5000/portal:<VERSION>
+          ports:
+            - containerPort: 80
+          env:
+            - name: env
+              value: "charite"
+            - name: REACT_APP_ENV
+              value: "charite"
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "1000Mi"
+              cpu: "1"
+            limits:
+              memory: "1000Mi"
+              cpu: "1"
+          volumeMounts:
+            - mountPath: /etc/nginx/conf.d
+              readOnly: true
+              name: nginx-conf
+      nodeSelector:
+        namespace: utility
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: nginx-conf
+            items:
+              - key: portal.conf
+                path: portal.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portal
+  namespace: utility
+  labels:
+    app: portal
+    env: charite
+spec:
+  ports:
+    - name: portal
+      port: 80
+      targetPort: 80
+      nodePort:
+  selector:
+    app: portal
+    env: charite
+  type: ClusterIP
