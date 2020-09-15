@@ -64,3 +64,4 @@ spec:
     env: charite
   type: ClusterIP
 
+
