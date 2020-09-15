@@ -23,7 +23,8 @@ build-portal:
   script:
     - export PORTAL_ENV=build-charite
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-    - docker build -t ${PORTAL_CONTAINER_IMAGE} --build-arg PORTAL_ENV portal/.
+#    - docker build -t ${PORTAL_CONTAINER_IMAGE} --build-arg PORTAL_ENV portal/.
+    - docker build -t ${PORTAL_CONTAINER_IMAGE} PORTAL_ENV portal/.
     - docker push ${PORTAL_CONTAINER_IMAGE}
 
 deploy-portal:
