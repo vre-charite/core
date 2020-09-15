@@ -1,10 +1,11 @@
 FROM 10.32.42.225:5000/node:12
 COPY .  ./
-ARG PORTAL_ENV
+#ARG PORTAL_ENV
 RUN npm config set proxy "http://proxy.charite.de:8080/"
 RUN npm config set https-proxy "http://proxy.charite.de:8080/"
 RUN npm install
-RUN npm run ${PORTAL_ENV}
+RUN npm run 
+#RUN npm run ${PORTAL_ENV}
 
 FROM 10.32.42.225:5000/nginx:latest
 COPY --from=0 build /usr/share/nginx/html/vre
