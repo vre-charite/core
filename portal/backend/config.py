@@ -51,6 +51,9 @@ class ConfigClass(object):
     RDS_DBNAME = "INDOC_VRE"
     RDS_USER = "postgres"
     RDS_PWD = "postgres"
+    if env is None or env == 'charite':
+        RDS_USER = "indoc_vre"
+        RDS_PWD = "opsdb-jrjmfa9svvC"
     RDS_SCHEMA_DEFAULT = "indoc_vre"
 
     # Error and Access Log
