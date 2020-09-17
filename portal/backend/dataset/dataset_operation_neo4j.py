@@ -1,6 +1,6 @@
 from flask import request
 from flask_restx import Resource
-from flask_jwt import jwt_required
+from flask_jwt import jwt_required, current_identity
 import requests
 import json
 from resources.utils import *
@@ -45,16 +45,45 @@ class datasets(Resource):
                 payload = {"type": "Usecase"} if param == "usecase" else None
                 result = list_containers(access_token, "Dataset", payload)
 
+                role = current_identity["role"]
+                username = current_identity["username"]
+
+                if role == 'admin':
+                    return {'result': result}, 200
+
+                # Fetch all datasets that connected to the user
+                url = ConfigClass.NEO4J_SERVICE + "relations/query"
+                payload = {
+                    "start_label": "User",
+                    "end_label": "Dataset",
+                    "start_params": {"name": username}
+                }
+                res = requests.post(url=url, json=payload)
+
+                visible_projects = [
+                    x for x in result if x.get('discoverable', False)]
+
+                accessible_projects = [x['end_node']
+                                       for x in json.loads(res.text)]
+
+                # Iterating and using extend to convert
+                for i in accessible_projects:
+                    for j in visible_projects:
+                        if i['id'] == j['id']:
+                            break
+                    else:
+                        visible_projects.append(i)
+
         except Exception as e:
             _logger.error('Error in gfetching project info: {}'.format(str(e)))
             return {'result': 'Error %s' % str(e)}, 403
 
-        return {'result': result}, 200
+        return {'result': visible_projects}, 200
 
-    @datasets_entity_ns.expect(dataset_module)
-    @datasets_entity_ns.response(200, dataset_sample_return)
-    @jwt_required()
-    @check_role("admin", True)
+    @ datasets_entity_ns.expect(dataset_module)
+    @ datasets_entity_ns.response(200, dataset_sample_return)
+    @ jwt_required()
+    @ check_role("admin", True)
     def post(self):
         '''
         This method allow to create container in platform.
@@ -114,14 +143,16 @@ class datasets(Resource):
                 if len(error) != 0:
                     return {"result": str(error)}
 
-            # Create folder (project) in NFS
+            # Create folder (project) in Green Room
             url = ConfigClass.DATA_SERVICE + "folders"
             root = result['path']
             if container_type == "Usecase":
                 path = [root, root+"/raw", root+"/processed", root +
                         "/workdir", root+"/trash", root+'/logs']  # Top-level folders
+                vre_path = [root]
             else:
                 path = [root]
+                vre_path = [root]
 
             for p in path:
                 payload = {
@@ -131,6 +162,15 @@ class datasets(Resource):
                     url=url,
                     json=payload
                 )
+                if(res.status_code != 200):
+                    return {'result': json.loads(res.text)}, res.status_code
+
+            # Create folder in VRE Core
+            for p in vre_path:
+                res = requests.post(url=url, json={
+                    'path': p,
+                    'service': 'VRE'
+                })
                 if(res.status_code != 200):
                     return {'result': json.loads(res.text)}, res.status_code
 
@@ -145,9 +185,9 @@ class datasets(Resource):
 
 
 class dataset(Resource):
-    @datasets_entity_ns.response(200, dataset_sample_return)
-    @jwt_required()
-    @check_role("admin")
+    @ datasets_entity_ns.response(200, dataset_sample_return)
+    @ jwt_required()
+    @ check_role("admin")
     def put(self, dataset_id):
         '''
         This method allow to allow admin to update information of the container.
@@ -182,9 +222,9 @@ class dataset(Resource):
         return {'result': json.loads(result.text)}, 200
 
     # not used
-    @datasets_entity_ns.response(200, dataset_sample_return)
-    @jwt_required()
-    @check_role("visitor")
+    @ datasets_entity_ns.response(200, dataset_sample_return)
+    @ jwt_required()
+    @ check_role("visitor")
     def get(self, dataset_id):
         '''
         This method allow to allow admin to get information of the container.
@@ -205,8 +245,10 @@ class dataset(Resource):
         return {'result': json.loads(result.text)}, 200
 
 # Deprecate
+
+
 class datasets_search(Resource):
-    @jwt_required()
+    @ jwt_required()
     def post(self):
         '''
         This method allow user to query datasets by name/tags/metadata
@@ -230,7 +272,7 @@ class dataset_relation_parent(Resource):
     # given dataset add the parent dataset
     # the parameter is the select dataset
     # the target dataset will be in the payload
-    @jwt_required()
+    @ jwt_required()
     def post(self, dataset_id):
         '''
         This method allow user to add one as the child of another
@@ -271,7 +313,7 @@ class dataset_relation_parent(Resource):
 
         return {'result': 'ok'}, 200
 
-    @jwt_required()
+    @ jwt_required()
     def get(self, dataset_id):
         try:
             res = requests.get(ConfigClass.NEO4J_SERVICE+"relations/PARENT/node/%s" % dataset_id,
@@ -284,8 +326,10 @@ class dataset_relation_parent(Resource):
         return {'result': result}, 200
 
 # Deprecate
+
+
 class dataset_relation_child(Resource):
-    @jwt_required()
+    @ jwt_required()
     def post(self, dataset_id):
         # the parameter is the select dataset
         # the target dataset will be in the payload
@@ -324,7 +368,7 @@ class dataset_relation_child(Resource):
 
         return {'result': 'ok'}, 200
 
-    @jwt_required()
+    @ jwt_required()
     def get(self, dataset_id):
         # start query for get the the parent relationship all the way down
         try:
@@ -368,8 +412,10 @@ class dataset_relation_child(Resource):
 # with give dataset
 
 # Deprecate
+
+
 class dataset_relation_none(Resource):
-    @jwt_required()
+    @ jwt_required()
     def get(self, dataset_id):
 
         # make the query to find the dataset is not in relationship

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Progress, Collapse, Table, Button, Space, Input, Popover } from 'antd';
-import { getProcessedFilesAPI, downloadFilesAPI } from '../../../../../APIs';
+import { getProcessedFilesAPI, downloadFilesAPI, getRawFilesAPI } from '../../../../../APIs';
 import { CloudDownloadOutlined, SyncOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import { SearchOutlined } from '@ant-design/icons';
 import { useCookies } from 'react-cookie';
 import { namespace, ErrorMessager } from '../../../../../ErrorMessages';
 import { appendDownloadListCreator } from '../../../../../Redux/actions';
-import { connect } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
+import FilesTable from './FilesTable';
 
 const { Panel } = Collapse;
 
@@ -21,13 +22,15 @@ const ContainerDetailsContent = (props) => {
   const [downloadStatus, setProgress] = useState({});
   const [groupDownloadStatus, setGroupProgress] = useState({});
   let [rawFiles, setRawFiles] = useState([]);
-  const [searchText, setSearchText] = useState(null);
+  const [searchText, setSearchText] = useState([]);
   const [searchedColumn, setSearchedColumn] = useState('');
   const [searchInput, setSearchInput] = useState({});
   const [reFreshing, setRefreshing] = useState(false);
   const [sortColumn, setSortColumn] = useState('createTime');
   const [order, setOrder] = useState('desc');
-  const [cookies, setCookie] = useCookies(['cookies']);
+  const [tableKey, setTableKey] = useState(0);
+
+  const containersPermission = useSelector((state) => state.containersPermission);
 
   async function updateProcessedFiles(
     containerId,
@@ -37,19 +40,52 @@ const ContainerDetailsContent = (props) => {
     column,
     text,
     order,
+    entity_type = null,
+    filePath = null,
   ) {
     let result;
     try {
-      result = await getProcessedFilesAPI(
-        containerId,
-        pageSize,
-        page,
-        path,
-        column,
-        text,
-        order,
-      );
+      if (props.filePath) {
+        const filters = {};
+
+        if (text.length > 0) {
+          for (const item of text) {
+            filters[item.key] = item.value;
+          }
+        }
+
+        filters.path = props.filePath;
+
+        const currentDataset = containersPermission && containersPermission.filter(el => el.container_id === Number(containerId));
+
+        let role = false;
+    
+        if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+
+        result = await getRawFilesAPI(
+          containerId,
+          pageSize,
+          page,
+          column,
+          text,
+          order,
+          role === 'admin',
+          'nfs_file_cp',
+          filters,
+        )
+      } else {
+        result = await getProcessedFilesAPI(
+          containerId,
+          pageSize,
+          page,
+          path,
+          column,
+          text,
+          order,
+        );
+      }
     } catch (err) {
+      console.log(err)
       if (err.response) {
         const errorMessager = new ErrorMessager(
           namespace.dataset.files.getProcessedFilesAPI,
@@ -174,7 +210,6 @@ const ContainerDetailsContent = (props) => {
     typeof path === 'string' && path[0] === '/' ? path.substring(1) : path;
 
   useEffect(() => {
-    // fetchData();
     setTotalItem(totalProcessedItem);
     setRawFiles(processedData);
   }, [id, pageSize, processedData, totalProcessedItem]);
@@ -190,6 +225,7 @@ const ContainerDetailsContent = (props) => {
       searchText,
       order,
     );
+    setTableKey(tableKey+1);
   }
 
   const onSelectChange = (selectedRowKeys) => {
@@ -216,10 +252,19 @@ const ContainerDetailsContent = (props) => {
 
     let isSearchingFile = false;
 
-    if (param2.fileName && param2.fileName.length > 0) isSearchingFile = true;
-    if (param2.generateID && param2.generateID.length > 0)
+    if (param2.fileName && param2.fileName.length > 0) {
       isSearchingFile = true;
-    if (param2.owner && param2.owner.length > 0) isSearchingFile = true;
+      setTableKey(tableKey + 1);
+    }
+    if (param2.generateID && param2.generateID.length > 0) {
+      isSearchingFile = true;
+      setTableKey(tableKey + 1);
+    }
+
+    if (param2.owner && param2.owner.length > 0) {
+      isSearchingFile = true;
+      setTableKey(tableKey + 1);
+    }
 
     if (!isSearchingFile) {
       updateProcessedFiles(
@@ -249,11 +294,12 @@ const ContainerDetailsContent = (props) => {
       key: 'fileName',
       sorter: true,
       width: '35%',
-      ...getColumnSearchProps('name'),
+      searchKey: 'name',
+      // ...getColumnSearchProps('name'),
       render: (text, record) => {
         let filename = text;
-        if (text.length > 58) {
-          filename = filename.slice(0, 50);
+        if (text.length > 45) {
+          filename = filename.slice(0, 45);
           filename = `${filename}...`;
 
           const content = <span>{text}</span>;
@@ -270,7 +316,8 @@ const ContainerDetailsContent = (props) => {
       key: 'owner',
       sorter: true,
       width: '15%',
-      ...getColumnSearchProps('owner'),
+      searchKey: 'owner',
+      // ...getColumnSearchProps('owner'),
     },
     props.currentDataset && props.currentDataset.code === 'generate'
       ? {
@@ -279,7 +326,8 @@ const ContainerDetailsContent = (props) => {
           key: 'generateID',
           sorter: (a, b) => a.generateID.localeCompare(b.generateID),
           width: '15%',
-          ...getColumnSearchProps('generateID'),
+          searchKey: 'generateID',
+          // ...getColumnSearchProps('generateID'),
         }
       : {},
     {
@@ -314,14 +362,15 @@ const ContainerDetailsContent = (props) => {
       width: '5%',
       render: (text, record) => {
         let file = record.name;
-        let fileArr = file.split('/');
-        let fileName = fileArr[fileArr.length - 1];
-        let path = fileArr.slice(4, fileArr.length - 1).join('/');
-        let files = [{ file: fileName, path: path }];
+        var folder = file.substring(0, file.lastIndexOf('/') + 1);
+        var filename = file.substring(file.lastIndexOf('/') + 1, file.length);
+        let files = [{ file: filename, path: folder }];
         return (
           <Space size="middle">
             <CloudDownloadOutlined
-              onClick={(e) =>
+              onClick={(e) => {
+                console.log('ContainerDetailsContent -> record', record);
+
                 downloadFilesAPI(props.datasetId, files).catch((err) => {
                   console.log('ContainerDetailsContent -> err', err);
                   if (err.response) {
@@ -332,8 +381,8 @@ const ContainerDetailsContent = (props) => {
                     errorMessager.triggerMsg(err.response.status);
                   }
                   return;
-                })
-              }
+                });
+              }}
             >
               Download
             </CloudDownloadOutlined>
@@ -347,10 +396,12 @@ const ContainerDetailsContent = (props) => {
     setLoading(true);
     let files = [];
     selectedRowKeys.map((i) => {
-      let fileArr = i.split('/');
+      let file = i;
+      var folder = file.substring(0, file.lastIndexOf('/') + 1);
+      var filename = file.substring(file.lastIndexOf('/') + 1, file.length);
       files.push({
-        file: fileArr[fileArr.length - 1],
-        path: fileArr.slice(4, fileArr.length - 1).join('/'),
+        file: filename,
+        path: folder,
       });
     });
     downloadFilesAPI(
@@ -417,9 +468,7 @@ const ContainerDetailsContent = (props) => {
           </Panel>
         </Collapse>
       )}
-
-      <Table
-        // pagination={{ pageSize: 5 }}
+      {/* <Table
         pagination={{
           current: page + 1,
           pageSize,
@@ -433,6 +482,18 @@ const ContainerDetailsContent = (props) => {
         dataSource={rawFiles}
         onChange={changePage}
         scroll={{ x: true }}
+        key={tableKey}
+      /> */}
+      <FilesTable
+        columns={columns}
+        dataSource={rawFiles}
+        totalItem={totalItem}
+        updateTable={updateProcessedFiles}
+        projectId={props.datasetId}
+        type="processed table"
+        parsePath={parsePath}
+        rowSelection={rowSelection}
+        tableKey={tableKey}
       />
     </>
   );

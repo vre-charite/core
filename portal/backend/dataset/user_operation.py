@@ -68,7 +68,7 @@ class users(Resource):
             payload = {
                 "admin_username": "admin",
                 "admin_password": "amenamen",
-                "realm": "testrealms",
+                "realm": "vre",
                 "username": username,
                 "password": password,
                 "email": email,
@@ -193,7 +193,7 @@ class user_registry(Resource):
 
             # Add user in keycloak
             payload = {
-                "realm": "testrealms",
+                "realm": "vre",
                 "username": username,
                 "password": password,
                 "email": email,
@@ -535,6 +535,27 @@ class dataset_user(Resource):
                 return {'result': "User %s does not exist." % username}, 404
             user_id = users[0]['id']
 
+            # # also check if user in the project
+            url = ConfigClass.NEO4J_SERVICE + "relations/query"
+            res = requests.post(
+                url=url,
+                headers=headers,
+                json={
+                    'start_label': 'User',
+                    'start_params': {'id': user_id},
+                    'end_label': 'Dataset',
+                    'end_params': {'id': int(dataset_id)},
+                }
+            )
+            if res.status_code != 200:
+                return {'result': res.text}, res.status_code
+            else:
+                result = json.loads(res.text)
+                if (len(result) == 0):
+                    _logger.error(
+                        "User %s does not exist in project." % username)
+                    return {'result': "User %s does not exist in project." % username}, 404
+
             # Update relation between user and container
             url = ConfigClass.NEO4J_SERVICE + "relations/"+old_role
             res = requests.put(
@@ -601,6 +622,27 @@ class dataset_user(Resource):
                 _logger.error("User %s does not exist." % username)
                 return {'result': "User %s does not exist." % username}, 404
             user_id = users[0]['id']
+
+            # # also check if user in the project
+            url = ConfigClass.NEO4J_SERVICE + "relations/query"
+            res = requests.post(
+                url=url,
+                headers=headers,
+                json={
+                    'start_label': 'User',
+                    'start_params': {'id': user_id},
+                    'end_label': 'Dataset',
+                    'end_params': {'id': int(dataset_id)},
+                }
+            )
+            if res.status_code != 200:
+                return {'result': res.text}, res.status_code
+            else:
+                result = json.loads(res.text)
+                if (len(result) == 0):
+                    _logger.error(
+                        "User %s does not exist in project." % username)
+                    return {'result': "User %s does not exist in project." % username}, 404
 
             # Get relation between user and container
             url = ConfigClass.NEO4J_SERVICE + "relations"

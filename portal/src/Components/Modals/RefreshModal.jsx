@@ -9,7 +9,7 @@ import moment from 'moment';
 import { connect } from 'react-redux';
 import { setRefreshModal,setIsLoginCreator } from '../../Redux/actions';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
-import { logout as logoutUtility } from '../../Utility';
+import { logout as logoutUtility, getCookie } from '../../Utility';
 
 function CreateDatasetModal({
   visible,
@@ -20,22 +20,6 @@ function CreateDatasetModal({
   const [cookies, setCookie] = useCookies(['cookies']);
   const [secondsToGo, setTimer] = useState(60);
   let timer;
-
-  function getCookie(cname) {
-    var name = cname + '=';
-    var decodedCookie = decodeURIComponent(document.cookie);
-    var ca = decodedCookie.split(';');
-    for (var i = 0; i < ca.length; i++) {
-      var c = ca[i];
-      while (c.charAt(0) == ' ') {
-        c = c.substring(1);
-      }
-      if (c.indexOf(name) == 0) {
-        return c.substring(name.length, c.length);
-      }
-    }
-    return undefined;
-  }
 
   const refreshToken = (autoRefresh) => {
     const payload = {

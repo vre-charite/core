@@ -82,7 +82,7 @@ function UserStats(props) {
               let { owner, createTime, fileName } = i['attributes'];
               return (
                 <Timeline.Item color="green">
-                  {owner} Uploaded {fileName} {createTime}
+                  {owner} uploaded {fileName} at {createTime}
                 </Timeline.Item>
               );
             })}
@@ -91,10 +91,10 @@ function UserStats(props) {
         <TabPane tab="Download Logs" key="2">
           <Timeline>
             {downloadLog.map((i) => {
-              let { owner, createTime, fileName } = i['attributes'];
+              let { downloader, createTime, fileName } = i['attributes'];
               return (
                 <Timeline.Item color="green">
-                  {owner} Downloaded {fileName} {createTime}
+                  {downloader} downloaded {fileName} at {createTime}
                 </Timeline.Item>
               );
             })}

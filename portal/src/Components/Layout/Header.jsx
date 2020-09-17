@@ -10,7 +10,7 @@ import {
   Tag,
   Badge,
   Tabs,
-  Dropdown,
+  Empty,
   Modal,
 } from 'antd';
 import {
@@ -36,28 +36,12 @@ import { emailUploadedFileListAPI } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { logout } from '../../Utility';
 import ResetPasswordModal from '../Modals/ResetPasswordModal';
-import { logoutChannel, headerUpdate } from '../../Utility';
+import { logoutChannel, headerUpdate, getCookie } from '../../Utility';
 import { UploadQueueContext } from '../../Context';
 const { confirm } = Modal;
 const { Header } = Layout;
 const { TabPane } = Tabs;
 const SubMenu = Menu.SubMenu;
-
-function getCookie(cname) {
-  var name = cname + '=';
-  var decodedCookie = decodeURIComponent(document.cookie);
-  var ca = decodedCookie.split(';');
-  for (var i = 0; i < ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == ' ') {
-      c = c.substring(1);
-    }
-    if (c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return undefined;
-}
 
 class AppHeader extends Component {
   static contextType = UploadQueueContext;
@@ -68,6 +52,7 @@ class AppHeader extends Component {
       show: false,
       modalVisible: false,
       loading: false,
+      showNotifications: [],
     };
   }
   logout = async () => {
@@ -141,6 +126,11 @@ class AppHeader extends Component {
         0;
       this.setState({ loading: loading });
     }
+
+    if (prevProps.uploadList && this.props.uploadList && (this.props.uploadList.length !== prevProps.uploadList.length)) {
+      // this.setState({ showNotifications: ['notifications'] });
+    }
+
   }
 
   render() {
@@ -157,7 +147,7 @@ class AppHeader extends Component {
           return <Tag color="red">Error</Tag>;
         }
         case 'pending': {
-          return <Tag color="yellow">Pending</Tag>;
+          return <Tag color="yellow">Processing</Tag>;
         }
         case 'success': {
           return <Tag color="green">Success</Tag>;
@@ -217,89 +207,97 @@ class AppHeader extends Component {
       return false;
     };
 
+    // const uploadListContent = (
+    //   <Tabs defaultActiveKey="1" className={styles.tab}>
+    //     <TabPane
+    //       tab={
+    //         <>
+    //           Upload
+    //           <Badge
+    //             offset={[4, 0]}
+    //             style={countStatus()[1]}
+    //             count={countStatus()[0]}
+    //             overflowCount={99}
+    //           />
+    //         </>
+    //       }
+    //       key="1"
+    //     >
+    //       <List
+    //         size="small"
+    //         dataSource={this.props.uploadList}
+    //         className={
+    //           this.props.uploadList.length > 0 ? styles.download_list : ''
+    //         }
+    //         renderItem={(item) => (
+    //           <List.Item style={{ overflowWrap: 'anywhere' }}>
+    //             <List.Item.Meta
+    //               title={
+    //                 <>
+    //                   {item.fileName} {statusTags(item.status)}
+    //                 </>
+    //               }
+    //               description={
+    //                 item.status === 'uploading' && (
+    //                   <Progress
+    //                     status="active"
+    //                     percent={Math.floor(100 * item.progress)}
+    //                     size="small"
+    //                   />
+    //                 )
+    //               }
+    //             />
+    //           </List.Item>
+    //         )}
+    //       />
+    //       <Button
+    //         onClick={this.cleanUploadList}
+    //         danger
+    //         disabled={isCleanButtonDisabled()}
+    //       >
+    //         Clear upload history
+    //       </Button>
+    //     </TabPane>
+    //     <TabPane
+    //       tab={
+    //         <>
+    //           Bulk Download
+    //           <Badge
+    //             offset={[4, 0]}
+    //             style={{ backgroundColor: 'gold' }}
+    //             count={this.props.downloadList.length}
+    //             overflowCount={99}
+    //           />
+    //         </>
+    //       }
+    //       key="2"
+    //     >
+    //       <List
+    //         size="small"
+    //         dataSource={this.props.downloadList}
+    //         renderItem={(item) => (
+    //           <List.Item>
+    //             <List.Item.Meta
+    //               title={
+    //                 <>
+    //                   {item.downloadKey} {statusTags(item.status)}
+    //                 </>
+    //               }
+    //             />
+    //           </List.Item>
+    //         )}
+    //       />
+    //     </TabPane>
+    //   </Tabs>
+    // );
+
     const uploadListContent = (
-      <Tabs defaultActiveKey="1" className={styles.tab}>
-        <TabPane
-          tab={
-            <>
-              Upload
-              <Badge
-                offset={[4, 0]}
-                style={countStatus()[1]}
-                count={countStatus()[0]}
-                overflowCount={99}
-              />
-            </>
-          }
-          key="1"
-        >
-          <List
-            size="small"
-            dataSource={this.props.uploadList}
-            className={
-              this.props.uploadList.length > 0 ? styles.download_list : ''
-            }
-            renderItem={(item) => (
-              <List.Item style={{ overflowWrap: 'anywhere' }}>
-                <List.Item.Meta
-                  title={
-                    <>
-                      {item.fileName} {statusTags(item.status)}
-                    </>
-                  }
-                  description={
-                    item.status === 'uploading' && (
-                      <Progress
-                        status="active"
-                        percent={Math.floor(100 * item.progress)}
-                        size="small"
-                      />
-                    )
-                  }
-                />
-              </List.Item>
-            )}
-          />
-          <Button
-            onClick={this.cleanUploadList}
-            danger
-            disabled={isCleanButtonDisabled()}
-          >
-            Clear upload history
-          </Button>
-        </TabPane>
-        <TabPane
-          tab={
-            <>
-              Bulk Download
-              <Badge
-                offset={[4, 0]}
-                style={{ backgroundColor: 'gold' }}
-                count={this.props.downloadList.length}
-                overflowCount={99}
-              />
-            </>
-          }
-          key="2"
-        >
-          <List
-            size="small"
-            dataSource={this.props.downloadList}
-            renderItem={(item) => (
-              <List.Item>
-                <List.Item.Meta
-                  title={
-                    <>
-                      {item.downloadKey} {statusTags(item.status)}
-                    </>
-                  }
-                />
-              </List.Item>
-            )}
-          />
+      <Tabs className={styles.tab}>
+        <TabPane tab="Messages" key="message">
+          <Empty description="No Messages" />
         </TabPane>
       </Tabs>
-    );
+    )
 
     const username = getCookie('username');
 
@@ -316,7 +314,15 @@ class AppHeader extends Component {
           height: '100%',
         }}
       >
-        <Menu mode="horizontal" getPopupContainer={(node) => node.parentNode}>
+        <Menu 
+          mode="horizontal" 
+          getPopupContainer={(node) => node.parentNode} 
+          triggerSubMenuAction="click"
+          openKeys={this.state.showNotifications && this.state.showNotifications.length > 0 ? this.state.showNotifications : []}
+          onOpenChange={(key) => {
+            this.setState({ showNotifications: key });
+          }}
+        >
           <Menu.Item key="logo" style={{ marginRight: '27px' }}>
             <Link to="/">
               <img
@@ -351,6 +357,7 @@ class AppHeader extends Component {
             )}
           </Menu.Item> */}
           <SubMenu
+            key="user"
             style={{ float: 'right', paddingRight: '25px' }}
             title={
               <span>
@@ -377,12 +384,16 @@ class AppHeader extends Component {
           </SubMenu>
 
           <SubMenu
+            key="notifications"
             style={{ float: 'right' }}
-            className={this.state.shakeClass}
+            // className={this.state.shakeClass}
             title={
-              <Badge offset={[5, 0]} dot={this.state.show}>
-                {this.state.loading && <LoadingOutlined color={'#1890ff'} />}{' '}
-                Message Centre
+              <Badge 
+                offset={[5, 0]} 
+                // dot={this.state.show}
+              >
+                {/* {this.state.loading && <LoadingOutlined color={'#1890ff'} />}{' '} */}
+                Notifications
               </Badge>
             }
           >

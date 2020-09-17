@@ -21,6 +21,7 @@ import { ErrorMessager, namespace } from '../../../../../ErrorMessages';
 import { appendDownloadListCreator } from '../../../../../Redux/actions';
 import { getRawFilesAPI, downloadFilesAPI } from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
+import FilesTable from './FilesTable';
 
 const { Panel } = Collapse;
 
@@ -35,13 +36,14 @@ function RawTable(props) {
   let [rawFiles, setRawFiles] = useState([]);
   const [reFreshing, setRefreshing] = useState(false);
   const [cookies, setCookie] = useCookies(['cookies']);
-  const [searchText, setSearchText] = useState(null);
+  const [searchText, setSearchText] = useState([]);
   const [searchedColumn, setSearchedColumn] = useState('');
   const [searchInput, setSearchInput] = useState({});
   const [sortColumn, setSortColumn] = useState('createTime');
   const [order, setOrder] = useState('desc');
   const [pageLoading, setPageLoading] = useState(true);
   const [isShown, toggleModal] = useState(false);
+  const [tableKey, setTableKey] = useState(0);
 
   function getRawFilesAndUpdateUI(
     containerId,
@@ -51,9 +53,24 @@ function RawTable(props) {
     text,
     order,
   ) {
-    return getRawFilesAPI(containerId, pageSize, page, column, text, order)
+    const filters = {};
+
+    if (text.length > 0) {
+      for (const item of text) {
+        filters[item.key] = item.value;
+      }
+    }
+
+    const currentDataset = props.containersPermission && props.containersPermission.filter(el => el.container_id === Number(containerId));
+
+    let role = false;
+
+    if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+
+    return getRawFilesAPI(containerId, pageSize, page, column, text, order, role === 'admin', null, filters)
       .then((res) => {
         const { entities, approximateCount } = res.data.result;
+
         setRawFiles(
           entities.map((item) => ({
             ...item.attributes,
@@ -153,14 +170,19 @@ function RawTable(props) {
         style={{ color: filtered ? '#1890ff' : undefined, top: '60%' }}
       />
     ),
-    // onFilter: (value, record) =>
-    //   record[dataIndex] ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()) : '',
-    onFilterDropdownVisibleChange: (visible) => {
-      if (visible && Object.keys(searchInput).length > 0) {
-        // console.log('searchInput', searchInput);
 
-        setTimeout(() => searchInput.select(), 100);
+    onFilterDropdownVisibleChange: (visible) => {
+      if (searchedColumn !== dataIndex && searchText && searchText.length > 0) {
+      } else {
+        if (visible && searchInput && Object.keys(searchInput).length > 0) {
+          setTimeout(() => searchInput.select(), 100);
+        }
       }
+
+      setSearchText('');
+      // if (visible && searchInput && Object.keys(searchInput).length > 0) {
+      //   setTimeout(() => searchInput.select(), 100);
+      // }
     },
     render: (text) =>
       searchedColumn === dataIndex ? (
@@ -182,11 +204,12 @@ function RawTable(props) {
       key: 'fileName',
       sorter: true,
       width: '35%',
-      ...getColumnSearchProps('name'),
+      searchKey: 'name',
+      // ...getColumnSearchProps('name'),
       render: (text, record) => {
         let filename = text;
-        if (text.length > 58) {
-          filename = filename.slice(0, 50);
+        if (text.length > 45) {
+          filename = filename.slice(0, 45);
           filename = `${filename}...`;
 
           const content = <span>{text}</span>;
@@ -203,7 +226,8 @@ function RawTable(props) {
       key: 'owner',
       sorter: true,
       width: '15%',
-      ...getColumnSearchProps('owner'),
+      searchKey: 'owner',
+      // ...getColumnSearchProps('owner'),
     },
     props.currentDataset && props.currentDataset.code === 'generate'
       ? {
@@ -212,7 +236,8 @@ function RawTable(props) {
           key: 'generateID',
           sorter: true,
           width: '15%',
-          ...getColumnSearchProps('generateID'),
+          searchKey: 'generateID',
+          // ...getColumnSearchProps('generateID'),
         }
       : {},
     {
@@ -251,16 +276,16 @@ function RawTable(props) {
       width: '5%',
       render: (text, record) => {
         let file = record.name;
-        let fileArr = file.split('/');
-        let fileName = fileArr[fileArr.length - 1];
-        let path = fileArr.slice(4, fileArr.length - 1).join('/');
-        let files = [{ file: fileName, path: path }];
+        var folder = file.substring(0, file.lastIndexOf('/') + 1);
+        var filename = file.substring(file.lastIndexOf('/') + 1, file.length);
+        let files = [{ file: filename, path: folder }];
         return (
           <Space size="middle">
             <CloudDownloadOutlined
-              onClick={(e) =>
+              onClick={(e) => {
+                console.log('RawTable -> record', record);
+
                 downloadFilesAPI(props.projectId, files).catch((err) => {
-                  console.log('ContainerDetailsContent -> err', err);
                   if (err.response) {
                     const errorMessager = new ErrorMessager(
                       namespace.dataset.files.downloadFilesAPI,
@@ -268,8 +293,8 @@ function RawTable(props) {
                     errorMessager.triggerMsg(err.response.status);
                   }
                   return;
-                })
-              }
+                });
+              }}
             >
               Download
             </CloudDownloadOutlined>
@@ -280,21 +305,19 @@ function RawTable(props) {
   ];
 
   useEffect(() => {
-    // fetchData()
     setRawFiles(props.rawData);
     setTotalItem(props.totalItem);
     setPageLoading(false);
   }, [
     page,
     pageSize,
+    searchInput,
     props.projectId,
     props.rawData,
     props.totalItem,
-    // props.uploadList,
   ]);
 
   const onSelectChange = (selectedRowKeys) => {
-    console.log('selectedRowKeys changed: ', selectedRowKeys);
     setSelectedRowKeys(selectedRowKeys);
   };
 
@@ -317,10 +340,19 @@ function RawTable(props) {
 
     let isSearchingFile = false;
 
-    if (param2.fileName && param2.fileName.length > 0) isSearchingFile = true;
-    if (param2.generateID && param2.generateID.length > 0)
+    if (param2.fileName && param2.fileName.length > 0) {
       isSearchingFile = true;
-    if (param2.owner && param2.owner.length > 0) isSearchingFile = true;
+      setTableKey(tableKey + 1);
+    }
+    if (param2.generateID && param2.generateID.length > 0) {
+      isSearchingFile = true;
+      setTableKey(tableKey + 1);
+    }
+
+    if (param2.owner && param2.owner.length > 0) {
+      isSearchingFile = true;
+      setTableKey(tableKey + 1);
+    }
 
     if (!isSearchingFile) {
       getRawFilesAndUpdateUI(
@@ -338,10 +370,12 @@ function RawTable(props) {
     setLoading(true);
     let files = [];
     selectedRowKeys.map((i) => {
-      let fileArr = i.split('/');
+      let file = i;
+      var folder = file.substring(0, file.lastIndexOf('/') + 1);
+      var filename = file.substring(file.lastIndexOf('/') + 1, file.length);
       files.push({
-        file: fileArr[fileArr.length - 1],
-        path: fileArr.slice(4, fileArr.length - 1).join('/'),
+        file: filename,
+        path: folder,
       });
     });
     downloadFilesAPI(
@@ -372,6 +406,8 @@ function RawTable(props) {
       searchText,
       order,
     );
+
+    setTableKey(tableKey+1)
   }
 
   const hasSelected = selectedRowKeys.length > 0;
@@ -429,8 +465,7 @@ function RawTable(props) {
           </Panel>
         </Collapse>
       )}
-
-      <Table
+      {/* <Table
         pagination={{
           current: page + 1,
           pageSize,
@@ -443,6 +478,17 @@ function RawTable(props) {
         columns={columns}
         dataSource={rawFiles}
         onChange={changePage}
+        key={tableKey}
+      /> */}
+      <FilesTable
+        columns={columns}
+        dataSource={rawFiles}
+        totalItem={totalItem}
+        updateTable={getRawFilesAndUpdateUI}
+        projectId={props.projectId}
+        type="raw table"
+        rowSelection={rowSelection}
+        tableKey={tableKey}
       />
       <GreenRoomUploader
         isShown={isShown}
@@ -458,6 +504,8 @@ function RawTable(props) {
 export default connect(
   (state) => ({
     uploadList: state.uploadList,
+    role: state.role,
+    containersPermission: state.containersPermission,
   }),
   { appendDownloadListCreator },
 )(RawTable);

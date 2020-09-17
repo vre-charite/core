@@ -401,7 +401,7 @@ class Canvas extends Component {
                           Project: {this.state.datasetName}
                         </span>
                       }
-                      subTitle={`Your currnt role is ${this.state.currentRole}.`}
+                      subTitle={`Your current role is ${this.state.currentRole}.`}
                       extra={[
                         <Button type="" onClick={this.handleResetLayout}>
                           Reset Layout

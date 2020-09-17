@@ -85,5 +85,6 @@ class APIInvitation(metaclass=MetaAPI):
                 return my_res.to_dict, my_res.code
             except Exception as e:
                 _logger.fatal(str(e))
-                my_res.set_error_msg('Internal Error')
-                return my_res.to_dict, 500
+                my_res.set_code(EAPIResponseCode.internal_error)
+                my_res.set_error_msg('Internal Error' + str(e))
+                return my_res.to_dict, my_res.code

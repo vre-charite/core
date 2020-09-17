@@ -266,7 +266,7 @@ export default function ErrorMessager(name) {
       },
       404: (err, params) => {
         message.error(
-          `An Internal Error occurred while attempting to modify role for user ${params.name}. Please try again later.`,
+          `User ${params.name} not exist in this project.`,
         );
       },
       500: (err, params) => {
@@ -300,7 +300,7 @@ export default function ErrorMessager(name) {
       },
       404: (err, params) => {
         message.error(
-          `Something went wrong when trying to remove user on dataset, please try again later`,
+          `User ${params.username} not exist in this project.`,
         );
       },
       500: (err, params) => {

@@ -6,9 +6,9 @@ import {
   Select,
   Input,
   Button,
-  Radio,
   message,
   Tooltip,
+  Checkbox,
 } from 'antd';
 import DynamicKeyValue from '../Form/DynamicKeyValue';
 import { createProjectAPI } from '../../APIs/index';
@@ -18,22 +18,7 @@ import {
 } from '../../Redux/actions';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-
-function getCookie(cname) {
-  var name = cname + '=';
-  var decodedCookie = decodeURIComponent(document.cookie);
-  var ca = decodedCookie.split(';');
-  for (var i = 0; i < ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == ' ') {
-      c = c.substring(1);
-    }
-    if (c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return undefined;
-}
+import { getCookie } from '../../Utility';
 
 function CreateDatasetModal({
   visible,
@@ -67,6 +52,7 @@ function CreateDatasetModal({
           dataset_name: values.name,
           code: values.code,
           tags: values.tags,
+          discoverable: values.discoverable,
           admin: [username],
           type: 'Usecase',
           metadatas,
@@ -142,6 +128,7 @@ function CreateDatasetModal({
         onFinish={onFinish}
         style={{ padding: '20px 0 50px' }}
         layout="vertical"
+        initialValues={{ discoverable: true }}
       >
         <Form.Item
           label={
@@ -203,6 +190,15 @@ function CreateDatasetModal({
                 <Select.Option key={item}>{item}</Select.Option>
               ))}
           </Select>
+        </Form.Item>
+        <Form.Item
+          label="Visibility"
+          name="discoverable"
+          valuePropName="checked"
+        >
+          <Checkbox>
+            Make this project discoverable by all platform users
+          </Checkbox>
         </Form.Item>
         {/* <div style={{ paddingBottom: '5px' }}>Metadata (Optional):</div>
         <DynamicKeyValue name="metadatas" label={'metadatas'} /> */}

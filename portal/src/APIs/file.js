@@ -6,6 +6,7 @@ import {
 import { objectKeysToSnakeCase, apiErrorHandling } from '../Utility';
 import { message } from 'antd';
 import namespace from '../ErrorMessages';
+import Axios from 'axios';
 
 function uploadFileApi(containerId, data, cancelToken) {
   return devOpAxios({
@@ -30,7 +31,7 @@ function preUpload(containerId, data) {
     url: `/v1/upload/containers/${containerId}/pre`,
     method: 'POST',
     data,
-  })
+  });
 }
 
 function combineChunks(containerId, data) {
@@ -38,7 +39,7 @@ function combineChunks(containerId, data) {
     url: `/v1/upload/containers/${containerId}/on-success`,
     method: 'POST',
     data,
-  })
+  });
 }
 
 /**
@@ -103,31 +104,27 @@ function getRawFilesAPI(
   text,
   order,
   admin_view,
+  entityType,
+  filters,
 ) {
-  if (admin_view === false) {
-    return devOpAxios({
-      url: `/v1/containers/${containerId}/files/meta`,
-      params: objectKeysToSnakeCase({
-        page,
-        pageSize,
-        column,
-        text,
-        order,
-        admin_view,
-      }),
-    });
-  } else {
-    return devOpAxios({
-      url: `/v1/containers/${containerId}/files/meta`,
-      params: objectKeysToSnakeCase({
-        page,
-        pageSize,
-        column,
-        text,
-        order,
-      }),
-    });
-  }
+  let params = {
+    page,
+    pageSize,
+    column,
+    // text,
+    order,
+    admin_view,
+  };
+
+  if (entityType) params = { ...params, entityType };
+  if (!admin_view) params = { ...params, admin_view };
+  if (filters && Object.keys(filters).length > 0)
+    params = { ...params, filter: JSON.stringify(filters) };
+
+  return axios({
+    url: `/v1/files/containers/${containerId}/files/meta`,
+    params: objectKeysToSnakeCase(params),
+  });
 }
 
 /**
@@ -145,21 +142,26 @@ function getProcessedFilesAPI(
   column,
   text,
   order,
+  entityType,
 ) {
   const pipelineArr = path.split('/');
   const pipeline = pipelineArr[pipelineArr.length - 1];
-  return devOpAxios({
-    url: `/v1/files/processed`,
-    params: objectKeysToSnakeCase({
-      page,
-      pageSize,
-      stage: 'processed',
-      column,
-      text,
-      order,
-      pipeline: pipeline,
-      container_id: containerId,
-    }),
+
+  let params = {
+    page,
+    pageSize,
+    stage: 'processed',
+    column,
+    text,
+    order,
+    pipeline: pipeline,
+    container_id: containerId,
+  };
+  if (entityType) params = { ...params, entityType };
+
+  return axios({
+    url: `/v1/files/files/processed`,
+    params: objectKeysToSnakeCase(params),
   });
 }
 
@@ -210,8 +212,8 @@ function downloadFilesAPI(
   setLoading,
   appendDownloadListCreator,
 ) {
-  return devOpAxios({
-    url: `/v1/containers/${containerId}/file`,
+  return axios({
+    url: `/v1/files/containers/${containerId}/file`,
     method: 'POST',
     data: { files: files },
   }).then((res) => {
@@ -257,7 +259,7 @@ function checkPendingStatusAPI(containerId, taskId) {
   //     taskId,
   //   }),
   // });
-  return devOpAxios({
+  return axios({
     url: `/v1/upload/containers/${containerId}/status`,
     method: 'GET',
     params: objectKeysToSnakeCase({
@@ -303,8 +305,8 @@ function emailUploadedFileListAPI(fileList, uploader) {
  * @VRE-314
  */
 function projectFileCountTotal(containerId) {
-  return devOpAxios({
-    url: `v1/containers/${containerId}/files/count/total`,
+  return axios({
+    url: `v1/files/containers/${containerId}/files/count/total`,
   });
 }
 
@@ -316,12 +318,12 @@ function projectFileCountTotal(containerId) {
  */
 function projectFileCountToday(containerId, admin_view) {
   if (admin_view === false) {
-    return devOpAxios({
-      url: `v1/containers/${containerId}/files/count/daily?admin_view=false`,
+    return axios({
+      url: `v1/files/containers/${containerId}/files/count/daily?admin_view=false`,
     });
   } else {
-    return devOpAxios({
-      url: `v1/containers/${containerId}/files/count/daily`,
+    return axios({
+      url: `v1/files/containers/${containerId}/files/count/daily`,
     });
   }
 }

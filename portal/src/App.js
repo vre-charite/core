@@ -37,6 +37,8 @@ import {
   logoutChannel,
   loginChannel,
   headerUpdate,
+  isTokenExpired,
+  getCookie,
 } from './Utility';
 import { message } from 'antd';
 import Promise from 'bluebird';
@@ -50,23 +52,6 @@ let clearIds = [];
 message.config({
   maxCount: 2,
 });
-
-function getCookie(cname) {
-  var name = cname + '=';
-  var decodedCookie = decodeURIComponent(document.cookie);
-  var ca = decodedCookie.split(';');
-  for (var i = 0; i < ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == ' ') {
-      c = c.substring(1);
-    }
-    if (c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return undefined;
-}
-
 
 class App extends Component {
   constructor(props) {
@@ -86,13 +71,15 @@ class App extends Component {
         localStorage.clear();
         return;
       }
+      if (isTokenExpired(getCookie('access_token'))) {
+        logout(true);
+        return;
+      }
 
       this.setCheckTokenInterval();
-     
 
       const token = getCookie('access_token');
-      checkToken(token,this.props.setRefreshModal);
-
+      checkToken(token, this.props.setRefreshModal);
       getDatasetsAPI({ type: 'usecase' })
         .then((res) => {
           this.props.AddDatasetCreator(res.data.result, 'All Use Cases');
@@ -137,7 +124,8 @@ class App extends Component {
         if (token) {
           const exp = jwt_decode(token).exp;
           const diff = exp - moment().unix() < 60; // expired after 1 min
-          if (diff && (!this.props.refresh) && this.props.isLogin) { // if is not login, will not show refresh modal
+          if (diff && !this.props.refresh && this.props.isLogin) {
+            // if is not login, will not show refresh modal
             this.props.setRefreshModal(true); // Pop up warning modal
           }
         } else {
@@ -148,12 +136,12 @@ class App extends Component {
         console.log(e);
       }
     }, 6000);
-    this.setState({ checkTokenIntervalId })
-  }
+    this.setState({ checkTokenIntervalId });
+  };
 
   listenBroadcast = () => {
     logoutChannel.onmessage = (msg) => {
-      console.log('logout in app.js, listen logout')
+      console.log('logout in app.js, listen logout');
       logout();
     };
     loginChannel.onmessage = (username) => {
@@ -165,7 +153,7 @@ class App extends Component {
         return;
       }
       if (cookieUsername !== undefined && username !== cookieUsername) {
-        console.log('logout in app.js, listen login')
+        console.log('logout in app.js, listen login');
         logout(false); //should not use this logout, since it will clean the cookies
       }
       if (username === cookieUsername) {
@@ -178,12 +166,13 @@ class App extends Component {
     if (prevProps.uploadList !== this.props.uploadList) {
       this.debouncedUpdatePendingStatus(this.props.uploadList);
       this.setRefreshConfirmation(this.props.uploadList);
+      this.debouncedTokenRefreshWhileUploading();
     }
     if (prevProps.downloadList !== this.props.downloadList) {
       this.updateDownloadStatus(this.props.downloadList);
     }
     if (prevProps.isLogin !== this.props.isLogin) {
-      console.log('isLogin change')
+      console.log('isLogin change');
       this.setCheckTokenInterval();
     }
     logoutChannel.onmessage = (msg) => {
@@ -195,14 +184,12 @@ class App extends Component {
 
   updatePendingStatus = (arr) => {
     clearInterval(this.props.clearId); //don't know why this doesn't work
-    
 
     const pendingArr = arr.filter((item) => item.status === 'pending');
-    console.log(pendingArr,pendingArr.length);
     if (pendingArr.length === 0) {
       //make sure clear all interval ids
-      clearIds.forEach(element => {
-          clearInterval(element);
+      clearIds.forEach((element) => {
+        clearInterval(element);
       });
       clearIds = [];
       return;
@@ -264,9 +251,31 @@ class App extends Component {
       window.onbeforeunload = confirmation;
       //window.onbeforeunload = confirmation;
     } else {
-      window.onbeforeunload = () => { };
+      window.onbeforeunload = () => {};
     }
   };
+
+  tokenRefreshWhileUploading() {
+    const { uploadList } = this.props;
+    const uploadingList = uploadList.filter(
+      (item) => item.status === 'uploading',
+    );
+    if (uploadingList.length > 0) {
+      const accessToken = getCookie('access_token');
+      const refreshToken = getCookie('refresh_token');
+      headerUpdate(accessToken, refreshToken);
+    }
+  }
+
+  debouncedTokenRefreshWhileUploading = _.debounce(
+    this.tokenRefreshWhileUploading,
+    5 * 1000,
+    {
+      leading: true,
+      trailing: true,
+      maxWait: 15 * 1000,
+    },
+  );
 
   debouncedUpdatePendingStatus = _.debounce(this.updatePendingStatus, 5000, {
     leading: true,
@@ -319,10 +328,10 @@ class App extends Component {
                   props,
                   datasetList,
                 ) ? (
-                    <item.component />
-                  ) : (
-                    <Redirect to="/uploader" />
-                  );
+                  <item.component />
+                ) : (
+                  <Redirect to="/uploader" />
+                );
               }}
             ></Route>
           ))}
@@ -358,3 +367,5 @@ export default connect(
     updateClearIdCreator,
   },
 )(withCookies(withRouter(App)));
+
+// trigger cicd

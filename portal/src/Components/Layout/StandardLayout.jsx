@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout } from 'antd';
 import { RightOutlined, LeftOutlined } from '@ant-design/icons';
 import AppHeader from './Header';
+import FilePanel from './FilePanel';
 import LeftSider from './LeftSider';
 import RightSlider from './RightSlider';
 import { withRouter } from 'react-router-dom';
@@ -88,15 +89,11 @@ function StandardLayout(props) {
     maxWait: 15 * 1000,
   });
 
-  useEffect(
-    () => {
-      initFunc();
-      /* debouncedUpdatePendingStatus(uploadList);
+  useEffect(() => {
+    initFunc();
+    /* debouncedUpdatePendingStatus(uploadList);
       setRefreshConfirmation(uploadList); */
-    },
-    [...observationVars/* ,uploadList */],
-  );
-  
+  }, [...observationVars /* ,uploadList */]);
 
   return (
     <Layout>
@@ -107,6 +104,7 @@ function StandardLayout(props) {
           {rightContent && <RightSlider>{rightContent}</RightSlider>}
         </Layout>
       </Content>
+      <FilePanel />
     </Layout>
   );
 }

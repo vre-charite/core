@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Card, Col, Row } from 'antd';
-import { Form, Input, Button, Checkbox, message, Modal } from 'antd';
+import { Form, Input, Button, message, Modal, notification } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
@@ -35,6 +35,7 @@ import {
   apiErrorHandling,
   headerUpdate,
   loginChannel,
+  getCookie,
 } from '../../Utility';
 import {
   getDatasetsAPI,
@@ -47,27 +48,63 @@ import {
 import jwt_decode from 'jwt-decode';
 import moment from 'moment';
 import { reject } from 'async';
+import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
+import CoookiesDrawer from './CookiesDrawer';
 const { confirm } = Modal;
-function getCookie(cname) {
-  var name = cname + '=';
-  var decodedCookie = decodeURIComponent(document.cookie);
-  var ca = decodedCookie.split(';');
-  for (var i = 0; i < ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == ' ') {
-      c = c.substring(1);
-    }
-    if (c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return undefined;
-}
 
 class Auth extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { visible: false, cookiesDrawer: false };
+  }
   static propTypes = {
     cookies: instanceOf(Cookies).isRequired,
   };
+
+  componentDidMount() {
+    const { allCookies } = this.props;
+
+    if (!allCookies.cookies_notified) {
+      const closeNotification = () => {
+        console.log('closing!!');
+        notification.close(key);
+        this.props.cookies.set('cookies_notified', true, { path: '/' });
+      };
+      const key = `open${Date.now()}`;
+      const btn = (
+        <Button type="primary" size="small" onClick={closeNotification}>
+          OK
+        </Button>
+      );
+
+      notification.open({
+        message: 'Cookies on this site',
+        description: (
+          <>
+            <p>
+              We use cookies to make your experience better by keeping your
+              session information and login status. By using the VRE, you accept
+              our use of cookies.
+              <Button
+                type="link"
+                style={{ paddingLeft: 0 }}
+                onClick={() => {
+                  closeNotification();
+                  this.showDrawer();
+                }}
+              >
+                Click here for details and controls.
+              </Button>
+            </p>
+          </>
+        ),
+        key,
+        btn,
+        duration: 0,
+        onClose: closeNotification,
+      });
+    }
+  }
 
   onFinish = async (values) => {
     try {
@@ -165,6 +202,36 @@ class Auth extends Component {
       );
       errorMessager.triggerMsg(err.response && err.response.status);
     }
+  };
+
+  showModal = () => {
+    this.setState({
+      visible: true,
+    });
+  };
+
+  handleOk = (e) => {
+    console.log(e);
+    this.setState({
+      visible: false,
+    });
+  };
+
+  handleCancel = (e) => {
+    console.log(e);
+    this.setState({
+      visible: false,
+    });
+  };
+  showDrawer = () => {
+    this.setState({
+      cookiesDrawer: true,
+    });
+  };
+  onDrawerClose = () => {
+    this.setState({
+      cookiesDrawer: false,
+    });
   };
 
   render() {
@@ -312,6 +379,32 @@ class Auth extends Component {
             </Col>
           </Row>
         </Card>
+        <div className={styles.utils}>
+          <Button
+            type="link"
+            style={{ color: 'white' }}
+            onClick={this.showModal}
+          >
+            Terms of Use
+          </Button>{' '}
+          |
+          <Button
+            type="link"
+            style={{ color: 'white' }}
+            onClick={this.showDrawer}
+          >
+            Cookie Policies
+          </Button>
+          <TermsOfUseModal
+            visible={this.state.visible}
+            handleOk={this.handleOk}
+            handleCancel={this.handleCancel}
+          />
+          <CoookiesDrawer
+            onDrawerClose={this.onDrawerClose}
+            cookiesDrawer={this.state.cookiesDrawer}
+          />
+        </div>
       </div>
     );
   }

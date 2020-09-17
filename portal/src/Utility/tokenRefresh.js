@@ -50,9 +50,38 @@ function checkToken(token,setRefreshModal) {
   }
 }
 
+function isTokenExpired(token){
+  if(!token){
+    return true;
+  }
+  const exp = jwt_decode(token).exp;
+  const diff = exp - moment().unix();
+  if(diff<=0){
+    return true;
+  }
+  return false;
+}
+
 function validateEmail(email) {
   const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
 }
 
-export { headerUpdate, clearCookies, checkToken, validateEmail };
+// Function to returns the value of a specified cookie
+function getCookie(cname) {
+  var name = cname + '=';
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return undefined;
+}
+
+export { headerUpdate, clearCookies, checkToken, validateEmail, isTokenExpired, getCookie };

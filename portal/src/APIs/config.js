@@ -2,37 +2,9 @@ import axios from 'axios';
 import { message } from 'antd';
 import _ from 'lodash';
 import { clearCookies } from '../Utility';
-import { logout } from '../Utility';
+import { logout, getCookie } from '../Utility';
 import Cookies from 'universal-cookie';
 const cookies = new Cookies();
-
-// Function to returns the value of a specified cookie
-function getCookie(cname) {
-  var name = cname + '=';
-  var decodedCookie = decodeURIComponent(document.cookie);
-  var ca = decodedCookie.split(';');
-  for (var i = 0; i < ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == ' ') {
-      c = c.substring(1);
-    }
-    if (c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return undefined;
-}
-
-function deleteAllCookies() {
-  var cookies = document.cookie.split(';');
-
-  for (var i = 0; i < cookies.length; i++) {
-    var cookie = cookies[i];
-    var eqPos = cookie.indexOf('=');
-    var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-    document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
-  }
-}
 
 /**
  * For axios to handle the success response
@@ -66,7 +38,7 @@ function errorHandler(error) {
           message.error(
             'The session is expired or token is invalid. Please log in again',
           );
-          console.log('logout in config.js since 401')
+          console.log('logout in config.js since 401');
           logout(cookies.get('username'));
         }
 
@@ -111,7 +83,8 @@ const refreshToken = getCookie('refresh_token');
 console.log('process.env.REACT_APP_ENV', process.env.REACT_APP_ENV);
 // for dev env
 let kongAPI = 'http://10.3.7.220/vre/api/vre/portal';
-let devOpServerUrl = 'http://10.3.7.220/vre/api/vre/portal/dataops';
+// let devOpServerUrl = 'http://10.3.7.220/vre/api/vre/portal/dataops';
+let devOpServerUrl = 'http://10.3.7.234:5063';
 
 // for staging env
 if (process.env.REACT_APP_ENV === 'staging') {
@@ -119,7 +92,13 @@ if (process.env.REACT_APP_ENV === 'staging') {
   devOpServerUrl = 'https://nx.indocresearch.org/vre/api/vre/portal/dataops';
 }
 
-const authService = 'http://authn.utility:5061';
+// for charite env
+if (process.env.REACT_APP_ENV === 'charite') {
+  kongAPI = 'http://10.32.42.226/vre/api/vre/portal';
+  devOpServerUrl = 'http://10.32.42.226/vre/api/vre/portal/dataops';
+}
+
+const authService = 'http://auth.utility:5061';
 const serverAxios = axios.create({
   baseURL: kongAPI,
 });
@@ -192,7 +171,6 @@ invitationAxios.defaults.timeout = 10000;
 if (token) {
   invitationAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 }
-
 
 export {
   serverAxios,

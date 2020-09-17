@@ -8,7 +8,6 @@ import {
   Upload,
   message,
   Progress,
-  Tooltip,
 } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { InboxOutlined } from '@ant-design/icons';
@@ -169,18 +168,7 @@ const GreenRoomUploader = ({
           </Form.Item> */}
           {currentDataset && currentDataset.code === 'generate' ? (
             <>
-              <Form.Item
-                //label="Generate ID"
-                label={
-                  <span>
-                    Generate ID&nbsp;
-                    <Tooltip title="The format of Generate ID should follow: ABC-1234">
-                      <QuestionCircleOutlined />
-                    </Tooltip>
-                  </span>
-                }
-                required
-              >
+              <Form.Item label="Generate ID" required>
                 <Form.Item
                   name="gid"
                   style={{ marginBottom: '0px' }}
@@ -208,6 +196,9 @@ const GreenRoomUploader = ({
                     }}
                   />
                 </Form.Item>
+                <small>
+                  * The format of Generate ID should follow: ABC-1234
+                </small>
               </Form.Item>
 
               <Form.Item

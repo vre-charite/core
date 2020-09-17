@@ -51,6 +51,7 @@
     "start": "react-scripts start",
     "build-dev": "export REACT_APP_ENV=dev; react-scripts build",
     "build-staging": "export REACT_APP_ENV=staging; react-scripts build",
+    "build-charite": "export REACT_APP_ENV=charite; react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

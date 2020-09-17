@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 //import { StandardLayout } from "../../Components/Layout";
-import { withRouter } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import {
   Layout,
   Row,
@@ -10,8 +10,11 @@ import {
   Typography,
   message,
   Tooltip,
+  Checkbox,
+  Modal,
+  Button,
+  Card
 } from 'antd';
-import { Card, Button, H1 } from 'antd';
 import styles from './index.module.scss';
 import {
   checkIsUserExistAPI,
@@ -25,6 +28,7 @@ import PasswordValidator from 'password-validator';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
+const { TextArea } = Input;
 const { Content } = Layout;
 const formItemLayout = {
   labelCol: {
@@ -36,6 +40,12 @@ const formItemLayout = {
     sm: { span: 10 },
   },
 };
+const tailLayout = {
+  wrapperCol: {
+    offset: 0,
+    span: 24,
+  },
+};
 
 function SelfRegistration(props) {
   const [validatingStatus, setValidatingStatus] = useState('');
@@ -44,6 +54,9 @@ function SelfRegistration(props) {
     projectId: 'project',
     email: null,
   });
+  const [visible, setVisible] = useState(false);
+  const [btnDisable, setBtnDisable] = useState(true);
+
   const [form] = Form.useForm();
   const submitForm = (values) => {
     const params = {
@@ -82,6 +95,28 @@ function SelfRegistration(props) {
         }
       });
   }, [props.match.params]);
+
+  const onCancel = () => {
+    setVisible(false);
+    setBtnDisable(true);
+    form.setFieldsValue({ tou: false });
+  }
+
+  const onOk = () => {
+    form.setFieldsValue({ tou: true });
+    setVisible(false);
+  }
+
+  const handleScroll = (e) => {
+    const bottom = e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight;
+    if (bottom) setBtnDisable(false)
+  }
+
+  let aggreementText = `hello
+    So, if I'm understanding right what you're saying and especially this example, 
+    what you propose is to use something that already exists and that we're already monitoring to decide whether an effect hook should execute or not 
+  `;
+
   return (
     <div className={styles.bg}>
       <Card className={styles.card} bodyStyle={{ padding: '10% 10%' }}>
@@ -92,7 +127,7 @@ function SelfRegistration(props) {
               bodyStyle={{ textAlign: 'center', padding: '30px' }}
             >
               <img
-                src={require('../../Images/indoc-icon.png')}
+                src={require('../../Images/vre-logo.png')}
                 className={styles.icon}
                 alt="icon"
               />
@@ -223,12 +258,67 @@ function SelfRegistration(props) {
                 >
                   <Input type="password" />
                 </Form.Item>
+                <Form.Item
+									{...tailLayout}
+									name="tou"
+									valuePropName="checked"
+									style={{ marginBottom: "8px" }}
+									rules={[
+										{
+											validator: (_, value) =>
+												value
+													? Promise.resolve()
+													: Promise.reject(
+															"Please accept the terms of use to proceed",
+													  ),
+										},
+									]}
+								>
+									<Checkbox disabled>
+										By checking this box you agree to our{" "}
+										<Link onClick={() => setVisible(true)}>
+											Terms of Use
+										</Link>
+										.
+									</Checkbox>
+								</Form.Item>
                 <Form.Item wrapperCol={6}>
                   <Button type="primary" htmlType="submit">
                     Submit
                   </Button>
                 </Form.Item>
               </Form>
+
+              <Modal
+                title="VRE Terms of Use"
+                visible={visible}
+                centered
+                width={800}
+                onCancel={onCancel}
+                footer={[
+                  <Button key="submit" type="primary" disabled={btnDisable} onClick={onOk}>
+                    Accept
+                  </Button>,
+
+                  <Button key="back" type="danger" onClick={onCancel}>
+                    Declined
+                  </Button>,
+                ]}
+              >
+                <div style={{ overflowY: "scroll", height: 300 }} onScroll={handleScroll}>
+                  <h2 style={{ textAlign: 'center' }}>Section One</h2>
+                  <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} />
+
+                  <h2 style={{ textAlign: 'center' }}>Section Two</h2>
+                  <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} />
+
+                  <h2 style={{ textAlign: 'center' }}>Section Three</h2>
+                  <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} />
+
+                  <h2 style={{ textAlign: 'center' }}>Section Four</h2>
+                  <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} />
+                </div>
+              </Modal>
             </Card>
           </Col>
         </Row>

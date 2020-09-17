@@ -44,7 +44,9 @@ function logout(cleanCookies = true) {
   //   });
   if (cleanCookies) {
     Object.keys(allCookies).forEach((key) => {
-      cookies.remove(key, { path: '/' });
+      if (key !== 'cookies_notified') {
+        cookies.remove(key, { path: '/' });
+      }
     });
   }
   q.kill();

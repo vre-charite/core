@@ -33,7 +33,7 @@ function checkIsUserExistAPI(username) {
   return axios({
     url: `/v1/admin/users/name`,
     method: 'GET',
-    params: { realm: 'testrealms', username: username },
+    params: { realm: 'vre', username: username },
   });
 }
 
@@ -46,7 +46,7 @@ function checkIsUserExistAPI(username) {
 function checkEmailExistAPI0(email) {
   return axios({
     url: `/v1/admin/getuserbyemailinternal`,
-    data: { email, realm: 'testrealms' },
+    data: { email, realm: 'vre' },
     method: 'post',
   });
 }

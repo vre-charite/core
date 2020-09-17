@@ -1,7 +1,12 @@
 import { message } from 'antd';
 import { cancelRequestReg } from '../../APIs/config';
 // import { uploadFileApi, checkUploadStatusApi } from "../Api";
-import { uploadFileApi, preUpload, uploadFileApi2, combineChunks } from '../../APIs';
+import {
+  uploadFileApi,
+  preUpload,
+  uploadFileApi2,
+  combineChunks,
+} from '../../APIs';
 import {
   appendUploadListCreator,
   updateUploadItemCreator,
@@ -11,7 +16,7 @@ import { objectKeysToCamelCase } from '..';
 import reduxActionWrapper from '../reduxActionWrapper';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { v4 as uuidv4 } from 'uuid';
-import axios from 'axios';
+import { sleep } from '../common';
 
 const [
   appendUploadListDispatcher,
@@ -117,49 +122,27 @@ async function fileUpload(data, resolve, reject) {
               //   taskId = result.taskId;
               // }
               uploadedSize += chunk.size;
-    
-              if ((uploadedSize / totalSize) === 1) {
-                // const formData = new FormData();
-                // formData.append('resumableIdentifier', file.uid + uuid);
-                // formData.append('resumableFilename', file.name);
-                // formData.append('resumableTotalChunks', chunks.length);
-                // formData.append('resumableTotalSize', file.size);
-                // formData.append('uploader', uploader);
-                
-                // if (generateID) formData.append('generateID', generateID);
-    
-                // const result = await combineChunks(datasetId, formData);
-                // if (result.status === 200 && result.data && result.data.result && result.data.result.task_id) {
-                //   taskId = result.data.result.task_id;
-                // } 
-              } else {
-                updateUploadItemDispatcher({
-                  uploadKey,
-                  progress: uploadedSize / totalSize,
-                  status: 'uploading',
-                });
-              }
+
+              updateUploadItemDispatcher({
+                uploadKey,
+                progress: uploadedSize / totalSize,
+                status: 'uploading',
+              });
             })
             .catch((err) => {
               // Retry when file upload fails on 401 or unstable internet (ECONNABORTED)
               // If anything wrong with the file itself(e.g. repeated file name/illegal file name)
               // The upload should stop
-              console.log(err);
-              if (err.code === 'ECONNABORTED' || err.response.status === 401 || err.response.status === 403) {
-                return retry(chunk, index, 1); // Max retry times is 1
-              } else {
-                /* if (err.response) {
-                  const errorMessager = new ErrorMessager(
-                    namespace.dataset.files.uploadFileApi,
-                  );
-                  errorMessager.triggerMsg(err.response.status,null,{fileName:file.name});
-                }else{
-                  const errorMessager = new ErrorMessager(namespace.dataset.files.uploadRequestFail);
-                  errorMessager.triggerMsg(null,null,{fileName:file.name})
-                } */
-    
-                return Promise.reject(err);
-              }
+              // console.log(err);
+              // if (err.code === 'ECONNABORTED' || err.response.status === 401 || err.response.status === 403) {
+              //   return retry(chunk, index, 1); // Max retry times is 1
+              // } else {
+              //   return Promise.reject(err);
+              // }
+
+              setTimeout(function () {
+                return retry(chunk, index, 3);
+              }, 5000);
             });
         },
         {
@@ -174,15 +157,32 @@ async function fileUpload(data, resolve, reject) {
           formData.append('resumableTotalChunks', chunks.length);
           formData.append('resumableTotalSize', file.size);
           formData.append('uploader', uploader);
-          
+
           if (generateID) formData.append('generateID', generateID);
 
           const result = await combineChunks(datasetId, formData);
-          if (result.status === 200 && result.data && result.data.result && result.data.result.task_id) {
+          if (
+            result.status === 200 &&
+            result.data &&
+            result.data.result &&
+            result.data.result.task_id
+          ) {
             taskId = result.data.result.task_id;
-          } 
+          }
           if (!taskId) {
-            throw new Error(`the task Id doesn't exist`);
+            await sleep(1000);
+
+            const checkedResult = await combineChunks(datasetId, formData);
+            if (
+              checkedResult.status === 200 &&
+              checkedResult.data &&
+              checkedResult.data.result &&
+              checkedResult.data.result.task_id
+            ) {
+              taskId = checkedResult.data.result.task_id;
+            } else {
+              throw new Error(`the task Id doesn't exist`);
+            }
           }
           updateUploadItemDispatcher({
             uploadKey,
@@ -218,14 +218,18 @@ async function fileUpload(data, resolve, reject) {
     })
     .catch((err) => {
       reject();
-      message.error('failed upload')
+      if (err.response && err.response.status === 403) {
+        message.error(err.response.data && err.response.data.error_msg);
+      } else {
+        message.error('failed upload');
+      }
       updateUploadItemDispatcher({
         uploadKey,
         progress: uploadedSize / totalSize,
         status: 'error',
         uploadedTime: Date.now(),
       });
-    })
+    });
 }
 
 /**

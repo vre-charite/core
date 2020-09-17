@@ -14,9 +14,9 @@ class ConfigClass(object):
     api_modules = ["api"]
 
     # # Micro services on server(used for testing)
-    NEO4J_SERVICE = "http://graphapi.utility:5062/v1/neo4j/"
+    NEO4J_SERVICE = "http://neo4j.utility:5062/v1/neo4j/"
     DATA_SERVICE = "http://dataops-gr.greenroom:5063/v1/"
-    AUTH_SERVICE = "http://authn.utility:5061/v1/"
+    AUTH_SERVICE = "http://auth.utility:5061/v1/"
 
     # KONG API Gateway
     KONG_BASE = "http://kong-proxy.utility:8000/vre/"
@@ -32,17 +32,21 @@ class ConfigClass(object):
 
     # User Invitation
     env = os.environ.get('env')
-    if env is None or env == 'dev':
-        INVITATION_URL_PREFIX = "http://10.3.7.220/vre/self-registration"
+    if env is None or env == 'charite':
+        INVITATION_URL_PREFIX = "http://10.32.42.226/vre/self-registration"
         INVITATION_EXPIRY_DAYS = 14
-        INVITATION_URL_LOGIN = 'http://10.3.7.220/vre/'
-    else:
+        INVITATION_URL_LOGIN = 'http://10.32.42.226/vre/'
+    elif env == "staging":
         INVITATION_URL_PREFIX = "https://nx.indocresearch.org/vre/self-registration"
         INVITATION_EXPIRY_DAYS = 14
         INVITATION_URL_LOGIN = 'https://nx.indocresearch.org/vre/'
+    else:
+        INVITATION_URL_PREFIX = "http://10.3.7.220/vre/self-registration"
+        INVITATION_EXPIRY_DAYS = 14
+        INVITATION_URL_LOGIN = 'http://10.3.7.220/vre/'
 
     # BFF RDS
-    RDS_HOST = "10.3.7.13"
+    RDS_HOST = "opsdb.utility"
     RDS_PORT = "5432"
     RDS_DBNAME = "INDOC_VRE"
     RDS_USER = "postgres"

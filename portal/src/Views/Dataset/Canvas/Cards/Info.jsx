@@ -6,7 +6,7 @@ import {
   Button,
   Input,
   Select,
-  Form,
+  Checkbox,
   message,
 } from 'antd';
 import { connect } from 'react-redux';
@@ -92,8 +92,6 @@ function Description(props) {
   }
 
   const printDetails = () => {
-    // console.log('printDetails -> datasetInfo', datasetInfo);
-
     if (datasetInfo) {
       return (
         <>
@@ -113,6 +111,25 @@ function Description(props) {
             </Descriptions.Item>
             <Descriptions.Item label="Created">
               <>{datasetInfo.time_created.split('T')[0]}</>
+            </Descriptions.Item>
+            <Descriptions.Item label="Visibility">
+              {editView ? (
+                <Checkbox
+                  defaultChecked={datasetInfo.discoverable}
+                  onChange={(e) =>
+                    updateDatasetInfo('discoverable', e.target.checked)
+                  }
+                  style={{ paddingLeft: '10px' }}
+                >
+                  Discoverable by all platform users
+                </Checkbox>
+              ) : (
+                <>
+                  {datasetInfo.discoverable
+                    ? 'Discoverable by all platform users'
+                    : 'Only discoverable by project members'}
+                </>
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="Tags" span={3}>
               {editView ? (
@@ -161,7 +178,8 @@ function Description(props) {
             </Descriptions.Item>
           </Descriptions>
 
-          { !currentContainer || (currentContainer['permission'] !== 'admin' )? null : editView ? (
+          {!currentContainer ||
+          currentContainer['permission'] !== 'admin' ? null : editView ? (
             <div style={{ marginTop: '20px', float: 'right' }}>
               <Button type="link" onClick={(e) => setEditView(false)}>
                 Cancel

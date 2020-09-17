@@ -27,7 +27,13 @@
     bottom: 0;
     right: 50%;
     background-color: #537895;
-    background: url('../../Images/tech.png');
+    background-image: linear-gradient(
+        to bottom,
+        rgba(4, 52, 96, 0.9) 0%,
+        rgba(7, 53, 109, 0.7) 70%,
+        rgba(255, 255, 255, 0) 100%
+      ),
+      url('../../Images/tech.png');
     background-repeat: no-repeat;
     background-size: cover !important;
     background-position: left bottom;
@@ -98,4 +104,11 @@
       margin-right: 20px;
     }
   }
+}
+
+.utils {
+  color: white;
+  position: fixed;
+  bottom: 8px;
+  left: 16px;
 }

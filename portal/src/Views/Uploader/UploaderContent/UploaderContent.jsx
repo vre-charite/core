@@ -12,7 +12,6 @@ import {
   Dropdown,
   Menu,
   Space,
-  Badge,
 } from 'antd';
 import {
   BarChartOutlined,
@@ -59,6 +58,7 @@ class Uploader extends Component {
       order: 'desc',
       sortReset: false,
       pageSize: 10,
+      selectedTab: 'My Projects',
     };
   }
 
@@ -223,8 +223,33 @@ class Uploader extends Component {
     this.setState({ sortby: 'time_created', order: 'desc', sortReset: false });
   };
 
+  tagsData = ['My Projects', 'All Projects'];
+
+  getProjectsWithTab = ({ selectedTab, ...rest }) => {
+    const { projectNoPermission, projectPermission } = rest;
+
+    if (selectedTab === 'All Projects') {
+      return _.uniq([...projectPermission, ...projectNoPermission]);
+    } else if (selectedTab === 'My Projects') {
+      return projectPermission;
+    } //And more
+  };
+
+  onTabChange = (tabkey) => {
+    this.setState({
+      selectedTab: tabkey,
+    });
+  };
+
   render() {
-    const { uploader, datasetId, sortby, order, sortReset } = this.state;
+    const {
+      uploader,
+      datasetId,
+      sortby,
+      order,
+      sortReset,
+      selectedTab,
+    } = this.state;
     const { datasetList: tabs = [] } = this.props;
 
     let projectNoPermission = [];
@@ -235,17 +260,9 @@ class Uploader extends Component {
       this.props.datasetList &&
       this.props.datasetList[0] &&
       this.props.datasetList[0]['datasetList'] &&
-      this.props.containersPermission &&
-      this.props.containersPermission[0]
+      this.props.containersPermission 
     ) {
       this.props.datasetList[0]['datasetList'].forEach((dataset) => {
-        // this.props.containersPermission.forEach((contPremission) => {
-        //   if (contPremission.permission === 'admin') {
-        //     projectPermission.push(dataset);
-        //   } else {
-        //     projectNoPermission.push(dataset);
-        //   }
-        // });
         const current = moment();
         this.props.containersPermission.forEach((contPremission) => {
           let isNew = false;
@@ -254,11 +271,17 @@ class Uploader extends Component {
           dataset.isNew = isNew;
           if (contPremission['container_id'] === dataset.id) {
             projectPermission.push(dataset);
-          } else {
+          } else if (dataset.discoverable) {
             projectNoPermission.push(dataset);
-          }
+          } //if discoverable if true and user don't have access, it will be abandomed //Will remove once backend removes the undiscoverable projects
         });
       });
+
+      if (this.props.containersPermission.length === 0) {
+        this.props.datasetList[0]['datasetList'].forEach((dataset) => {
+          if (dataset.discoverable) projectNoPermission.push(dataset);
+        })
+      }
     }
 
     projectNoPermission = _.uniq([...projectNoPermission]);
@@ -267,7 +290,12 @@ class Uploader extends Component {
     projectPermission = _.uniq([...projectPermission]);
     projectPermission = _.orderBy(projectPermission, [sortby], [order]);
 
-    const allProjects = _.uniq([...projectPermission, ...projectNoPermission]);
+    //Get projects based on selctedTags
+    const allProjects = this.getProjectsWithTab({
+      selectedTab,
+      projectNoPermission,
+      projectPermission,
+    });
 
     const sortPanel = (
       <Menu onClick={this.handleSortClick}>
@@ -296,7 +324,14 @@ class Uploader extends Component {
       <>
         <Content className={`content ${styles.wrapper}`}>
           <Row>
-            <Col span={24}>
+            <Col span={12}>
+              <Tabs defaultActiveKey="My Projects" onChange={this.onTabChange}>
+                {this.tagsData.map((tag) => (
+                  <TabPane tab={tag} key={tag} />
+                ))}
+              </Tabs>
+            </Col>
+            <Col span={12}>
               <Space style={{ float: 'right', marginBottom: '16px' }}>
                 {sortReset && (
                   <Button onClick={this.resetSort}>Reset sort</Button>
@@ -320,6 +355,7 @@ class Uploader extends Component {
                   this.setState({ pageSize });
                 },
                 pageSize: this.state.pageSize,
+                showSizeChanger: true,
               }}
               key={index}
               dataSource={allProjects}
@@ -340,23 +376,6 @@ class Uploader extends Component {
                         />
                       </Link>
                     ),
-
-                    // (this.props.role === 'admin' ||
-                    //   _.some(this.props.containersPermission, (o) => {
-                    //     return parseInt(o.container_id) === parseInt(item.id);
-                    //   })) && (
-                    //   <div
-                    //     onClick={() => {
-                    //       this.showUploaderModal(item.id);
-                    //     }}
-                    //   >
-                    //     <IconText
-                    //       icon={UploadOutlined}
-                    //       text="Upload File"
-                    //       key="upload"
-                    //     />
-                    //   </div>
-                    // ),
                   ]}
                 >
                   <List.Item.Meta

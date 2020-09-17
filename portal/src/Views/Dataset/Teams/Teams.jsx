@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Select,
   Card,
-  Avatar,
+  PageHeader,
   Typography,
   Layout,
   Table,
@@ -17,14 +18,8 @@ import {
   Modal,
 } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import {
-  UploadOutlined,
-  SelectOutlined,
-  ShareAltOutlined,
-  DownOutlined,
-} from '@ant-design/icons';
+import { DownOutlined } from '@ant-design/icons';
 import AddUserModal from './Components/AddUserModal';
-import { RightOutlined, LeftOutlined } from '@ant-design/icons';
 import styles from './index.module.scss';
 import { fakeDataGenerator } from '../../../Utility/index';
 import { withRouter } from 'react-router-dom';
@@ -38,6 +33,7 @@ import {
   objectKeysToSnakeCase,
   apiErrorHandling,
   objectKeysToCamelCase,
+  getCookie,
 } from '../../../Utility';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
 const { Meta } = Card;
@@ -45,22 +41,6 @@ const { Title } = Typography;
 const { Option } = Select;
 const { Content } = Layout;
 const { TabPane } = Tabs;
-
-function getCookie(cname) {
-  var name = cname + '=';
-  var decodedCookie = decodeURIComponent(document.cookie);
-  var ca = decodedCookie.split(';');
-  for (var i = 0; i < ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == ' ') {
-      c = c.substring(1);
-    }
-    if (c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return undefined;
-}
 
 class Teams extends Component {
   constructor(props) {
@@ -113,9 +93,8 @@ class Teams extends Component {
         message.success('Role successfully updated.');
       })
       .catch((err) => {
-        console.log(err);
-
         if (err.response) {
+          if (err.response && err.response.status === 404) this.getUsers();
           const errorMessager = new ErrorMessager(
             namespace.teams.changeRoleInDataset,
           );
@@ -135,6 +114,7 @@ class Teams extends Component {
       })
       .catch((err) => {
         if (err.response) {
+          if (err.response && err.response.status === 404) this.getUsers();
           const errorMessager = new ErrorMessager(
             namespace.teams.removeUserFromDataset,
           );
@@ -167,8 +147,20 @@ class Teams extends Component {
   }
 
   render() {
+    console.log(this.props);
     const username = getCookie('username');
-    const projectAdmin = this.props.containersPermission && this.props.containersPermission.some(el => el.container_id === Number(this.props.datasetId) && el.permission === 'admin');
+    const projectAdmin =
+      this.props.containersPermission &&
+      this.props.containersPermission.some(
+        (el) =>
+          el.container_id === Number(this.props.datasetId) &&
+          el.permission === 'admin',
+      );
+    const projectName =
+      this.props.containersPermission &&
+      this.props.containersPermission.filter(
+        (el) => el.container_id === Number(this.props.datasetId),
+      )[0]['container_name'];
 
     const menu = (record, role) => (
       <Menu>
@@ -184,7 +176,7 @@ class Teams extends Component {
         </Menu.Item>
 
         <Menu.Item
-        disabled={role === 'admin'}
+          disabled={role === 'admin'}
           onClick={() => {
             // this.changeRole(record.name, record.permission, "admin");
             this.confirmModal(record.name, record.permission, 'admin');
@@ -205,14 +197,6 @@ class Teams extends Component {
         </Menu.Item>
       </Menu>
     );
-    const dataSource = [
-      {
-        key: '1',
-        name: 'Mike',
-        email: 'indoc@gmail.com',
-        role: 'visitor',
-      },
-    ];
 
     const columns = [
       {
@@ -251,19 +235,29 @@ class Teams extends Component {
         render: (text, record) => {
           let isEnable = false;
 
-          if (projectAdmin && record.name !== username && record.role !== 'admin') isEnable = true;
-
-          return isEnable && (
-            <Dropdown overlay={menu(record, record.permission)} trigger={['click']}>
-              <a
-                className="ant-dropdown-link"
-                onClick={(e) => e.preventDefault()}
-              >
-                Change role <DownOutlined />
-              </a>
-            </Dropdown>
+          if (
+            projectAdmin &&
+            record.name !== username &&
+            record.role !== 'admin'
           )
-        }
+            isEnable = true;
+
+          return (
+            isEnable && (
+              <Dropdown
+                overlay={menu(record, record.permission)}
+                trigger={['click']}
+              >
+                <a
+                  className="ant-dropdown-link"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  Change role <DownOutlined />
+                </a>
+              </Dropdown>
+            )
+          );
+        },
       },
     ];
 
@@ -300,37 +294,100 @@ class Teams extends Component {
       },
     ];
 
+    const routes = [
+      {
+        path: 'index',
+        breadcrumbName: 'Projects',
+      },
+      {
+        path: 'first',
+        breadcrumbName: projectName,
+      },
+    ];
+
+    function itemRender(route, params, routes, paths) {
+      const last = routes.indexOf(route) === routes.length - 1;
+      return last ? (
+        <span
+          style={{
+            maxWidth: 'calc(100% - 74px)',
+            display: 'inline-block',
+            verticalAlign: 'bottom',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {route.breadcrumbName}
+        </span>
+      ) : (
+        <Link to="/uploader">{route.breadcrumbName}</Link>
+      );
+    }
+
     return (
       <>
         <Content className={'content'}>
-          <Card style={{ marginBottom: '20px' }}>
-            <Tabs defaultActiveKey="1">
-              <TabPane tab="Users" key="1">
-                <Row justify="end">
-                  <Col>
-                    <Button
-                      type="primary"
-                      onClick={this.showAddUserModal}
-                      className="mb-2"
-                    >
-                      Add User
-                    </Button>
-                  </Col>
-                </Row>
-
-                <Table
-                  dataSource={this.props.userListOnDataset}
-                  columns={columns}
-                />
-              </TabPane>
-              {/* <TabPane tab="Access Request" key="2">
+          <Row style={{ paddingBottom: '10px' }}>
+            <Col span={1} />
+            <Col
+              span={22}
+              style={{
+                paddingTop: '10px',
+              }}
+            >
+              <PageHeader
+                ghost={false}
+                style={{
+                  border: '1px solid rgb(235, 237, 240)',
+                  width: '-webkit-fill-available',
+                  marginTop: '10px',
+                  marginBottom: '25px',
+                }}
+                title={
+                  <span
+                    style={{
+                      maxWidth: '1000px',
+                      display: 'inline-block',
+                      verticalAlign: 'bottom',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    Project: {projectName}
+                  </span>
+                }
+                subTitle={`Your current role is ${this.props.role}.`}
+                breadcrumb={{ routes, itemRender }}
+                extra={[
+                  <Button
+                    type="primary"
+                    onClick={this.showAddUserModal}
+                    className="mb-2"
+                  >
+                    Add User
+                  </Button>,
+                ]}
+              />
+              <Card style={{ marginBottom: '20px' }}>
+                <Tabs defaultActiveKey="1">
+                  <TabPane tab="Users" key="1">
+                    <Table
+                      dataSource={this.props.userListOnDataset}
+                      columns={columns}
+                    />
+                  </TabPane>
+                  {/* <TabPane tab="Access Request" key="2">
                 <Table
                   columns={AccessRequestColumns}
                   dataSource={fakeDataGenerator(100)}
                 />
               </TabPane> */}
-            </Tabs>
-          </Card>
+                </Tabs>
+              </Card>
+            </Col>
+            <Col span={1} />
+          </Row>
         </Content>
         <AddUserModal
           datasetId={this.props.match.params.datasetId}
@@ -343,9 +400,7 @@ class Teams extends Component {
   }
 }
 
-export default connect(
-  (state) => {
-    const { role, containersPermission } = state;
-    return { role, containersPermission };
-  },
-) (withRouter(Teams));
+export default connect((state) => {
+  const { role, containersPermission } = state;
+  return { role, containersPermission };
+})(withRouter(Teams));

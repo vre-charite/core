@@ -170,8 +170,8 @@ function createPersonalDatasetAPI(username) {
  * @param {number} containerId
  */
 function traverseFoldersContainersAPI(containerId) {
-  return devOpAxios({
-    url: `/v1/folders`,
+  return axios({
+    url: `/v1/files/folders`,
     params: { container_id: containerId },
   });
 }
