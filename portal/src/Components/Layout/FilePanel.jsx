@@ -11,12 +11,6 @@ function callback(key) {
   console.log(key);
 }
 
-const text = `
-  A dog is a type of domesticated animal.
-  Known for its loyalty and faithfulness,
-  it can be found as a welcome guest in many households across the world.
-`;
-
 function FilePanel() {
   const [visibility, setVisibility] = useState(false);
   const [isActive, setIsActive] = useState(false);
@@ -37,7 +31,7 @@ function FilePanel() {
   function toggleVisibility() {
     setVisibility(!visibility);
   }
-  const statusTags = (status) => {
+  const statusTags = (status, type) => {
     switch (status) {
       case 'waiting': {
         return <Tag color="default">Waiting</Tag>;
@@ -49,6 +43,7 @@ function FilePanel() {
         return <Tag color="red">Error</Tag>;
       }
       case 'pending': {
+        if (type === 'download') return <Tag color="yellow">Downloading</Tag>;
         return <Tag color="yellow">Uploading</Tag>;
       }
       case 'success': {
@@ -86,6 +81,12 @@ function FilePanel() {
     uploadHeader = `${uploadList.length - waitingUploadList.length}/${
       uploadList.length
     } files are uploading`;
+
+    if (uploadList.length === 1) {
+      uploadHeader = `${uploadList.length - waitingUploadList.length}/${
+        uploadList.length
+      } file is uploading`;
+    }
   }
 
   if (
@@ -98,18 +99,34 @@ function FilePanel() {
     const successList = uploadList.filter((el) => el.status === 'success');
 
     if (uploadingList.length === 0 && processingList.length > 0) {
-      uploadHeader = `${
-        uploadList.length - successList.length
-      } files are being uploaded`;
+      if (uploadList.length - successList.length > 1) {
+        uploadHeader = `${
+          uploadList.length - successList.length
+        } files are being uploaded`;
 
-      if (failedList.length > 0)
+        if (failedList.length > 0)
         uploadHeader = `${
           uploadList.length - successList.length - failedList.length
         } files are being uploaded. ${failedList.length} files failed`;
+      } else {
+        uploadHeader = `${
+          uploadList.length - successList.length
+        } file is being uploaded`;
+
+        if (failedList.length > 0)
+        uploadHeader = `${
+          uploadList.length - successList.length - failedList.length
+        } file is being uploaded. ${failedList.length} files failed`;
+      }
     }
 
-    if (successList && failedList && (failedList.length + successList.length) === uploadList.length) {
-      uploadHeader = `${successList.length} files succeed. ${failedList.length} files failed`;
+    if (successList && failedList && successList.length && (failedList.length + successList.length) === uploadList.length) {
+      let suceessLetters = `${successList.length} files succeed.`;
+      let failLetters = `${failedList.length} files failed`;
+
+      if (successList.length === 1) suceessLetters = `${successList.length} file succeed.`;
+      if (failedList.length === 1) failLetters = `${failedList.length} file failed`;
+      uploadHeader = `${suceessLetters}${failLetters}`;
     }
   }
 
@@ -164,7 +181,7 @@ function FilePanel() {
                 <List.Item.Meta
                   title={
                     <>
-                      {item.fileName} {statusTags(item.status)}
+                      {item.fileName} {statusTags(item.status, 'upload')}
                     </>
                   }
                   description={
@@ -199,7 +216,7 @@ function FilePanel() {
                 <List.Item.Meta
                   title={
                     <>
-                      {item.downloadKey} {statusTags(item.status)}
+                      {item.downloadKey} {statusTags(item.status, 'download')}
                     </>
                   }
                 />

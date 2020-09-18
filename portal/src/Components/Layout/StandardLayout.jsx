@@ -12,6 +12,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import {
   updateUploadItemCreator,
   updateClearIdCreator,
+  setSuccessNum,
 } from '../../Redux/actions';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { checkPendingStatusAPI } from '../../APIs';
@@ -32,6 +33,8 @@ function StandardLayout(props) {
   const [collapsed, toggle] = useState(isCollapsed);
   const uploadList = useSelector((state) => state.uploadList);
   const clearId = useSelector((state) => state.clearId);
+  const successNum = useSelector((state) => state.successNum);
+
   const dispatch = useDispatch();
 
   const setRefreshConfirmation = (arr) => {
@@ -70,6 +73,8 @@ function StandardLayout(props) {
                   namespace.dataset.files.processingFile,
                 );
                 errorMessager.triggerMsg(null, null, item);
+              } else {
+                dispatch(setSuccessNum(successNum + 1))
               }
             }
           })

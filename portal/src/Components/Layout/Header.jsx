@@ -294,7 +294,7 @@ class AppHeader extends Component {
     const uploadListContent = (
       <Tabs className={styles.tab}>
         <TabPane tab="Messages" key="message">
-          <Empty description="No Messages" />
+          <Empty description="No Messages" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         </TabPane>
       </Tabs>
     )

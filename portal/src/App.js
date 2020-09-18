@@ -16,6 +16,7 @@ import {
   removeDownloadListCreator,
   setIsLoginCreator,
   updateClearIdCreator,
+  setSuccessNum,
 } from './Redux/actions';
 import { withCookies } from 'react-cookie';
 import {
@@ -204,11 +205,14 @@ class App extends Component {
               item.status = status;
               //always remember to put redux creator in the connect function !!!!!
               this.props.updateUploadItemCreator(item);
+             
               if (status === 'error') {
                 const errorMessager = new ErrorMessager(
                   namespace.dataset.files.processingFile,
                 );
                 errorMessager.triggerMsg(null, null, item);
+              } else {
+                this.props.setSuccessNum(this.props.successNum + 1);
               }
             }
           })
@@ -351,6 +355,7 @@ export default connect(
     downloadList: state.downloadList,
     containersPermission: state.containersPermission,
     datasetList: state.datasetList,
+    successNum: state.successNum,
   }),
   {
     AddDatasetCreator,
@@ -365,6 +370,7 @@ export default connect(
     removeDownloadListCreator,
     setIsLoginCreator,
     updateClearIdCreator,
+    setSuccessNum,
   },
 )(withCookies(withRouter(App)));
 

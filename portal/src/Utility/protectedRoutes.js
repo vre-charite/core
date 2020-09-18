@@ -24,13 +24,13 @@ export default function protectedRoutes(type, isLogin, props, permissions) {
       }
       return true;
     }
-    case 'projectUploader': {
+    case 'projectMember': {
       if (container_id && permissions) {
         let p = permissions.filter((i) => {
           return i.container_id === parseInt(container_id);
         });
         return (p[0] && p[0]['permission'] === 'admin') ||
-          (p[0] && p[0]['permission'] === 'uploader')
+          (p[0] && p[0]['permission'])
           ? true
           : '403';
       }

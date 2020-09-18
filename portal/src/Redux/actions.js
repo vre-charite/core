@@ -16,7 +16,8 @@ import {
   SET_REFRESH_MODAL, APPEND_DOWNLOAD_LIST,
   REMOVE_DOWNLOAD_LIST,
   UPDATE_DATASET_LIST,
-  UPDATE_CLEAR_ID,SET_IS_LOGIN
+  UPDATE_CLEAR_ID,SET_IS_LOGIN,
+  SET_SUCCESS_NUM,
 } from "./actionTypes";
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -146,4 +147,9 @@ export const updateClearIdCreator = (clearId)=>({
 export const setIsLoginCreator = (isLogin)=>({
   type:SET_IS_LOGIN,
   payload:isLogin
+})
+
+export const setSuccessNum = (num) => ({
+  type:SET_SUCCESS_NUM,
+  payload:num
 })

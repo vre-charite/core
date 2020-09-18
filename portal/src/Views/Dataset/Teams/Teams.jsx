@@ -45,7 +45,9 @@ const { TabPane } = Tabs;
 class Teams extends Component {
   constructor(props) {
     super(props);
-    this.state = { isAddUserModalShown: false };
+    this.state = {
+      isAddUserModalShown: false,
+    };
 
     this.changeRole = this.changeRole.bind(this);
     this.confirmModal = this.confirmModal.bind(this);
@@ -164,27 +166,19 @@ class Teams extends Component {
 
     const menu = (record, role) => (
       <Menu>
-        <Menu.Item
-          onClick={() => {
-            // this.changeRole(record.name, record.permission, "uploader");
-            this.confirmModal(record.name, record.permission, 'uploader');
-          }}
-          disabled={role === 'uploader'}
-          key="0"
-        >
-          uploader
-        </Menu.Item>
-
-        <Menu.Item
-          disabled={role === 'admin'}
-          onClick={() => {
-            // this.changeRole(record.name, record.permission, "admin");
-            this.confirmModal(record.name, record.permission, 'admin');
-          }}
-          key="1"
-        >
-          admin
-        </Menu.Item>
+        {this.props.containerDetails &&
+          this.props.containerDetails['roles'].map((i) => (
+            <Menu.Item
+              onClick={() => {
+                // this.changeRole(record.name, record.permission, "uploader");
+                this.confirmModal(record.name, record.permission, i);
+              }}
+              disabled={role === i}
+              key="0"
+            >
+              {i}
+            </Menu.Item>
+          ))}
         <Menu.Divider />
         <Menu.Item
           onClick={() => {
@@ -394,6 +388,7 @@ class Teams extends Component {
           cancelAddUser={this.cancelAddUser}
           isAddUserModalShown={this.state.isAddUserModalShown}
           getUsers={this.getUsers}
+          containerDetails={this.props.containerDetails}
         ></AddUserModal>
       </>
     );

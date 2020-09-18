@@ -15,8 +15,15 @@ function Dataset(props) {
     match: { path, params },
     containersPermission,
     role,
+    datasetList,
   } = props;
   const [userListOnDataset, setUserListOnDataset] = useState(null);
+  const containerDetails =
+    datasetList[0] &&
+    _.find(datasetList[0]['datasetList'], (item) => {
+      return parseInt(item.id) === parseInt(params.datasetId);
+    });
+
   const config = {
     observationVars: [params.datasetId, containersPermission, role],
     initFunc: () => {
@@ -80,6 +87,7 @@ function Dataset(props) {
                   <item.component
                     datasetId={params.datasetId}
                     userListOnDataset={userListOnDataset}
+                    containerDetails={containerDetails}
                     getUsersOnDatasetAPI={getUsersOnDatasetAPI}
                     setUserListOnDataset={setUserListOnDataset}
                   />
@@ -96,4 +104,5 @@ function Dataset(props) {
 export default connect((state) => ({
   containersPermission: state.containersPermission,
   role: state.role,
+  datasetList: state.datasetList,
 }))(withRouter(Dataset));

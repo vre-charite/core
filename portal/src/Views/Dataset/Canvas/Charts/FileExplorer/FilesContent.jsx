@@ -35,12 +35,12 @@ const treeData = [
     icon: <FolderOutlined />,
     disabled: true,
   },
-  {
-    title: 'Core',
-    key: '2',
-    icon: <FolderOutlined />,
-    disabled: true,
-  },
+  // {
+  //   title: 'Core',
+  //   key: '2',
+  //   icon: <FolderOutlined />,
+  //   disabled: true,
+  // },
 ];
 
 /**
@@ -208,11 +208,8 @@ class FilesContent extends Component {
     const newTree = this.state.treeData;
     newTree[1].children = processedFolder.children;
 
-    newTree[2].children = treeData2;
+    // newTree[2].children = treeData2;
 
-    //Finished compute tree datea
-
-    //Create default pane
     const newPanes = this.state.panes;
     const pane = {};
     const firstPane = newTree[0];
@@ -361,43 +358,45 @@ class FilesContent extends Component {
             activeKey: selectedKeys[0].toString(),
             panes,
           });
-        } else if (selectedKeys[0] && selectedKeys[0].includes('core')) {
-          let folderName = selectedKeys[0].split('-');
-          if (folderName && folderName.length > 1) folderName = folderName[1];
+        } 
+        // else if (selectedKeys[0] && selectedKeys[0].includes('core')) {
+        //   let folderName = selectedKeys[0].split('-');
+        //   if (folderName && folderName.length > 1) folderName = folderName[1];
 
-          const currentDatasetProccessed = _.find(
-            this.props.containersPermission,
-            {
-              container_id: Number(this.props.match.params.datasetId),
-            },
-          );
+        //   const currentDatasetProccessed = _.find(
+        //     this.props.containersPermission,
+        //     {
+        //       container_id: Number(this.props.match.params.datasetId),
+        //     },
+        //   );
 
-          const { entities, approximateCount } = await this.fetchRawData(
-            'nfs_file_cp',
-            `/vre-data/tvb/${folderName}`,
-          );
+        //   const { entities, approximateCount } = await this.fetchRawData(
+        //     'nfs_file_cp',
+        //     `/vre-data/tvb/${folderName}`,
+        //   );
 
-          const pane = {
-            title: info.node.title,
-            content: (
-              <ContainerDetailsContent
-                {...info.node}
-                datasetId={this.props.match.params.datasetId}
-                currentDataset={currentDatasetProccessed}
-                processedData={entities}
-                totalProcessedItem={approximateCount}
-                filePath={`/vre-data/tvb/${folderName}`}
-              />
-            ),
-            key: info.node.key.toString(),
-            id: info.node.id,
-          };
-          panes.push(pane);
-          this.setState({
-            activeKey: selectedKeys[0].toString(),
-            panes,
-          });
-        } else {
+        //   const pane = {
+        //     title: info.node.title,
+        //     content: (
+        //       <ContainerDetailsContent
+        //         {...info.node}
+        //         datasetId={this.props.match.params.datasetId}
+        //         currentDataset={currentDatasetProccessed}
+        //         processedData={entities}
+        //         totalProcessedItem={approximateCount}
+        //         filePath={`/vre-data/tvb/${folderName}`}
+        //       />
+        //     ),
+        //     key: info.node.key.toString(),
+        //     id: info.node.id,
+        //   };
+        //   panes.push(pane);
+        //   this.setState({
+        //     activeKey: selectedKeys[0].toString(),
+        //     panes,
+        //   });
+        // } 
+        else {
           console.log('no matching keys');
         }
       }

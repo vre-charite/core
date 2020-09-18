@@ -9,6 +9,8 @@ import {
   message,
   Tooltip,
   Checkbox,
+  Row,
+  Col,
 } from 'antd';
 import DynamicKeyValue from '../Form/DynamicKeyValue';
 import { createProjectAPI } from '../../APIs/index';
@@ -53,6 +55,7 @@ function CreateDatasetModal({
           code: values.code,
           tags: values.tags,
           discoverable: values.discoverable,
+          roles: values.roles,
           admin: [username],
           type: 'Usecase',
           metadatas,
@@ -192,6 +195,53 @@ function CreateDatasetModal({
           </Select>
         </Form.Item>
         <Form.Item
+          label="Roles"
+          name="roles"
+          initialValue={['admin']}
+          required
+          style={{ marginBottom: '5px' }}
+        >
+          <Checkbox.Group style={{ width: '100%' }}>
+            <Row>
+              <Col span={8}>
+                <Checkbox value="admin">
+                  Admin&nbsp;
+                  <Tooltip
+                    title="Project Admin is able to add user into project as any roles in current project, 
+                  upload data into Green Room, 
+                  view all data and download data from both Green Room and VRE core in the project."
+                  >
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </Checkbox>
+              </Col>
+              <Col span={8}>
+                <Checkbox value="member">
+                  Member&nbsp;
+                  <Tooltip
+                    title="Project member is able to upload data into Green Room, 
+                  view/download data only being uploaded by self in Green Room, 
+                  view all data in VRE core"
+                  >
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </Checkbox>
+              </Col>
+              <Col span={8}>
+                <Checkbox value="uploader">
+                  Uploader&nbsp;
+                  <Tooltip
+                    title="Project uploader is able to upload data into Green Room, 
+                  view/download data only being uploaded by self in Green Room"
+                  >
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </Checkbox>
+              </Col>
+            </Row>
+          </Checkbox.Group>
+        </Form.Item>
+        <Form.Item
           label="Visibility"
           name="discoverable"
           valuePropName="checked"
@@ -200,6 +250,7 @@ function CreateDatasetModal({
             Make this project discoverable by all platform users
           </Checkbox>
         </Form.Item>
+
         {/* <div style={{ paddingBottom: '5px' }}>Metadata (Optional):</div>
         <DynamicKeyValue name="metadatas" label={'metadatas'} /> */}
         {/* <Form.Item name="admin" label={'Admins'}>

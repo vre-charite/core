@@ -157,10 +157,10 @@ function getProcessedFilesAPI(
     pipeline: pipeline,
     container_id: containerId,
   };
-  if (entityType) params = { ...params, entityType };
 
+  params['entityType'] = entityType ? entityType : 'nfs_file_processed';
   return axios({
-    url: `/v1/files/files/processed`,
+    url: `/v1/files/containers/${containerId}/files/meta`,
     params: objectKeysToSnakeCase(params),
   });
 }

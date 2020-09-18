@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateUploadItemCreator, updateClearIdCreator } from '../Redux/actions';
+import { updateUploadItemCreator, updateClearIdCreator, setSuccessNum } from '../Redux/actions';
 import { namespace, ErrorMessager } from '../ErrorMessages';
 import { checkPendingStatusAPI } from '../APIs';
 import _ from 'lodash';
@@ -9,6 +9,8 @@ import Promise from 'bluebird';
 export default function uploadPendingListener(Component) {
     const uploadList = useSelector(state => state.uploadList);
     const clearId = useSelector(state => state.clearId);
+    const successNum = useSelector((state) => state.successNum);
+
     const dispatch = useDispatch();
 
     const setRefreshConfirmation = (arr) => {
@@ -47,6 +49,8 @@ export default function uploadPendingListener(Component) {
                                     namespace.dataset.files.processingFile,
                                 );
                                 errorMessager.triggerMsg(null, null, item);
+                            } else {
+                                dispatch(setSuccessNum(successNum + 1));
                             }
                         }
                     })

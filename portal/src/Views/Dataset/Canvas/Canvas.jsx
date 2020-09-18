@@ -51,6 +51,12 @@ const defaultLayout = {
     { i: '4', x: 15, y: 0, w: 12, h: 4 },
     { i: '5', x: 0, y: 7, w: 24, h: 7.5 },
   ],
+  //Member panel
+  5: [
+    { i: '0', x: 0, y: 0, w: 12, h: 4 },
+    { i: '4', x: 15, y: 0, w: 12, h: 4 },
+    { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+  ],
 };
 
 class Canvas extends Component {
@@ -140,6 +146,12 @@ class Canvas extends Component {
         this.setState({
           roleIndex: 4,
           currentRole: 'uploader',
+          updateCount: this.state.updateCount + 1,
+        });
+      } else {
+        this.setState({
+          roleIndex: 5,
+          currentRole: 'member',
           updateCount: this.state.updateCount + 1,
         });
       }

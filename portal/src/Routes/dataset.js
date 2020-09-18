@@ -5,7 +5,7 @@ const routes = [
   {
     path: '/canvas',
     component: Canvas,
-    protectedType: 'projectUploader', // Both admin and uploader could access
+    protectedType: 'projectMember', // Both admin and uploader could access
   },
   {
     path: '/teams',

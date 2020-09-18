@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Table,
   Button,
@@ -44,6 +44,8 @@ function RawTable(props) {
   const [pageLoading, setPageLoading] = useState(true);
   const [isShown, toggleModal] = useState(false);
   const [tableKey, setTableKey] = useState(0);
+
+  const mounted = useRef(false);
 
   function getRawFilesAndUpdateUI(
     containerId,
@@ -315,7 +317,15 @@ function RawTable(props) {
     props.projectId,
     props.rawData,
     props.totalItem,
+    props.successNum,
   ]);
+
+  useEffect(() => {
+    if (mounted.current) {
+      console.log('changed');
+      fetchData();
+    } else mounted.current = true;
+  }, [props.successNum])
 
   const onSelectChange = (selectedRowKeys) => {
     setSelectedRowKeys(selectedRowKeys);
@@ -397,6 +407,7 @@ function RawTable(props) {
   };
 
   function fetchData() {
+    console.log('fetch data')
     setRefreshing(true);
     getRawFilesAndUpdateUI(
       props.projectId,
@@ -506,6 +517,7 @@ export default connect(
     uploadList: state.uploadList,
     role: state.role,
     containersPermission: state.containersPermission,
+    successNum: state.successNum,
   }),
   { appendDownloadListCreator },
 )(RawTable);

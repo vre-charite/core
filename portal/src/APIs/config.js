@@ -83,8 +83,8 @@ const refreshToken = getCookie('refresh_token');
 console.log('process.env.REACT_APP_ENV', process.env.REACT_APP_ENV);
 // for dev env
 let kongAPI = 'http://10.3.7.220/vre/api/vre/portal';
-// let devOpServerUrl = 'http://10.3.7.220/vre/api/vre/portal/dataops';
-let devOpServerUrl = 'http://10.3.7.234:5063';
+let devOpServerUrl = 'http://10.3.7.220/vre/api/vre/portal/dataops';
+// let devOpServerUrl = 'http://10.3.7.234:5063';
 
 // for staging env
 if (process.env.REACT_APP_ENV === 'staging') {

@@ -37,3 +37,5 @@ export const UPDATE_DATASET_LIST = 'UPDATE_DATASET_LIST';
 export const UPDATE_CLEAR_ID = 'UPDATE_CLEAR_ID';
 
 export const SET_IS_LOGIN = 'SET_IS_LOGIN';
+
+export const SET_SUCCESS_NUM = 'SET_SUCCESS_NUM';

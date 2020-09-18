@@ -15,7 +15,9 @@ import {
   Button,
   Card
 } from 'antd';
+import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import styles from './index.module.scss';
+import AggrementPDF from './Components/AggrementPDF';
 import {
   checkIsUserExistAPI,
   parseInviteHashAPI,
@@ -105,6 +107,10 @@ function SelfRegistration(props) {
   const onOk = () => {
     form.setFieldsValue({ tou: true });
     setVisible(false);
+  }
+
+  const onPrint = () => { 
+    console.log('print')
   }
 
   const handleScroll = (e) => {
@@ -211,7 +217,7 @@ function SelfRegistration(props) {
                   label={
                     <span>
                       Password&nbsp;
-                      <Tooltip title="Project code (8~16 digits) should contain the following: 1 Uppercase, 1 Lowercase letters, 1 number and 1 Special character(@#$!%*?&^). ">
+                      <Tooltip title="Project code (11~30 digits) should contain the following: 1 Uppercase, 1 Lowercase letters, 1 number and 1 Special character(@#$!%*?&^). ">
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </span>
@@ -225,10 +231,10 @@ function SelfRegistration(props) {
                     },
                     {
                       pattern: new RegExp(
-                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&^])[A-Za-z\d@#$!%*?&^]{8,16}$/g,
+                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&^])[A-Za-z\d@#$!%*?&^]{11,30}$/g,
                       ),
                       message:
-                        'The password should be 8-16 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character',
+                        'The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character',
                     },
                   ]}
                 >
@@ -296,6 +302,20 @@ function SelfRegistration(props) {
                 width={800}
                 onCancel={onCancel}
                 footer={[
+                  <Button key="submit" type="primary" onClick={onPrint} style={{ float: 'left' }}>
+                     <PDFDownloadLink
+                        document={
+                          <AggrementPDF
+                          />
+                        }
+                        fileName="VRE Terms of Use.pdf"
+                      >
+                      {({ blob, url, loading, error }) =>
+                        loading ? "Loading document..." : "Export PDF"
+                      }
+                    </PDFDownloadLink>
+                  </Button>,
+
                   <Button key="submit" type="primary" disabled={btnDisable} onClick={onOk}>
                     Accept
                   </Button>,
@@ -306,17 +326,29 @@ function SelfRegistration(props) {
                 ]}
               >
                 <div style={{ overflowY: "scroll", height: 300 }} onScroll={handleScroll}>
-                  <h2 style={{ textAlign: 'center' }}>Section One</h2>
-                  <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} />
+                  <h1>Contents</h1>
+                  <ul style={{ fontSize: 18 }}>
+                    <li><a href="#first">Section One</a></li>
+                    <li><a href="#second">Section Two</a></li>
+                    <li><a href="#third">Section Three</a></li>
+                    <li><a href="#fourth">Section Four</a></li>
+                  </ul>
 
-                  <h2 style={{ textAlign: 'center' }}>Section Two</h2>
-                  <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} />
+                  <h2 style={{ textAlign: 'center' }} id="first">Section One</h2>
+                  {/* <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} /> */}
+                  <p style={{ fontSize: 16 }}>{aggreementText}</p>
 
-                  <h2 style={{ textAlign: 'center' }}>Section Three</h2>
-                  <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} />
+                  <h2 style={{ textAlign: 'center' }} id="second">Section Two</h2>
+                  {/* <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} /> */}
+                  <p style={{ fontSize: 16 }}>{aggreementText}</p>
 
-                  <h2 style={{ textAlign: 'center' }}>Section Four</h2>
-                  <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} />
+                  <h2 style={{ textAlign: 'center' }} id="third">Section Three</h2>
+                  {/* <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} /> */}
+                  <p style={{ fontSize: 16 }}>{aggreementText}</p>
+
+                  <h2 style={{ textAlign: 'center' }} id="fourth">Section Four</h2>
+                  {/* <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} /> */}
+                  <p style={{ fontSize: 16 }}>{aggreementText}</p>
                 </div>
               </Modal>
             </Card>

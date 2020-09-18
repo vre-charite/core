@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import moment from 'moment';
 import { Progress, Collapse, Table, Button, Space, Input, Popover } from 'antd';
 import { getProcessedFilesAPI, downloadFilesAPI, getRawFilesAPI } from '../../../../../APIs';
 import { CloudDownloadOutlined, SyncOutlined } from '@ant-design/icons';
@@ -330,13 +331,16 @@ const ContainerDetailsContent = (props) => {
           // ...getColumnSearchProps('generateID'),
         }
       : {},
-    {
-      title: 'Created',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      sorter: true,
-      width: '20%',
-    },
+      {
+        title: 'Created',
+        dataIndex: 'createTime',
+        key: 'createTime',
+        sorter: true,
+        width: '20%',
+        render: (text, record) => {
+          return text && moment(text).format('YYYY-MM-DD');
+        },
+      },
     {
       title: 'File Size',
       dataIndex: 'fileSize',

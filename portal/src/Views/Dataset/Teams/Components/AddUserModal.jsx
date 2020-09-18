@@ -14,7 +14,8 @@ const { Option, OptGroup } = Select;
 const { confirm } = Modal;
 
 function AddUserModal(props) {
-  const { isAddUserModalShown, cancelAddUser } = props;
+  const { isAddUserModalShown, cancelAddUser, containerDetails } = props;
+  console.log('AddUserModal -> containerDetails', containerDetails);
   const [form] = Form.useForm();
   const [submitting, toggleSubmitting] = useState(false);
 
@@ -225,8 +226,10 @@ function AddUserModal(props) {
           rules={[{ required: true, message: 'Please input role' }]}
         >
           <Radio.Group>
-            <Radio value={'admin'}>admin</Radio>
-            <Radio value={'uploader'}>uploader</Radio>
+            {containerDetails &&
+              containerDetails['roles'].map((i) => (
+                <Radio value={i}>{i}</Radio>
+              ))}
           </Radio.Group>
         </Form.Item>
       </Form>
