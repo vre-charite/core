@@ -221,13 +221,14 @@ function AddUserModal(props) {
           <Input type="email" />
         </Form.Item>
         <Form.Item
-          initialValue={'uploader'}
+          initialValue={containerDetails && containerDetails['roles'][0]}
           label={'Role'}
           name="role"
           rules={[{ required: true, message: 'Please input role' }]}
         >
           <Radio.Group>
-            {containerDetails && containerDetails['roles'] &&
+            {containerDetails &&
+              containerDetails['roles'] &&
               containerDetails['roles'].map((i) => (
                 <Radio value={i}>{i}</Radio>
               ))}
