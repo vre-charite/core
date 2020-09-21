@@ -142,7 +142,9 @@ function getProcessedFilesAPI(
   column,
   text,
   order,
+  admin_view,
   entityType,
+  filters,
 ) {
   const pipelineArr = path.split('/');
   const pipeline = pipelineArr[pipelineArr.length - 1];
@@ -152,11 +154,14 @@ function getProcessedFilesAPI(
     pageSize,
     stage: 'processed',
     column,
-    text,
+    // text,
     order,
     pipeline: pipeline,
     container_id: containerId,
   };
+
+  if (!admin_view) params = { ...params, admin_view };
+  if (filters && Object.keys(filters).length > 0) params = { ...params, filter: JSON.stringify(filters) };
 
   params['entityType'] = entityType ? entityType : 'nfs_file_processed';
   return axios({

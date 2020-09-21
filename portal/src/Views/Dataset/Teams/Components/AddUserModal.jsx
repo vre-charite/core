@@ -187,6 +187,7 @@ function AddUserModal(props) {
       message.error('Please input email!');
     }
   };
+
   return (
     <Modal
       title="Add user to project"
@@ -226,7 +227,7 @@ function AddUserModal(props) {
           rules={[{ required: true, message: 'Please input role' }]}
         >
           <Radio.Group>
-            {containerDetails &&
+            {containerDetails && containerDetails['roles'] &&
               containerDetails['roles'].map((i) => (
                 <Radio value={i}>{i}</Radio>
               ))}

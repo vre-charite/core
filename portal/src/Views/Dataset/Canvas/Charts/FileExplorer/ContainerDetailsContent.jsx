@@ -46,22 +46,20 @@ const ContainerDetailsContent = (props) => {
   ) {
     let result;
     try {
-      if (props.filePath) {
-        const filters = {};
+      const filters = {};
 
-        if (text.length > 0) {
-          for (const item of text) {
-            filters[item.key] = item.value;
-          }
+      if (text.length > 0) {
+        for (const item of text) {
+          filters[item.key] = item.value;
         }
+      }
 
+      let role = false;
+      const currentDataset = containersPermission && containersPermission.filter(el => el.container_id === Number(containerId));
+      if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+
+      if (props.filePath) {
         filters.path = props.filePath;
-
-        const currentDataset = containersPermission && containersPermission.filter(el => el.container_id === Number(containerId));
-
-        let role = false;
-    
-        if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
 
         result = await getRawFilesAPI(
           containerId,
@@ -83,6 +81,9 @@ const ContainerDetailsContent = (props) => {
           column,
           text,
           order,
+          role === 'admin',
+          null,
+          filters,
         );
       }
     } catch (err) {

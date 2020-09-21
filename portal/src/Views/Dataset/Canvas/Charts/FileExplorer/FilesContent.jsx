@@ -125,6 +125,12 @@ class FilesContent extends Component {
 
   fetchProcesseData = async (path, entity_type) => {
     try {
+      const currentDataset = this.props.containersPermission && this.props.containersPermission.filter(el => el.container_id === Number(this.props.match.params.datasetId));
+
+      let role = false;
+
+      if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+
       const result = await getProcessedFilesAPI(
         this.props.match.params.datasetId,
         10,
@@ -133,7 +139,9 @@ class FilesContent extends Component {
         'createTime',
         null,
         'desc',
+        role === 'admin',
         entity_type,
+        {},
       );
       let { entities, approximateCount } = result.data.result;
       entities = entities.map((item) => ({
