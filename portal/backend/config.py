@@ -34,8 +34,8 @@ class ConfigClass(object):
     env = os.environ.get('env')
     if env is None or env == 'charite':
         # Config Email Service in charite
-        EMAIL_DEFAULT_NOTIFIER = "notification@charite.de"
-        EMAIL_ADMIN_CONNECTION = "notification@charite.de"
+        EMAIL_DEFAULT_NOTIFIER = "vre-support@charite.de"
+        EMAIL_ADMIN_CONNECTION = "vre-support@charite.de"
 
         INVITATION_URL_PREFIX = "http://10.32.42.226/vre/self-registration"
         INVITATION_EXPIRY_DAYS = 14
