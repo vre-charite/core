@@ -48,19 +48,19 @@ function Dataset(props) {
         }
       }
 
-      currentContainer &&
-        currentContainer.permission === 'admin' &&
-        getUsersOnDatasetAPI(params.datasetId)
-          .then((res) => {
-            setUserListOnDataset(objectKeysToCamelCase(res.data.result));
-          })
-          .catch(
-            apiErrorHandling({
-              e500: 'when getting users list',
-              e400: 'service to get users list',
-              e403: 'get users list',
-            }),
-          );
+      // currentContainer &&
+      //   currentContainer.permission === 'admin' &&
+      //   getUsersOnDatasetAPI(params.datasetId)
+      //     .then((res) => {
+      //       setUserListOnDataset(objectKeysToCamelCase(res.data.result));
+      //     })
+      //     .catch(
+      //       apiErrorHandling({
+      //         e500: 'when getting users list',
+      //         e400: 'service to get users list',
+      //         e403: 'get users list',
+      //       }),
+      //     );
     },
   };
   return (

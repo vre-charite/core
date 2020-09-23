@@ -8,16 +8,10 @@ import {
 } from '@ant-design/icons';
 import { instanceOf } from 'prop-types';
 import { withCookies, Cookies } from 'react-cookie';
-import {
-  serverAxios,
-  devOpServer,
-  invitationAxios,
-  authServerAxios,
-} from '../../APIs/config';
 import styles from './index.module.scss';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { login } from '../../APIs/auth';
-import { withRouter, Link } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import {
   AddDatasetCreator,
@@ -31,23 +25,13 @@ import {
   setIsLoginCreator,
 } from '../../Redux/actions';
 import {
-  objectKeysToCamelCase,
-  apiErrorHandling,
   headerUpdate,
   loginChannel,
-  getCookie,
 } from '../../Utility';
 import {
   getDatasetsAPI,
-  getAllUsersAPI,
-  getTagsAPI,
-  getMetadatasAPI,
-  getPersonalDatasetAPI,
   listAllContainersPermission,
 } from '../../APIs';
-import jwt_decode from 'jwt-decode';
-import moment from 'moment';
-import { reject } from 'async';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import CoookiesDrawer from './CookiesDrawer';
 const { confirm } = Modal;
@@ -90,7 +74,10 @@ class Auth extends Component {
                 style={{ paddingLeft: 0 }}
                 onClick={() => {
                   closeNotification();
-                  this.showDrawer();
+                  this.showModal();
+                  setTimeout(() => {
+                    document.getElementById('cookies-link').click();
+                  }, 10);
                 }}
               >
                 Click here for details and controls.
@@ -387,14 +374,6 @@ class Auth extends Component {
           >
             Terms of Use
           </Button>{' '}
-          |
-          <Button
-            type="link"
-            style={{ color: 'white' }}
-            onClick={this.showDrawer}
-          >
-            Cookie Policies
-          </Button>
           <TermsOfUseModal
             visible={this.state.visible}
             handleOk={this.handleOk}

@@ -376,6 +376,13 @@ class AppHeader extends Component {
                 <span>Reset Password</span>
               </Button>
             </Menu.Item>
+            <Menu.Item key="helpCenter">
+              <Button
+                type="link"
+              >
+                <a href="mailto:vre-support@charite.de">Contact Us</a> 
+              </Button>
+            </Menu.Item>
             <Menu.Item key="logout">
               <Button type="link" onClick={this.logout}>
                 <span style={{ color: 'red' }}>Logout</span>

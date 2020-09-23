@@ -19,7 +19,7 @@ import Highlighter from 'react-highlight-words';
 import { SearchOutlined } from '@ant-design/icons';
 import { ErrorMessager, namespace } from '../../../../../ErrorMessages';
 import { appendDownloadListCreator } from '../../../../../Redux/actions';
-import { getRawFilesAPI, downloadFilesAPI } from '../../../../../APIs';
+import { downloadFilesAPI, getFilesByTypeAPI } from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
 import FilesTable from './FilesTable';
 
@@ -69,7 +69,7 @@ function RawTable(props) {
 
     if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
 
-    return getRawFilesAPI(containerId, pageSize, page, column, text, order, role === 'admin', null, filters)
+    return getFilesByTypeAPI(containerId, pageSize, page, null, column, order, role === 'admin', null, filters)
       .then((res) => {
         const { entities, approximateCount } = res.data.result;
 
@@ -86,7 +86,7 @@ function RawTable(props) {
         setRefreshing(false);
         if (err.response) {
           const errorMessager = new ErrorMessager(
-            namespace.dataset.files.getRawFilesAPI,
+            namespace.dataset.files.getFilesByTypeAPI,
           );
           errorMessager.triggerMsg(err.response.status, null, {
             datasetId: containerId,

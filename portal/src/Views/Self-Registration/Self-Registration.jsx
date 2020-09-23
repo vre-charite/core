@@ -28,6 +28,7 @@ import { apiErrorHandling } from '../../Utility';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import PasswordValidator from 'password-validator';
 import { QuestionCircleOutlined } from '@ant-design/icons';
+import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -101,6 +102,11 @@ function SelfRegistration(props) {
   const onCancel = () => {
     setVisible(false);
     setBtnDisable(true);
+  }
+
+  const onDecline = () => {
+    setVisible(false);
+    setBtnDisable(true);
     form.setFieldsValue({ tou: false });
   }
 
@@ -115,13 +121,9 @@ function SelfRegistration(props) {
 
   const handleScroll = (e) => {
     const bottom = e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight;
+    console.log(bottom)
     if (bottom) setBtnDisable(false)
   }
-
-  let aggreementText = `hello
-    So, if I'm understanding right what you're saying and especially this example, 
-    what you propose is to use something that already exists and that we're already monitoring to decide whether an effect hook should execute or not 
-  `;
 
   return (
     <div className={styles.bg}>
@@ -295,12 +297,7 @@ function SelfRegistration(props) {
                 </Form.Item>
               </Form>
 
-              <Modal
-                title="VRE Terms of Use"
-                visible={visible}
-                centered
-                width={800}
-                onCancel={onCancel}
+              <TermsOfUseModal 
                 footer={[
                   <Button key="submit" type="primary" onClick={onPrint} style={{ float: 'left' }}>
                      <PDFDownloadLink
@@ -308,7 +305,7 @@ function SelfRegistration(props) {
                           <AggrementPDF
                           />
                         }
-                        fileName="VRE Terms of Use.pdf"
+                        fileName="Platform Terms of Use Agreement.pdf"
                       >
                       {({ blob, url, loading, error }) =>
                         loading ? "Loading document..." : "Export PDF"
@@ -320,37 +317,14 @@ function SelfRegistration(props) {
                     Accept
                   </Button>,
 
-                  <Button key="back" type="danger" onClick={onCancel}>
+                  <Button key="back" type="danger" onClick={onDecline}>
                     Declined
                   </Button>,
                 ]}
-              >
-                <div style={{ overflowY: "scroll", height: 300 }} onScroll={handleScroll}>
-                  <h1>Contents</h1>
-                  <ul style={{ fontSize: 18 }}>
-                    <li><a href="#first">Section One</a></li>
-                    <li><a href="#second">Section Two</a></li>
-                    <li><a href="#third">Section Three</a></li>
-                    <li><a href="#fourth">Section Four</a></li>
-                  </ul>
-
-                  <h2 style={{ textAlign: 'center' }} id="first">Section One</h2>
-                  {/* <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} /> */}
-                  <p style={{ fontSize: 16 }}>{aggreementText}</p>
-
-                  <h2 style={{ textAlign: 'center' }} id="second">Section Two</h2>
-                  {/* <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} /> */}
-                  <p style={{ fontSize: 16 }}>{aggreementText}</p>
-
-                  <h2 style={{ textAlign: 'center' }} id="third">Section Three</h2>
-                  {/* <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} /> */}
-                  <p style={{ fontSize: 16 }}>{aggreementText}</p>
-
-                  <h2 style={{ textAlign: 'center' }} id="fourth">Section Four</h2>
-                  {/* <TextArea rows={5} disabled defaultValue={aggreementText} style={{ marginBottom: 20 }} /> */}
-                  <p style={{ fontSize: 16 }}>{aggreementText}</p>
-                </div>
-              </Modal>
+                visible={visible}
+                handleCancel={onCancel}
+                handleScroll={handleScroll}
+              />
             </Card>
           </Col>
         </Row>

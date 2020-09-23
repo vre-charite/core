@@ -12,7 +12,6 @@ import {
   Row,
   Col,
 } from 'antd';
-import DynamicKeyValue from '../Form/DynamicKeyValue';
 import { createProjectAPI } from '../../APIs/index';
 import {
   UpdateDatasetCreator,
@@ -208,8 +207,7 @@ function CreateDatasetModal({
                   Admin&nbsp;
                   <Tooltip
                     title="Project Admin is able to add user into project as any roles in current project, 
-                  upload data into Green Room, 
-                  view all data and download data from both Green Room and VRE core in the project."
+                  upload data into Green Room, view/download all data in Green Room."
                   >
                     <QuestionCircleOutlined />
                   </Tooltip>
@@ -220,8 +218,7 @@ function CreateDatasetModal({
                   Member&nbsp;
                   <Tooltip
                     title="Project member is able to upload data into Green Room, 
-                  view/download data only being uploaded by self in Green Room, 
-                  view all data in VRE core"
+                  view/download data only being uploaded by self in Green Room."
                   >
                     <QuestionCircleOutlined />
                   </Tooltip>

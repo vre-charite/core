@@ -5,8 +5,7 @@ import { Row, Col, Tree, Tabs } from 'antd';
 import {
   getChildrenDataset,
   traverseFoldersContainersAPI,
-  getRawFilesAPI,
-  getProcessedFilesAPI,
+  getFilesByTypeAPI,
 } from '../../../../../APIs';
 import { getChildrenTree } from '../../../../../Utility';
 import ContainerDetailsContent from './ContainerDetailsContent';
@@ -23,26 +22,6 @@ import {
 
 const { TabPane } = Tabs;
 
-const treeData = [
-  {
-    title: 'Raw',
-    key: '0',
-    icon: <FolderOpenOutlined />,
-  },
-  {
-    title: 'Processed',
-    key: '1',
-    icon: <FolderOutlined />,
-    disabled: true,
-  },
-  // {
-  //   title: 'Core',
-  //   key: '2',
-  //   icon: <FolderOutlined />,
-  //   disabled: true,
-  // },
-];
-
 /**
  * props: need datasetId
  *
@@ -56,7 +35,13 @@ class FilesContent extends Component {
     this.state = {
       activeKey: '0',
       panes: [], //folder panes
-      treeData: treeData, //folder view data
+      treeData: [
+        {
+          title: 'Raw',
+          key: '0',
+          icon: <FolderOpenOutlined />,
+        },
+      ], //folder view data
       treeKey: 0, //to mark refresh
       rawData: [],
       totalItem: 0,
@@ -68,6 +53,7 @@ class FilesContent extends Component {
   componentDidMount() {
     this.fetch();
     const { datasetId } = this.props;
+    const treeData = this.state.treeData;
     treeData[0].id = datasetId; //Why updating id here?
 
     const currentDataset = _.find(this.props.containersPermission, {
@@ -92,12 +78,12 @@ class FilesContent extends Component {
 
       if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
 
-      const result = await getRawFilesAPI(
+      const result = await getFilesByTypeAPI(
         this.props.match.params.datasetId,
         10,
         0,
-        'createTime',
         null,
+        'createTime',
         'desc',
         role === 'admin',
         entity_type,
@@ -115,7 +101,7 @@ class FilesContent extends Component {
       console.log(err)
       if (err.response) {
         const errorMessager = new ErrorMessager(
-          namespace.dataset.files.getRawFilesAPI,
+          namespace.dataset.files.getFilesByTypeAPI,
         );
         errorMessager.triggerMsg(err.response.status);
       }
@@ -131,13 +117,12 @@ class FilesContent extends Component {
 
       if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
 
-      const result = await getProcessedFilesAPI(
+      const result = await getFilesByTypeAPI(
         this.props.match.params.datasetId,
         10,
         0,
         path,
         'createTime',
-        null,
         'desc',
         role === 'admin',
         entity_type,
@@ -157,7 +142,7 @@ class FilesContent extends Component {
     } catch (err) {
       if (err.response) {
         const errorMessager = new ErrorMessager(
-          namespace.dataset.files.getProcessedFilesAPI,
+          namespace.dataset.files.getFilesByTypeAPI,
         );
         errorMessager.triggerMsg(err.response.status);
       }
@@ -182,29 +167,31 @@ class FilesContent extends Component {
       return;
     }
 
-    try {
-      subContainers = await getChildrenDataset(datasetId);
-    } catch (err) {
-      if (err.response) {
-        const errorMessager = new ErrorMessager(
-          namespace.dataset.files.getChildrenDataset,
-        );
-        errorMessager.triggerMsg(err.response.status);
-      }
-      return;
-    }
+    // try {
+    //   subContainers = await getChildrenDataset(datasetId);
+    // } catch (err) {
+    //   if (err.response) {
+    //     const errorMessager = new ErrorMessager(
+    //       namespace.dataset.files.getChildrenDataset,
+    //     );
+    //     errorMessager.triggerMsg(err.response.status);
+    //   }
+    //   return;
+    // }
 
     await this.fetchRawData();
 
     // Compute tree data
-    const pureFolders = this.computePureFolders(
+    let pureFolders = this.computePureFolders(
       allFolders.data.result.gr,
-      subContainers.data.result.children,
+      // subContainers.data.result.children,
+      undefined,
     );
 
     const coreFolders = this.computePureFolders(
       allFolders.data.result.vre,
-      subContainers.data.result.children,
+      // subContainers.data.result.children,
+      undefined,
     );
 
     const treeData = getChildrenTree(pureFolders, 0, '');
@@ -213,10 +200,22 @@ class FilesContent extends Component {
     const processedFolder = _.find(treeData, (ele) => {
       return ele.title === 'processed';
     });
-    const newTree = this.state.treeData;
-    newTree[1].children = processedFolder.children;
 
-    // newTree[2].children = treeData2;
+    const newTree = this.state.treeData;
+
+    if (processedFolder) {
+      newTree.push(
+        {
+            title: 'Processed',
+            key: '1',
+            icon: <FolderOutlined />,
+            disabled: true,
+            children: processedFolder.children
+        },
+      )
+    }
+    
+    // newTree[2].children = treeData2;  copy files workflow
 
     const newPanes = this.state.panes;
     const pane = {};

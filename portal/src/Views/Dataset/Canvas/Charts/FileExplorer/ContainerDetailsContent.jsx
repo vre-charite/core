@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
 import { Progress, Collapse, Table, Button, Space, Input, Popover } from 'antd';
-import { getProcessedFilesAPI, downloadFilesAPI, getRawFilesAPI } from '../../../../../APIs';
+import { getFilesByTypeAPI, downloadFilesAPI, } from '../../../../../APIs';
 import { CloudDownloadOutlined, SyncOutlined } from '@ant-design/icons';
 import Highlighter from 'react-highlight-words';
 import { SearchOutlined } from '@ant-design/icons';
@@ -61,25 +61,24 @@ const ContainerDetailsContent = (props) => {
       if (props.filePath) {
         filters.path = props.filePath;
 
-        result = await getRawFilesAPI(
+        result = await getFilesByTypeAPI(
           containerId,
           pageSize,
           page,
+          null,
           column,
-          text,
           order,
           role === 'admin',
           'nfs_file_cp',
           filters,
         )
       } else {
-        result = await getProcessedFilesAPI(
+        result = await getFilesByTypeAPI(
           containerId,
           pageSize,
           page,
           path,
           column,
-          text,
           order,
           role === 'admin',
           null,
@@ -90,7 +89,7 @@ const ContainerDetailsContent = (props) => {
       console.log(err)
       if (err.response) {
         const errorMessager = new ErrorMessager(
-          namespace.dataset.files.getProcessedFilesAPI,
+          namespace.dataset.files.getFilesByTypeAPI,
         );
         errorMessager.triggerMsg(err.response.status);
       }

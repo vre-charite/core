@@ -54,6 +54,10 @@ class Teams extends Component {
     this.getUsers = this.getUsers.bind(this);
   }
 
+  componentDidMount() {
+    this.getUsers();
+  }
+
   showAddUserModal = () => {
     console.log('show it!');
     this.setState({
@@ -149,7 +153,6 @@ class Teams extends Component {
   }
 
   render() {
-    console.log(this.props);
     const username = getCookie('username');
     const projectAdmin =
       this.props.containersPermission &&

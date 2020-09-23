@@ -151,7 +151,7 @@ export default function ErrorMessager(name) {
         );
       },
     },
-    [namespace.dataset.files.getProcessedFilesAPI]: {
+    [namespace.dataset.files.getFilesByTypeAPI]: {
       403: (err, params) => {
         message.error('You do not have access to retrieve processed files.');
       },

@@ -21,7 +21,7 @@ const dataset = {
     getRawFilesAPI: 'dataset.files.getRawFilesAPI',
     getChildrenDataset: 'dataset.files.getChildrenDataset',
     traverseFoldersContainersAPI: 'dataset.files.traverseFoldersContainersAPI',
-    getProcessedFilesAPI: 'dataset.files.getProcessedFilesAPI',
+    getFilesByTypeAPI: 'dataset.files.getFilesByTypeAPI',
     downloadFilesAPI: 'dataset.files.downloadFilesAPI',
     processingFile:'dataset.files.processingFile',
   },

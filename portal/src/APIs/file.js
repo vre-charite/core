@@ -134,36 +134,40 @@ function getRawFilesAPI(
  * @param {number} page
  * @param {string} path
  */
-function getProcessedFilesAPI(
+function getFilesByTypeAPI(
   containerId,
   pageSize,
   page,
   path,
   column,
-  text,
   order,
   admin_view,
   entityType,
   filters,
 ) {
-  const pipelineArr = path.split('/');
-  const pipeline = pipelineArr[pipelineArr.length - 1];
+  let pipelineArr = null;
+  if (path) pipelineArr = path.split('/');
+
+  let pipeline = null;
+  if (pipelineArr && pipelineArr.length > 1) pipeline = pipelineArr[pipelineArr.length - 1];
 
   let params = {
     page,
     pageSize,
-    stage: 'processed',
     column,
-    // text,
     order,
-    pipeline: pipeline,
     container_id: containerId,
   };
+
+  if (pipeline) {
+    params.stage = 'processed';
+    params.pipeline = pipeline;
+    params['entityType'] = entityType ? entityType : 'nfs_file_processed';
+  }
 
   if (!admin_view) params = { ...params, admin_view };
   if (filters && Object.keys(filters).length > 0) params = { ...params, filter: JSON.stringify(filters) };
 
-  params['entityType'] = entityType ? entityType : 'nfs_file_processed';
   return axios({
     url: `/v1/files/containers/${containerId}/files/meta`,
     params: objectKeysToSnakeCase(params),
@@ -341,7 +345,7 @@ export {
   downloadFilesAPI,
   checkDownloadStatusAPI,
   checkPendingStatusAPI,
-  getProcessedFilesAPI,
+  getFilesByTypeAPI,
   emailUploadedFileListAPI,
   projectFileCountTotal,
   projectFileCountToday,

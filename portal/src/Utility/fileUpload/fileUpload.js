@@ -1,8 +1,6 @@
 import { message } from 'antd';
 import { cancelRequestReg } from '../../APIs/config';
-// import { uploadFileApi, checkUploadStatusApi } from "../Api";
 import {
-  uploadFileApi,
   preUpload,
   uploadFileApi2,
   combineChunks,
@@ -12,7 +10,6 @@ import {
   updateUploadItemCreator,
   setNewUploadIndicator,
 } from '../../Redux/actions';
-import { objectKeysToCamelCase } from '..';
 import reduxActionWrapper from '../reduxActionWrapper';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { v4 as uuidv4 } from 'uuid';
@@ -32,7 +29,7 @@ const _ = require('lodash');
 var Promise = require('bluebird');
 
 async function fileUpload(data, resolve, reject) {
-  const MAX_LENGTH = 1024 * 1024 * 4;
+  const MAX_LENGTH = 1024 * 1024 * 2;
   const uuid = uuidv4();
   const { uploadKey, generateID, datasetId, uploader, file } = data;
 

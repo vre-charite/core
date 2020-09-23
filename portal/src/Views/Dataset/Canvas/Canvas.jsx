@@ -90,7 +90,7 @@ class Canvas extends Component {
     return urlArr[urlArr.length - 2];
   }
   componentDidMount() {
-    this.init();
+    // this.init();
     this.fetchDatasetName();
     this.updatePermision();
   }
@@ -112,7 +112,7 @@ class Canvas extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-    let { containersPermission, datasetList } = this.props;
+    let { containersPermission } = this.props;
     if (prevProps.containersPermission !== containersPermission) {
       this.updatePermision();
       this.fetchDatasetName();
@@ -333,7 +333,6 @@ class Canvas extends Component {
       modalTitle,
       content,
       cardTypes,
-      layoutType,
     } = this.state;
     let tags = [];
     Object.keys(filter).map((key) => {

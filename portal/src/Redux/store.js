@@ -24,7 +24,7 @@ const persistedReducer = persistReducer(persistConfig, rootReducer)
 const syncConfig = {
   whitelist: [SET_UPLOAD_LIST,
     APPEND_UPLOAD_LIST,
-    UPDATE_UPLOAD_LIST_ITEM,UPDATE_CLEAR_ID],
+    UPDATE_UPLOAD_LIST_ITEM],
 };
 const middlewares = [createStateSyncMiddleware(syncConfig)];
 

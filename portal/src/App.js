@@ -374,4 +374,4 @@ export default connect(
   },
 )(withCookies(withRouter(App)));
 
-// trigger cicd
+// trigger cic
