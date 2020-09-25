@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Table,
   Button,
@@ -16,16 +16,15 @@ import {
 } from '@ant-design/icons';
 import { projectFileCountToday } from '../../../../APIs';
 import { useCookies } from 'react-cookie';
-import { getRawFilesAPI, downloadFilesAPI } from '../../../../APIs';
+import { getFilesByTypeAPI, downloadFilesAPI } from '../../../../APIs';
 import GreenRoomUploader from '../../Components/GreenRoomUploader';
 import { appendDownloadListCreator } from '../../../../Redux/actions';
 import { ErrorMessager, namespace } from '../../../../ErrorMessages';
-import Highlighter from 'react-highlight-words';
+import FilesTable from '../Charts/FileExplorer/FilesTable';
 
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import _ from 'lodash';
-import styles from './index.module.scss';
 const { Panel } = Collapse;
 
 function UploaderHistory(props) {
@@ -39,13 +38,16 @@ function UploaderHistory(props) {
   let [rawFiles, setRawFiles] = useState([]);
   const [reFreshing, setRefreshing] = useState(false);
   const [cookies, setCookie] = useCookies(['cookies']);
-  const [searchText, setSearchText] = useState(null);
+  const [searchText, setSearchText] = useState({});
   const [searchedColumn, setSearchedColumn] = useState('');
   const [searchInput, setSearchInput] = useState({});
   const [sortColumn, setSortColumn] = useState('createTime');
   const [order, setOrder] = useState('desc');
   const [pageLoading, setPageLoading] = useState(true);
   const [isShown, toggleModal] = useState(false);
+  const [tableKey, setTableKey] = useState(0);
+
+  const mounted = useRef(false);
 
   const {
     containersPermission,
@@ -55,7 +57,6 @@ function UploaderHistory(props) {
     content,
     datasetList,
   } = props;
-  console.log('UploaderHistory -> props', props);
 
   const currentContainer =
     containersPermission &&
@@ -81,17 +82,24 @@ function UploaderHistory(props) {
     text,
     order,
   ) {
-    return getRawFilesAPI(
-      containerId,
-      pageSize,
-      page,
-      column,
-      text,
-      order,
-      false,
-    )
+    const filters = {};
+
+    if (text.length > 0) {
+      for (const item of text) {
+        filters[item.key] = item.value;
+      }
+    }
+
+    const currentDataset = props.containersPermission && props.containersPermission.filter(el => el.container_id === Number(containerId));
+
+    let role = false;
+
+    if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+
+    return getFilesByTypeAPI(containerId, pageSize, page, null, column, order, role === 'admin', null, filters)
       .then((res) => {
         const { entities, approximateCount } = res.data.result;
+
         setRawFiles(
           entities.map((item) => ({
             ...item.attributes,
@@ -105,7 +113,7 @@ function UploaderHistory(props) {
         setRefreshing(false);
         if (err.response) {
           const errorMessager = new ErrorMessager(
-            namespace.dataset.files.getRawFilesAPI,
+            namespace.dataset.files.getFilesByTypeAPI,
           );
           errorMessager.triggerMsg(err.response.status, null, {
             datasetId: containerId,
@@ -113,30 +121,6 @@ function UploaderHistory(props) {
         }
       });
   }
-
-  const handleSearch = (selectedKeys, confirm, dataIndex) => {
-    confirm();
-
-    setSearchedColumn(dataIndex);
-    setSearchText(selectedKeys[0]);
-
-    getRawFilesAndUpdateUI(
-      datasetId,
-      pageSize,
-      page,
-      sortColumn,
-      selectedKeys[0],
-      order,
-    );
-  };
-
-  const handleReset = (clearFilters) => {
-    clearFilters();
-    setSearchedColumn('dataIndex');
-    setSearchText('');
-    console.log(searchText);
-    getRawFilesAndUpdateUI(datasetId, pageSize, page, sortColumn, '', order);
-  };
 
   const checkGenerate = (datasetId, datasetList) => {
     if (!datasetList || !datasetList.length > 0) {
@@ -148,75 +132,6 @@ function UploaderHistory(props) {
     return dataset['code'] === 'generate';
   };
 
-  const getColumnSearchProps = (dataIndex) => ({
-    filterDropdown: ({
-      setSelectedKeys,
-      selectedKeys,
-      confirm,
-      clearFilters,
-    }) => (
-      <div style={{ padding: 8 }}>
-        <Input
-          ref={(node) => {
-            //this.searchInput = node;
-            setSearchInput(node);
-          }}
-          placeholder={`Search ${dataIndex}`}
-          value={selectedKeys[0]}
-          onChange={(e) =>
-            setSelectedKeys(e.target.value ? [e.target.value] : [])
-          }
-          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-          style={{ width: 188, marginBottom: 8, display: 'block' }}
-          autoFocus
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
-          </Button>
-          <Button
-            onClick={() => handleReset(clearFilters)}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Reset
-          </Button>
-        </Space>
-      </div>
-    ),
-    filterIcon: (filtered) => (
-      <SearchOutlined
-        style={{ color: filtered ? '#1890ff' : undefined, top: '60%' }}
-      />
-    ),
-    // onFilter: (value, record) =>
-    //   record[dataIndex] ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()) : '',
-    onFilterDropdownVisibleChange: (visible) => {
-      if (visible && Object.keys(searchInput).length > 0) {
-        // console.log('searchInput', searchInput);
-
-        setTimeout(() => searchInput.select(), 100);
-      }
-    },
-    render: (text) =>
-      searchedColumn === dataIndex ? (
-        <Highlighter
-          highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-          searchWords={[searchText]}
-          autoEscape
-          textToHighlight={text ? text.toString() : ''}
-        />
-      ) : (
-        text
-      ),
-  });
-
   const columns = [
     {
       title: 'Name',
@@ -224,7 +139,7 @@ function UploaderHistory(props) {
       key: 'fileName',
       sorter: true,
       width: '35%',
-      ...getColumnSearchProps('name'),
+      searchKey: 'name',
       render: (text, record) => {
         let filename = text;
         if (text.length > 58) {
@@ -245,7 +160,7 @@ function UploaderHistory(props) {
       key: 'owner',
       sorter: true,
       width: '15%',
-      ...getColumnSearchProps('owner'),
+      searchKey: 'owner',
     },
     props.datasetList && checkGenerate(datasetId, props.datasetList)
       ? {
@@ -254,7 +169,7 @@ function UploaderHistory(props) {
           key: 'generateID',
           sorter: true,
           width: '15%',
-          ...getColumnSearchProps('generateID'),
+          searchKey: 'generateID',
         }
       : {},
     {
@@ -319,8 +234,7 @@ function UploaderHistory(props) {
   ];
 
   useEffect(() => {
-    // fetchData()
-    getRawFilesAndUpdateUI(datasetId, 10, 0, 'createTime', null, 'desc');
+    getRawFilesAndUpdateUI(datasetId, 10, 0, 'createTime', [], 'desc');
     setTotalItem(props.totalItem);
     setPageLoading(false);
   }, [
@@ -329,8 +243,14 @@ function UploaderHistory(props) {
     datasetId,
     props.rawData,
     props.totalItem,
-    // props.uploadList,
   ]);
+
+  useEffect(() => {
+    if (mounted.current) {
+      console.log('changed');
+      fetchData();
+    } else mounted.current = true;
+  }, [props.successNum])
 
   const onSelectChange = (selectedRowKeys) => {
     console.log('selectedRowKeys changed: ', selectedRowKeys);
@@ -340,36 +260,6 @@ function UploaderHistory(props) {
   const rowSelection = {
     selectedRowKeys,
     onChange: onSelectChange,
-  };
-
-  const changePage = (pagination, param2, param3) => {
-    let order = 'asc';
-    if (param3 && param3.order !== 'ascend') order = 'desc';
-
-    setPage(pagination.current - 1);
-    if (param3) {
-      setSortColumn(param3.field);
-      setOrder(order);
-    }
-
-    if (pagination.pageSize) setPageSize(pagination.pageSize);
-
-    let isSearchingFile = false;
-
-    if (param2.fileName && param2.fileName.length > 0) isSearchingFile = true;
-    if (param2.generateID && param2.generateID.length > 0)
-      isSearchingFile = true;
-
-    if (!isSearchingFile) {
-      getRawFilesAndUpdateUI(
-        datasetId,
-        pagination.pageSize,
-        pagination.current - 1,
-        param3 ? param3.field : 'createTime',
-        searchText,
-        order,
-      );
-    }
   };
 
   const downloadFiles = () => {
@@ -410,6 +300,7 @@ function UploaderHistory(props) {
       searchText,
       order,
     );
+    setTableKey(tableKey+1)
   }
 
   const hasSelected = selectedRowKeys.length > 0;
@@ -468,19 +359,15 @@ function UploaderHistory(props) {
         </Collapse>
       )}
 
-      <Table
-        pagination={{
-          current: page + 1,
-          pageSize,
-          total: totalItem,
-          showQuickJumper: true,
-          showSizeChanger: true,
-        }}
-        rowKey={(record) => record.name}
-        rowSelection={rowSelection}
+      <FilesTable
         columns={columns}
         dataSource={rawFiles}
-        onChange={changePage}
+        totalItem={totalItem}
+        updateTable={getRawFilesAndUpdateUI}
+        projectId={datasetId}
+        rowSelection={rowSelection}
+        tableKey={tableKey}
+        type="raw table"
       />
       <GreenRoomUploader
         isShown={isShown}
@@ -498,6 +385,7 @@ export default connect(
     containersPermission: state.containersPermission,
     datasetList: state.datasetList,
     uploadList: state.uploadList,
+    successNum: state.successNum,
   }),
   { appendDownloadListCreator },
 )(withRouter(UploaderHistory));

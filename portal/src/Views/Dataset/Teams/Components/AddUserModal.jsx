@@ -202,14 +202,6 @@ function AddUserModal(props) {
       }
     >
       <Form form={form}>
-        {/* <Form.Item label={"User"} name="user">
-          <Select showSearch style={{ width: "100%" }} placeholder="Tags Mode">
-            {props.userList &&
-              props.userList.map((item) => {
-                return <Option key={item.name}>{item.name}</Option>;
-              })}
-          </Select>
-        </Form.Item> */}
         <Form.Item
           label="Email"
           name="email"
@@ -229,9 +221,13 @@ function AddUserModal(props) {
           <Radio.Group>
             {containerDetails &&
               containerDetails['roles'] &&
-              containerDetails['roles'].map((i) => (
-                <Radio value={i}>{i}</Radio>
-              ))}
+              containerDetails['roles'].map((i) => {
+                if (i !== 'member') {
+                  return (
+                    <Radio value={i}>{i}</Radio>
+                  )
+                }
+              })}
           </Radio.Group>
         </Form.Item>
       </Form>

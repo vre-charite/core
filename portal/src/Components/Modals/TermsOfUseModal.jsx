@@ -20,142 +20,300 @@ function TermsOfUseModal(props) {
         style={{ overflowY: 'scroll', height: '60vh' }}
         onScroll={props.handleScroll}
       >
-        <ul>
+        <h1 style={{ textAlign: 'center' }}>VRE Website Privacy Policy (Draft)</h1>
+        <h5 style={{ textAlign: 'center' }}>Version 1.0</h5>
+
+        <h2 style={{ color: "#3b5991", marginTop: 20 }}>Table of Contents</h2>
+        <ol>
           <li>
-            <a href="#top">Data Protection Statement</a>
-            <ol>
-              <li>
-                <a href="#first">Definitions</a>
-              </li>
-              <li>
-                <a href="#second">
-                  Name and contact details of the data protection officer
-                </a>
-              </li>
-            </ol>
+            <a href="#first">Use of Cookies by the VRE</a>
           </li>
           <li>
-            <a href="#cookies" id="cookies-link">
-              Cookies Policy
+            <a href="#second">
+              VRE Privacy Policy
             </a>
           </li>
-        </ul>
-        <Title level={3} id="top">
-          Data Protection Statement
-        </Title>
-        <p>
-          Thank you for your interest in our company. Data protection is of the
-          utmost importance to Charité – Universitätsmedizin Berlin. It is
-          generally possible to use our website without having to provide any
-          personal data. However, if a data subject wishes to use our website to
-          access specific services offered by our company, the processing of
-          personal data may become necessary. If it is necessary to process
-          personal data, and there is no legal basis for such processing, we
-          will generally obtain the data subject’s consent.
-        </p>
-        <p>
-          The processing of personal data, such as a data subject's name,
-          address, email address or telephone number, shall always be performed
-          in accordance with the General Data Protection Regulation (“GDPR”) and
-          in compliance with the country-specific data protection regulations
-          applicable to Charité – Universitätsmedizin Berlin. The aim of our
-          organization’s data protection statement is to inform the general
-          public of the nature, scope and purpose of the personal data we
-          collect, use and process. This data protection statement also informs
-          data subjects of the rights to which they are entitled.
-        </p>
-        <p>
-          As the data controller, Charité – Universitätsmedizin Berlin has
-          implemented numerous technical and organizational measures to ensure
-          that personal data processed via this website enjoy the most
-          comprehensive protection possible. However, due to some of the
-          security vulnerabilities inherent in data transfer via the internet,
-          complete protection cannot be guaranteed. For this reason, data
-          subjects are free to choose alternative means (e.g. via telephone) by
-          which to transfer their personal data.
-        </p>
+          <li>
+            <a href="#third">Data Controllers for the VRE website</a>
+          </li>
+          <li>
+            <a href="#four">VRE Data Protection Officer (DPO)</a>
+          </li>
+          <li>
+            <a href="#five">Legal Basis</a>
+          </li>
+          <li>
+            <a href="#six">Non-VRE Services</a>
+          </li>
+          <li>
+            <a href="#seven">Data Shared within the VRE Consortium</a>
+          </li>
+          <li>
+            <a href="#eight">Data Shared between Research Partners and VRE</a>
+          </li>
+          <li>
+            <a href="#nine">Data Shared with Third Parties</a>
+          </li>
+          <li>
+            <a href="#ten">Transfers of the personal data to third countries</a>
+          </li>
+          <li>
+            <a href="#eleven">Retention periods for the personal data</a>
+          </li>
+          <li>
+            <a href="#twlve">Rights available to individuals</a>
+          </li>
+          <li>
+            <a href="#thirteen">Right to lodge a complaint with a supervisory authority</a>
+          </li>
+        </ol>
+
         <Title level={4} id="first">
-          1. Definitions
+          1  Use of Cookies by the VRE
         </Title>
         <p>
-          Charité – Universitätsmedizin Berlin’s data protection statement uses
-          the terms adopted by the European legislator for the purposes of the
-          GDPR.
+          Cookies are small text files placed on your computer. Some cookies are functional session cookies which
+          are used to provide the user with the experience of a session: e.g. they track login details, remember user
+          choices and preferences, and in some instances determine site permissions. Other cookies are used to
+          provide statistics: e.g. they provide, in anonymous form, the number of visitors accessing a website,
+          features users access during website visits, and the general location of the user based on IP address. 
         </p>
+        <p>
+          This VRE website uses only strictly necessary cookies — these cookies are essential for the proper
+          operation of the website, allowing you to browse the website and use its features such as accessing
+          secure areas of the site. This website protects your privacy by not creating cookies which contain
+          personal data. The following list describes the types of cookies used on the VRE website.
+        </p>
+        <p>
+          <ul>
+            <li>
+              <strong>Access token: </strong>
+              <span>An encoded token that is used to mark user's identity and access to services.</span>
+            </li>
+
+            <li>
+              <strong>Refresh token:  </strong>
+              <span>An encoded token that is used to refresh user's session.</span>
+            </li>
+
+            <li>
+              <strong>Username:  </strong>
+              <span>Username of the current user.</span>
+            </li>
+
+            <li>
+              <strong>Login status:  </strong>
+              <span> Indicates whether or not a user is logged into the VRE.</span>
+            </li>
+
+            <li>
+              <strong>Terms of Use Notification:  </strong>
+              <span>  Indicates whether or not a user has acknowledged the applicable Terms of Use and Privacy Policy notifications.</span>
+            </li>
+          </ul>
+        </p>
+
         <Title level={4} id="second">
-          2. Name and contact details of the data protection officer
+          2  VRE Privacy Policy
         </Title>
         <p>
-          For the purposes of the GDPR, other data protection laws applicable to
-          Member States of the European Union and other provisions relating to
-          the subject of data protection, the controller is:
+          The VRE is a research infrastructure developed by the Charité and its service partners. 
         </p>
         <p>
-          Charité – Universitätsmedizin Berlin Charitéplatz 1 <br />
-          10117 Berlin
-          <br />
-          Deutschland
-        </p>
-        <p>+49 30 450 50</p>
-        <p>
-          <a href="mailto:datenschutz@charite.de">datenschutz(at)charite.de</a>
+          For more information on Data Protection across the project, visit:
         </p>
         <p>
-          Website: <a href="https://www.charite.de">https://www.charite.de</a>
+          <a href="https://www.charite.de/en/service/data_protection/">https://www.charite.de/en/service/data_protection/</a>
         </p>
         <p>
-          <strong>Data Protection Officer</strong>
+          At present, the Data Protection needs for the VRE are served by the Charité Data Protection Officer.
         </p>
-        <p>
-          For any questions on the processing of your personal data or on your
-          rights under data protection law, please contact:
-        </p>
-        <p>
-          Datenschutz der Charité – Universitätsmedizin Berlin <br />
-          Charitéplatz 1<br />
-          10117 Berlin
-        </p>
-        <p>+49 30 450 580 016</p>
-        <p>
-          <a href="mailto:datenschutz@charite.de">datenschutz(at)charite.de</a>
-        </p>
-        <p>
-          You can contact us via the contact details provided in Section 2 of
-          this Data Protection Statement.
-        </p>
-        <Title level={3} id="cookies">
-          Cookies Policy
+
+        <Title level={4} id="third">
+          3  Data Controllers for the VRE website 
         </Title>
         <p>
-          We use <strong>following strictly necessary cookies</strong> to fulfil
-          the site functionality. These are not tracking cookies.
+          The Charité is the coordinating centre for the VRE Research Infrastructure and is the data controller for
+          the personal information processed on the VRE Public Website (https://www.xxxxxx.de), unless
+          otherwise stated. Charité’s legal address is: Charité – Universitätsmedizin Berlin, Charitéplatz 1, 10117
+          Berlin, Deutschland.
         </p>
         <p>
-          <strong>Access token</strong> :<br /> An encoded token that is used to
-          mark user's identity and access to services.
+          Charité is neither data controller nor in charge of third party embedded content.
         </p>
         <p>
-          <strong>Refresh token</strong>: <br />
-          An encoded token that is used to refresh user's session.
+          All concerns regarding this VRE website, including ethical or data protection issues in the VRE, can be
+          submitted to the Data Protection Officer of the Charite here: <br></br>
+          <a href="https://www.charite.de/en/service/data_protection/">https://www.charite.de/en/service/data_protection/</a>
+        </p>
+
+        <Title level={4} id="four">
+          4  VRE Data Protection Officer (DPO)
+        </Title>
+        <p>
+          To contact the VRE Data Protection Officer directly, please send an email to the following address 
+          <a href="mailto:datenschutz@charite.de">datenschutz@charite.de</a>
+        </p>
+  
+        <Title level={4} id="five">
+          5  Legal Basis
+        </Title>
+        <p>
+          The legal basis for data processing in this VRE website include:
         </p>
         <p>
-          <strong>Username</strong> : <br />
-          Username of the current user.
+          <ul>
+            <li>Consent given by the Data Subject (GDPR Art. 6(1)(a))</li>
+            <li>Necessity for the performance of a contract to which the Data Subject is a party, or for taking
+              steps at the request of the Data Subject prior to entering a contract (GDPR Art. 6(1)(b)). </li>
+            <li>Compliance with a legal obligation (GDPR Art. 6(1)(c)). For example, where the VRE partners are
+              required to store the data to meet bookkeeping or audit obligations.</li>
+            <li>Necessity for the performance of a task carried out in the public interest or in the exercise of
+              official authority vested in the controller (GDPR Art. 6(1)(e)).</li>
+            <li>If the VRE partners have a legitimate interest that is not overridden by the interests or
+              fundamental rights freedoms of the Data Subject (GDPR Art. 6(1)(f)).</li>
+          </ul>
         </p>
         <p>
-          <strong>Login status</strong> :<br /> A boolean that marks whether a
-          user is logged in.
+          If you are employed by a VRE partner, your data will not be processed based on consent but rather to
+          comply with a legal obligation, to perform a contract, or in some cases, for purposes of a legitimate
+          interest
         </p>
-        {/* <p>
-          <strong>Cookies notification</strong> : A boolean that marks whether a
-          user has seen the cookies notification.
-        </p> */}
-        <br />
-        <p>Explainations about other cookies, if any.</p>
-        <p>The site is currently using following cookies:</p>
-        <Checkbox checked={true} disabled={true}>
+        <p>
+          This VRE website may process personal data that the Data Subject provides explicitly through account
+          profile entry, login or other forms (e.g. contact forms, event registration, newsletter subscription). This
+          includes required and optional fields entered by the Data Subject.
+        </p>
+        <p>
+          Additionally, this VRE website logs the IP address used to access the website for security reasons.
+        </p>
+        <p>
+          Personal data may be processed to provide access to services offered by the VRE website, to facilitate
+          collaboration among users of the VRE website and to contact users to keep them informed of events
+          and news regarding VRE.
+        </p>
+
+        <Title level={4} id="six">
+          6  Non-VRE Services
+        </Title>
+        <p>
+          This VRE website may receive support and services from providers outside of the Charité. If any personal
+          data is transferred to these providers, the administrator of this website is required to consult the Charité
+          Data Protection Officer to ensure that all data privacy obligations are met.
+        </p>
+
+        <Title level={4} id="seven">
+          7  Data Shared within the VRE Consortium
+        </Title>
+        <p>
+          The data controller may share data with VRE service providers within the VRE Consortium. All VRE
+          partners are required by contract to meet all GDPR requirements. In some cases, VRE partners may
+          publish statistical information about VRE usage, e.g. to the European Commission (EC). Such statistical
+          information will always be anonymous.
+        </p>
+        <p>
+          The data controller may also share data with official authorities if required by an administrative or courtorder, or with auditors.
+        </p>
+
+        <Title level={4} id="eight">
+          8  Data Shared between Research Partners and VRE
+        </Title>
+        <p>
+          The VRE receives data from its Research Partners as part of its operational function. This includes data
+          from research institutions and data providers. The VRE will process this data in accordance with
+          applicable EU laws such as the GDPR on privacy and data protection.
+        </p>
+
+        <Title level={4} id="nine">
+          9  Data Shared with Third Parties
+        </Title>
+        <p>
+          No personal data collected from this VRE website is sold or otherwise shared for the purposes of direct marketing or other commercial purposes.
+        </p>
+
+        <Title level={4} id="ten">
+          10  Transfers of the personal data to third countries
+        </Title>
+        <p>
+          Personal data may be transferred between the VRE service providers based in different countries.
+          Personal data transfers may take place within the EU/EEA and to other countries that have been found
+          to have adequate levels of protection by the European Commission including, but not limited to,
+          Switzerland and Israel. All other personal data transfers are made with adequate safeguards in place
+          including EC Standard Contractual Clauses, Binding Corporate Rules, or as part of the Privacy Shield
+          Framework.
+        </p>
+
+        <Title level={4} id="eleven">
+          11  Retention periods for the personal data
+        </Title>
+        <p>
+          Cookies may be erased by the user at the end of each session. Some web browsers offer to do this automatically.
+        </p>
+        <p>
+          Personal data entered by the Data Subject may be retained up to 2 years after the lifetime of the VRE
+          research infrastructure.
+        </p>
+        <p>
+          Data Subjects may request erasure of their personal data to the VRE DPO. The data controller will
+          execute such requests, except for minimal personal data which may be retained if needed for
+          monitoring legal compliance. Backups may also be retained in case of legitimate interests of the data
+          controller for the continued exploitation of the research infrastructure.
+        </p>
+
+        <Title level={4} id="twlve">
+          12  Rights available to individuals
+        </Title>
+        <p>
+          <ul>
+            <li>The rights available to individuals, as provided in the General Data Protection regulation in
+            respect of the processing their personal data, include:</li>
+            <li>the right to be informed (GDPR Articles 12-14, and Recitals 58 and 60-62),</li>
+            <li>the right to access personal data (GDPR Articles 12, 15 and Recitals 63, 64),</li>
+            <li>the right to rectification including having inaccurate personal data completed if it is incomplete
+              (GDPR Articles 5, 12, 16 and 19),</li>
+            <li>the right to erasure (GDPR Articles 18, 19 and Recital 67),</li>
+            <li>the right to restrict processing (GDPR Article 18),</li>
+            <li>the right to data portability (GDPR Article 20 and Recital 68),</li>
+            <li>the right to object (GDPR Article 21).</li>
+          </ul>
+        </p>
+
+        <Title level={4} id="thirteen">
+          13  Right to lodge a complaint with a supervisory authority
+        </Title>
+        <p>
+          The VRE DPO and its service providers will make every reasonable effort to address your data protection
+          concerns. However, you have a right to lodge a complaint with a data protection authority. Contact
+          information for the European Data Protection Board and EU DPAs is available here:
+        </p>
+        <p>
+          <a href="http://ec.europa.eu/newsroom/article29/item-detail.cfm?item_id=612080">http://ec.europa.eu/newsroom/article29/item-detail.cfm?item_id=612080</a>
+          <br></br>
+          <a href="https://edpb.europa.eu/about-edpb/board/members_en">https://edpb.europa.eu/about-edpb/board/members_en</a>
+        </p>
+        <p>
+          Contact information for the Swiss Data Protection authority is available here:
+          <br></br>
+          <a href="https://www.edoeb.admin.ch/edoeb/en/home.html">https://www.edoeb.admin.ch/edoeb/en/home.html</a>
+        </p>
+        <p>
+          Contact information for the Israeli Data Protection authority is available here:
+          <br></br>
+          <a href="https://www.gov.il/en/Departments/the_privacy_protection_authority">https://www.gov.il/en/Departments/the_privacy_protection_authority</a>
+        </p>
+        <p>
+          Contact information for the Norwegian Data Protection authority is available here:
+          <br></br>
+          <a href="https://www.datatilsynet.no/en/about-us/">https://www.datatilsynet.no/en/about-us/</a>
+        </p>
+        <p>
+          Contact information for the Turkish Data Protection authority is available here: 
+          <a href="https://kvkk.gov.tr/ ">https://kvkk.gov.tr/ </a>
+        </p>
+
+        {/* <Checkbox checked={true} disabled={true}>
           Strictly necessary cookies
-        </Checkbox>
+        </Checkbox> */}
         <br />
         <br />
       </div>

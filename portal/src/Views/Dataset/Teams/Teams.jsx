@@ -170,18 +170,22 @@ class Teams extends Component {
     const menu = (record, role) => (
       <Menu>
         {this.props.containerDetails &&
-          this.props.containerDetails['roles'].map((i) => (
-            <Menu.Item
-              onClick={() => {
-                // this.changeRole(record.name, record.permission, "uploader");
-                this.confirmModal(record.name, record.permission, i);
-              }}
-              disabled={role === i}
-              key="0"
-            >
-              {i}
-            </Menu.Item>
-          ))}
+          this.props.containerDetails['roles'].map((i) => {
+            if (i !== 'member') {
+              return (
+                <Menu.Item
+                  onClick={() => {
+                    // this.changeRole(record.name, record.permission, "uploader");
+                    this.confirmModal(record.name, record.permission, i);
+                  }}
+                  disabled={role === i}
+                  key="0"
+                >
+                  {i}
+                </Menu.Item>
+              )
+            }
+          })}
         <Menu.Divider />
         <Menu.Item
           onClick={() => {
@@ -238,7 +242,7 @@ class Teams extends Component {
             record.role !== 'admin'
           )
             isEnable = true;
-
+          
           return (
             isEnable && (
               <Dropdown

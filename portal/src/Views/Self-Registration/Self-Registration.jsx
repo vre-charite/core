@@ -300,7 +300,7 @@ function SelfRegistration(props) {
               <TermsOfUseModal 
                 footer={[
                   <Button key="submit" type="primary" onClick={onPrint} style={{ float: 'left' }}>
-                     <PDFDownloadLink
+                     {/* <PDFDownloadLink
                         document={
                           <AggrementPDF
                           />
@@ -310,7 +310,11 @@ function SelfRegistration(props) {
                       {({ blob, url, loading, error }) =>
                         loading ? "Loading document..." : "Export PDF"
                       }
-                    </PDFDownloadLink>
+                    </PDFDownloadLink> */}
+                      <a href="/vre/files/VRE Website Privacy Policy draft.pdf" download target="_self">
+                        {' '}
+                        Export PDF
+                      </a>
                   </Button>,
 
                   <Button key="submit" type="primary" disabled={btnDisable} onClick={onOk}>

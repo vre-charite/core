@@ -213,7 +213,7 @@ function CreateDatasetModal({
                   </Tooltip>
                 </Checkbox>
               </Col>
-              <Col span={8}>
+              {/* <Col span={8}>
                 <Checkbox value="member">
                   Member&nbsp;
                   <Tooltip
@@ -223,7 +223,7 @@ function CreateDatasetModal({
                     <QuestionCircleOutlined />
                   </Tooltip>
                 </Checkbox>
-              </Col>
+              </Col> */}
               <Col span={8}>
                 <Checkbox value="uploader">
                   Uploader&nbsp;

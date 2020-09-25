@@ -3,7 +3,7 @@ import { Modal, Button, message } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { useCookies } from 'react-cookie';
 import { refreshTokenAPI } from '../../APIs';
-import { headerUpdate, clearCookies } from '../../Utility';
+import { headerUpdate, clearCookies,refreshChannel } from '../../Utility';
 import jwt_decode from 'jwt-decode';
 import moment from 'moment';
 import { connect } from 'react-redux';
@@ -37,6 +37,7 @@ function CreateDatasetModal({
         setRefreshModal(false);
 
         if (autoRefresh) message.success('Automatic refresh');
+        refreshChannel.postMessage();
       })
       .catch((err) => {
         if (err.response) {
@@ -55,7 +56,7 @@ function CreateDatasetModal({
         let remain = exp - moment().unix();
         if (remain <= 0) {
           console.log('logout in refreshModal.jsx, remain <= 0')
-          logout();
+          logoutUtility();
           setRefreshModal(false);
         }else if(remain>60){
 
@@ -65,7 +66,7 @@ function CreateDatasetModal({
         }
       }else{ 
         console.log('logout in refreshModal.jsx, no token')
-        logout();
+        logoutUtility();
 
       }
     }, 1000);
@@ -73,7 +74,19 @@ function CreateDatasetModal({
   });
 
   const logout =  () => {
-    logoutUtility(true);
+    Modal.confirm({
+      title: 'Are you sure you want to log out?',
+      icon: <ExclamationCircleOutlined />,
+      content:
+        `If you're uploading/downloading, all the progress will be lost.`,
+      onOk() {
+        logoutUtility(true);
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    });
+    
   };
 
   const upladingList =

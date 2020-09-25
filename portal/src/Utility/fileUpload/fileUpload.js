@@ -14,6 +14,7 @@ import reduxActionWrapper from '../reduxActionWrapper';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { v4 as uuidv4 } from 'uuid';
 import { sleep } from '../common';
+import {store} from '../../Redux/store'
 
 const [
   appendUploadListDispatcher,
@@ -136,9 +137,9 @@ async function fileUpload(data, resolve, reject) {
               // } else {
               //   return Promise.reject(err);
               // }
-
               setTimeout(function () {
-                return retry(chunk, index, 3);
+                const {isLogin} = store.getState();
+                isLogin&&retry(chunk, index, 3);
               }, 5000);
             });
         },

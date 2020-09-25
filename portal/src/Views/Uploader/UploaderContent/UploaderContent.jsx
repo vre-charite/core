@@ -260,7 +260,7 @@ class Uploader extends Component {
       this.props.datasetList &&
       this.props.datasetList[0] &&
       this.props.datasetList[0]['datasetList'] &&
-      this.props.containersPermission 
+      this.props.containersPermission
     ) {
       this.props.datasetList[0]['datasetList'].forEach((dataset) => {
         const current = moment();
@@ -280,7 +280,7 @@ class Uploader extends Component {
       if (this.props.containersPermission.length === 0) {
         this.props.datasetList[0]['datasetList'].forEach((dataset) => {
           if (dataset.discoverable) projectNoPermission.push(dataset);
-        })
+        });
       }
     }
 

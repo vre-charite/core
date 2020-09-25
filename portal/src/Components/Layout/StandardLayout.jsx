@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout } from 'antd';
 import { RightOutlined, LeftOutlined } from '@ant-design/icons';
 import AppHeader from './Header';
-import FilePanel from './FilePanel';
+
 import LeftSider from './LeftSider';
 import RightSlider from './RightSlider';
 import { withRouter } from 'react-router-dom';
@@ -74,7 +74,7 @@ function StandardLayout(props) {
                 );
                 errorMessager.triggerMsg(null, null, item);
               } else {
-                dispatch(setSuccessNum(successNum + 1))
+                dispatch(setSuccessNum(successNum + 1));
               }
             }
           })
@@ -101,7 +101,7 @@ function StandardLayout(props) {
   }, [...observationVars /* ,uploadList */]);
 
   return (
-    <Layout>
+    <Layout style={{ minHeight: '100vh' }}>
       <AppHeader />
       <Content>
         <Layout>
@@ -109,7 +109,6 @@ function StandardLayout(props) {
           {rightContent && <RightSlider>{rightContent}</RightSlider>}
         </Layout>
       </Content>
-      <FilePanel />
     </Layout>
   );
 }

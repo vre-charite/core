@@ -42,7 +42,7 @@ const { confirm } = Modal;
 const { Header } = Layout;
 const { TabPane } = Tabs;
 const SubMenu = Menu.SubMenu;
-
+let modal;
 class AppHeader extends Component {
   static contextType = UploadQueueContext;
   constructor(props) {
@@ -66,23 +66,44 @@ class AppHeader extends Component {
       const { allCookies, history, cookies } = this.props;
       logout();
     };
+    console.log(
+      uploadingList.length > 0,
+      this.checkTabUploading(),
+      this.checkTabDownloading(),
+    );
+    modal = confirm({
+      title: 'Are you sure you want to log out?',
+      icon: <ExclamationCircleOutlined />,
+      content: `If you're uploading/downloading, all the progress will be lost.`,
+      onOk() {
+        doLogout();
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    });
+  };
 
-    if (uploadingList.length > 0) {
-      confirm({
-        title: 'Are you sure to log out?',
-        icon: <ExclamationCircleOutlined />,
-        content:
-          'The file uploading is still in progress. Progress will be lost if you log out',
-        onOk() {
-          doLogout();
-        },
-        onCancel() {
-          console.log('Cancel');
-        },
-      });
-    } else {
-      doLogout();
+  checkTabUploading = () => {
+    const uploadListFlags = localStorage.getItem('uploadList');
+    if (!uploadListFlags) {
+      return false;
     }
+    if (!_.isObject(JSON.parse(uploadListFlags))) {
+      return false;
+    }
+    return _.some(Object.values(JSON.parse(uploadListFlags)));
+  };
+  checkTabDownloading = () => {
+    const downloadListFlags = localStorage.getItem('downloadList');
+    if (!downloadListFlags) {
+      return false;
+    }
+    if (!_.isObject(JSON.parse(downloadListFlags))) {
+      return false;
+    }
+
+    return _.some(Object.values(JSON.parse(downloadListFlags)));
   };
 
   handleCancel = () => {
@@ -127,10 +148,13 @@ class AppHeader extends Component {
       this.setState({ loading: loading });
     }
 
-    if (prevProps.uploadList && this.props.uploadList && (this.props.uploadList.length !== prevProps.uploadList.length)) {
+    if (
+      prevProps.uploadList &&
+      this.props.uploadList &&
+      this.props.uploadList.length !== prevProps.uploadList.length
+    ) {
       // this.setState({ showNotifications: ['notifications'] });
     }
-
   }
 
   render() {
@@ -294,10 +318,13 @@ class AppHeader extends Component {
     const uploadListContent = (
       <Tabs className={styles.tab}>
         <TabPane tab="Messages" key="message">
-          <Empty description="No Messages" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          <Empty
+            description="No Messages"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
         </TabPane>
       </Tabs>
-    )
+    );
 
     const username = getCookie('username');
 
@@ -314,11 +341,16 @@ class AppHeader extends Component {
           height: '100%',
         }}
       >
-        <Menu 
-          mode="horizontal" 
-          getPopupContainer={(node) => node.parentNode} 
+        <Menu
+          mode="horizontal"
+          getPopupContainer={(node) => node.parentNode}
           triggerSubMenuAction="click"
-          openKeys={this.state.showNotifications && this.state.showNotifications.length > 0 ? this.state.showNotifications : []}
+          openKeys={
+            this.state.showNotifications &&
+            this.state.showNotifications.length > 0
+              ? this.state.showNotifications
+              : []
+          }
           onOpenChange={(key) => {
             this.setState({ showNotifications: key });
           }}
@@ -337,6 +369,7 @@ class AppHeader extends Component {
               <ContainerOutlined /> Projects
             </Link>
           </Menu.Item>
+
           {/* this.props.role === "admin" && (
             <Menu.Item key="admin">
               <Link to="/admin/users">
@@ -376,13 +409,12 @@ class AppHeader extends Component {
                 <span>Reset Password</span>
               </Button>
             </Menu.Item>
-            <Menu.Item key="helpCenter">
-              <Button
-                type="link"
-              >
-                <a href="mailto:vre-support@charite.de">Contact Us</a> 
+            {/* removed to support page */}
+            {/* <Menu.Item key="helpCenter">
+              <Button type="link">
+                <a href="mailto:vre-support@charite.de">Contact Us</a>
               </Button>
-            </Menu.Item>
+            </Menu.Item> */}
             <Menu.Item key="logout">
               <Button type="link" onClick={this.logout}>
                 <span style={{ color: 'red' }}>Logout</span>
@@ -395,8 +427,8 @@ class AppHeader extends Component {
             style={{ float: 'right' }}
             // className={this.state.shakeClass}
             title={
-              <Badge 
-                offset={[5, 0]} 
+              <Badge
+                offset={[5, 0]}
                 // dot={this.state.show}
               >
                 {/* {this.state.loading && <LoadingOutlined color={'#1890ff'} />}{' '} */}
@@ -406,6 +438,10 @@ class AppHeader extends Component {
           >
             {uploadListContent}
           </SubMenu>
+          <Menu.Item key="support" style={{ float: 'right' }}>
+            <Link to="/support">Support</Link>
+            {/* <a href="/files/test.pdf" download target="_self"></a> */}
+          </Menu.Item>
         </Menu>
         <ResetPasswordModal
           visible={this.state.modalVisible}
@@ -436,6 +472,7 @@ export default connect(
     uploadList: state.uploadList,
     downloadList: state.downloadList,
     uploadIndicator: state.newUploadIndicator,
+    isLogin: state.isLogin,
   }),
   {
     cleanDatasetCreator,

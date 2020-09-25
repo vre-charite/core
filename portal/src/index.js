@@ -20,13 +20,13 @@ console.log('no route')
 ReactDOM.render(
   <CookiesProvider>
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+     {/*  <PersistGate loading={null} persistor={persistor}> */}
         <Router /* basename={"/vre"} */ history={history} forceRefresh={false}>
          {/*  <UploadQueueContext.Provider> */}
             <App />
          {/*  </UploadQueueContext.Provider> */}
         </Router>
-      </PersistGate>
+      {/* </PersistGate> */}
     </Provider>
   </CookiesProvider>,
   document.getElementById("root")

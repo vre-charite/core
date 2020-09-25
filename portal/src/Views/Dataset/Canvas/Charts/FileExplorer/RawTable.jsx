@@ -407,7 +407,6 @@ function RawTable(props) {
   };
 
   function fetchData() {
-    console.log('fetch data')
     setRefreshing(true);
     getRawFilesAndUpdateUI(
       props.projectId,

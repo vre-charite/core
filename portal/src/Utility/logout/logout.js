@@ -35,7 +35,7 @@ function logout(cleanCookies = true) {
     console.error('username is undefined');
   }
 
-  const { uploadList, clearId } = store.getState();
+  const { uploadList, clearId, downloadClearId } = store.getState();
   // emailUploadedFileListAPI(uploadList, uploader)
   //   .then((res) => {})
   //   .catch((err) => {
@@ -50,12 +50,17 @@ function logout(cleanCookies = true) {
     });
   }
   q.kill();
-  console.log('logout real');
+
   headerUpdate('', '');
   console.log('clearId', clearId);
   window.clearInterval(clearId);
+  window.clearInterval(downloadClearId);
+  
   setUploadListDispatcher([]);
+  
   cleanReduxDispatcher();
+  localStorage.removeItem('uploadList');
+  localStorage.removeItem('downloadList');
   setIsLoginDispatcher(false);
   history.push('/');
   message.success(`Logout successful!`);

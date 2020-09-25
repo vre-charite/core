@@ -7,7 +7,7 @@ import protectedRoutes from './protectedRoutes';
 import { headerUpdate, clearCookies, checkToken, validateEmail,isTokenExpired, getCookie } from './tokenRefresh';
 import { apiErrorHandling } from './apiErrorHandling';
 import  logout  from './logout/logout';
-import {logoutChannel,loginChannel} from './broadcast';
+import {logoutChannel,loginChannel,refreshChannel} from './broadcast';
 import { sleep } from './common';
 
 
@@ -26,5 +26,5 @@ export {
   checkToken,
   getCookie,
   validateEmail, logout,logoutChannel,loginChannel,isTokenExpired,
-  sleep,
+  sleep,refreshChannel
 };

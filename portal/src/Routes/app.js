@@ -1,6 +1,7 @@
 import Login from '../Views/Login/Auth';
 import Uploader from '../Views/Uploader/Uploader';
 import Dataset from '../Views/Dataset/Dataset';
+import Support from '../Views/Support/Support';
 import ErrorPage from '../Views/ErrorPage/ErrorPage';
 import SelfRegistration from '../Views/Self-Registration/Self-Registration';
 const authedRoutes = [
@@ -14,6 +15,12 @@ const authedRoutes = [
     component: Dataset,
     protectedType: 'isLogin',
   },
+  {
+    path: '/support',
+    component: Support,
+    protectedType: 'isLogin',
+  },
+
   /*   {
     path: "/admin",
     component: AdminManagement,

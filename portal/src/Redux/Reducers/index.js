@@ -14,6 +14,7 @@ import downloadList from './downloadList';
 import clearId from './clearId';
 import isLogin from './isLogin'
 import successNum from './successNum';
+import downloadClearId from './downloadClearId'
 // export default combineReducers({
 //   datasetList,
 //   userList,
@@ -37,7 +38,7 @@ const appReducer = combineReducers({
   newUploadIndicator,
   refreshTokenModal,
   downloadList,clearId,isLogin,
-  successNum,
+  successNum,downloadClearId
 });
 
 const rootReducer = (state, action) => {

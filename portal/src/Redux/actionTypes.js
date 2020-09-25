@@ -39,3 +39,5 @@ export const UPDATE_CLEAR_ID = 'UPDATE_CLEAR_ID';
 export const SET_IS_LOGIN = 'SET_IS_LOGIN';
 
 export const SET_SUCCESS_NUM = 'SET_SUCCESS_NUM';
+
+export const SET_DOWNLOAD_CLEAR_ID = 'SET_DOWNLOAD_CLEAR_ID';

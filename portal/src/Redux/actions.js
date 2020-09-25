@@ -17,7 +17,7 @@ import {
   REMOVE_DOWNLOAD_LIST,
   UPDATE_DATASET_LIST,
   UPDATE_CLEAR_ID,SET_IS_LOGIN,
-  SET_SUCCESS_NUM,
+  SET_SUCCESS_NUM,SET_DOWNLOAD_CLEAR_ID
 } from "./actionTypes";
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -152,4 +152,10 @@ export const setIsLoginCreator = (isLogin)=>({
 export const setSuccessNum = (num) => ({
   type:SET_SUCCESS_NUM,
   payload:num
+})
+
+
+export const setDownloadClearId = (downloadClearId)=>({
+  type:SET_DOWNLOAD_CLEAR_ID,
+  payload:downloadClearId
 })

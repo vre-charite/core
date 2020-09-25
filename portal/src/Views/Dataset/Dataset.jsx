@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StandardLayout } from '../../Components/Layout';
+import FilePanel from '../../Components/Layout/FilePanel';
 import { message } from 'antd';
 import { datasetRoutes as routes } from '../../Routes/index';
 import { withRouter, Switch, Route, Redirect } from 'react-router-dom';
@@ -97,6 +98,7 @@ function Dataset(props) {
           ></Route>
         ))}
       </Switch>
+      <FilePanel />
     </StandardLayout>
   );
 }

@@ -16,7 +16,7 @@ import {
   removeDownloadListCreator,
   setIsLoginCreator,
   updateClearIdCreator,
-  setSuccessNum,
+  setSuccessNum,setDownloadClearId
 } from './Redux/actions';
 import { withCookies } from 'react-cookie';
 import {
@@ -39,9 +39,9 @@ import {
   loginChannel,
   headerUpdate,
   isTokenExpired,
-  getCookie,
+  getCookie,refreshChannel
 } from './Utility';
-import { message } from 'antd';
+import { message,Modal } from 'antd';
 import Promise from 'bluebird';
 import _ from 'lodash';
 import { useStore } from 'react-redux';
@@ -49,10 +49,18 @@ import jwt_decode from 'jwt-decode';
 import moment from 'moment';
 import RefreshModel from './Components/Modals/RefreshModal';
 import { namespace, ErrorMessager } from './ErrorMessages';
+import { v4 as uuidv4 } from 'uuid';
+import { history } from './Routes';
+
+// router change
+history.listen(() => {
+  Modal.destroyAll();
+});
 let clearIds = [];
 message.config({
   maxCount: 2,
 });
+const tabUuid = uuidv4();
 
 class App extends Component {
   constructor(props) {
@@ -161,6 +169,11 @@ class App extends Component {
         headerUpdate(getCookie('access_token'), getCookie('refresh_token'));
       }
     };
+    refreshChannel.onmessage = ()=>{
+      console.log('refesh token from another tab');
+      headerUpdate(getCookie('access_token'), getCookie('refresh_token'));
+    }
+
   };
 
   componentDidUpdate(prevProps) {
@@ -168,6 +181,7 @@ class App extends Component {
       this.debouncedUpdatePendingStatus(this.props.uploadList);
       this.setRefreshConfirmation(this.props.uploadList);
       this.debouncedTokenRefreshWhileUploading();
+      
     }
     if (prevProps.downloadList !== this.props.downloadList) {
       this.updateDownloadStatus(this.props.downloadList);
@@ -195,6 +209,7 @@ class App extends Component {
       clearIds = [];
       return;
     }
+    
 
     const clearId = window.setInterval(() => {
       Promise.map(pendingArr, (item, index) => {
@@ -228,7 +243,7 @@ class App extends Component {
   };
 
   updateDownloadStatus = (arr) => {
-    clearInterval(this.state.downloadClearId);
+    clearInterval(this.props.downloadClearId);
     const downloadClearId = window.setInterval(() => {
       Promise.map(arr, (item, index) => {
         checkDownloadStatusAPI(
@@ -238,9 +253,7 @@ class App extends Component {
         );
       });
     }, 4000);
-    this.setState({
-      downloadClearId,
-    });
+    this.props.setDownloadClearId(downloadClearId);
   };
 
   setRefreshConfirmation = (arr) => {
@@ -258,6 +271,8 @@ class App extends Component {
       window.onbeforeunload = () => {};
     }
   };
+
+
 
   tokenRefreshWhileUploading() {
     const { uploadList } = this.props;
@@ -356,6 +371,7 @@ export default connect(
     containersPermission: state.containersPermission,
     datasetList: state.datasetList,
     successNum: state.successNum,
+    downloadClearId:state.downloadClearId
   }),
   {
     AddDatasetCreator,
@@ -370,8 +386,8 @@ export default connect(
     removeDownloadListCreator,
     setIsLoginCreator,
     updateClearIdCreator,
-    setSuccessNum,
+    setSuccessNum,setDownloadClearId
   },
 )(withCookies(withRouter(App)));
 
-// trigger cic
+// trigger cic 
