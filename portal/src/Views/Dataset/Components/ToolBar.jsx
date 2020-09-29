@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Menu } from "antd";
+import React, { useState } from 'react';
+import { Menu } from 'antd';
 import {
   DesktopOutlined,
   PieChartOutlined,
@@ -8,12 +8,13 @@ import {
   SettingOutlined,
   FileSearchOutlined,
   PlusOutlined,
-} from "@ant-design/icons";
-import { Link } from "react-router-dom";
-import { withRouter } from "react-router-dom";
-import GreenRoomUploader from "./GreenRoomUploader";
-import { connect } from "react-redux";
-import _ from "lodash";
+} from '@ant-design/icons';
+import { Link } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
+import GreenRoomUploader from './GreenRoomUploader';
+import { connect } from 'react-redux';
+import _ from 'lodash';
+import style from './index.module.scss';
 const { SubMenu } = Menu;
 
 const ToolBar = ({
@@ -25,53 +26,34 @@ const ToolBar = ({
   const [isShown, toggleModal] = useState(false);
   const [isCreateDatasetModalShown, toggleCreateDataset] = useState(false);
   const adminPermission =
-    role === "admin" ||
+    role === 'admin' ||
     _.some(containersPermission, (item) => {
       return (
         parseInt(item.container_id) === parseInt(params.datasetId) &&
-        item.permission === "admin"
+        item.permission === 'admin'
       );
     });
 
   return (
     <>
-      <Menu mode="inline" selectedKeys={[pathname.split("/")[3]]}>
+      <Menu mode="inline" selectedKeys={[pathname.split('/')[3]]} className={style.menu}>
         <Menu.Item key="canvas">
           <Link to="canvas">
             <PieChartOutlined />
-            <span>canvas</span>
+            <span>Canvas</span>
           </Link>
         </Menu.Item>
-        {/* <Menu.Item title={"workspace"} key="workspace">
-          <Link to="workspace">
-            <DesktopOutlined />
-          </Link>
-        </Menu.Item> */}
-        {/* <Menu.Item
-          key="dataset"
-          onClick={() => {
-            toggleCreateDataset(true);
-          }}
-        >
-          <PlusOutlined />
-          <span>New Dataset</span>
-        </Menu.Item> */}
 
-         <Menu.Item
+        <Menu.Item
           key="uploader"
           onClick={() => {
             toggleModal(true);
           }}
         >
           <UploadOutlined />
-          <span>Uploader</span>
+          <span>Upload</span>
         </Menu.Item>
-        {/* <Menu.Item key="files">
-          <Link to="files">
-            <FileSearchOutlined />
-            <span>Files</span>
-          </Link>
-        </Menu.Item> */}
+
         {adminPermission && (
           <Menu.Item key="teams">
             <Link to="teams">
@@ -81,10 +63,6 @@ const ToolBar = ({
           </Menu.Item>
         )}
 
-        {/* <Menu.Item key="setting">
-          <SettingOutlined />
-          <span>Setting</span>
-        </Menu.Item> */}
       </Menu>
       <GreenRoomUploader
         isShown={isShown}

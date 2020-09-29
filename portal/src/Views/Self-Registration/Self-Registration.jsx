@@ -13,9 +13,9 @@ import {
   Checkbox,
   Modal,
   Button,
-  Card
+  Card,
 } from 'antd';
-import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
 import styles from './index.module.scss';
 import AggrementPDF from './Components/AggrementPDF';
 import {
@@ -102,28 +102,29 @@ function SelfRegistration(props) {
   const onCancel = () => {
     setVisible(false);
     setBtnDisable(true);
-  }
+  };
 
   const onDecline = () => {
     setVisible(false);
     setBtnDisable(true);
     form.setFieldsValue({ tou: false });
-  }
+  };
 
   const onOk = () => {
     form.setFieldsValue({ tou: true });
     setVisible(false);
-  }
+  };
 
-  const onPrint = () => { 
-    console.log('print')
-  }
+  const onPrint = () => {
+    console.log('print');
+  };
 
   const handleScroll = (e) => {
-    const bottom = e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight;
-    console.log(bottom)
-    if (bottom) setBtnDisable(false)
-  }
+    const bottom =
+      e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight;
+    console.log(bottom);
+    if (bottom) setBtnDisable(false);
+  };
 
   return (
     <div className={styles.bg}>
@@ -207,10 +208,10 @@ function SelfRegistration(props) {
                 <Form.Item label="Email">
                   <Input value={info.email} disabled />
                 </Form.Item>
-
+                {/* 
                 <Form.Item label="Project ID">
                   <Input value={info.projectId} disabled />
-                </Form.Item>
+                </Form.Item> */}
                 {/* <Form.Item label="Role">
                   <Input value={info.role} disabled />
                 </Form.Item> */}
@@ -267,29 +268,26 @@ function SelfRegistration(props) {
                   <Input type="password" />
                 </Form.Item>
                 <Form.Item
-									{...tailLayout}
-									name="tou"
-									valuePropName="checked"
-									style={{ marginBottom: "8px" }}
-									rules={[
-										{
-											validator: (_, value) =>
-												value
-													? Promise.resolve()
-													: Promise.reject(
-															"Please accept the terms of use to proceed",
-													  ),
-										},
-									]}
-								>
-									<Checkbox disabled>
-										By checking this box you agree to our{" "}
-										<Link onClick={() => setVisible(true)}>
-											Terms of Use
-										</Link>
-										.
-									</Checkbox>
-								</Form.Item>
+                  {...tailLayout}
+                  name="tou"
+                  valuePropName="checked"
+                  style={{ marginBottom: '8px' }}
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        value
+                          ? Promise.resolve()
+                          : Promise.reject(
+                              'Please accept the terms of use to proceed',
+                            ),
+                    },
+                  ]}
+                >
+                  <Checkbox disabled>
+                    By checking this box you agree to our{' '}
+                    <Link onClick={() => setVisible(true)}>Terms of Use</Link>.
+                  </Checkbox>
+                </Form.Item>
                 <Form.Item wrapperCol={6}>
                   <Button type="primary" htmlType="submit">
                     Submit
@@ -297,10 +295,15 @@ function SelfRegistration(props) {
                 </Form.Item>
               </Form>
 
-              <TermsOfUseModal 
+              <TermsOfUseModal
                 footer={[
-                  <Button key="submit" type="primary" onClick={onPrint} style={{ float: 'left' }}>
-                     {/* <PDFDownloadLink
+                  <Button
+                    key="submit"
+                    type="primary"
+                    onClick={onPrint}
+                    style={{ float: 'left' }}
+                  >
+                    {/* <PDFDownloadLink
                         document={
                           <AggrementPDF
                           />
@@ -311,18 +314,27 @@ function SelfRegistration(props) {
                         loading ? "Loading document..." : "Export PDF"
                       }
                     </PDFDownloadLink> */}
-                      <a href="/vre/files/VRE Website Privacy Policy draft.pdf" download target="_self">
-                        {' '}
-                        Export PDF
-                      </a>
+                    <a
+                      href="/vre/files/VRE Website Privacy Policy draft.pdf"
+                      download
+                      target="_self"
+                    >
+                      {' '}
+                      Export PDF
+                    </a>
                   </Button>,
 
-                  <Button key="submit" type="primary" disabled={btnDisable} onClick={onOk}>
+                  <Button
+                    key="submit"
+                    type="primary"
+                    disabled={btnDisable}
+                    onClick={onOk}
+                  >
                     Accept
                   </Button>,
 
                   <Button key="back" type="danger" onClick={onDecline}>
-                    Declined
+                    Decline
                   </Button>,
                 ]}
                 visible={visible}

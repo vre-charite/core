@@ -17,7 +17,7 @@ export default class DragArea extends React.Component {
       currentBreakpoint: 'lg',
       compactType: 'vertical',
       mounted: false,
-      layouts: { lg: this.props.layout },
+      layouts: this.props.layout,
     };
   }
 
@@ -71,6 +71,7 @@ export default class DragArea extends React.Component {
           draggableHandle={'.dragarea'}
           measureBeforeMount={true}
           compactType={this.state.compactType}
+          verticalCompact={true}
           preventCollision={!this.state.compactType}
         >
           {this.props.children}
@@ -88,6 +89,6 @@ DragArea.defaultProps = {
   className: 'layout',
   rowHeight: 100,
   onLayoutChange: function () {},
-  cols: { lg: 24, md: 24, sm: 5, xs: 4, xxs: 2 },
+  cols: { lg: 24, md: 24, sm: 12, xs: 3, xxs: 3 },
   // initialLayout: generateLayout(),
 };

@@ -74,7 +74,7 @@ class AppHeader extends Component {
     modal = confirm({
       title: 'Are you sure you want to log out?',
       icon: <ExclamationCircleOutlined />,
-      content: `If you're uploading/downloading, all the progress will be lost.`,
+      content: `By clicking on “OK“, you will be logged out on all the opened VRE tabs. If you're uploading/downloading, all the progress will be lost.`,
       onOk() {
         doLogout();
       },

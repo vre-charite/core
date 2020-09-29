@@ -15,48 +15,64 @@ import { namespace, ErrorMessager } from '../../../ErrorMessages';
 const { Content } = Layout;
 
 const defaultLayout = {
-  0: [],
-  1: [
-    { i: '0', x: 0, y: 0, w: 9, h: 2, minH: 2, maxH: 2 },
-    { i: '1', x: 9, y: 0, w: 5, h: 2, minH: 2, maxH: 2 },
-    { i: '2', x: 14, y: 0, w: 5, h: 2, minH: 2, maxH: 2 },
-    { i: '3', x: 19, y: 0, w: 5, h: 2, minH: 2, maxH: 2 },
+  0: { lg: [] },
+  1: {
+    lg: [
+      { i: '0', x: 0, y: 0, w: 9, h: 2, minH: 2, maxH: 2 },
+      { i: '1', x: 9, y: 0, w: 5, h: 2, minH: 2, maxH: 2 },
+      { i: '2', x: 14, y: 0, w: 5, h: 2, minH: 2, maxH: 2 },
+      { i: '3', x: 19, y: 0, w: 5, h: 2, minH: 2, maxH: 2 },
 
-    { i: '4', x: 0, y: 2, w: 15, h: 6 },
-    { i: '5', x: 0, y: 9, w: 5, h: 3 },
-    { i: '6', x: 5, y: 9, w: 5, h: 3 },
-    { i: '7', x: 10, y: 9, w: 5, h: 3 },
-    { i: '8', x: 15, y: 2, w: 9, h: 9 },
+      { i: '4', x: 0, y: 2, w: 15, h: 6 },
+      { i: '5', x: 0, y: 9, w: 5, h: 3 },
+      { i: '6', x: 5, y: 9, w: 5, h: 3 },
+      { i: '7', x: 10, y: 9, w: 5, h: 3 },
+      { i: '8', x: 15, y: 2, w: 9, h: 9 },
 
-    { i: '9', x: 0, y: 11, w: 9, h: 3 },
-    { i: '10', x: 9, y: 11, w: 9, h: 3 },
-    { i: '11', x: 18, y: 11, w: 6, h: 3 },
-    { i: '12', x: 0, y: 13, w: 15, h: 3 },
-  ],
-  2: [
-    { i: '5', x: 0, y: 9, w: 5, h: 3 },
-    { i: '6', x: 5, y: 9, w: 5, h: 3 },
-    { i: '7', x: 10, y: 9, w: 5, h: 3 },
-  ],
+      { i: '9', x: 0, y: 11, w: 9, h: 3 },
+      { i: '10', x: 9, y: 11, w: 9, h: 3 },
+      { i: '11', x: 18, y: 11, w: 6, h: 3 },
+      { i: '12', x: 0, y: 13, w: 15, h: 3 },
+    ],
+  },
+  2: {
+    lg: [
+      { i: '5', x: 0, y: 9, w: 5, h: 3 },
+      { i: '6', x: 5, y: 9, w: 5, h: 3 },
+      { i: '7', x: 10, y: 9, w: 5, h: 3 },
+    ],
+  },
   //Admin panel
-  3: [
-    { i: '0', x: 0, y: 0, w: 12, h: 4 },
-    { i: '2', x: 12, y: 0, w: 3, h: 4 },
-    { i: '3', x: 15, y: 0, w: 9, h: 4 },
-    { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
-  ],
+  3: {
+    lg: [
+      { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '2', x: 12, y: 0, w: 3, h: 4 },
+      { i: '3', x: 15, y: 0, w: 9, h: 4 },
+      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+    ],
+    sm: [
+      { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '2', x: 0, y: 4, w: 3, h: 4 },
+      { i: '3', x: 3, y: 4, w: 9, h: 4 },
+      { i: '1', x: 0, y: 8, w: 24, h: 7.5 },
+    ],
+  },
   //Uploader panel
-  4: [
-    { i: '0', x: 0, y: 0, w: 12, h: 4 },
-    { i: '4', x: 15, y: 0, w: 12, h: 4 },
-    { i: '5', x: 0, y: 7, w: 24, h: 7.5 },
-  ],
+  4: {
+    lg: [
+      { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '4', x: 15, y: 0, w: 12, h: 4 },
+      { i: '5', x: 0, y: 7, w: 24, h: 7.5 },
+    ],
+  },
   //Member panel
-  5: [
-    { i: '0', x: 0, y: 0, w: 12, h: 4 },
-    { i: '4', x: 15, y: 0, w: 12, h: 4 },
-    { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
-  ],
+  5: {
+    lg: [
+      { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '4', x: 15, y: 0, w: 12, h: 4 },
+      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+    ],
+  },
 };
 
 class Canvas extends Component {
@@ -412,7 +428,7 @@ class Canvas extends Component {
                           Project: {this.state.datasetName}
                         </span>
                       }
-                      subTitle={`Your current role is ${this.state.currentRole}.`}
+                      subTitle={`Your role is ${this.state.currentRole}.`}
                       extra={[
                         <Button type="" onClick={this.handleResetLayout}>
                           Reset Layout

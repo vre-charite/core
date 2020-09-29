@@ -88,7 +88,7 @@ function AddUserModal(props) {
 
     const config = {
       title: 'Confirm',
-      content: `User ${email} doesn't exist. Invite the user to ${projectName} as a ${role}?`,
+      content: `User ${email} doesn't exist. Invite the user to the ${projectName} Project with the role of ${role}?`,
       icon: <ExclamationCircleOutlined />,
       onOk: () => {
         inviteUserApi(email, role, parseInt(projectId))
@@ -223,9 +223,7 @@ function AddUserModal(props) {
               containerDetails['roles'] &&
               containerDetails['roles'].map((i) => {
                 if (i !== 'member') {
-                  return (
-                    <Radio value={i}>{i}</Radio>
-                  )
+                  return <Radio value={i}>{i}</Radio>;
                 }
               })}
           </Radio.Group>

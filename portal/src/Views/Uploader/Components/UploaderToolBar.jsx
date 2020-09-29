@@ -80,7 +80,11 @@ function UploaderToolBar(props) {
   return (
     <>
       <Sider collapsed={true} reverseArrow={true} trigger={null} theme="light">
-        <Menu defaultSelectedKeys={['dashboard']} mode="inline">
+        <Menu
+          defaultSelectedKeys={['dashboard']}
+          mode="inline"
+          style={{ position: 'fixed' }}
+        >
           {/* <Menu.Item
             key="uploader"
             onClick={() => {

@@ -15,6 +15,7 @@ const cardsAttr = {
       type: 'fileStats',
       key: '2',
       title: 'General Statistics',
+      defaultSize: 'm',
       expandable: false,
       exportable: false,
     },

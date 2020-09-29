@@ -72,6 +72,7 @@ function CreateDatasetModal({
                 container_id: newContainer.id,
                 container_name: values.name,
                 permission: 'admin',
+                code: values.code,
               },
             ]);
             cancel();
@@ -128,7 +129,6 @@ function CreateDatasetModal({
         form={form}
         name="create_dataset"
         onFinish={onFinish}
-        style={{ padding: '20px 0 50px' }}
         layout="vertical"
         initialValues={{ discoverable: true }}
       >

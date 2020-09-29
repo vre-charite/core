@@ -27,7 +27,7 @@ const [
 ]);
 const _ = require('lodash');
 
-var Promise = require('bluebird');
+const Promise = require('bluebird');
 
 async function fileUpload(data, resolve, reject) {
   const MAX_LENGTH = 1024 * 1024 * 2;
@@ -127,7 +127,7 @@ async function fileUpload(data, resolve, reject) {
                 status: 'uploading',
               });
             })
-            .catch((err) => {
+            .catch(async (err) => {
               // Retry when file upload fails on 401 or unstable internet (ECONNABORTED)
               // If anything wrong with the file itself(e.g. repeated file name/illegal file name)
               // The upload should stop
@@ -137,10 +137,13 @@ async function fileUpload(data, resolve, reject) {
               // } else {
               //   return Promise.reject(err);
               // }
-              setTimeout(function () {
-                const {isLogin} = store.getState();
-                isLogin&&retry(chunk, index, 3);
-              }, 5000);
+              await new Promise((resolve,reject)=>{
+                setTimeout(function () {
+                  resolve();
+                }, 5000);
+              });
+              const {isLogin} = store.getState();
+              return isLogin&&retry(chunk, index, 3);
             });
         },
         {

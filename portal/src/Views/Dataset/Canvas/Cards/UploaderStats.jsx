@@ -53,7 +53,7 @@ function UserStats(props) {
     <>
       <div className={styles.userStats}>
         <Statistic
-          title="Upload(today)"
+          title="Uploads (today)"
           value={uploadCount}
           prefix={<CloudUploadOutlined />}
           valueStyle={{
@@ -64,7 +64,7 @@ function UserStats(props) {
           style={{ paddingRight: '36px' }}
         />
         <Statistic
-          title="Download(today)"
+          title="Downloads (today)"
           value={downloadCount}
           prefix={<CloudDownloadOutlined />}
           valueStyle={{

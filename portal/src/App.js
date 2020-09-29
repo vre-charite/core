@@ -59,6 +59,7 @@ history.listen(() => {
 let clearIds = [];
 message.config({
   maxCount: 2,
+  duration: 5,
 });
 const tabUuid = uuidv4();
 
