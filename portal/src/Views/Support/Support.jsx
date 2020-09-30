@@ -109,7 +109,9 @@ function Support(props) {
             technical suport, let us know through email:{' '}
           </p>
           <Button type="primary">
-            <a href="mailto:vre-support@charite.de">Contact Us</a>
+            <a href="mailto:vre-support@charite.de?subject=[VRE Support]">
+              Contact Us
+            </a>
           </Button>
         </Card>
       </div>

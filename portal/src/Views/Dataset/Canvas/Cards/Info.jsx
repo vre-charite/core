@@ -14,13 +14,17 @@ import { withRouter } from 'react-router-dom';
 import _ from 'lodash';
 import { updateDatasetInfoAPI } from '../../../../APIs';
 import { UpdateDatasetCreator } from '../../../../Redux/actions';
+import { getUsersOnDatasetAPI } from '../../../../APIs';
+import { objectKeysToCamelCase } from '../../../../Utility';
 import { PresetStatusColorTypes } from 'antd/lib/_util/colors';
 const { TextArea } = Input;
+const { Paragraph } = Typography;
 
 function Description(props) {
   const [editView, setEditView] = useState(false);
   const [datasetInfo, setDatasetInfo] = useState(null);
   const [datasetUpdate, setDatasetUpdate] = useState(null);
+  const [userListOnDataset, setUserListOnDataset] = useState(null);
 
   const {
     containersPermission,
@@ -47,6 +51,13 @@ function Description(props) {
       return parseInt(ele.container_id) === parseInt(datasetId);
     });
 
+  useEffect(() => {
+    currentContainer &&
+      getUsersOnDatasetAPI(datasetId).then((res) => {
+        setUserListOnDataset(objectKeysToCamelCase(res.data.result));
+      });
+  }, [null]);
+
   const saveDatasetInfo = () => {
     // check information (name is required)
     console.log('Description -> datasetUpdate', datasetUpdate);
@@ -65,7 +76,6 @@ function Description(props) {
         ...datasetList,
         (datasetList[0].datasetList[index] = newDataInfo),
       ];
-      console.log('saveDatasetInfo -> newDatasetList', newDatasetList);
       UpdateDatasetCreator(newDatasetList, 'All Projects');
       setDatasetInfo(newDataInfo);
       setEditView(false);
@@ -112,7 +122,7 @@ function Description(props) {
             <Descriptions.Item label="Created">
               <>{datasetInfo.time_created.split('T')[0]}</>
             </Descriptions.Item>
-            <Descriptions.Item label="Visibility">
+            <Descriptions.Item label="Visibility" span={1}>
               {editView ? (
                 <Checkbox
                   defaultChecked={datasetInfo.discoverable}
@@ -131,7 +141,7 @@ function Description(props) {
                 </>
               )}
             </Descriptions.Item>
-            <Descriptions.Item label="Tags" span={3}>
+            <Descriptions.Item label="Tags" span={1}>
               {editView ? (
                 <Select
                   mode="tags"
@@ -150,6 +160,37 @@ function Description(props) {
                     ))}
                 </>
               )}
+            </Descriptions.Item>
+            <Descriptions.Item label="Project Administrators" span={1}>
+              <Paragraph
+                style={{
+                  color: 'rgba(0,0,0,0.8)',
+                }}
+                ellipsis={{
+                  rows: 2,
+                  expandable: true,
+                }}
+              >
+                {userListOnDataset &&
+                  userListOnDataset.map((i, index) => {
+                    const len = userListOnDataset.length;
+                    let separator = index + 1 === len ? '' : ',';
+                    if (i.permission === 'admin') {
+                      return (
+                        <a
+                          href={
+                            'mailto:' +
+                            i.email +
+                            `?subject=[VRE Platform: ${datasetInfo.name}]`
+                          }
+                          style={{ paddingRight: '5px' }}
+                        >
+                          {i.firstName + ' ' + i.lastName + separator}
+                        </a>
+                      );
+                    }
+                  })}
+              </Paragraph>
             </Descriptions.Item>
             {/* <Descriptions.Item label="Custom Metadata" span={2}>
             {currentDataset &&

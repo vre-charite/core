@@ -259,7 +259,7 @@ class dataset_users(Resource):
 
     @datasets_entity_ns.response(200, users_sample_return)
     @jwt_required()
-    @check_role("admin")
+    @check_role("uploader")
     def get(self, dataset_id):
         '''
         This method allow user to fetch all users under a specific dataset with permissions.

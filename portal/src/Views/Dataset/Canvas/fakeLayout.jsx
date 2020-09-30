@@ -22,7 +22,7 @@ const cardsAttr = {
     {
       type: 'files',
       key: '1',
-      title: 'File Explorer - Green Room',
+      title: 'File Explorer',
       defaultSize: 'm',
       expandable: true,
       exportable: false,

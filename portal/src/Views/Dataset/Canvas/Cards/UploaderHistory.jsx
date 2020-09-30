@@ -25,6 +25,8 @@ import FilesTable from '../Charts/FileExplorer/FilesTable';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import _ from 'lodash';
+import moment from 'moment';
+
 const { Panel } = Collapse;
 
 function UploaderHistory(props) {
@@ -90,13 +92,28 @@ function UploaderHistory(props) {
       }
     }
 
-    const currentDataset = props.containersPermission && props.containersPermission.filter(el => el.container_id === Number(containerId));
+    const currentDataset =
+      props.containersPermission &&
+      props.containersPermission.filter(
+        (el) => el.container_id === Number(containerId),
+      );
 
     let role = false;
 
-    if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+    if (currentDataset && currentDataset.length)
+      role = currentDataset[0].permission;
 
-    return getFilesByTypeAPI(containerId, pageSize, page, null, column, order, role === 'admin', null, filters)
+    return getFilesByTypeAPI(
+      containerId,
+      pageSize,
+      page,
+      null,
+      column,
+      order,
+      role === 'admin',
+      null,
+      filters,
+    )
       .then((res) => {
         const { entities, approximateCount } = res.data.result;
 
@@ -178,6 +195,9 @@ function UploaderHistory(props) {
       key: 'createTime',
       sorter: true,
       width: '20%',
+      render: (text, record) => {
+        return text && moment(text).format('YYYY-MM-DD');
+      },
     },
     {
       title: 'File Size',
@@ -237,20 +257,14 @@ function UploaderHistory(props) {
     getRawFilesAndUpdateUI(datasetId, 10, 0, 'createTime', [], 'desc');
     setTotalItem(props.totalItem);
     setPageLoading(false);
-  }, [
-    page,
-    pageSize,
-    datasetId,
-    props.rawData,
-    props.totalItem,
-  ]);
+  }, [page, pageSize, datasetId, props.rawData, props.totalItem]);
 
   useEffect(() => {
     if (mounted.current) {
       console.log('changed');
       fetchData();
     } else mounted.current = true;
-  }, [props.successNum])
+  }, [props.successNum]);
 
   const onSelectChange = (selectedRowKeys) => {
     console.log('selectedRowKeys changed: ', selectedRowKeys);
@@ -300,7 +314,7 @@ function UploaderHistory(props) {
       searchText,
       order,
     );
-    setTableKey(tableKey+1)
+    setTableKey(tableKey + 1);
   }
 
   const hasSelected = selectedRowKeys.length > 0;

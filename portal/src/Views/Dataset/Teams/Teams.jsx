@@ -153,6 +153,7 @@ class Teams extends Component {
   }
 
   render() {
+    console.log(this.props);
     const username = getCookie('username');
     const projectAdmin =
       this.props.containersPermission &&
@@ -161,6 +162,11 @@ class Teams extends Component {
           el.container_id === Number(this.props.datasetId) &&
           el.permission === 'admin',
       );
+    const role =
+      this.props.containersPermission &&
+      this.props.containersPermission.filter((i) => {
+        return i.container_id === parseInt(this.props.datasetId);
+      })[0]['permission'];
     const projectName =
       this.props.containersPermission &&
       this.props.containersPermission.filter(
@@ -183,7 +189,7 @@ class Teams extends Component {
                 >
                   {i}
                 </Menu.Item>
-              )
+              );
             }
           })}
         <Menu.Divider />
@@ -242,7 +248,7 @@ class Teams extends Component {
             record.role !== 'admin'
           )
             isEnable = true;
-          
+
           return (
             isEnable && (
               <Dropdown
@@ -358,7 +364,7 @@ class Teams extends Component {
                     Project: {projectName}
                   </span>
                 }
-                subTitle={`Your current role is ${this.props.role}.`}
+                subTitle={`Your role is ${role}.`}
                 breadcrumb={{ routes, itemRender }}
                 extra={[
                   <Button
