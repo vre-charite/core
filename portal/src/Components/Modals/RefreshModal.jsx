@@ -1,43 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, message } from 'antd';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { useCookies } from 'react-cookie';
-import { refreshTokenAPI } from '../../APIs';
-import { headerUpdate, clearCookies,refreshChannel } from '../../Utility';
-import jwt_decode from 'jwt-decode';
-import moment from 'moment';
-import { connect } from 'react-redux';
-import { setRefreshModal,setIsLoginCreator } from '../../Redux/actions';
+import { Modal, Button } from 'antd';
+import { connect, useSelector } from 'react-redux';
+import { setRefreshModal } from '../../Redux/actions';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
-import { logout as logoutUtility, getCookie } from '../../Utility';
+import { tokenManager } from '../../Service/tokenManager';
+import { userAuthManager } from '../../Service/userAuthManager';
+import { broadcastManager } from '../../Service/broadcastManager';
+import { namespace as ServiceNamespace } from '../../Service/namespace';
 
-function CreateDatasetModal({
-  visible,
-  uploadList,
-  downloadList,
-  setRefreshModal,setIsLoginCreator
-}) {
-  const [cookies, setCookie] = useCookies(['cookies']);
-  const [secondsToGo, setTimer] = useState(60);
-  let timer;
+/**
+ * 
+ * @param {{visible:boolean,setRefreshModal:(isShouldRefreshModal:boolean)=>void}} param0
+ */
+function CreateDatasetModal({ visible, setRefreshModal }) {
+  const [secondsToGo, setTimer] = useState(tokenManager.getTokenTimeRemain());
+  const [listenerId, setListenerId] = useState('default');
+  const { refreshTokenModal, username } = useSelector((state) => state);
 
-  const refreshToken = (autoRefresh) => {
-    const payload = {
-      refreshtoken: cookies['refresh_token'],
-    };
-
-    // call API to refresh token
-    refreshTokenAPI(payload)
+  const refreshToken = () => {
+    userAuthManager
+      .extendAuth()
       .then((res) => {
-        const { access_token, refresh_token } = res.data.result;
-        setCookie('access_token', access_token, { path: '/' });
-        setCookie('refresh_token', refresh_token, { path: '/' });
-        headerUpdate(access_token, refresh_token);
-        clearInterval(timer);
+        broadcastManager.postMessage(
+          'refresh',
+          ServiceNamespace.broadCast.CLICK_REFRESH_MODAL,
+          username,
+        );
         setRefreshModal(false);
-
-        if (autoRefresh) message.success('Automatic refresh');
-        refreshChannel.postMessage();
       })
       .catch((err) => {
         if (err.response) {
@@ -48,58 +37,32 @@ function CreateDatasetModal({
   };
 
   useEffect(() => {
-    timer = setInterval(() => {
-      const token = getCookie('access_token');
-      // let exp = jwt_decode(cookies["access_token"]).exp;
-      if (token) {
-        let exp = jwt_decode(token).exp;
-        let remain = exp - moment().unix();
-        if (remain <= 0) {
-          console.log('logout in refreshModal.jsx, remain <= 0')
-          logoutUtility();
-          setRefreshModal(false);
-        }else if(remain>60){
+    //set the time on the modal
+    if (refreshTokenModal) {
+      setTimer(tokenManager.getTokenTimeRemain());
+      const time = 60; //any value because condition always return true;
+      const condition = (timeRemain, time) => true;
+      const func = () => {
+        setTimer(tokenManager.getTokenTimeRemain());
+      };
+      const newListenerId = tokenManager.addListener({ time, condition, func });
+      setListenerId(newListenerId);
+    } else {
+      tokenManager.removeListener(listenerId);
+    }
+  }, [refreshTokenModal]);
 
-          setRefreshModal(false);
-        } else {
-          setTimer(remain);
-        }
-      }else{ 
-        console.log('logout in refreshModal.jsx, no token')
-        logoutUtility();
-
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  });
-
-  const logout =  () => {
-    Modal.confirm({
-      title: 'Are you sure you want to log out?',
-      icon: <ExclamationCircleOutlined />,
-      content:
-        `By clicking on “OK“, you will be logged out on all the opened VRE tabs. If you're uploading/downloading, all the progress will be lost.`,
-      onOk() {
-        logoutUtility(true);
-      },
-      onCancel() {
-        console.log('Cancel');
-      },
-    });
-    
+  const logout = () => {
+    tokenManager.removeListener(listenerId);
+    userAuthManager.logout(
+      ServiceNamespace.userAuthLogout.LOGOUT_REFRESH_MODAL,
+    );
+    broadcastManager.postMessage(
+      'logout',
+      ServiceNamespace.broadCast.REFRESH_MODAL_LOGOUT,
+    );
+    localStorage.removeItem('sessionId');
   };
-
-  const upladingList =
-    uploadList && uploadList.filter((el) => el.status === 'uploading');
-
-  if (
-    (upladingList && upladingList.length > 0) ||
-    (downloadList && downloadList.length > 0)
-  ) {
-    setRefreshModal(false);
-    console.log('refresh automatically');
-    refreshToken(true);
-  }
 
   return (
     <Modal
@@ -115,7 +78,7 @@ function CreateDatasetModal({
         <Button key="back" onClick={logout}>
           Logout
         </Button>,
-        <Button key="submit" type="primary" onClick={() => refreshToken(false)}>
+        <Button key="submit" type="primary" onClick={() => refreshToken()}>
           Refresh
         </Button>,
       ]}
@@ -129,8 +92,6 @@ function CreateDatasetModal({
 export default connect(
   (state) => ({
     visible: state.refreshTokenModal,
-    uploadList: state.uploadList,
-    downloadList: state.downloadList,
   }),
-  { setRefreshModal,setIsLoginCreator },
+  { setRefreshModal },
 )(CreateDatasetModal);

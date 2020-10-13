@@ -1,30 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Table,
   Button,
   Space,
   Collapse,
   Progress,
-  Input,
   Spin,
   Popover,
 } from 'antd';
 import {
-  SearchOutlined,
   CloudDownloadOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
-import { projectFileCountToday } from '../../../../APIs';
-import { useCookies } from 'react-cookie';
 import { getFilesByTypeAPI, downloadFilesAPI } from '../../../../APIs';
 import GreenRoomUploader from '../../Components/GreenRoomUploader';
 import { appendDownloadListCreator } from '../../../../Redux/actions';
 import { ErrorMessager, namespace } from '../../../../ErrorMessages';
 import FilesTable from '../Charts/FileExplorer/FilesTable';
-
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import _ from 'lodash';
+import {getCurrentProject} from '../../../../Utility'
 import moment from 'moment';
 
 const { Panel } = Collapse;
@@ -35,14 +30,10 @@ function UploaderHistory(props) {
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(0);
   const [totalItem, setTotalItem] = useState(0);
-  const [downloadStatus, setProgress] = useState({});
   const [groupDownloadStatus, setGroupProgress] = useState({});
   let [rawFiles, setRawFiles] = useState([]);
   const [reFreshing, setRefreshing] = useState(false);
-  const [cookies, setCookie] = useCookies(['cookies']);
   const [searchText, setSearchText] = useState({});
-  const [searchedColumn, setSearchedColumn] = useState('');
-  const [searchInput, setSearchInput] = useState({});
   const [sortColumn, setSortColumn] = useState('createTime');
   const [order, setOrder] = useState('desc');
   const [pageLoading, setPageLoading] = useState(true);
@@ -52,29 +43,11 @@ function UploaderHistory(props) {
   const mounted = useRef(false);
 
   const {
-    containersPermission,
     match: {
       params: { datasetId },
     },
-    content,
-    datasetList,
   } = props;
 
-  const currentContainer =
-    containersPermission &&
-    containersPermission.find((ele) => {
-      return parseInt(ele.container_id) === parseInt(datasetId);
-    });
-
-  const printDetails = () => {
-    if (datasetList.length > 0) {
-      const currentDataset = _.find(
-        datasetList[0].datasetList,
-        (d) => d.id === parseInt(datasetId),
-      );
-      return;
-    }
-  };
 
   function getRawFilesAndUpdateUI(
     containerId,
@@ -92,16 +65,11 @@ function UploaderHistory(props) {
       }
     }
 
-    const currentDataset =
-      props.containersPermission &&
-      props.containersPermission.filter(
-        (el) => el.container_id === Number(containerId),
-      );
+    const currentDataset = getCurrentProject(datasetId);
 
     let role = false;
 
-    if (currentDataset && currentDataset.length)
-      role = currentDataset[0].permission;
+    if (currentDataset ) role = currentDataset.permission;
 
     return getFilesByTypeAPI(
       containerId,
@@ -182,7 +150,7 @@ function UploaderHistory(props) {
     props.datasetList && checkGenerate(datasetId, props.datasetList)
       ? {
           title: 'Generate ID',
-          dataIndex: 'generateID',
+          dataIndex: 'generateId',
           key: 'generateID',
           sorter: true,
           width: '15%',

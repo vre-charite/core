@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Card, Col, Row } from 'antd';
-import { Form, Input, Button, message, Modal, notification } from 'antd';
+import { Form, Input, Button, message, Modal, notification, Alert } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
@@ -8,11 +8,13 @@ import {
 } from '@ant-design/icons';
 import { instanceOf } from 'prop-types';
 import { withCookies, Cookies } from 'react-cookie';
+import { axios } from '../../APIs/config';
 import styles from './index.module.scss';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { login } from '../../APIs/auth';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { v4 as uuidv4 } from 'uuid';
 import {
   AddDatasetCreator,
   setUserListCreator,
@@ -23,15 +25,12 @@ import {
   setUserRoleCreator,
   setRefreshModal,
   setIsLoginCreator,
+  setUsernameCreator,
 } from '../../Redux/actions';
-import {
-  headerUpdate,
-  loginChannel,
-} from '../../Utility';
-import {
-  getDatasetsAPI,
-  listAllContainersPermission,
-} from '../../APIs';
+import { tokenManager } from '../../Service/tokenManager';
+import { broadcastManager } from '../../Service/broadcastManager';
+import { namespace as serviceNamespace } from '../../Service/namespace';
+import { getDatasetsAPI, listAllContainersPermission } from '../../APIs';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import CoookiesDrawer from './CookiesDrawer';
 const { confirm } = Modal;
@@ -46,13 +45,17 @@ class Auth extends Component {
   };
 
   componentDidMount() {
-    const { allCookies } = this.props;
+    this.setTermsOfUse();
+  }
 
-    if (!allCookies.cookies_notified) {
+  setTermsOfUse = () => {
+    const cookiesNotified = localStorage.getItem('cookies_notified');
+
+    if (!cookiesNotified) {
       const closeNotification = () => {
         console.log('closing!!');
         notification.close(key);
-        this.props.cookies.set('cookies_notified', true, { path: '/' });
+        localStorage.setItem('cookies_notified', true);
       };
       const key = `open${Date.now()}`;
       const btn = (
@@ -91,7 +94,7 @@ class Auth extends Component {
         onClose: closeNotification,
       });
     }
-  }
+  };
 
   onFinish = async (values) => {
     try {
@@ -125,47 +128,38 @@ class Auth extends Component {
 
     login(values)
       .then((res) => {
-        loginChannel.postMessage(values.username);
-        const { access_token, refresh_token } = res.data.result;
-        this.props.cookies.set('access_token', access_token, { path: '/' });
-        this.props.cookies.set('refresh_token', refresh_token, { path: '/' });
-        this.props.cookies.set('isLogin', true, { path: '/' });
-        this.props.cookies.set('username', values.username, { path: '/' });
+        const { accessToken, refreshToken } = res.data.result;
+        const sourceId = uuidv4();
+        localStorage.setItem('sessionId', `${values.username}-${sourceId}`)
 
-        headerUpdate(access_token);
+        tokenManager.setCookies({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          sessionId: `${values.username}-${sourceId}`,
+        });
+        tokenManager.refreshToken(accessToken);
+
         this.initApis(values.username);
         this.props.setIsLoginCreator(true);
+        this.props.setUsernameCreator(values.username);
         this.props.history.push('/uploader');
+        broadcastManager.postMessage(
+          'login',
+          serviceNamespace.broadCast.USER_CLICK_LOGIN,
+          values.username,
+        );
         message.success(`Welcome back, ${values.username}`);
-
-        /*         setInterval(() => {
-          const token = getCookie('access_token');
-          try {
-            if (token) {
-              var exp = jwt_decode(token).exp;
-              const diff = exp - moment().unix() < 70; // expired after 1 min
-              console.log('Auth -> componentDidMount -> diff', diff);
-              if (diff) {
-                this.props.setRefreshModal(true); // Pop up warning modal
-              }
-            }else{
-              this.props.setRefreshModal(false);
-            }
-          } catch (e) {
-            console.log(e);
-          }
-        }, 60000); */
       })
       .catch((err) => {
         if (err.response) {
           const errorMessager = new ErrorMessager(namespace.login.auth);
-          // if (err.response.status) alert('Wrong username or password');
           errorMessager.triggerMsg(err.response.status);
         }
       });
   };
 
   initApis = async (username) => {
+    console.log(axios.defaults.headers.common, 'axios.defaults.headers.common');
     getDatasetsAPI({ type: 'usecase' })
       .then((res) => {
         this.props.AddDatasetCreator(res.data.result, 'All Use Cases');
@@ -223,168 +217,173 @@ class Auth extends Component {
 
   render() {
     return (
-      <div className={styles.bg}>
-        <Card
-          className={styles.card}
-          bodyStyle={{ padding: '10%', height: '100%' }}
-        >
-          <div className={styles.bgImage}></div>
-          <Row style={{ height: '100%' }}>
-            <Col span={12} className={styles.intro}>
-              <div className={styles.text}>
-                <p className={styles.title}>Welcome to VRE!</p>
-                <p className={styles.content}>
-                  The{' '}
-                  <a
-                    href="https://www.bihealth.org/en/research/translation-hubs/digital-medicine/bihcharite-virtual-research-environment/"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    style={{ color: 'white', textDecoration: 'underline' }}
-                  >
-                    Virtual Research Environment (VRE)
-                  </a>{' '}
-                  supports researchers to follow the FAIR Data Principles by
-                  offering functionalities to make research data findable,
-                  accessible, interoperable and reusable. It integrates with the
-                  Charité Health Data Platform systems (HDP) and provides
-                  customizable workbenches for data modelling and data analysis.
-                </p>
+      <>
+        <Alert
+          message="This release of the VRE is exclusively for testing purposes by Charité staff. 
+            The upload of files containing clinical and/or research data of any type is strictly forbidden. 
+            By proceeding, you are agreeing to these terms."
+          type="warning"
+          showIcon
+          style={{ float: 'right', width: '100%', zIndex: '10' }}
+        />
+        <div className={styles.bg}>
+          <Card
+            className={styles.card}
+            bodyStyle={{ padding: '10%', height: '100%' }}
+          >
+            <div className={styles.bgImage}></div>
+            <Row style={{ height: '100%' }}>
+              <Col span={12} className={styles.intro}>
+                <div className={styles.text}>
+                  <p className={styles.title}>Welcome to VRE!</p>
+                  <p className={styles.content}>
+                    The{' '}
+                    <a
+                      href="https://www.bihealth.org/en/research/translation-hubs/digital-medicine/bihcharite-virtual-research-environment/"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      style={{ color: 'white', textDecoration: 'underline' }}
+                    >
+                      Virtual Research Environment (VRE)
+                    </a>{' '}
+                    supports researchers to follow the FAIR Data Principles by
+                    offering functionalities to make research data findable,
+                    accessible, interoperable and reusable. It integrates with
+                    the Charité Health Data Platform systems (HDP) and provides
+                    customizable workbenches for data modelling and data
+                    analysis.
+                  </p>
 
-                {/* <Button type="ghost" className={styles.btn}>
+                  {/* <Button type="ghost" className={styles.btn}>
                   Learn More
                 </Button> */}
-                <div className={styles.logos}>
-                  <a
-                    href="https://www.bihealth.org/en/"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    <img
-                      src={require('../../Images/logo-bih-alt.png')}
-                      className={styles.icon}
-                      alt="icon"
-                    />
-                  </a>
-                  <a
-                    href="https://www.charite.de/en/"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    <img
-                      src={require('../../Images/logo-charite-alt.png')}
-                      className={styles.icon}
-                      alt="icon"
-                    />
-                  </a>
-                  <a
-                    href="https://indocresearch.org/"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    <img
-                      src={require('../../Images/logo-indoc-alt.png')}
-                      className={styles.icon}
-                      alt="icon"
-                      style={{ maxWidth: '80px' }}
-                    />
-                  </a>
-                </div>
-              </div>
-            </Col>
-            <Col span={12}>
-              <Card
-                className={styles.form}
-                bodyStyle={{ textAlign: 'center', padding: '30px' }}
-              >
-                <img
-                  src={require('../../Images/vre-logo.png')}
-                  className={styles.icon}
-                  alt="icon"
-                />
-                <Form
-                  name="normal_login"
-                  className={styles['login-form']}
-                  initialValues={{
-                    remember: true,
-                  }}
-                  onFinish={this.onFinish}
-                  style={{ textAlign: 'left' }}
-                >
-                  <Form.Item
-                    name="username"
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please input your Username!',
-                      },
-                    ]}
-                  >
-                    <Input
-                      prefix={<UserOutlined className="site-form-item-icon" />}
-                      placeholder="Username"
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    name="password"
-                    rules={[
-                      {
-                        required: true,
-                        message: 'Please input your Password!',
-                      },
-                    ]}
-                  >
-                    <Input
-                      prefix={<LockOutlined className="site-form-item-icon" />}
-                      type="password"
-                      placeholder="Password"
-                      onCopy={(e) => e.preventDefault()}
-                      onPaste={(e) => e.preventDefault()}
-                    />
-                  </Form.Item>
-                  {/* <Form.Item>
-                    <a className={styles["login-form-left"]} href="">
-                      Forgot password
-                    </a>
-                  </Form.Item> */}
-
-                  <Form.Item style={{ paddingTop: '20px' }}>
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      className={styles['login-form-button']}
+                  <div className={styles.logos}>
+                    <a
+                      href="https://www.bihealth.org/en/"
+                      target="_blank"
+                      rel="noreferrer noopener"
                     >
-                      Login
-                    </Button>
-                    {/*  Or{" "}
-                    <a>
-                      {" "}
-                      <Link to="/register">register now!</Link>
-                    </a> */}
-                  </Form.Item>
-                </Form>
-              </Card>
-            </Col>
-          </Row>
-        </Card>
-        <div className={styles.utils}>
-          <Button
-            type="link"
-            style={{ color: 'white' }}
-            onClick={this.showModal}
-          >
-            Terms of Use
-          </Button>{' '}
-          <TermsOfUseModal
-            visible={this.state.visible}
-            handleOk={this.handleOk}
-            handleCancel={this.handleCancel}
-          />
-          <CoookiesDrawer
-            onDrawerClose={this.onDrawerClose}
-            cookiesDrawer={this.state.cookiesDrawer}
-          />
+                      <img
+                        src={require('../../Images/logo-bih-alt.png')}
+                        className={styles.icon}
+                        alt="icon"
+                      />
+                    </a>
+                    <a
+                      href="https://www.charite.de/en/"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      <img
+                        src={require('../../Images/logo-charite-alt.png')}
+                        className={styles.icon}
+                        alt="icon"
+                      />
+                    </a>
+                    <a
+                      href="https://indocresearch.org/"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      <img
+                        src={require('../../Images/logo-indoc-alt.png')}
+                        className={styles.icon}
+                        alt="icon"
+                        style={{ maxWidth: '80px' }}
+                      />
+                    </a>
+                  </div>
+                </div>
+              </Col>
+              <Col span={12}>
+                <Card
+                  className={styles.form}
+                  bodyStyle={{ textAlign: 'center', padding: '30px' }}
+                >
+                  <img
+                    src={require('../../Images/vre-logo.png')}
+                    className={styles.icon}
+                    alt="icon"
+                  />
+                  <Form
+                    name="normal_login"
+                    className={styles['login-form']}
+                    initialValues={{
+                      remember: true,
+                    }}
+                    onFinish={this.onFinish}
+                    style={{ textAlign: 'left' }}
+                  >
+                    <Form.Item
+                      name="username"
+                      rules={[
+                        {
+                          required: true,
+                          message: 'Please input your Username!',
+                        },
+                      ]}
+                    >
+                      <Input
+                        prefix={
+                          <UserOutlined className="site-form-item-icon" />
+                        }
+                        placeholder="Username"
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="password"
+                      rules={[
+                        {
+                          required: true,
+                          message: 'Please input your Password!',
+                        },
+                      ]}
+                    >
+                      <Input
+                        prefix={
+                          <LockOutlined className="site-form-item-icon" />
+                        }
+                        type="password"
+                        placeholder="Password"
+                        onCopy={(e) => e.preventDefault()}
+                        onPaste={(e) => e.preventDefault()}
+                      />
+                    </Form.Item>
+
+                    <Form.Item style={{ paddingTop: '20px' }}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        className={styles['login-form-button']}
+                      >
+                        Login
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                </Card>
+              </Col>
+            </Row>
+          </Card>
+          <div className={styles.utils}>
+            <Button
+              type="link"
+              style={{ color: 'white' }}
+              onClick={this.showModal}
+            >
+              Terms of Use
+            </Button>{' '}
+            <TermsOfUseModal
+              visible={this.state.visible}
+              handleOk={this.handleOk}
+              handleCancel={this.handleCancel}
+            />
+            <CoookiesDrawer
+              onDrawerClose={this.onDrawerClose}
+              cookiesDrawer={this.state.cookiesDrawer}
+            />
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 }
@@ -401,6 +400,7 @@ export default withRouter(
       setUserRoleCreator,
       setRefreshModal,
       setIsLoginCreator,
+      setUsernameCreator,
     })(Auth),
   ),
 );

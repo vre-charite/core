@@ -1,27 +1,22 @@
 import { message } from 'antd';
-import { cancelRequestReg } from '../../APIs/config';
-import {
-  preUpload,
-  uploadFileApi2,
-  combineChunks,
-} from '../../APIs';
-import {
-  appendUploadListCreator,
-  updateUploadItemCreator,
-  setNewUploadIndicator,
-} from '../../Redux/actions';
-import reduxActionWrapper from '../reduxActionWrapper';
-import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  combineChunks, preUpload,
+  uploadFileApi2
+} from '../../APIs';
+import { cancelRequestReg } from '../../APIs/config';
+import { ErrorMessager, namespace } from '../../ErrorMessages';
+import {
+  setNewUploadIndicator, updateUploadItemCreator
+} from '../../Redux/actions';
+import { store } from '../../Redux/store';
 import { sleep } from '../common';
-import {store} from '../../Redux/store'
-
+import reduxActionWrapper from '../reduxActionWrapper';
+const USER_LOGOUT = 'user logged out';
 const [
-  appendUploadListDispatcher,
   updateUploadItemDispatcher,
   setNewUploadIndicatorDispatcher,
 ] = reduxActionWrapper([
-  appendUploadListCreator,
   updateUploadItemCreator,
   setNewUploadIndicator,
 ]);
@@ -29,10 +24,45 @@ const _ = require('lodash');
 
 const Promise = require('bluebird');
 
+/**
+ * Slice files into chunks
+ * Author: 橙红年代
+ * https://juejin.im/post/5cf765275188257c6b51775f
+ *
+ * @param {array} file file[]
+ * @param {number} [piece=1024 * 1024 * 5]
+ * @returns chunks
+ */
+
+function slice(file, piece = 1024 * 1024 * 5) {
+  let totalSize = file.size;
+  let start = 0; // starting byte for each chunk
+  let end = start + piece; // ending byte for each chunk
+  let chunks = [];
+  while (start < totalSize) {
+    // slice file into chunks with piece size.
+    // Inherited from Blob object, file has slice function
+    let blob = file.slice(start, end);
+    chunks.push(blob);
+
+    start = end;
+    end = start + piece;
+  }
+  return chunks;
+}
+
+
+
+/**
+ * 
+ * @param {*} data 
+ * @param {*} resolve 
+ * @param {*} reject 
+ */
 async function fileUpload(data, resolve, reject) {
   const MAX_LENGTH = 1024 * 1024 * 2;
   const uuid = uuidv4();
-  const { uploadKey, generateID, datasetId, uploader, file } = data;
+  const { uploadKey, generateID, datasetId, uploader, file, projectCode } = data;
 
   setNewUploadIndicatorDispatcher();
 
@@ -48,6 +78,7 @@ async function fileUpload(data, resolve, reject) {
     progress: 0,
     projectId: datasetId,
     fileName: file.name,
+    projectCode,
   });
 
   const createContext = function (
@@ -85,7 +116,7 @@ async function fileUpload(data, resolve, reject) {
     });
     fd.append('chunk', index + 1);
 
-    const { source, request } = cancelRequestReg(uploadFileApi2, datasetId, fd);
+    const { request } = cancelRequestReg(uploadFileApi2, datasetId, fd);
     return request;
   };
 
@@ -102,48 +133,31 @@ async function fileUpload(data, resolve, reject) {
     }
     return Promise.any(arr);
   };
-
   const bodyFormData = new FormData();
   bodyFormData.append('resumableIdentifier', file.uid + uuid);
   bodyFormData.append('resumableFilename', file.name);
   if (generateID) bodyFormData.append('generateID', generateID);
-
-  preUpload(datasetId, bodyFormData)
+  const sessionId = localStorage.getItem('sessionId')
+  preUpload(datasetId, bodyFormData, sessionId)
     .then((res) => {
       Promise.map(
         chunks,
         function (chunk, index) {
           return sendOneChunk(chunk, index)
             .then(async (res) => {
-              // const { result } = objectKeysToCamelCase(res.data);
-              // if (result.taskId) {
-              //   taskId = result.taskId;
-              // }
               uploadedSize += chunk.size;
-
               updateUploadItemDispatcher({
                 uploadKey,
                 progress: uploadedSize / totalSize,
                 status: 'uploading',
+                projectCode,
               });
             })
             .catch(async (err) => {
-              // Retry when file upload fails on 401 or unstable internet (ECONNABORTED)
-              // If anything wrong with the file itself(e.g. repeated file name/illegal file name)
-              // The upload should stop
-              // console.log(err);
-              // if (err.code === 'ECONNABORTED' || err.response.status === 401 || err.response.status === 403) {
-              //   return retry(chunk, index, 1); // Max retry times is 1
-              // } else {
-              //   return Promise.reject(err);
-              // }
-              await new Promise((resolve,reject)=>{
-                setTimeout(function () {
-                  resolve();
-                }, 5000);
-              });
               const {isLogin} = store.getState();
-              return isLogin&&retry(chunk, index, 3);
+              if(!isLogin) return Promise.reject( new Error(USER_LOGOUT))
+              await sleep(5000);
+              retry(chunk, index, 3);
             });
         },
         {
@@ -160,27 +174,26 @@ async function fileUpload(data, resolve, reject) {
           formData.append('uploader', uploader);
 
           if (generateID) formData.append('generateID', generateID);
-
-          const result = await combineChunks(datasetId, formData);
+          const result = await combineChunks(datasetId, formData, sessionId);
           if (
             result.status === 200 &&
             result.data &&
             result.data.result &&
-            result.data.result.task_id
+            result.data.result.taskId
           ) {
-            taskId = result.data.result.task_id;
+            taskId = result.data.result.taskId;
           }
           if (!taskId) {
             await sleep(1000);
 
-            const checkedResult = await combineChunks(datasetId, formData);
+            const checkedResult = await combineChunks(datasetId, formData, sessionId);
             if (
               checkedResult.status === 200 &&
               checkedResult.data &&
               checkedResult.data.result &&
-              checkedResult.data.result.task_id
+              checkedResult.data.result.taskId
             ) {
-              taskId = checkedResult.data.result.task_id;
+              taskId = checkedResult.data.result.taskId;
             } else {
               throw new Error(`the task Id doesn't exist`);
             }
@@ -190,12 +203,14 @@ async function fileUpload(data, resolve, reject) {
             progress: 1,
             status: 'pending',
             taskId,
+            projectCode,
             uploadedTime: Date.now(),
           });
           message.success(`File ${file.name} was successfully uploaded.`);
         })
         .catch((err) => {
           reject();
+          if(err.message === USER_LOGOUT) return;
           if (err.response) {
             const errorMessager = new ErrorMessager(
               namespace.dataset.files.uploadFileApi,
@@ -214,60 +229,25 @@ async function fileUpload(data, resolve, reject) {
             progress: uploadedSize / totalSize,
             status: 'error',
             uploadedTime: Date.now(),
+            projectCode
           });
         });
     })
     .catch((err) => {
       reject();
-      if (err.response && err.response.status === 403) {
-        message.error(err.response.data && err.response.data.error_msg);
-      } else {
-        message.error('failed upload');
-      }
+      const errorMessager = new ErrorMessager(namespace?.dataset?.files?.preUpload);
+      errorMessager.triggerMsg(err?.response?.status,null,{fileName:file.name})
       updateUploadItemDispatcher({
         uploadKey,
         progress: uploadedSize / totalSize,
         status: 'error',
         uploadedTime: Date.now(),
+        projectCode
       });
     });
 }
 
-/**
- *  Omit file and uploaded_study keys, retrun all the tags
- *
- * @param {object} values the object fromt the uploader
- * @returns {object} all tags
- */
-function getTags(values) {
-  return _.omit(values, ['upload', 'uploaded_study']);
-}
 
-/**
- * Slice files into chunks
- * Author: 橙红年代
- * https://juejin.im/post/5cf765275188257c6b51775f
- *
- * @param {array} file file[]
- * @param {number} [piece=1024 * 1024 * 5]
- * @returns chunks
- */
-
-function slice(file, piece = 1024 * 1024 * 5) {
-  let totalSize = file.size;
-  let start = 0; // starting byte for each chunk
-  let end = start + piece; // ending byte for each chunk
-  let chunks = [];
-  while (start < totalSize) {
-    // slice file into chunks with piece size.
-    // Inherited from Blob object, file has slice function
-    let blob = file.slice(start, end);
-    chunks.push(blob);
-
-    start = end;
-    end = start + piece;
-  }
-  return chunks;
-}
 
 export { fileUpload };
+

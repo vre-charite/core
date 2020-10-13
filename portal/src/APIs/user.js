@@ -1,8 +1,4 @@
-import {
-  serverAxios as axios,
-  authServerAxios,
-  invitationAxios,
-} from './config';
+import { serverAxios as axios } from './config';
 import { objectKeysToSnakeCase } from '../Utility';
 
 function getAllUsersAPI() {
@@ -29,25 +25,11 @@ function getUsersOnDatasetAPI(datasetId) {
  * check if user exist in key cloak
  * @param {string} username
  */
-function checkIsUserExistAPI(username) {
+function checkIsUserExistAPI(username, code) {
   return axios({
-    url: `/v1/admin/users/name`,
+    url: `/users/name`,
     method: 'GET',
-    params: { realm: 'vre', username: username },
-  });
-}
-
-/**
- * Archived: check if email exist in key cloak
- *
- * @param {*} email
- * @returns
- */
-function checkEmailExistAPI0(email) {
-  return axios({
-    url: `/v1/admin/getuserbyemailinternal`,
-    data: { email, realm: 'vre' },
-    method: 'post',
+    params: { realm: 'vre', username: username, invite_code: code },
   });
 }
 
@@ -55,13 +37,13 @@ function checkEmailExistAPI0(email) {
  * Check if email exit in neo4j
  *
  * @param {string} email
- * @param {int} container_id
+ * @param {int} containerId
  * @returns username/error
  */
-function checkEmailExistAPI(email, container_id) {
+function checkEmailExistAPI(email, datasetId) {
   return axios({
-    url: `/v1/admin/users/email`,
-    params: { email, container_id },
+    url: `/v1/datasets/${datasetId}/users/email`,
+    params: { email, realm: 'vre' },
     method: 'GET',
   });
 }
@@ -126,6 +108,27 @@ function UserSelfRegistrationAPI({
   });
 }
 
+/**
+ *
+ * @param {object} data
+ */
+function contactUsApi(data) {
+  return axios({
+    url: '/v1/contact',
+    method: 'post',
+    data,
+  });
+}
+
+/* list admins under specific project
+ * @param {string} datasetId
+ */
+function getAdminsOnDatasetAPI(datasetId) {
+  return axios({
+    url: `/v1/datasets/${datasetId}/admins`,
+  });
+}
+
 export {
   getAllUsersAPI,
   createUserAPI,
@@ -135,4 +138,6 @@ export {
   inviteUserApi,
   parseInviteHashAPI,
   UserSelfRegistrationAPI,
+  contactUsApi,
+  getAdminsOnDatasetAPI,
 };

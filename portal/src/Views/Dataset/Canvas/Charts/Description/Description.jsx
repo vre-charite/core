@@ -14,13 +14,13 @@ function Description(props) {
   const currentContainer =
     containersPermission &&
     containersPermission.find((ele) => {
-      return parseInt(ele.container_id) === parseInt(datasetId);
+      return parseInt(ele.containerId) === parseInt(datasetId);
     });
   return (
     <>
       <Title level={3}>
         {currentContainer ? (
-          <>{currentContainer.container_name} </>
+          <>{currentContainer.containerName} </>
         ) : (
           "Not Available"
         )}

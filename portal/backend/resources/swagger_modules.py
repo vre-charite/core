@@ -71,6 +71,23 @@ update_invitation_request_model = module_api.model("update_invitation_form", {
 deactivate_invitation_request_model = module_api.model("deactivate_invitation_form", {
 })
 
+## Contact Us
+contact_us_model = module_api.model("contact_us_form", {
+    "category": fields.String,
+    "description": fields.String,
+    "email": fields.String,
+    "name": fields.String,
+    "title": fields.String,
+})
+
+contact_us_return_example = '''
+    {
+        "code": 200,
+        "error_msg": "",
+        "result": "[SUCCEED] Contact Us Email Sent"
+    }
+    '''
+
 ## Hello World
 hello_indoc_return_example = '''
     {

@@ -15,20 +15,14 @@ import {
 } from 'antd';
 import {
   BarChartOutlined,
-  UploadOutlined,
   DownOutlined,
   SortAscendingOutlined,
-  UserOutlined,
 } from '@ant-design/icons';
 
-import BasicLayout from '../../../Components/Layout/BasicLayout';
-import UploadFileToFolder from '../../../Components/Modals/UploadFileToFolder';
 import { connect } from 'react-redux';
 import { AddDatasetCreator, setDatasetCreator } from '../../../Redux/actions';
 import styles from './index.module.scss';
-import { RightOutlined, LeftOutlined } from '@ant-design/icons';
 import _ from 'lodash';
-import datasetList from '../../../Redux/Reducers/datasetList';
 import moment from 'moment';
 
 const { Paragraph, Text } = Typography;
@@ -54,7 +48,7 @@ class Uploader extends Component {
       activeTab: initPane,
       uploader: false,
       datasetId: null,
-      sortby: 'time_created',
+      sortby: 'timeCreated',
       order: 'desc',
       sortReset: false,
       pageSize: 10,
@@ -197,10 +191,10 @@ class Uploader extends Component {
 
     switch (sortRule) {
       case 'time-desc':
-        this.setState({ sortby: 'time_created', order: 'desc' });
+        this.setState({ sortby: 'timeCreated', order: 'desc' });
         return;
       case 'time-asc':
-        this.setState({ sortby: 'time_created', order: 'asc' });
+        this.setState({ sortby: 'timeCreated', order: 'asc' });
         return;
       case 'name-desc':
         this.setState({ sortby: 'name', order: 'desc' });
@@ -220,7 +214,7 @@ class Uploader extends Component {
   };
 
   resetSort = () => {
-    this.setState({ sortby: 'time_created', order: 'desc', sortReset: false });
+    this.setState({ sortby: 'timeCreated', order: 'desc', sortReset: false });
   };
 
   tagsData = ['My Projects', 'All Projects'];
@@ -266,10 +260,10 @@ class Uploader extends Component {
         const current = moment();
         this.props.containersPermission.forEach((contPremission) => {
           let isNew = false;
-          if (moment(dataset['time_created']).add(3, 'hours') > current)
+          if (moment(dataset['timeCreated']).add(3, 'hours') > current)
             isNew = true;
           dataset.isNew = isNew;
-          if (contPremission['container_id'] === dataset.id) {
+          if (contPremission['containerId'] === dataset.id) {
             projectPermission.push(dataset);
           } else if (dataset.discoverable) {
             projectNoPermission.push(dataset);
@@ -283,7 +277,6 @@ class Uploader extends Component {
         });
       }
     }
-
     projectNoPermission = _.uniq([...projectNoPermission]);
     projectNoPermission = _.orderBy(projectNoPermission, [sortby], [order]);
 
@@ -366,7 +359,7 @@ class Uploader extends Component {
                   actions={[
                     (this.props.role === 'admin' ||
                       _.some(this.props.containersPermission, (o) => {
-                        return parseInt(o.container_id) === parseInt(item.id);
+                        return parseInt(o.containerId) === parseInt(item.id);
                       })) && (
                       <Link to={`/dataset/${item.id}/canvas`}>
                         <IconText
@@ -391,14 +384,14 @@ class Uploader extends Component {
                       >
                         {this.props.role === 'admin' ||
                         _.some(this.props.containersPermission, (o) => {
-                          return parseInt(o.container_id) === parseInt(item.id);
+                          return parseInt(o.containerId) === parseInt(item.id);
                         }) ? (
                           <Link to={`/dataset/${item.id}/canvas`}>
                             {item.name + ' '}
                           </Link>
                         ) : this.props.containersPermission.some(
                             (el) =>
-                              parseInt(el.container_id) === parseInt(item.id),
+                              parseInt(el.containerId) === parseInt(item.id),
                           ) ? (
                           <a href="#" style={{ pointerEvents: 'none' }}>
                             {item.name}
@@ -423,7 +416,7 @@ class Uploader extends Component {
                                       this.props.containersPermission,
                                       (o) => {
                                         return (
-                                          parseInt(o.container_id) ===
+                                          parseInt(o.containerId) ===
                                             parseInt(item.id) &&
                                           o.permission !== 'uploader' // Uploader should not enter project
                                         );
@@ -433,7 +426,7 @@ class Uploader extends Component {
                                       : // : '#CCCC'
                                       this.props.containersPermission.some(
                                           (el) =>
-                                            parseInt(el.container_id) ===
+                                            parseInt(el.containerId) ===
                                             parseInt(item.id),
                                         )
                                       ? 'cyan'
@@ -455,7 +448,7 @@ class Uploader extends Component {
                                     this.props.containersPermission,
                                     (o) => {
                                       return (
-                                        parseInt(o.container_id) ===
+                                        parseInt(o.containerId) ===
                                         parseInt(item.id)
                                       );
                                     },
@@ -464,7 +457,7 @@ class Uploader extends Component {
                                     : // : '#CCCC'
                                     this.props.containersPermission.some(
                                         (el) =>
-                                          parseInt(el.container_id) ===
+                                          parseInt(el.containerId) ===
                                           parseInt(item.id),
                                       )
                                     ? 'green'

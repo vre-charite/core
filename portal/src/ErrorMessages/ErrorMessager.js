@@ -1,6 +1,6 @@
 import namespace from './namespace';
 import { message } from 'antd';
-
+import _ from 'lodash';
 /**
  * Create a error message object to trigger the error message
  * @param {string} name the namespace of the API
@@ -190,6 +190,22 @@ export default function ErrorMessager(name) {
         );
       },
     },
+    [namespace.dataset.files.preUpload]: {
+      403: (err, params) => {
+        message.error(`Sorry, ${params.fileName} cannot be uploaded.`);
+      },
+      409: (err, params) => {
+        message.error(`File ${params.fileName} already exists!`);
+      },
+      500: (err, params) => {
+        message.error(
+          `An Internal Error has occurred while attempting to upload file ${params.fileName}. Please try again later.`,
+        );
+      },
+      default: (err, params) => {
+        message.error(`Failed to upload ${params.fileName}`);
+      },
+    },
     [namespace.selfRegister.selfRegistration]: {
       400: (err, params) => {
         message.error(
@@ -265,9 +281,7 @@ export default function ErrorMessager(name) {
         );
       },
       404: (err, params) => {
-        message.error(
-          `User ${params.name} not exist in this project.`,
-        );
+        message.error(`User ${params.name} not exist in this project.`);
       },
       500: (err, params) => {
         message.error(
@@ -299,9 +313,7 @@ export default function ErrorMessager(name) {
         );
       },
       404: (err, params) => {
-        message.error(
-          `User ${params.username} not exist in this project.`,
-        );
+        message.error(`User ${params.username} not exist in this project.`);
       },
       500: (err, params) => {
         message.error(
@@ -339,6 +351,17 @@ export default function ErrorMessager(name) {
         );
       },
     },
+    [namespace.contactUs.contactUsAPI]: {
+      401: (err, params) => {
+        message.error('Unauthorized to send a request to admin');
+      },
+      404: (err, params) => {
+        message.error('Error when trying to send a request to admin');
+      },
+      default: (err, parames) => {
+        message.error('Failed sending email to admin.');
+      },
+    },
   };
 
   this.messageObj = _namespaces[name];
@@ -355,7 +378,7 @@ export default function ErrorMessager(name) {
  * the method to trigger the message
  *
  * @param {string | number} errorCode typically the HTTP status code. you can also define your own under the corresponding namespace.
- * @param {object} err the error object from axios. If the message needs some arguments, you can get from here.
+ * @param {Error} err the error object from axios. If the message needs some arguments, you can get from here.
  * @param {object} params some other useful context. If the message needs some arguments besides err, you can get from here.
  */
 ErrorMessager.prototype.triggerMsg = function (errorCode, err, params) {
@@ -366,5 +389,5 @@ ErrorMessager.prototype.triggerMsg = function (errorCode, err, params) {
     this.messageObj[errorCode] !== undefined
       ? this.messageObj[errorCode]
       : this.messageObj['default'];
-  messageFunc(err, params);
+  _.isFunction(messageFunc) && messageFunc(err, params);
 };

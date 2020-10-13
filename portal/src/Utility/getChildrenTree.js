@@ -2,7 +2,6 @@ import React from "react";
 import {
   FolderOpenOutlined,
   ContainerOutlined,
-  PlusOutlined,
 } from "@ant-design/icons";
 const getChildrenTree = (data, layer = 0, path) => {
   if (!data || data.length === 0) {

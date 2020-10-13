@@ -18,6 +18,11 @@ class ConfigClass(object):
     DATA_SERVICE = "http://dataops-gr.greenroom:5063/v1/"
     AUTH_SERVICE = "http://auth.utility:5061/v1/"
 
+    # NEO4J_SERVICE = "http://10.3.7.216:5062/v1/neo4j/"
+    # DATA_SERVICE = "http://127.0.0.1:5001/v1/"
+    # AUTH_SERVICE = "http://10.3.7.217:5061/v1/"
+
+
     # KONG API Gateway
     KONG_BASE = "http://kong-proxy.utility:8000/vre/"
 

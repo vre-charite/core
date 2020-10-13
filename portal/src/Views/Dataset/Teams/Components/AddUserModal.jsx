@@ -24,56 +24,6 @@ function AddUserModal(props) {
     cancelAddUser();
   };
 
-  // /**
-  //  * invite user in platform
-  //  *
-  //  * @param {number} projectId
-  //  * @param {"admin"|"member"|"uploader"} role
-  //  * @param {string} email
-  //  * @param {string} username
-  //  */
-  // const confirmForInPlatform = (projectId, role, email, username) => {
-  //   const { container_name: projectName } = props.containersPermission.find(
-  //     (item) => projectId === item.container_id,
-  //   );
-  //   //const projectName = "Temp ProjectName";
-  //   const config = {
-  //     title: `${username}(${email}) is in platform, add the user to ${projectName} as ${role}?`,
-  //     /* content: (
-  //       <>
-  //         User: {username}
-  //         <br></br>
-  //         email: {email}
-  //         <br></br>
-  //         role: {role}
-  //       </>
-  //     ), */
-  //     onOk: async () => {
-  //       try {
-  //         const result = await addUserToDatasetAPI(username, projectId, role);
-  //         message.success(`User ${username} is added to ${projectName}`);
-  //         return Promise.resolve();
-  //       } catch (err) {
-  //         // apiErrorHandling({
-  //         //   e500: `when add user to dataset`,
-  //         //   e404: `service to add user to dataset`,
-  //         //   fe403: `The user already exist in the project`,
-  //         // })(err);
-
-  //         if (err.response) {
-  //           const errorMessager = new ErrorMessager(
-  //             namespace.teams.addUsertoDataSet,
-  //           );
-  //           errorMessager.triggerMsg(err.response.status);
-  //         }
-
-  //         return Promise.reject();
-  //       }
-  //     },
-  //     onCancel: () => {},
-  //   };
-  //   confirm(config);
-  // };
 
   /**
    * Invite user from outside
@@ -82,8 +32,8 @@ function AddUserModal(props) {
    * @param {string} email
    */
   const confirmForOutPlatform = (projectId, role, email) => {
-    const { container_name: projectName } = props.containersPermission.find(
-      (item) => projectId === item.container_id,
+    const { containerName: projectName } = props.containersPermission.find(
+      (item) => projectId === item.containerId,
     );
 
     const config = {
@@ -126,18 +76,17 @@ function AddUserModal(props) {
       }
 
       toggleSubmitting(true);
-      checkEmailExistAPI(values.email.toLowerCase(), parseInt(props.datasetId))
+      checkEmailExistAPI(values.email.toLowerCase(), props.datasetId)
         .then((res) => {
-          console.log('onSubmit -> res', res);
           toggleSubmitting(false);
           cancelAddUser();
-          const username = res.data.result; //User name will be returned on 200
+          const username = res.data.result['username']; //User name will be returned on 200
           const role = values.role;
           const projectId = parseInt(props.datasetId);
           const {
-            container_name: projectName,
+            containerName: projectName,
           } = props.containersPermission.find(
-            (item) => projectId === item.container_id,
+            (item) => projectId === item.containerId,
           );
           addUserToDatasetAPI(username, projectId, role)
             .then(async (res) => {

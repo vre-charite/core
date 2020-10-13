@@ -17,7 +17,9 @@ import {
   REMOVE_DOWNLOAD_LIST,
   UPDATE_DATASET_LIST,
   UPDATE_CLEAR_ID,SET_IS_LOGIN,
-  SET_SUCCESS_NUM,SET_DOWNLOAD_CLEAR_ID
+  SET_USER_NAME,CLEAR_DOWNLOAD_LIST,
+  SET_SUCCESS_NUM,
+  SET_DOWNLOAD_CLEAR_ID,SET_PANEL_ACTIVE_KEY
 } from "./actionTypes";
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -139,6 +141,10 @@ export const removeDownloadListCreator = (downloadKey)=>({
   payload:downloadKey
 })
 
+export const clearDownloadListCreator = ()=>({
+  type:CLEAR_DOWNLOAD_LIST,
+})
+
 export const updateClearIdCreator = (clearId)=>({
   type:UPDATE_CLEAR_ID,
   payload:clearId,
@@ -149,13 +155,21 @@ export const setIsLoginCreator = (isLogin)=>({
   payload:isLogin
 })
 
+export const setUsernameCreator = (username)=>({
+  type:SET_USER_NAME,
+  payload:username
+})
 export const setSuccessNum = (num) => ({
   type:SET_SUCCESS_NUM,
   payload:num
 })
 
-
-export const setDownloadClearId = (downloadClearId)=>({
+export const setDonwloadClearIdCreator = (downloadClearId) =>({
   type:SET_DOWNLOAD_CLEAR_ID,
-  payload:downloadClearId
+  payload:downloadClearId,
+})
+
+export const setPanelActiveKey = (key)=>({
+  type:SET_PANEL_ACTIVE_KEY,
+  payload:key
 })

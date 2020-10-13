@@ -1,56 +1,42 @@
-import React, { Component } from 'react';
-import { withRouter, Switch, Route, Redirect } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import {
+  Switch,
+  Route,
+  Redirect,
+  useParams,
+  withRouter,
+} from 'react-router-dom';
 import { authedRoutes, unAuthedRoutes } from './Routes';
 import './App.css';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   AddDatasetCreator,
-  setUserListCreator,
-  setTagsCreator,
-  setMetadatasCreator,
-  setPersonalDatasetIdCreator,
   setContainersPermissionCreator,
   setUserRoleCreator,
   updateUploadItemCreator,
-  setRefreshModal,
   removeDownloadListCreator,
-  setIsLoginCreator,
   updateClearIdCreator,
-  setSuccessNum,setDownloadClearId
+  setSuccessNum,
+  setDonwloadClearIdCreator,
+  setUploadListCreator,
 } from './Redux/actions';
-import { withCookies } from 'react-cookie';
 import {
   getDatasetsAPI,
-  getAllUsersAPI,
-  getTagsAPI,
-  getMetadatasAPI,
-  getPersonalDatasetAPI,
   listAllContainersPermission,
   checkPendingStatusAPI,
   checkDownloadStatusAPI,
+  checkUploadStatus,
 } from './APIs';
-import {
-  objectKeysToCamelCase,
-  protectedRoutes,
-  apiErrorHandling,
-  checkToken,
-  logout,
-  logoutChannel,
-  loginChannel,
-  headerUpdate,
-  isTokenExpired,
-  getCookie,refreshChannel
-} from './Utility';
-import { message,Modal } from 'antd';
+import { protectedRoutes, reduxActionWrapper } from './Utility';
+import { message, Modal } from 'antd';
 import Promise from 'bluebird';
 import _ from 'lodash';
-import { useStore } from 'react-redux';
-import jwt_decode from 'jwt-decode';
-import moment from 'moment';
-import RefreshModel from './Components/Modals/RefreshModal';
+import RefreshModal from './Components/Modals/RefreshModal';
 import { namespace, ErrorMessager } from './ErrorMessages';
 import { v4 as uuidv4 } from 'uuid';
 import { history } from './Routes';
+import { tokenManager } from './Service/tokenManager';
+import { userAuthManager } from './Service/userAuthManager';
 
 // router change
 history.listen(() => {
@@ -61,175 +47,164 @@ message.config({
   maxCount: 2,
   duration: 5,
 });
-const tabUuid = uuidv4();
+const [
+  AddDatasetDispatcher,
+  setContainersPermissionDispatcher,
+  setUserRoleDispatcher,
+  updateUploadItemDispatcher,
+  updateClearIdDispatcher,
+  removeDownloadListDispatcher,
+  setDonwloadClearIdDispatcher,
+  setUploadListDispatcher,
+  setSuccessNumDispatcher
+] = reduxActionWrapper([
+  AddDatasetCreator,
+  setContainersPermissionCreator,
+  setUserRoleCreator,
+  updateUploadItemCreator,
+  updateClearIdCreator,
+  removeDownloadListCreator,
+  setDonwloadClearIdCreator,
+  setUploadListCreator,
+  setSuccessNum,
+]);
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      clearId: null,
-      refresh: false,
-      authError: false,
-      downloadClearId: null,
-      checkTokenIntervalId: null,
-    };
-  }
+function App() {
+  const {
+    uploadList,
+    downloadList,
+    clearId,
+    username,
+    datasetList,
+    isLogin,
+    downloadClearId,
+    successNum,
+  } = useSelector((state) => state);
 
-  async componentDidMount() {
-    if (window.location.pathname !== '/') {
-      if (!this.props.allCookies.isLogin) {
-        localStorage.clear();
-        return;
-      }
-      if (isTokenExpired(getCookie('access_token'))) {
-        logout(true);
-        return;
-      }
+  const dispatch = useDispatch();
+  const sessionId = localStorage.getItem('sessionId');
 
-      this.setCheckTokenInterval();
-
-      const token = getCookie('access_token');
-      checkToken(token, this.props.setRefreshModal);
-      getDatasetsAPI({ type: 'usecase' })
-        .then((res) => {
-          this.props.AddDatasetCreator(res.data.result, 'All Use Cases');
-        })
-        .catch((err) => {
-          const errorMessager = new ErrorMessager(namespace.common.getDataset);
-          errorMessager.triggerMsg(err.response && err.response.status);
-        });
-
-      const username = this.props.allCookies.username;
-      try {
-        const {
-          data: { result: containersPermission },
-        } = await listAllContainersPermission(username);
-
-        this.props.setContainersPermissionCreator(
-          containersPermission.permission,
-        );
-        this.props.setUserRoleCreator(containersPermission.role);
-      } catch (err) {
-        if (err.response) {
-          const errorMessager = new ErrorMessager(
-            namespace.common.listAllContainersPermission,
-          );
-          errorMessager.triggerMsg(err.response.status);
-        }
-      }
-
-      this.debouncedUpdatePendingStatus(this.props.uploadList);
-      this.updateDownloadStatus(this.props.downloadList);
+  useEffect(() => {
+    userAuthManager.init();
+    if (!tokenManager.checkTokenUnExpiration()) {
+      return;
     }
+    initApis();
+  }, []);
 
-    this.listenBroadcast();
-    this.props.setIsLoginCreator(getCookie('isLogin') ? true : false);
-  }
+  useEffect(() => {
+    debouncedUpdatePendingStatus(uploadList);
+    //updatePendingStatus(uploadList);
+    setRefreshConfirmation(
+      uploadList.filter((item) => item.status === 'uploading'),
+    );
+  }, [uploadList]);
 
-  setCheckTokenInterval = () => {
-    clearInterval(this.state.checkTokenIntervalId);
-    const checkTokenIntervalId = window.setInterval(() => {
-      const token = getCookie('access_token');
-      try {
-        if (token) {
-          const exp = jwt_decode(token).exp;
-          const diff = exp - moment().unix() < 60; // expired after 1 min
-          if (diff && !this.props.refresh && this.props.isLogin) {
-            // if is not login, will not show refresh modal
-            this.props.setRefreshModal(true); // Pop up warning modal
+  useEffect(() => {
+    updateDownloadStatus(downloadList);
+    setRefreshConfirmation(downloadList);
+  }, [downloadList]);
+
+  const initApis = async () => {
+    try {
+      const res = await getDatasetsAPI({ type: 'usecase' });
+      AddDatasetDispatcher(res.data.result, 'All Use Cases');
+    } catch (err) {
+      const errorMessager = new ErrorMessager(namespace.common.getDataset);
+      errorMessager.triggerMsg(err.response && err.response.status);
+    }
+    try {
+      const {
+        data: { result: containersPermission },
+      } = await listAllContainersPermission(username);
+
+      setContainersPermissionDispatcher(containersPermission.permission);
+      setUserRoleDispatcher(containersPermission.role);
+
+      const res = await checkUploadStatus(0, sessionId);
+      const { code, result } = res.data;
+
+      if (code === 200) {
+        const uploadList = [];
+        for (const item of result) {
+          if (['TERMINATED', 'SUCCEED'].includes(item.state)) {
+            uploadList.push({
+              fileName: item.fileName,
+              status: item.state === 'SUCCEED' ? 'success' : 'error',
+              progress: 1,
+              uploadedTime: item.startTimestamp,
+              projectCode: item.projectCode,
+            });
           }
-        } else {
-          return;
         }
-      } catch (e) {
-        console.log(token, 'token');
-        console.log(e);
+        console.log(uploadList);
+        setUploadListDispatcher(uploadList);
       }
-    }, 6000);
-    this.setState({ checkTokenIntervalId });
+    } catch (err) {
+      if (err.response) {
+        const errorMessager = new ErrorMessager(
+          namespace.common.listAllContainersPermission,
+        );
+        errorMessager.triggerMsg(err.response.status);
+      }
+    }
   };
 
-  listenBroadcast = () => {
-    logoutChannel.onmessage = (msg) => {
-      console.log('logout in app.js, listen logout');
-      logout();
-    };
-    loginChannel.onmessage = (username) => {
-      const { username: cookieUsername } = this.props.allCookies;
-      const { isLogin } = this.props;
-
-      console.log(username, cookieUsername, 'loginChannel');
-      if (!isLogin) {
-        return;
-      }
-      if (cookieUsername !== undefined && username !== cookieUsername) {
-        console.log('logout in app.js, listen login');
-        logout(false); //should not use this logout, since it will clean the cookies
-      }
-      if (username === cookieUsername) {
-        headerUpdate(getCookie('access_token'), getCookie('refresh_token'));
-      }
-    };
-    refreshChannel.onmessage = ()=>{
-      console.log('refesh token from another tab');
-      headerUpdate(getCookie('access_token'), getCookie('refresh_token'));
-    }
-
-  };
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.uploadList !== this.props.uploadList) {
-      this.debouncedUpdatePendingStatus(this.props.uploadList);
-      this.setRefreshConfirmation(this.props.uploadList);
-      this.debouncedTokenRefreshWhileUploading();
-      
-    }
-    if (prevProps.downloadList !== this.props.downloadList) {
-      this.updateDownloadStatus(this.props.downloadList);
-    }
-    if (prevProps.isLogin !== this.props.isLogin) {
-      console.log('isLogin change');
-      this.setCheckTokenInterval();
-    }
-    logoutChannel.onmessage = (msg) => {
-      console.log(msg, 'logoutChannel in app.js componentdidmount');
-      //logout();
-    };
-    this.listenBroadcast();
-  }
-
-  updatePendingStatus = (arr) => {
-    clearInterval(this.props.clearId); //don't know why this doesn't work
-
+  const updatePendingStatus = (arr) => {
+    tokenManager.removeListener(clearId);
+    //const {clearId} = store.getState();
+    tokenManager.removeListener(clearId);
     const pendingArr = arr.filter((item) => item.status === 'pending');
     if (pendingArr.length === 0) {
       //make sure clear all interval ids
-      clearIds.forEach((element) => {
-        clearInterval(element);
-      });
-      clearIds = [];
       return;
     }
-    
 
-    const clearId = window.setInterval(() => {
+    const time = 4;
+    const func = () => {
       Promise.map(pendingArr, (item, index) => {
-        checkPendingStatusAPI(item.projectId, item.taskId)
+        // checkPendingStatusAPI(item.projectId, item.taskId)
+        //   .then((res) => {
+        //     const { status } = res.data.result;
+        //     if (status === 'success' || status === 'error') {
+        //       item.status = status;
+        //       //always remember to put redux creator in the connect function !!!!!
+        //       updateUploadItemDispatcher(item);
+        //       if (status === 'error') {
+        //         const errorMessager = new ErrorMessager(
+        //           namespace.dataset.files.processingFile,
+        //         );
+        //         errorMessager.triggerMsg(null, null, item);
+        //       } else {
+        //         dispatch(setSuccessNum(successNum + 1));
+        //       }
+        //     }
+        //   })
+        //   .catch((err) => {
+        //     if (err.response && parseInt(err.response.status) !== 404) {
+        //       console.log(err.response, 'error response in checking pending');
+        //     }
+        //   });
+
+        checkUploadStatus(item.projectId, sessionId)
           .then((res) => {
-            const { status } = res.data.result;
-            if (status === 'success' || status === 'error') {
-              item.status = status;
-              //always remember to put redux creator in the connect function !!!!!
-              this.props.updateUploadItemCreator(item);
-             
-              if (status === 'error') {
-                const errorMessager = new ErrorMessager(
-                  namespace.dataset.files.processingFile,
+            const { code, result } = res.data;
+            if (code === 200) {
+              let fileName = item.fileName;
+
+              if (item.generateID) fileName = `${item.generateID}_${fileName}`;
+
+              const isSuccess =
+                result &&
+                result.some(
+                  (el) => el.fileName === fileName && el.state === 'SUCCEED',
                 );
-                errorMessager.triggerMsg(null, null, item);
-              } else {
-                this.props.setSuccessNum(this.props.successNum + 1);
+
+              if (isSuccess) {
+                item.status = 'success';
+                dispatch(setSuccessNum(successNum + 1));
               }
+              updateUploadItemDispatcher(item);
             }
           })
           .catch((err) => {
@@ -238,157 +213,114 @@ class App extends Component {
             }
           });
       });
-    }, 4000);
-    clearIds.push(clearId);
-    this.props.updateClearIdCreator(clearId);
+    };
+    const condition = (timeRemain, time) => {
+      return timeRemain % time === 0;
+    };
+    const newClearId = tokenManager.addListener({ time, func, condition });
+    console.log(`add id ${newClearId}`);
+    updateClearIdDispatcher(newClearId);
   };
 
-  updateDownloadStatus = (arr) => {
-    clearInterval(this.props.downloadClearId);
-    const downloadClearId = window.setInterval(() => {
+  const updateDownloadStatus = (arr) => {
+    tokenManager.removeListener(downloadClearId);
+    const time = 4;
+    const condition = (timeRemain, time) => {
+      return timeRemain % time === 0;
+    };
+    const func = () => {
       Promise.map(arr, (item, index) => {
         checkDownloadStatusAPI(
           item.projectId,
           item.downloadKey,
-          this.props.removeDownloadListCreator,
+          removeDownloadListDispatcher,
+          setSuccessNumDispatcher,
+          successNum,
         );
       });
-    }, 4000);
-    this.props.setDownloadClearId(downloadClearId);
+    };
+    const newDownloadClearId = tokenManager.addListener({
+      time,
+      condition,
+      func,
+    });
+
+    setDonwloadClearIdDispatcher(newDownloadClearId);
   };
 
-  setRefreshConfirmation = (arr) => {
-    const uploadingArr = arr.filter((item) => item.status === 'uploading');
+  const setRefreshConfirmation = (arr) => {
     const confirmation = function (event) {
       return window.confirm(
         'You will loss your uploading progress. Are you sure to exit?',
       );
     };
-    if (uploadingArr.length > 0) {
-      // window.addEventListener('beforeunload',confirmation);
+    if (arr.length > 0) {
       window.onbeforeunload = confirmation;
-      //window.onbeforeunload = confirmation;
     } else {
       window.onbeforeunload = () => {};
     }
   };
 
-
-
-  tokenRefreshWhileUploading() {
-    const { uploadList } = this.props;
-    const uploadingList = uploadList.filter(
-      (item) => item.status === 'uploading',
-    );
-    if (uploadingList.length > 0) {
-      const accessToken = getCookie('access_token');
-      const refreshToken = getCookie('refresh_token');
-      headerUpdate(accessToken, refreshToken);
-    }
-  }
-
-  debouncedTokenRefreshWhileUploading = _.debounce(
-    this.tokenRefreshWhileUploading,
-    5 * 1000,
-    {
-      leading: true,
-      trailing: true,
-      maxWait: 15 * 1000,
-    },
-  );
-
-  debouncedUpdatePendingStatus = _.debounce(this.updatePendingStatus, 5000, {
+  const debouncedUpdatePendingStatus = _.debounce(updatePendingStatus, 5000, {
     leading: true,
     trailing: true,
     maxWait: 15 * 1000,
   });
 
-  render() {
-    let refresh = this.props.refresh;
-    let datasetList = this.props.datasetList;
-
-    return (
-      <>
-        <Switch>
-          {authedRoutes.map((item) => (
-            <Route
-              path={item.path}
-              key={item.path}
-              exact={item.exact || false}
-              //component={item.component}
-              render={(props) => {
-                let res = protectedRoutes(
-                  item.protectedType,
-                  this.props.isLogin,
-                  props,
-                  datasetList,
-                );
-                if (res === '403') {
-                  return <Redirect to="/error/403" />;
-                } else if (res === '404') {
-                  return <Redirect to="/error/404" />;
-                } else if (res) {
-                  return <item.component />;
-                } else {
-                  return <Redirect to="/" />;
-                }
-              }}
-            ></Route>
-          ))}
-          {unAuthedRoutes.map((item) => (
-            <Route
-              path={item.path}
-              key={item.path}
-              exact={item.exact || false}
-              //component={item.component}
-              render={(props) => {
-                return protectedRoutes(
-                  item.protectedType,
-                  this.props.isLogin,
-                  props,
-                  datasetList,
-                ) ? (
-                  <item.component />
-                ) : (
-                  <Redirect to="/uploader" />
-                );
-              }}
-            ></Route>
-          ))}
-        </Switch>
-        {refresh && <RefreshModel />}
-      </>
-    );
-  }
+  return (
+    <>
+      <Switch>
+        {authedRoutes.map((item) => (
+          <Route
+            path={item.path}
+            key={item.path}
+            exact={item.exact || false}
+            render={(props) => {
+              let res = protectedRoutes(
+                item.protectedType,
+                isLogin,
+                props.match.params.datasetId,
+                null,
+                datasetList,
+              );
+              if (res === '403') {
+                return <Redirect to="/error/403" />;
+              } else if (res === '404') {
+                return <Redirect to="/error/404" />;
+              } else if (res) {
+                return <item.component />;
+              } else {
+                return <Redirect to="/" />;
+              }
+            }}
+          ></Route>
+        ))}
+        {unAuthedRoutes.map((item) => (
+          <Route
+            path={item.path}
+            key={item.path}
+            exact={item.exact || false}
+            //component={item.component}
+            render={(props) => {
+              return protectedRoutes(
+                item.protectedType,
+                isLogin,
+                props.match.params.datasetId,
+                null,
+                datasetList,
+              ) ? (
+                <item.component />
+              ) : (
+                <Redirect to="/uploader" />
+              );
+            }}
+          ></Route>
+        ))}
+      </Switch>
+      {<RefreshModal />}
+    </>
+  );
 }
 
-export default connect(
-  (state) => ({
-    clearId: state.clearId,
-    uploadList: state.uploadList,
-    isLogin: state.isLogin,
-    refresh: state.refreshTokenModal,
-    downloadList: state.downloadList,
-    containersPermission: state.containersPermission,
-    datasetList: state.datasetList,
-    successNum: state.successNum,
-    downloadClearId:state.downloadClearId
-  }),
-  {
-    AddDatasetCreator,
-    setUserListCreator,
-    setTagsCreator,
-    setMetadatasCreator,
-    setPersonalDatasetIdCreator,
-    setContainersPermissionCreator,
-    setUserRoleCreator,
-    updateUploadItemCreator,
-    setRefreshModal,
-    removeDownloadListCreator,
-    setIsLoginCreator,
-    updateClearIdCreator,
-    setSuccessNum,setDownloadClearId
-  },
-)(withCookies(withRouter(App)));
-
-// trigger cic 
+export default withRouter(App);
+// cicd

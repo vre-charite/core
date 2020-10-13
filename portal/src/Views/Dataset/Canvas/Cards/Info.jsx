@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Typography,
   Descriptions,
   Tag,
   Button,
@@ -8,15 +7,15 @@ import {
   Select,
   Checkbox,
   message,
+  Typography,
 } from 'antd';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import _ from 'lodash';
-import { updateDatasetInfoAPI } from '../../../../APIs';
+import { updateDatasetInfoAPI, getAdminsOnDatasetAPI } from '../../../../APIs';
 import { UpdateDatasetCreator } from '../../../../Redux/actions';
-import { getUsersOnDatasetAPI } from '../../../../APIs';
+import { useCurrentProject, objectKeysToSnakeCase } from '../../../../Utility';
 import { objectKeysToCamelCase } from '../../../../Utility';
-import { PresetStatusColorTypes } from 'antd/lib/_util/colors';
 const { TextArea } = Input;
 const { Paragraph } = Typography;
 
@@ -40,20 +39,21 @@ function Description(props) {
         datasetList[0].datasetList,
         (d) => d.id === parseInt(datasetId),
       );
+
       setDatasetInfo(currentDataset);
       setDatasetUpdate(currentDataset);
     }
-  }, [containersPermission, datasetList]);
+  }, [containersPermission, datasetList, datasetId]);
 
-  const currentContainer =
-    containersPermission &&
-    containersPermission.find((ele) => {
-      return parseInt(ele.container_id) === parseInt(datasetId);
-    });
+  const [currentContainer] = useCurrentProject();
 
   useEffect(() => {
     currentContainer &&
-      getUsersOnDatasetAPI(datasetId).then((res) => {
+      getAdminsOnDatasetAPI(datasetId).then((res) => {
+        console.log(
+          'Description -> res',
+          objectKeysToCamelCase(res.data.result),
+        );
         setUserListOnDataset(objectKeysToCamelCase(res.data.result));
       });
   }, [null]);
@@ -67,19 +67,22 @@ function Description(props) {
     }
 
     // call API to update project info
-    updateDatasetInfoAPI(datasetId, datasetUpdate).then((res) => {
-      let newDataInfo = res.data.result[0];
-      let index = datasetList[0].datasetList.findIndex(
-        (d) => d.id === parseInt(datasetId),
-      );
-      let newDatasetList = [
-        ...datasetList,
-        (datasetList[0].datasetList[index] = newDataInfo),
-      ];
-      UpdateDatasetCreator(newDatasetList, 'All Projects');
-      setDatasetInfo(newDataInfo);
-      setEditView(false);
-    });
+    updateDatasetInfoAPI(datasetId, objectKeysToSnakeCase(datasetUpdate)).then(
+      (res) => {
+        let newDataInfo = res.data.result[0];
+        let index = datasetList[0].datasetList.findIndex(
+          (d) => d.id === parseInt(datasetId),
+        );
+        let newDatasetList = [
+          ...datasetList,
+          (datasetList[0].datasetList[index] = newDataInfo),
+        ];
+        console.log('saveDatasetInfo -> newDatasetList', newDatasetList);
+        UpdateDatasetCreator(newDatasetList, 'All Projects');
+        setDatasetInfo(newDataInfo);
+        setEditView(false);
+      },
+    );
   };
 
   const updateDatasetInfo = (field, value) => {
@@ -87,7 +90,7 @@ function Description(props) {
   };
 
   function tagRender(props) {
-    const { label, value, closable, onClose } = props;
+    const { label, closable, onClose } = props;
 
     return (
       <Tag
@@ -120,7 +123,7 @@ function Description(props) {
               <>{datasetInfo.code}</>
             </Descriptions.Item>
             <Descriptions.Item label="Created">
-              <>{datasetInfo.time_created.split('T')[0]}</>
+              <>{datasetInfo.timeCreated.split('T')[0]}</>
             </Descriptions.Item>
             <Descriptions.Item label="Visibility" span={1}>
               {editView ? (
@@ -175,36 +178,23 @@ function Description(props) {
                   userListOnDataset.map((i, index) => {
                     const len = userListOnDataset.length;
                     let separator = index + 1 === len ? '' : ',';
-                    if (i.permission === 'admin') {
-                      return (
-                        <a
-                          href={
-                            'mailto:' +
-                            i.email +
-                            `?subject=[VRE Platform: ${datasetInfo.name}]`
-                          }
-                          style={{ paddingRight: '5px' }}
-                        >
-                          {i.firstName + ' ' + i.lastName + separator}
-                        </a>
-                      );
-                    }
+                    return (
+                      <a
+                        href={
+                          'mailto:' +
+                          i.email +
+                          `?subject=[VRE Platform: ${datasetInfo.name}]`
+                        }
+                        target="_blank"
+                        // ref="noreferrer noopener"
+                        style={{ paddingRight: '5px' }}
+                      >
+                        {i.firstName + ' ' + i.lastName + separator}
+                      </a>
+                    );
                   })}
               </Paragraph>
             </Descriptions.Item>
-            {/* <Descriptions.Item label="Custom Metadata" span={2}>
-            {currentDataset &&
-              Object.keys(currentDataset).map((key) => {
-                return (
-                  key.startsWith('_') && (
-                    <Tag color="green">{currentDataset[key]}</Tag>
-                  )
-                );
-              })}
-          </Descriptions.Item> */}
-            {/* <Descriptions.Item label="Principle Investigator">
-            {currentDataset.pi}
-          </Descriptions.Item> */}
             <Descriptions.Item label="Description" span={3}>
               {editView ? (
                 <TextArea
@@ -241,19 +231,7 @@ function Description(props) {
       );
     }
   };
-  return (
-    <>
-      {printDetails()}
-      {/* <Title level={3}>
-        {currentContainer ? (
-          <>{currentContainer.container_name} </>
-        ) : (
-          'Not Available'
-        )}
-      </Title>
-      <p>{content} </p> */}
-    </>
-  );
+  return <>{printDetails()}</>;
 }
 
 export default connect(

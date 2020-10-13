@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Statistic, Row, Col, Timeline, Tabs } from 'antd';
+import {  Statistic, Timeline, Tabs } from 'antd';
 import { CloudUploadOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import { projectFileCountToday } from '../../../../APIs';
-
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import _ from 'lodash';
 import styles from './index.module.scss';
-const { Title } = Typography;
 const { TabPane } = Tabs;
 
 function UserStats(props) {
@@ -17,38 +14,20 @@ function UserStats(props) {
   const [downloadLog, setDownloadLog] = useState([]);
 
   const {
-    containersPermission,
     match: {
       params: { datasetId },
     },
-    content,
-    datasetList,
   } = props;
 
-  const currentContainer =
-    containersPermission &&
-    containersPermission.find((ele) => {
-      return parseInt(ele.container_id) === parseInt(datasetId);
-    });
-
-  const printDetails = () => {
-    if (datasetList.length > 0) {
-      const currentDataset = _.find(
-        datasetList[0].datasetList,
-        (d) => d.id === parseInt(datasetId),
-      );
-      return;
-    }
-  };
 
   useEffect(() => {
     projectFileCountToday(datasetId, false).then((res) => {
-      setUploadCount(res.data.result['upload_count']);
-      setDownloadCount(res.data.result['download_count']);
-      setUploadLog(res.data.result['recent_upload']);
-      setDownloadLog(res.data.result['recent_download']);
+      setUploadCount(res.data.result['uploadCount']);
+      setDownloadCount(res.data.result['downloadCount']);
+      setUploadLog(res.data.result['recentUpload']);
+      setDownloadLog(res.data.result['recentDownload']);
     });
-  }, []);
+  }, [datasetId]);
   return (
     <>
       <div className={styles.userStats}>

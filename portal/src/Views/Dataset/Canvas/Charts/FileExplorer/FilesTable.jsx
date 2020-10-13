@@ -1,5 +1,4 @@
 import { Table, Input, Button, Space } from 'antd';
-import Highlighter from 'react-highlight-words';
 import { SearchOutlined } from '@ant-design/icons';
 import React from 'react';
 
@@ -17,18 +16,40 @@ class FilesTable extends React.Component {
     };
   }
 
-  getColumnSearchProps = dataIndex => ({
-    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.successNum !== this.props.successNum) {
+      this.setState({
+        page: 0,
+        pageSize: 10,
+        order: 'desc',
+        sortColumn: 'createTime',
+        searchedColumn: '',
+        searchText: '',
+      });
+    }
+  }
+
+  getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+    }) => (
       <div style={{ padding: 8 }}>
         <Input
-          ref={node => {
+          ref={(node) => {
             this.searchInput = node;
             // if(!this.clearFilters) this.clearFilters = clearFilters;
           }}
           placeholder={`Search ${dataIndex}`}
           value={selectedKeys[0]}
-          onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-          onPressEnter={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() =>
+            this.handleSearch(selectedKeys, confirm, dataIndex)
+          }
           style={{ width: 188, marginBottom: 8, display: 'block' }}
         />
         <Space>
@@ -41,31 +62,29 @@ class FilesTable extends React.Component {
           >
             Search
           </Button>
-          <Button onClick={() => this.handleReset(clearFilters)} size="small" style={{ width: 90 }}>
+          <Button
+            onClick={() => this.handleReset(clearFilters)}
+            size="small"
+            style={{ width: 90 }}
+          >
             Reset
           </Button>
         </Space>
       </div>
     ),
-    filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined, top: '60%' }} />,
-    onFilterDropdownVisibleChange: visible => {
+    filterIcon: (filtered) => (
+      <SearchOutlined
+        style={{ color: filtered ? '#1890ff' : undefined, top: '60%' }}
+      />
+    ),
+    onFilterDropdownVisibleChange: (visible) => {
       if (visible) {
         setTimeout(() => {
-          this.searchInput.select()
+          this.searchInput.select();
         }, 100);
       }
     },
-    render: text => text
-      // this.state.searchedColumn === dataIndex ? (
-      //   <Highlighter
-      //     highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-      //     searchWords={[this.state.searchText]}
-      //     autoEscape
-      //     textToHighlight={text ? text.toString() : ''}
-      //   />
-      // ) : (
-      //   text
-      // ),
+    render: (text) => text,
   });
 
   handleSearch = (selectedKeys, confirm, dataIndex) => {
@@ -74,18 +93,9 @@ class FilesTable extends React.Component {
       searchText: selectedKeys[0],
       searchedColumn: dataIndex,
     });
-
-    // this.props.getRawFilesAndUpdateUI(
-    //   this.props.projectId,
-    //   this.state.pageSize,
-    //   this.state.page,
-    //   this.state.sortColumn,
-    //   selectedKeys[0],
-    //   this.state.order,
-    // );
   };
 
-  handleReset = clearFilters => {
+  handleReset = (clearFilters) => {
     clearFilters();
     this.setState({ searchText: '' });
   };
@@ -98,7 +108,7 @@ class FilesTable extends React.Component {
     this.setState({ page: pagination.current - 1 });
 
     if (param3) {
-      this.setState({ sortColumn: param3.field });
+      this.setState({ sortColumn: param3.columnKey });
       this.setState({ order: order });
     }
 
@@ -110,7 +120,7 @@ class FilesTable extends React.Component {
     if (param2.fileName && param2.fileName.length > 0) {
       // searchText = param2.fileName[0];
       isSearchingFile = true;
-      
+
       searchText.push({
         key: 'fileName',
         value: param2.fileName[0],
@@ -122,7 +132,7 @@ class FilesTable extends React.Component {
 
       searchText.push({
         value: param2.generateID[0],
-        key: 'generateID'
+        key: 'generateID',
       });
     }
 
@@ -132,52 +142,43 @@ class FilesTable extends React.Component {
 
       searchText.push({
         value: param2.owner[0],
-        key: 'owner'
+        key: 'owner',
       });
     }
 
     this.setState({ searchText: searchText });
 
+    this.props.updateTable(
+      this.props.projectId,
+      pagination.pageSize,
+      pagination.current - 1,
+      this.props.parsePath,
+      param3 ? param3.columnKey : 'createTime',
+      searchText,
+      order,
+    );
 
-    if (this.props.type === 'raw table') {
-      this.props.updateTable(
-        this.props.projectId,
-        pagination.pageSize,
-        pagination.current - 1,
-        param3 ? param3.field : 'createTime',
-        searchText,
-        order,
-      );
-    } else if (this.props.type === 'processed table') {
-      this.props.updateTable(
-        this.props.projectId,
-        pagination.pageSize,
-        pagination.current - 1,
-        this.props.parsePath,
-        param3 ? param3.field : 'createTime',
-        searchText,
-        order,
-      );
-    }
-  }
+  };
 
   render() {
-    const { page, pageSize, } = this.state;
+    const { page, pageSize } = this.state;
     const { totalItem } = this.props;
 
-    const columns = this.props.columns && this.props.columns.map((el) => {
-      if (el.searchKey) {
-        return {
-          ...el,
-          ...this.getColumnSearchProps(el.searchKey)
+    const columns =
+      this.props.columns &&
+      this.props.columns.map((el) => {
+        if (el.searchKey) {
+          return {
+            ...el,
+            ...this.getColumnSearchProps(el.searchKey),
+          };
         }
-      }
-      return el;
-    })
+        return el;
+      });
     return (
-      <Table 
-        columns={columns} 
-        dataSource={this.props.dataSource} 
+      <Table
+        columns={columns}
+        dataSource={this.props.dataSource}
         onChange={this.onChange}
         pagination={{
           current: page + 1,

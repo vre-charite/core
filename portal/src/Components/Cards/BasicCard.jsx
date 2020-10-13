@@ -17,8 +17,19 @@ export default class BasicCard extends Component {
   };
 
   onExpandClick = () => {
-    const { handleExpand, content, title } = this.props;
-    handleExpand(content("l", this.state.export, this.onExportClick), title);
+    const { handleExpand, content, title, expandComponent, datasetId, currentUser, isAdmin } = this.props;
+
+    let modalContent = content("l", this.state.export, this.onExportClick);
+
+    if (expandComponent) {
+      modalContent = expandComponent;
+      handleExpand(React.cloneElement(
+        modalContent,
+        {datasetId: datasetId, currentUser, isAdmin}
+      ), title, '55vw');
+    } else {
+      handleExpand(modalContent, title, '95vw');
+    }
   };
 
   render() {
@@ -55,7 +66,7 @@ export default class BasicCard extends Component {
         {exportable
           ? content(defaultSize, this.state.export, this.onExportClick)
           : expandable
-          ? content(defaultSize)
+          ? (typeof content === 'function') && content(defaultSize)
           : content}
       </Card>
     );

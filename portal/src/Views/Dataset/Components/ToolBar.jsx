@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { Menu } from 'antd';
 import {
-  DesktopOutlined,
   PieChartOutlined,
   UploadOutlined,
   TeamOutlined,
-  SettingOutlined,
-  FileSearchOutlined,
-  PlusOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
@@ -15,7 +11,6 @@ import GreenRoomUploader from './GreenRoomUploader';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import style from './index.module.scss';
-const { SubMenu } = Menu;
 
 const ToolBar = ({
   location: { pathname },
@@ -24,13 +19,12 @@ const ToolBar = ({
   role,
 }) => {
   const [isShown, toggleModal] = useState(false);
-  const [isCreateDatasetModalShown, toggleCreateDataset] = useState(false);
   const adminPermission =
     role === 'admin' ||
     _.some(containersPermission, (item) => {
       return (
-        parseInt(item.container_id) === parseInt(params.datasetId) &&
-        item.permission === 'admin'
+        parseInt(item.containerId) === parseInt(params.datasetId) &&
+        item.permission === "admin"
       );
     });
 

@@ -3,12 +3,11 @@ import { StandardLayout } from '../../Components/Layout';
 import FilePanel from '../../Components/Layout/FilePanel';
 import { message } from 'antd';
 import { datasetRoutes as routes } from '../../Routes/index';
-import { withRouter, Switch, Route, Redirect } from 'react-router-dom';
+import { withRouter, Switch, Route, Redirect,useParams } from 'react-router-dom';
 import ToolBar from './Components/ToolBar';
 import { getUsersOnDatasetAPI } from '../../APIs';
-import { objectKeysToCamelCase } from '../../Utility';
-import { connect } from 'react-redux';
-import { apiErrorHandling, protectedRoutes } from '../../Utility';
+import { connect,useSelector } from 'react-redux';
+import {   protectedRoutes } from '../../Utility';
 
 import _ from 'lodash';
 function Dataset(props) {
@@ -19,6 +18,7 @@ function Dataset(props) {
     datasetList,
   } = props;
   const [userListOnDataset, setUserListOnDataset] = useState(null);
+  const {datasetId} = useParams();
   const containerDetails =
     datasetList[0] &&
     _.find(datasetList[0]['datasetList'], (item) => {
@@ -28,16 +28,13 @@ function Dataset(props) {
   const config = {
     observationVars: [params.datasetId, containersPermission, role],
     initFunc: () => {
-      const currentContainer = _.find(containersPermission, (item) => {
-        return parseInt(item.container_id) === parseInt(params.datasetId);
-      });
       if (containersPermission !== null && role !== null) {
         const isAccess =
           role === 'admin' ||
           _.some(containersPermission, (item) => {
-            const itemId = parseInt(item.container_id);
+            const itemId = parseInt(item.containerId);
             const paramId = parseInt(params.datasetId);
-            return parseInt(item.container_id) === parseInt(params.datasetId);
+            return parseInt(item.containerId) === parseInt(params.datasetId);
           });
 
         if (!isAccess) {
@@ -48,20 +45,6 @@ function Dataset(props) {
           return;
         }
       }
-
-      // currentContainer &&
-      //   currentContainer.permission === 'admin' &&
-      //   getUsersOnDatasetAPI(params.datasetId)
-      //     .then((res) => {
-      //       setUserListOnDataset(objectKeysToCamelCase(res.data.result));
-      //     })
-      //     .catch(
-      //       apiErrorHandling({
-      //         e500: 'when getting users list',
-      //         e400: 'service to get users list',
-      //         e403: 'get users list',
-      //       }),
-      //     );
     },
   };
   return (
@@ -73,10 +56,13 @@ function Dataset(props) {
             path={path + item.path}
             key={item.path}
             render={(props) => {
+              if(!datasetId){
+                throw new Error(`datasetId undefined`)
+              }
               let res = protectedRoutes(
                 item.protectedType,
                 true,
-                props,
+                datasetId,
                 containersPermission,
               );
               if (res === '403') {

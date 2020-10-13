@@ -22,14 +22,16 @@ const uploadStarter =  (data, q) => {
             projectId: data.dataset,
             fileName: file.name,
             projectName:data.projectName,
-            generateID:data.gid?data.gid:null
+            generateID:data.gid?data.gid:null,
+            projectCode: data.projectCode,
         });
     });
     appendUploadListDispatcher(fileActions);
     q.push(fileList.map(item => ({
         file: item.originFileObj, uploadKey: item.originFileObj.name + timeStamp, generateID:data.gid,
         datasetId:data.dataset,
-        uploader:data.uploader
+        uploader:data.uploader,
+        projectCode: data.projectCode,
     })));
     q.error((err, task)=>{
         console.log(`task ${task} error`);

@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Button, Tooltip, Collapse, Tag, List, Progress, Badge } from 'antd';
-import { FileTextOutlined, DeleteOutlined } from '@ant-design/icons';
+import { FileTextOutlined } from '@ant-design/icons';
 import styles from './index.module.scss';
-import { setUploadListCreator } from '../../Redux/actions';
+import { setUploadListCreator, setPanelActiveKey } from '../../Redux/actions';
+import { useIsMount } from '../../Utility';
 
 const { Panel } = Collapse;
-
-function callback(key) {
-  console.log(key);
-}
 
 function FilePanel() {
   const [visibility, setVisibility] = useState(false);
@@ -17,16 +14,44 @@ function FilePanel() {
 
   const uploadList = useSelector((state) => state.uploadList);
   const downloadList = useSelector((state) => state.downloadList);
-
-  const mounted = useRef(false);
+  const panelActiveKey = useSelector((state) => state.panelActiveKey);
   const dispatch = useDispatch();
-
+  const isMount = useIsMount();
   useEffect(() => {
-    if (mounted.current) {
+    if (isMount) {
       setVisibility(true);
       setIsActive(true);
-    } else mounted.current = true;
+    }
   }, [uploadList.length, downloadList.length]);
+
+  useEffect(() => {
+    if (isMount) {
+      if (!visibility) {
+        dispatch(setPanelActiveKey(['upload']));
+      } else {
+        dispatch(
+          setPanelActiveKey([...new Set([...panelActiveKey, 'upload'])]),
+        );
+      }
+    }
+  }, [uploadList.length]);
+
+  useEffect(() => {
+    if (isMount) {
+      if (!visibility) {
+        dispatch(setPanelActiveKey(['download']));
+      } else {
+        dispatch(
+          setPanelActiveKey([...new Set([...panelActiveKey, 'download'])]),
+        );
+      }
+    }
+  }, [downloadList.length]);
+
+  function callback(key) {
+    console.log(key);
+    dispatch(setPanelActiveKey(key));
+  }
 
   function toggleVisibility() {
     setVisibility(!visibility);
@@ -98,34 +123,44 @@ function FilePanel() {
     const failedList = uploadList.filter((el) => el.status === 'error');
     const successList = uploadList.filter((el) => el.status === 'success');
 
-    if (uploadingList.length === 0 && processingList.length > 0) {
+    if (
+      uploadingList.length === 0 &&
+      (processingList.length > 0 || failedList.length > 0)
+    ) {
       if (uploadList.length - successList.length > 1) {
         uploadHeader = `${
           uploadList.length - successList.length
         } files are being uploaded`;
 
         if (failedList.length > 0)
-        uploadHeader = `${
-          uploadList.length - successList.length - failedList.length
-        } files are being uploaded. ${failedList.length} files failed`;
+          uploadHeader = `${
+            uploadList.length - successList.length - failedList.length
+          } files are being uploaded. ${failedList.length} files failed`;
       } else {
         uploadHeader = `${
           uploadList.length - successList.length
         } file is being uploaded`;
 
         if (failedList.length > 0)
-        uploadHeader = `${
-          uploadList.length - successList.length - failedList.length
-        } file is being uploaded. ${failedList.length} files failed`;
+          uploadHeader = `${
+            uploadList.length - successList.length - failedList.length
+          } file is being uploaded. ${failedList.length} files failed`;
       }
     }
 
-    if (successList && failedList && successList.length && (failedList.length + successList.length) === uploadList.length) {
-      let suceessLetters = `${successList.length} files succeed.`;
+    if (
+      successList &&
+      failedList &&
+      successList.length &&
+      failedList.length + successList.length === uploadList.length
+    ) {
+      let suceessLetters = `${successList.length} files uploaded successfully. `;
       let failLetters = `${failedList.length} files failed`;
 
-      if (successList.length === 1) suceessLetters = `${successList.length} file succeed.`;
-      if (failedList.length === 1) failLetters = `${failedList.length} file failed`;
+      if (successList.length === 1)
+        suceessLetters = `${successList.length} file uploaded successfully. `;
+      if (failedList.length === 1)
+        failLetters = `${failedList.length} file failed.`;
       uploadHeader = `${suceessLetters}${failLetters}`;
     }
   }
@@ -167,7 +202,7 @@ function FilePanel() {
         />
       </Tooltip>
       <Collapse
-        defaultActiveKey={defaultKey}
+        activeKey={panelActiveKey}
         onChange={callback}
         className={styles.fileCollapse + ' ' + (visibility && styles.active)}
       >
@@ -177,24 +212,33 @@ function FilePanel() {
             dataSource={uploadList}
             className={uploadList.length > 0 ? styles.download_list : ''}
             renderItem={(item) => (
-              <List.Item style={{ overflowWrap: 'anywhere' }}>
-                <List.Item.Meta
-                  title={
-                    <>
-                      {item.fileName} {statusTags(item.status, 'upload')}
-                    </>
-                  }
-                  description={
-                    item.status === 'uploading' && (
-                      <Progress
-                        status="active"
-                        percent={Math.floor(100 * item.progress)}
-                        size="small"
-                      />
-                    )
-                  }
-                />
-              </List.Item>
+              <>
+                <List.Item style={{ overflowWrap: 'anywhere' }}>
+                  <List.Item.Meta
+                    title={
+                      <>
+                        {/* <Tag color="blue">{item.projectCode}</Tag> */}
+                        {statusTags(item.status, 'upload')}
+                        {item.fileName}
+                      </>
+                    }
+                    description={
+                      <>
+                        {item.status === 'uploading' && (
+                          <Progress
+                            status="active"
+                            percent={Math.floor(100 * item.progress)}
+                            size="small"
+                          />
+                        )}
+                        <small style={{ float: 'right' }}>
+                          Project: {item.projectCode}
+                        </small>
+                      </>
+                    }
+                  />
+                </List.Item>
+              </>
             )}
           />
           <Button

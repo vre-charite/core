@@ -2,13 +2,17 @@ from .module_api import module_api
 from .api_hello_world import APIHelloWorld
 from .api_invitation import APIInvitation
 from .api_report import APIReport
+from .api_auth import APIAuthService
+from .api_contact_us import APIContactUs
 from dataset.route_registry import APIDateSet
 
 apis = [
     APIHelloWorld(),
     APIInvitation(),
     APIDateSet(),
-    APIReport()
+    APIReport(),
+    APIAuthService(),
+    APIContactUs()
 ]
 
 

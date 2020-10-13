@@ -6,15 +6,11 @@ import {
   Input,
   Select,
   Upload,
-  message,
-  Progress,
 } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
-import { InboxOutlined } from '@ant-design/icons';
-import { uploadStarter } from '../../../Utility';
+import { uploadStarter,useCurrentProject } from '../../../Utility';
 import { withRouter } from 'react-router-dom';
-import { connect } from 'react-redux';
-import { useCookies } from 'react-cookie';
+import { connect ,useSelector} from 'react-redux';
 import {
   appendUploadListCreator,
   updateUploadItemCreator,
@@ -22,34 +18,20 @@ import {
 } from '../../../Redux/actions';
 import _ from 'lodash';
 import { UploadQueueContext } from '../../../Context';
-import { QuestionCircleOutlined } from '@ant-design/icons';
 const { Option } = Select;
-const { Dragger } = Upload;
 
 const GreenRoomUploader = ({
   isShown: visible,
   cancel,
   datasetList,
-  match,
   datasetId,
-  selectedPane,
   fetch: fetchTree,
-  appendUploadListCreator,
-  updateUploadItemCreator,
-  setNewUploadIndicator,
-  containersPermission,
-  uploadList,
 }) => {
   const [form] = Form.useForm();
   const [isLoading, setIsloading] = useState(false);
-  const [cancelTokens, setCancelTokens] = useState([]);
-  const [cookies, setCookie] = useCookies(['username']);
-  const [folderPath, setFolderPath] = useState('');
   const q = useContext(UploadQueueContext);
-  const currentDatasetId = match.params.datasetId;
-  const currentDataset = _.find(containersPermission, {
-    container_id: Number(currentDatasetId),
-  });
+  const [currentDataset] = useCurrentProject();
+  const {username} = useSelector(state=>state);
   const handleOk = () => {
     form
       .validateFields()
@@ -58,8 +40,9 @@ const GreenRoomUploader = ({
         const data = Object.assign({}, values, {
           name: values.file.file.name,
           file_type: values.file.file.type,
-          uploader: cookies.username,
-          projectName: currentDataset.container_name,
+          uploader: username,
+          projectName: currentDataset.containerName,
+          projectCode: currentDataset.code,
         });
         uploadStarter(data, q);
         form.resetFields();
@@ -134,38 +117,6 @@ const GreenRoomUploader = ({
                 ))}
             </Select>
           </Form.Item>
-          {/* <Form.Item
-            rules={[
-              {
-                validator(rule, value) {
-                  if (value && value !== currentDataset.container_name) {
-                    return Promise.reject('The project name is not correct');
-                  } else {
-                    return Promise.resolve();
-                  }
-                },
-              },
-              {
-                required: true,
-                message: 'Please confirm the project name',
-              },
-            ]}
-            name="confirmProject"
-            label="Confirm Project"
-          >
-            <Input
-              onCopy={(e) => {
-                e.preventDefault();
-              }}
-              onPaste={(e) => {
-                e.preventDefault();
-              }}
-              onCut={(e) => {
-                e.preventDefault();
-              }}
-              placeholder="Please input the project name"
-            ></Input>
-          </Form.Item> */}
           {currentDataset && currentDataset.code === 'generate' ? (
             <>
               <Form.Item label="Generate ID" required>
@@ -203,7 +154,7 @@ const GreenRoomUploader = ({
 
               <Form.Item
                 name="gid_repeat"
-                label="Comfirm Generate ID"
+                label="Confirm Generate ID"
                 dependencies={['gid']}
                 hasFeedback
                 rules={[
@@ -269,25 +220,7 @@ const GreenRoomUploader = ({
                 Select Files
               </Button>
             </Upload>
-            {/*  <Dragger customRequest={()=>{}}>
-              <p className="ant-upload-drag-icon">
-                <InboxOutlined />
-              </p>
-              <p className="ant-upload-text">Click or drag file to this area to upload</p>
-              <p className="ant-upload-hint">
-                Support for a single or bulk upload. Strictly prohibit from uploading company data or other
-                band files
-              </p>
-            </Dragger> */}
           </Form.Item>
-          {/*     <Form.Item name="tags" label={"tags"}>
-            <Select mode="tags" style={{ width: "100%" }} placeholder="tags">
-              {tags &&
-                tags.map((item) => (
-                  <Select.Option key={item}>{item}</Select.Option>
-                ))}
-            </Select>
-          </Form.Item> */}
         </Form>
       </Modal>
     </div>

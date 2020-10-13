@@ -26,7 +26,6 @@ import {
 import _ from 'lodash';
 import { apiErrorHandling } from '../../Utility';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
-import PasswordValidator from 'password-validator';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 
@@ -121,9 +120,22 @@ function SelfRegistration(props) {
 
   const handleScroll = (e) => {
     const bottom =
-      e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight;
-    console.log(bottom);
+      Math.abs(
+        e.target.scrollHeight - e.target.scrollTop - e.target.clientHeight,
+      ) < 2;
     if (bottom) setBtnDisable(false);
+  };
+
+  const onPasswordChange = (e) => {
+    form.setFieldsValue(e.target.value);
+
+    const confirmPassword = form.getFieldValue('confirmPassword');
+
+    if (!confirmPassword || e.target.value === confirmPassword) {
+      form.validateFields(['confirmPassword'], () => Promise.resolve());
+    } else if (confirmPassword && e.target.value !== confirmPassword) {
+      form.validateFields(['confirmPassword'], () => Promise.reject());
+    }
   };
 
   return (
@@ -160,16 +172,19 @@ function SelfRegistration(props) {
                     ({ getFieldValue }) => ({
                       validator: async (rule, value) => {
                         if (!value.length) {
+                          setValidatingStatus('error');
                           return;
                         }
+
                         setValidatingStatus('validating');
                         try {
-                          const result = await checkIsUserExistAPI(value);
+                          const result = await checkIsUserExistAPI(
+                            value,
+                            props.match.params.invitationHash,
+                          );
                           setValidatingStatus('error');
                           return Promise.reject('The username has been taken');
                         } catch {
-                          console.log('validating catching');
-
                           setValidatingStatus('success');
                           return Promise.resolve();
                         }
@@ -220,7 +235,7 @@ function SelfRegistration(props) {
                   label={
                     <span>
                       Password&nbsp;
-                      <Tooltip title="Project code (11~30 digits) should contain the following: 1 Uppercase, 1 Lowercase letters, 1 number and 1 Special character(@#$!%*?&^). ">
+                      <Tooltip title="The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(@#$!%*?&^).">
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </span>
@@ -237,11 +252,11 @@ function SelfRegistration(props) {
                         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&^])[A-Za-z\d@#$!%*?&^]{11,30}$/g,
                       ),
                       message:
-                        'The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character',
+                        'The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(@#$!%*?&^).',
                     },
                   ]}
                 >
-                  <Input type="password" />
+                  <Input type="password" onChange={onPasswordChange} />
                 </Form.Item>
                 <Form.Item
                   label="Confirm Password"

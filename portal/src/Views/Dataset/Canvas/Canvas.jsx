@@ -11,39 +11,14 @@ import { connect } from 'react-redux';
 import { AddDatasetCreator } from '../../../Redux/actions';
 import { getChildrenDataset } from '../../../APIs';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
+import { withCurrentProject } from '../../../Utility';
 
 const { Content } = Layout;
 
 const defaultLayout = {
-  0: { lg: [] },
-  1: {
-    lg: [
-      { i: '0', x: 0, y: 0, w: 9, h: 2, minH: 2, maxH: 2 },
-      { i: '1', x: 9, y: 0, w: 5, h: 2, minH: 2, maxH: 2 },
-      { i: '2', x: 14, y: 0, w: 5, h: 2, minH: 2, maxH: 2 },
-      { i: '3', x: 19, y: 0, w: 5, h: 2, minH: 2, maxH: 2 },
-
-      { i: '4', x: 0, y: 2, w: 15, h: 6 },
-      { i: '5', x: 0, y: 9, w: 5, h: 3 },
-      { i: '6', x: 5, y: 9, w: 5, h: 3 },
-      { i: '7', x: 10, y: 9, w: 5, h: 3 },
-      { i: '8', x: 15, y: 2, w: 9, h: 9 },
-
-      { i: '9', x: 0, y: 11, w: 9, h: 3 },
-      { i: '10', x: 9, y: 11, w: 9, h: 3 },
-      { i: '11', x: 18, y: 11, w: 6, h: 3 },
-      { i: '12', x: 0, y: 13, w: 15, h: 3 },
-    ],
-  },
-  2: {
-    lg: [
-      { i: '5', x: 0, y: 9, w: 5, h: 3 },
-      { i: '6', x: 5, y: 9, w: 5, h: 3 },
-      { i: '7', x: 10, y: 9, w: 5, h: 3 },
-    ],
-  },
+  'initial': { lg: [] },
   //Admin panel
-  3: {
+  'admin': {
     lg: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
       { i: '2', x: 12, y: 0, w: 3, h: 4 },
@@ -58,18 +33,18 @@ const defaultLayout = {
     ],
   },
   //Uploader panel
-  4: {
+  'uploader': {
     lg: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
-      { i: '4', x: 15, y: 0, w: 12, h: 4 },
-      { i: '5', x: 0, y: 7, w: 24, h: 7.5 },
+      { i: '3', x: 15, y: 0, w: 12, h: 4 },
+      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
     ],
   },
   //Member panel
-  5: {
+  'member': {
     lg: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
-      { i: '4', x: 15, y: 0, w: 12, h: 4 },
+      { i: '3', x: 15, y: 0, w: 12, h: 4 },
       { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
     ],
   },
@@ -99,6 +74,7 @@ class Canvas extends Component {
       uploader: false,
       currentRole: '',
       datasetName: '',
+      modalWidth: '95vw'
     };
   }
   findStudyId() {
@@ -136,22 +112,16 @@ class Canvas extends Component {
   }
 
   fetchDatasetName = () => {
-    const datasetList = this.props.containersPermission;
-    if (datasetList) {
-      const d = datasetList.filter((i) => {
-        return i.container_id === parseInt(this.props.datasetId);
-      });
-      this.setState({ datasetName: d[0].container_name });
+    const currentProject = this.props.currentProject;
+    if (currentProject) {
+      this.setState({ datasetName: currentProject.containerName });
     }
   };
 
   updatePermision = () => {
-    const permissions = this.props.containersPermission;
-    if (permissions) {
-      const p = permissions.filter((i) => {
-        return i.container_id === parseInt(this.props.datasetId);
-      });
-      const role = p[0]['permission'];
+    const currentProject = this.props.currentProject;
+    if (currentProject?.permission) {
+      const role = currentProject.permission;
       if (role === 'admin') {
         this.setState({
           roleIndex: 3,
@@ -237,11 +207,12 @@ class Canvas extends Component {
     this.filterData(filter);
   };
 
-  handleExpand = (content, title) => {
+  handleExpand = (content, title, width) => {
     this.setState({
       modalVisible: true,
       content: content,
       modalTitle: title,
+      modalWidth: width,
     });
   };
 
@@ -440,11 +411,11 @@ class Canvas extends Component {
                   <DragArea
                     key={this.state.updateCount}
                     onLayoutChange={this.onLayoutChange}
-                    layout={this.state.layout[this.state.roleIndex]}
+                    layout={this.state.layout[this.state.currentRole]}
                     handleSaveLayout={this.handleSaveLayout}
                     handleResetLayout={this.handleResetLayout}
                   >
-                    {cardTypes[this.state.roleIndex].map((card) => {
+                    {cardTypes[this.state.currentRole] && cardTypes[this.state.currentRole].map((card) => {
                       return (
                         <div key={card.key}>
                           <BasicCard
@@ -453,12 +424,16 @@ class Canvas extends Component {
                             exportable={card.exportable}
                             handleExpand={this.handleExpand}
                             defaultSize={card.defaultSize}
+                            expandComponent={card.expandComponent}
                             content={getCard(
                               card,
                               data,
                               this.actions,
                               this.state,
                             )}
+                            datasetId={this.state.currentDataset}
+                            currentUser={this.props.username}
+                            isAdmin={this.state.currentRole === 'admin'}
                           />
                         </div>
                       );
@@ -470,7 +445,7 @@ class Canvas extends Component {
                   title={modalTitle}
                   visible={modalVisible}
                   onCancel={this.handleExpandClose}
-                  style={{ minWidth: '95vw' }}
+                  style={{ minWidth: this.state.modalWidth }}
                   footer={null}
                 >
                   {content}
@@ -485,8 +460,8 @@ class Canvas extends Component {
 }
 export default connect(
   (state) => {
-    const { datasetList, containersPermission } = state;
-    return { datasetList, containersPermission };
+    const { datasetList, containersPermission, username } = state;
+    return { datasetList, containersPermission, username };
   },
   { AddDatasetCreator },
-)(withRouter(Canvas));
+)(withCurrentProject(withRouter(Canvas)));

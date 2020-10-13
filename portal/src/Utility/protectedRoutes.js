@@ -1,14 +1,14 @@
-export default function protectedRoutes(type, isLogin, props, permissions) {
-  let container_id = props.match.params.datasetId;
+export default function protectedRoutes(type, isLogin, datasetId, permissions,datasetList) {
+  let containerId = datasetId;
   isLogin = Boolean(isLogin);
   switch (type) {
     case 'isLogin': {
       if (!isLogin) return isLogin;
-      if (container_id && permissions[0]) {
-        let p = permissions[0]['datasetList'].filter((i) => {
-          return i.id === parseInt(container_id);
+      if (containerId && datasetList[0]) {
+        let p = datasetList[0]['datasetList'].find((i) => {
+          return i.id === parseInt(containerId);
         });
-        if (!p[0]) return '404';
+        if (!p) return '404';
       }
       return isLogin;
     }
@@ -16,18 +16,18 @@ export default function protectedRoutes(type, isLogin, props, permissions) {
       return !isLogin;
     }
     case 'projectAdmin': {
-      if (container_id && permissions) {
+      if (containerId && permissions) {
         let p = permissions.filter((i) => {
-          return i.container_id === parseInt(container_id);
+          return i.containerId === parseInt(containerId);
         });
         return p[0] && p[0]['permission'] === 'admin' ? true : '403';
       }
       return true;
     }
     case 'projectMember': {
-      if (container_id && permissions) {
+      if (containerId && permissions) {
         let p = permissions.filter((i) => {
-          return i.container_id === parseInt(container_id);
+          return i.containerId === parseInt(containerId);
         });
         return (p[0] && p[0]['permission'] === 'admin') ||
           (p[0] && p[0]['permission'])

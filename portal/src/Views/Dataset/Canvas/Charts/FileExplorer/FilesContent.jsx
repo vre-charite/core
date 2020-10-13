@@ -3,11 +3,10 @@ import React, { Component } from 'react';
 import { Row, Col, Tree, Tabs } from 'antd';
 
 import {
-  getChildrenDataset,
   traverseFoldersContainersAPI,
   getFilesByTypeAPI,
 } from '../../../../../APIs';
-import { getChildrenTree } from '../../../../../Utility';
+import { getChildrenTree,withCurrentProject } from '../../../../../Utility';
 import ContainerDetailsContent from './ContainerDetailsContent';
 import RawTable from './RawTable';
 import { withRouter } from 'react-router-dom';
@@ -48,6 +47,7 @@ class FilesContent extends Component {
       processedData: [],
       totalProcessedItem: 0,
       currentDataset: null,
+      currentRole: null,
     };
   }
   componentDidMount() {
@@ -56,9 +56,8 @@ class FilesContent extends Component {
     const treeData = this.state.treeData;
     treeData[0].id = datasetId; //Why updating id here?
 
-    const currentDataset = _.find(this.props.containersPermission, {
-      container_id: Number(this.props.match.params.datasetId),
-    });
+    const currentDataset = this.props.currentProject;
+
     this.setState((prev) => ({
       treeData: treeData,
       treeKey: this.state.treeKey + 1, //This is causing a warning ? Why do we need this?
@@ -72,11 +71,11 @@ class FilesContent extends Component {
 
       if (path) filters.path = path;
 
-      const currentDataset = this.props.containersPermission && this.props.containersPermission.filter(el => el.container_id === Number(this.props.match.params.datasetId));
+      const currentDataset = this.props.currentProject;
 
       let role = false;
 
-      if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+      if (currentDataset) role = currentDataset.permission;
 
       const result = await getFilesByTypeAPI(
         this.props.match.params.datasetId,
@@ -111,11 +110,11 @@ class FilesContent extends Component {
 
   fetchProcesseData = async (path, entity_type) => {
     try {
-      const currentDataset = this.props.containersPermission && this.props.containersPermission.filter(el => el.container_id === Number(this.props.match.params.datasetId));
+      const currentDataset = this.props.currentProject;
 
       let role = false;
 
-      if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+      if (currentDataset) role = currentDataset.permission;
 
       const result = await getFilesByTypeAPI(
         this.props.match.params.datasetId,
@@ -153,93 +152,90 @@ class FilesContent extends Component {
   //Fetch tree data, create default panel
   fetch = async () => {
     const { datasetId } = this.props;
-    let subContainers, allFolders;
+    let currentRole = this.props.containersPermission && this.props.containersPermission.filter(el => el.containerId === Number(datasetId))
+    if (currentRole && currentRole.length > 0) currentRole = currentRole[0].permission;
 
-    try {
-      allFolders = await traverseFoldersContainersAPI(datasetId);
-    } catch (err) {
-      if (err.response) {
-        const errorMessager = new ErrorMessager(
-          namespace.dataset.files.traverseFoldersContainersAPI,
-        );
-        errorMessager.triggerMsg(err.response.status, null, { datasetId });
-      }
-      return;
-    }
+    this.setState({
+      currentRole,
+    })
 
-    // try {
-    //   subContainers = await getChildrenDataset(datasetId);
-    // } catch (err) {
-    //   if (err.response) {
-    //     const errorMessager = new ErrorMessager(
-    //       namespace.dataset.files.getChildrenDataset,
-    //     );
-    //     errorMessager.triggerMsg(err.response.status);
-    //   }
-    //   return;
-    // }
+    let allFolders;
 
     await this.fetchRawData();
 
-    // Compute tree data
-    let pureFolders = this.computePureFolders(
-      allFolders.data.result.gr,
-      // subContainers.data.result.children,
-      undefined,
-    );
-
-    const coreFolders = this.computePureFolders(
-      allFolders.data.result.vre,
-      // subContainers.data.result.children,
-      undefined,
-    );
-
-    const treeData = getChildrenTree(pureFolders, 0, '');
-    const treeData2 = getChildrenTree(coreFolders, 'core', '');
-
-    const processedFolder = _.find(treeData, (ele) => {
-      return ele.title === 'processed';
-    });
-
-    const newTree = this.state.treeData;
-
-    if (processedFolder) {
-      newTree.push(
-        {
-            title: 'Processed',
-            key: '1',
-            icon: <FolderOutlined />,
-            disabled: true,
-            children: processedFolder.children
-        },
-      )
+    if (!['uploader'].includes(currentRole)) {
+      try {
+        allFolders = await traverseFoldersContainersAPI(datasetId);
+      } catch (err) {
+        if (err.response) {
+          const errorMessager = new ErrorMessager(
+            namespace.dataset.files.traverseFoldersContainersAPI,
+          );
+          errorMessager.triggerMsg(err.response.status, null, { datasetId });
+        }
+        return;
+      }
+  
+      // Compute tree data
+      let pureFolders = this.computePureFolders(
+        allFolders.data.result.gr,
+        // subContainers.data.result.children,
+        undefined,
+      );
+  
+      const coreFolders = this.computePureFolders(
+        allFolders.data.result.vre,
+        // subContainers.data.result.children,
+        undefined,
+      );
+  
+      const treeData = getChildrenTree(pureFolders, 0, '');
+      const treeData2 = getChildrenTree(coreFolders, 'core', '');
+  
+      const processedFolder = _.find(treeData, (ele) => {
+        return ele.title === 'processed';
+      });
+  
+      const newTree = this.state.treeData;
+  
+      if (processedFolder) {
+        newTree.push(
+          {
+              title: 'Processed',
+              key: '1',
+              icon: <FolderOutlined />,
+              disabled: true,
+              children: processedFolder.children
+          },
+        )
+      }
+      
+      // newTree[2].children = treeData2;  copy files workflow
+  
+      const newPanes = this.state.panes;
+      const pane = {};
+      const firstPane = newTree[0];
+      pane.id = firstPane.id;
+      pane.path = firstPane.path;
+      pane.title = firstPane.title;
+      pane.key = firstPane.key;
+      pane.content = (
+        <RawTable
+          projectId={this.props.match.params.datasetId}
+          currentDataset={this.state.currentDataset}
+          rawData={this.state.rawData}
+          totalItem={this.state.totalItem}
+        />
+      );
+      newPanes.push(pane);
+  
+      this.setState((prev) => ({
+        treeData: newTree,
+        treeKey: prev.treeKey + 1,
+        activeKey: pane.key,
+        panes: newPanes,
+      }));
     }
-    
-    // newTree[2].children = treeData2;  copy files workflow
-
-    const newPanes = this.state.panes;
-    const pane = {};
-    const firstPane = newTree[0];
-    pane.id = firstPane.id;
-    pane.path = firstPane.path;
-    pane.title = firstPane.title;
-    pane.key = firstPane.key;
-    pane.content = (
-      <RawTable
-        projectId={this.props.match.params.datasetId}
-        currentDataset={this.state.currentDataset}
-        rawData={this.state.rawData}
-        totalItem={this.state.totalItem}
-      />
-    );
-    newPanes.push(pane);
-
-    this.setState((prev) => ({
-      treeData: newTree,
-      treeKey: prev.treeKey + 1,
-      activeKey: pane.key,
-      panes: newPanes,
-    }));
   };
 
   computePureFolders = (allFolders, subContainers) => {
@@ -305,10 +301,12 @@ class FilesContent extends Component {
             title: info.node.title,
             content: (
               <RawTable
+                {...info.node}
                 projectId={this.props.match.params.datasetId}
                 currentDataset={currentDataset}
                 rawData={this.state.rawData}
                 totalItem={this.state.totalItem}
+                type="raw table"
               />
             ),
             key: info.node.key.toString(),
@@ -332,14 +330,9 @@ class FilesContent extends Component {
             activeKey: selectedKeys[0].toString(),
             panes,
           });
-        } else if (selectedKeys[0] === '1-dicom_edit') {
+        } else if (selectedKeys[0] === '1-dicomEdit') {
           // Render container details table if pipleline
-          const currentDatasetProccessed = _.find(
-            this.props.containersPermission,
-            {
-              container_id: Number(this.props.match.params.datasetId),
-            },
-          );
+          const currentDatasetProccessed = this.props.currentProject;
 
           const {
             processedData,
@@ -349,12 +342,20 @@ class FilesContent extends Component {
           const pane = {
             title: info.node.title,
             content: (
-              <ContainerDetailsContent
+              // <ContainerDetailsContent
+              //   {...info.node}
+              //   datasetId={this.props.match.params.datasetId}
+              //   currentDataset={currentDatasetProccessed}
+              //   processedData={processedData}
+              //   totalProcessedItem={totalProcessedItem}
+              // />
+              <RawTable
                 {...info.node}
-                datasetId={this.props.match.params.datasetId}
+                projectId={this.props.match.params.datasetId}
                 currentDataset={currentDatasetProccessed}
-                processedData={processedData}
-                totalProcessedItem={totalProcessedItem}
+                rawData={processedData}
+                totalItem={totalProcessedItem}
+                type="processed table"
               />
             ),
             key: info.node.key.toString(),
@@ -366,43 +367,6 @@ class FilesContent extends Component {
             panes,
           });
         } 
-        // else if (selectedKeys[0] && selectedKeys[0].includes('core')) {
-        //   let folderName = selectedKeys[0].split('-');
-        //   if (folderName && folderName.length > 1) folderName = folderName[1];
-
-        //   const currentDatasetProccessed = _.find(
-        //     this.props.containersPermission,
-        //     {
-        //       container_id: Number(this.props.match.params.datasetId),
-        //     },
-        //   );
-
-        //   const { entities, approximateCount } = await this.fetchRawData(
-        //     'nfs_file_cp',
-        //     `/vre-data/tvb/${folderName}`,
-        //   );
-
-        //   const pane = {
-        //     title: info.node.title,
-        //     content: (
-        //       <ContainerDetailsContent
-        //         {...info.node}
-        //         datasetId={this.props.match.params.datasetId}
-        //         currentDataset={currentDatasetProccessed}
-        //         processedData={entities}
-        //         totalProcessedItem={approximateCount}
-        //         filePath={`/vre-data/tvb/${folderName}`}
-        //       />
-        //     ),
-        //     key: info.node.key.toString(),
-        //     id: info.node.id,
-        //   };
-        //   panes.push(pane);
-        //   this.setState({
-        //     activeKey: selectedKeys[0].toString(),
-        //     panes,
-        //   });
-        // } 
         else {
           console.log('no matching keys');
         }
@@ -411,46 +375,57 @@ class FilesContent extends Component {
 
     return (
       <>
-        <Row>
-          <Col span={4}>
-            <Tree
-              showIcon
-              defaultExpandedKeys={['1', '2']}
-              defaultSelectedKeys={['0']}
-              switcherIcon={<DownOutlined />}
-              onSelect={onSelect}
-              treeData={treeData}
-              key={treeKey}
+        {
+          !['uploader'].includes(this.state.currentRole) ? (
+            <Row>
+              <Col span={4}>
+                <Tree
+                  showIcon
+                  defaultExpandedKeys={['1', '2']}
+                  defaultSelectedKeys={['0']}
+                  switcherIcon={<DownOutlined />}
+                  onSelect={onSelect}
+                  treeData={treeData}
+                  key={treeKey}
+                />
+              </Col>
+              <Col span={20}>
+                <div>
+                  <Tabs
+                    hideAdd
+                    onChange={this.onChange}
+                    activeKey={this.state.activeKey.toString()}
+                    type="editable-card"
+                    onEdit={this.onEdit}
+                    style={{
+                      paddingLeft: '30px',
+                      borderLeft: '1px solid rgb(240,240,240)',
+                    }}
+                  >
+                    {this.state.panes.map((pane) => (
+                      <TabPane tab={pane.title} key={pane.key.toString()}>
+                        <div
+                          style={{
+                            minHeight: '300px',
+                          }}
+                        >
+                          {pane.content}
+                        </div>
+                      </TabPane>
+                    ))}
+                  </Tabs>
+                </div>
+              </Col>
+            </Row>
+          ) : (
+            <RawTable 
+              projectId={this.props.match.params.datasetId}
+              currentDataset={currentDataset}
+              rawData={this.state.rawData}
+              totalItem={this.state.totalItem}
             />
-          </Col>
-          <Col span={20}>
-            <div>
-              <Tabs
-                hideAdd
-                onChange={this.onChange}
-                activeKey={this.state.activeKey.toString()}
-                type="editable-card"
-                onEdit={this.onEdit}
-                style={{
-                  paddingLeft: '30px',
-                  borderLeft: '1px solid rgb(240,240,240)',
-                }}
-              >
-                {this.state.panes.map((pane) => (
-                  <TabPane tab={pane.title} key={pane.key.toString()}>
-                    <div
-                      style={{
-                        minHeight: '300px',
-                      }}
-                    >
-                      {pane.content}
-                    </div>
-                  </TabPane>
-                ))}
-              </Tabs>
-            </div>
-          </Col>
-        </Row>
+          )
+        }
       </>
     );
   }
@@ -460,4 +435,4 @@ export default connect((state) => ({
   datasetList: state.datasetList,
   containersPermission: state.containersPermission,
   uploadList: state.uploadList,
-}))(withRouter(FilesContent));
+}))( withCurrentProject(withRouter(FilesContent))  );

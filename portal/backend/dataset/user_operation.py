@@ -15,6 +15,7 @@ from services.invitation_services.invitation_manager import SrvInvitationManager
 from services.notifier_services.email_service import SrvEmail
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from services.user_services.user_email_template import update_role_email_body_generator, invite_user_email_body_generator
+from services.container_services.container_manager import SrvContainerManager
 
 
 # init logger
@@ -255,11 +256,60 @@ class user_registry(Resource):
         return {"result": user}
 
 
+class dataset_admins(Resource):
+    @datasets_entity_ns.response(200, users_sample_return)
+    @jwt_required()
+    @check_role("uploader")
+    def get(self, dataset_id):
+        '''
+        This method allow user to fetch all admins under a specific dataset with permissions.
+        '''
+        # check dataset exists
+        container_mgr = SrvContainerManager()
+        try:
+            my_project = container_mgr.check_container_exist(
+                None, "Dataset", dataset_id)
+            if len(my_project) == 0:
+                return {'result': 'Dataset %s is not available.' % dataset_id}, 404
+        except Exception as e:
+            _logger.error(
+                'Dataset %s is not available.' % dataset_id)
+            return {'result': str(e)}, 404
+
+        # fetch admins of the project
+        url = ConfigClass.NEO4J_SERVICE + 'relations/query'
+        try:
+            res = requests.post(
+                url=url,
+                json={
+                    'start_label': 'User',
+                    'end_label': 'Dataset',
+                    'end_params': {'code': my_project[0]['code']},
+                    'label': 'admin'
+                }
+            )
+            if(res.status_code != 200):
+                _logger.error('Calling neo4j service %s.' % str(res.text))
+                return {'result': json.loads(res.text)}, res.status_code
+        except Exception as e:
+            _logger.error('Calling neo4j service %s.' % str(e))
+            return {'result': str(e)}, res.status_code
+
+        # format response
+        result = []
+        for x in json.loads(res.text):
+            temp = x['start_node']
+            temp["permission"] = x['r']['type']
+            result.append(temp)
+
+        return {"result": result}
+
+
 class dataset_users(Resource):
 
     @datasets_entity_ns.response(200, users_sample_return)
     @jwt_required()
-    @check_role("uploader")
+    @check_role("admin")
     def get(self, dataset_id):
         '''
         This method allow user to fetch all users under a specific dataset with permissions.

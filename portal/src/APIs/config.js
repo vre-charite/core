@@ -1,19 +1,25 @@
-import axios from 'axios';
+import axios, { AxiosPromise, AxiosResponse, AxiosError,CancelTokenSource } from 'axios';
 import { message } from 'antd';
 import _ from 'lodash';
-import { clearCookies } from '../Utility';
-import { logout, getCookie } from '../Utility';
-import Cookies from 'universal-cookie';
-const cookies = new Cookies();
+import camelcaseKeys from 'camelcase-keys';
+import { activeManager } from '../Service/activeManager'
 
 /**
  * For axios to handle the success response
- * @param {*} response
+ * @param {AxiosResponse} response
  */
 function successHandler(response) {
-  return response;
+  const url = _.get(response, 'config.url');
+  if (url && url !== '/users/refresh') {
+    activeManager.activate();
+  }
+  return camelcaseKeys(response, { deep: true });
 }
 
+/**
+ * 
+ * @param {AxiosError} error 
+ */
 function errorHandler(error) {
   if (error.response) {
     const { data, status } = error.response;
@@ -39,19 +45,13 @@ function errorHandler(error) {
             'The session is expired or token is invalid. Please log in again',
           );
           console.log('logout in config.js since 401');
-          logout(cookies.get('username'));
         }
 
         break;
       }
     }
   } else if (error.request) {
-    /*  console.log("TCL: handleApiFailure -> error.request", error.request);
-    // The request was made but no response was received
-    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-    // http.ClientRequest in node.js
-    message.error("Error network: cannot receive a response");
- */
+
     if (error.request.status === 0) {
     }
   } else {
@@ -70,18 +70,6 @@ function errorHandler(error) {
   return new Promise((resolve, reject) => reject(error));
 }
 
-// Fetch token from cookies
-const token = getCookie('access_token');
-// console.log("token", token);
-const refreshToken = getCookie('refresh_token');
-
-// Axios request basic settings
-// const localhost = 'http://0.0.0.0:5060';
-// Test config
-// const server = 'http://bff.utility:5060';
-
-console.log('process.env.REACT_APP_ENV', process.env.REACT_APP_ENV);
-// for dev env
 let kongAPI = 'http://10.3.7.220/vre/api/vre/portal';
 let devOpServerUrl = 'http://10.3.7.220/vre/api/vre/portal/dataops';
 // let devOpServerUrl = 'http://10.3.7.234:5063';
@@ -107,9 +95,6 @@ const serverAxios = axios.create({
 serverAxios.defaults.headers.post['Content-Type'] = 'application/json';
 serverAxios.defaults.timeout = 10000;
 
-if (token) {
-  serverAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
 const CancelToken = axios.CancelToken;
 
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
@@ -119,9 +104,9 @@ serverAxios.interceptors.response.use(successHandler, errorHandler);
  * executes the api calling function
  * and returns both the cancel object of the axios call and the promise.
  * you can cancel this API request by calling source.cancel()
- * @param {function} requestFunction the
- * @param {*} arg other payloads of the request function
- * @returns   request: the axios result, source: the axios cancellation object
+ * @param {(...arg)=>AxiosPromise<any>} requestFunction the api function that return.
+ * @param {any[]} arg other payloads of the request function
+ * @returns {{request:(...arg:any[],source:CancelTokenSource)=>AxiosPromise<any>,source:CancelTokenSource}}   request: the axios result, source: the axios cancellation object
  */
 function cancelRequestReg(requestFunction, ...arg) {
   const source = CancelToken.source();
@@ -144,9 +129,6 @@ const devOpServer = axios.create({ baseURL: devOpServerUrl });
 // devOpServer.defaults.withCredentials = true;
 devOpServer.defaults.headers.post['Content-Type'] = 'application/json';
 devOpServer.defaults.timeout = 100000000000;
-if (token) {
-  devOpServer.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
 
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 devOpServer.interceptors.response.use(successHandler, errorHandler);
@@ -157,9 +139,7 @@ const authServerAxios = axios.create({ baseURL: authService });
 // authServerAxios.defaults.withCredentials = true;
 authServerAxios.defaults.headers.post['Content-Type'] = 'application/json';
 authServerAxios.defaults.timeout = 10000;
-if (token) {
-  authServerAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
+
 
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 //authServerAxios.interceptors.response.use(successHandler, errorHandler);
@@ -168,13 +148,21 @@ const invitationAxios = axios.create({ baseURL: 'http://bff.utility:5060' });
 // authServerAxios.defaults.withCredentials = true;
 invitationAxios.defaults.headers.post['Content-Type'] = 'application/json';
 invitationAxios.defaults.timeout = 10000;
-if (token) {
-  invitationAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
+
+
+[serverAxios, tempAxios, devOpServer,
+  authServerAxios,
+  invitationAxios,].forEach(item => [
+    item.interceptors.request.use(request => {
+      request.headers['Authorization'] = axios.defaults.headers.common['Authorization'];
+      return request
+    })
+  ]);
+
 
 export {
+  axios,
   serverAxios,
-  tempAxios,
   cancelRequestReg,
   devOpServer,
   authServerAxios,

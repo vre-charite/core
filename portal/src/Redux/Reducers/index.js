@@ -12,9 +12,12 @@ import { USER_LOGOUT } from "../actionTypes";
 import refreshTokenModal from "./refreshToken";
 import downloadList from './downloadList';
 import clearId from './clearId';
+import username from './username';
 import isLogin from './isLogin'
 import successNum from './successNum';
-import downloadClearId from './downloadClearId'
+import downloadClearId from './downloadClearId';
+import panelActiveKey from './panelActiveKey';
+
 // export default combineReducers({
 //   datasetList,
 //   userList,
@@ -37,8 +40,7 @@ const appReducer = combineReducers({
   uploadList,
   newUploadIndicator,
   refreshTokenModal,
-  downloadList,clearId,isLogin,
-  successNum,downloadClearId
+  downloadList, clearId, isLogin, username,successNum,downloadClearId,panelActiveKey
 });
 
 const rootReducer = (state, action) => {

@@ -38,10 +38,8 @@ class SrvInvitationManager(metaclass=MetaService):
         '''
         (str) -> () | None   #**TypeContract**
         '''
-        read_query = "Select * from {} where invitation_code='{}' ORDER BY create_timestamp asc".format(
-            self.table_full_name,
-            invitation_code)
-        invitation_feteched = self.rds_singleton.simple_query(read_query)
+        read_query = f"Select * from {self.table_full_name} where invitation_code=%(invitation_code)s ORDER BY create_timestamp asc"
+        invitation_feteched = self.rds_singleton.simple_query(read_query, sql_params={ "invitation_code": invitation_code })
         return invitation_feteched[len(invitation_feteched) - 1] if invitation_feteched != [] else None
 
     def save_invitation(self, invitation: InvitationForm, access_token, current_identity):
@@ -55,16 +53,17 @@ class SrvInvitationManager(metaclass=MetaService):
         form_data_json = json.dumps(form_data)
         now_utc_dt = helper_now_utc()
         expiry_dt = now_utc_dt + timedelta(days=ConfigClass.INVITATION_EXPIRY_DAYS)
-        create_timestamp = "Timestamp'{}'".format(now_utc_dt.isoformat())
-        expiry_timestamp = "Timestamp'{}'".format(expiry_dt.isoformat())
-        save_query = "INSERT INTO {}(invitation_code, invitation_detail, expiry_timestamp, create_timestamp) \
-                values ('{}', '{}', {}, {}) RETURNING *".format(
-            self.table_full_name,
-            invitation_code_generated,
-            form_data_json,
-            expiry_timestamp,
-            create_timestamp)
-        inserted = self.rds_singleton.simple_query(save_query)
+        create_timestamp = now_utc_dt.isoformat()
+        expiry_timestamp = expiry_dt.isoformat()
+        save_query = f"INSERT INTO {self.table_full_name}(invitation_code, invitation_detail, expiry_timestamp, create_timestamp) \
+                values (%(invitation_code_generated)s, %(form_data_json)s, %(expiry_timestamp)s, %(create_timestamp)s) RETURNING *"
+        sql_params = {
+            "invitation_code_generated": invitation_code_generated,
+            "form_data_json": form_data_json,
+            "expiry_timestamp": expiry_timestamp,
+            "create_timestamp": create_timestamp,
+        }
+        inserted = self.rds_singleton.simple_query(save_query, sql_params)
         self._logger.info(str(len(inserted)) + ' Invitations Saved To Database')
         my_project = container_mgr.check_container_exist(
                 access_token, "Dataset", invitation.project_id)[0]

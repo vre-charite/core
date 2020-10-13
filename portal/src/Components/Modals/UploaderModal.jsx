@@ -4,12 +4,11 @@ import { UploadOutlined } from "@ant-design/icons";
 // import { uploadFileAPI } from "../../API";
 import { DynamicKeyValue } from "../Form";
 import { fileUpload } from "../../Utility";
-import { connect } from "react-redux";
-import { useCookies } from "react-cookie";
+import { connect ,useSelector} from "react-redux";
+ 
 
 const { TextArea } = Input;
 const { Option } = Select;
-const { Dragger } = Upload;
 
 const children = [];
 for (let i = 10; i < 36; i++) {
@@ -24,8 +23,7 @@ const UploaderModal = ({ uploader: visible, cancel, datasetList }) => {
   const [form] = Form.useForm();
   const [isLoading, setIsloading] = useState(false);
   const [cancelTokens, setCancelTokens] = useState([]);
-  const [cookies, setCookie] = useCookies(["username"]);
-
+  const {username} = useSelector(state=>state);
   const stopLoading = () => {
     setIsloading(false);
   };
@@ -45,7 +43,7 @@ const UploaderModal = ({ uploader: visible, cancel, datasetList }) => {
           file_type: values.file.file.type,
 
           //TODO: placeholder for user id
-          uploader: cookies.username
+          uploader:  username
         });
 
         // form.resetFields();

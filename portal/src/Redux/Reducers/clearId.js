@@ -1,6 +1,6 @@
 import { UPDATE_CLEAR_ID } from "../actionTypes";
 
-const init = null;
+const init = '';
 function clearId(state = init, action) {
   const { type, payload } = action;
   switch (type) {

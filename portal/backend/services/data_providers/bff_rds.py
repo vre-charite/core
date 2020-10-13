@@ -13,14 +13,15 @@ class SrvRDSSingleton(metaclass=MetaService):
         else:
             provider_rds_pool_cache = rds_connection_pool_factory()
             self.pool = provider_rds_pool_cache
-    def simple_query(self, query, iffetch=True, iffetchone=False ):
+
+    def simple_query(self, query, sql_params={}, iffetch=True, iffetchone=False):
         '''
         Simple Query Executor, Singleton Pool Version, Not Close Connection, But Will End Transaction Right After the Execution, Close Cursor
         ## default fetch all results [()]
         ## No Record Returns []
         '''
         conn = self.pool.getconn()
-        res = postgre_simple_querier(conn, query, iffetch, iffetchone)
+        res = postgre_simple_querier(conn, query, sql_params, iffetch, iffetchone)
         self.pool.putconn(conn)
         return res
     def close(self):
@@ -51,7 +52,7 @@ def rds_connection_pool_factory():
         _logger.critical("Error when initiating RDS pool: " + str(e))
         raise
 
-def postgre_simple_querier(conn, query, iffetch=True, iffetchone=False ):
+def postgre_simple_querier(conn, query, sql_params, iffetch=True, iffetchone=False ):
     '''
     Simple Query Executor, Not Close Connection, But Will End Transaction Right After the Execution, Close Cursor
     ## default fetch all results [()]
@@ -61,7 +62,7 @@ def postgre_simple_querier(conn, query, iffetch=True, iffetchone=False ):
     cursor = conn.cursor()
     try:
         fetched = []
-        cursor.execute(query)
+        cursor.execute(query, sql_params)
         if iffetch:
             fetched = cursor.fetchone() if iffetchone else cursor.fetchall()
         conn.commit()

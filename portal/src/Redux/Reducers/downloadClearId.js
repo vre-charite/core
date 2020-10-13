@@ -1,7 +1,7 @@
 import { SET_DOWNLOAD_CLEAR_ID } from "../actionTypes";
 
-const init = null;
-function donwloadClearId(state = init, action) {
+const init = '';
+function downloadClearId(state = init, action) {
   const { type, payload } = action;
   switch (type) {
     case SET_DOWNLOAD_CLEAR_ID: {
@@ -13,4 +13,4 @@ function donwloadClearId(state = init, action) {
   }
 }
 
-export default donwloadClearId;
+export default downloadClearId;

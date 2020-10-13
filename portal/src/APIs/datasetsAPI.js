@@ -1,4 +1,4 @@
-import { serverAxios as axios, devOpServer as devOpAxios } from './config';
+import { serverAxios , axios } from './config';
 
 /**
  * Get all the datasets
@@ -7,7 +7,7 @@ import { serverAxios as axios, devOpServer as devOpAxios } from './config';
  * @IRDP-432
  */
 function getDatasetsAPI(params = {}) {
-  return axios({
+  return serverAxios({
     url: '/v1/datasets/',
     method: 'GET',
     params,
@@ -23,7 +23,7 @@ function getDatasetsAPI(params = {}) {
 //  */
 // function createDatasetAPI(data) {
 //   console.log('createDatasetAPI -> data', data);
-//   return axios({
+//   return serverAxios({
 //     url: `/v1/datasets`,
 //     method: 'POST',
 //     data,
@@ -34,16 +34,22 @@ function getDatasetsAPI(params = {}) {
  * Create a project
  *
  * @param {object} data
+ * @param {{cancelFunction:()=>void}} cancelAxios the obj containns the function to cancel the serverAxios api calling
  * @returns success/fail
  * @IRDP-432
  */
-function createProjectAPI(data) {
+function createProjectAPI(data, cancelAxios) {
+  const CancelToken = axios.CancelToken;
   const url = `/v1/datasets/`;
   console.log('createProjectAPI -> url', url);
-  return axios({
+  return serverAxios({
     url: url,
     method: 'POST',
     data,
+    cancelToken: new CancelToken(function executor(c) {
+      // An executor function receives a cancel function as a parameter
+      cancelAxios.cancelFunction = c;
+    })
   });
 }
 
@@ -55,7 +61,7 @@ function createProjectAPI(data) {
  * @IRDP-456
  */
 function getChildrenAPI(datasetId) {
-  return axios({
+  return serverAxios({
     url: `/v1/datasets/${datasetId}/relations/children`,
     method: 'GET',
   });
@@ -68,7 +74,7 @@ function getChildrenAPI(datasetId) {
  * @param {object} data
  */
 function queryDatasetAPI(data) {
-  return axios({
+  return serverAxios({
     url: '/v1/datasets/queries',
     method: 'POST',
     data,
@@ -76,20 +82,20 @@ function queryDatasetAPI(data) {
 }
 
 function listFilesApi(datasetId) {
-  return axios({
+  return serverAxios({
     url: `/datasets/${datasetId}`,
     method: 'GET',
   });
 }
 
 function getTagsAPI() {
-  return axios({
+  return serverAxios({
     url: `/v1/datasets/?type=tag`,
   });
 }
 
 function getMetadatasAPI() {
-  return axios({
+  return serverAxios({
     url: `/v1/datasets/?type=metadata`,
   });
 }
@@ -102,7 +108,7 @@ function getMetadatasAPI() {
  * @param {object} roles
  */
 function changeUserRoleInDatasetAPI(username, datasetId, roles) {
-  return axios({
+  return serverAxios({
     url: `/v1/datasets/${datasetId}/users/${username}`,
     data: roles,
     method: 'put',
@@ -110,7 +116,7 @@ function changeUserRoleInDatasetAPI(username, datasetId, roles) {
 }
 
 function addUserToDatasetAPI(username, datasetId, role) {
-  return axios({
+  return serverAxios({
     url: `/v1/datasets/${datasetId}/users/${username}`,
     data: { role },
     method: 'POST',
@@ -124,7 +130,7 @@ function addUserToDatasetAPI(username, datasetId, role) {
  * @param {number} datasetId
  */
 function removeUserFromDatasetApi(username, datasetId) {
-  return axios({
+  return serverAxios({
     url: `/v1/datasets/${datasetId}/users/${username}`,
     method: 'DELETE',
   });
@@ -136,7 +142,7 @@ function removeUserFromDatasetApi(username, datasetId) {
  * @param {number} datasetId the dataset id
  */
 function getChildrenDataset(datasetId) {
-  return axios({
+  return serverAxios({
     url: `/v1/datasets/${datasetId}/relations/children`,
   });
 }
@@ -147,7 +153,7 @@ function getChildrenDataset(datasetId) {
  * @param {number} username
  */
 function getPersonalDatasetAPI(username) {
-  return axios({
+  return serverAxios({
     url: `/v1/users/${username}/default`,
   });
 }
@@ -158,7 +164,7 @@ function getPersonalDatasetAPI(username) {
  * @param {number} username
  */
 function createPersonalDatasetAPI(username) {
-  return axios({
+  return serverAxios({
     url: `/v1/users/${username}/default`,
     method: 'POST',
   });
@@ -170,20 +176,20 @@ function createPersonalDatasetAPI(username) {
  * @param {number} containerId
  */
 function traverseFoldersContainersAPI(containerId) {
-  return axios({
+  return serverAxios({
     url: `/v1/files/folders`,
     params: { container_id: containerId },
   });
 }
 
 function listAllContainersPermission(username) {
-  return axios({
+  return serverAxios({
     url: `/v1/users/${username}/datasets`,
   });
 }
 
 function updateDatasetInfoAPI(containerId, data) {
-  return axios({
+  return serverAxios({
     url: `/v1/datasets/${containerId}`,
     method: 'PUT',
     data,

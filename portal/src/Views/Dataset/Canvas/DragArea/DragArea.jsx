@@ -62,12 +62,6 @@ export default class DragArea extends React.Component {
           className={styles.layout}
           layouts={this.state.layouts}
           onBreakpointChange={this.onBreakpointChange}
-          onLayoutChange={this.onLayoutChange}
-          // WidthProvider option
-          // measureBeforeMount={false}
-          // I like to have it animate on mount. If you don't, delete `useCSSTransforms` (it's default `true`)
-          // and set `measureBeforeMount={true}`.
-          // useCSSTransforms={this.state.mounted}
           draggableHandle={'.dragarea'}
           measureBeforeMount={true}
           compactType={this.state.compactType}

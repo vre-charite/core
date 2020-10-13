@@ -16,7 +16,7 @@ const setTransform = createTransform(null, (outboundState, key) => {
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['uploadList', 'downloadList'],
+  whitelist: ['username'],
   transforms: [setTransform]
 }
 
@@ -37,7 +37,7 @@ const composeEnhancers =
 
 const configureStore = () => {
   //const store = createStore(persistedReducer,  composeEnhancers(applyMiddleware(...middlewares)));
-  const store = createStore(rootReducer,
+  const store = createStore(persistedReducer,
     window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
   const persistor = persistStore(store)
   if (process.env.NODE_ENV !== 'production') {

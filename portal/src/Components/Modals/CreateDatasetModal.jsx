@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { connect } from 'react-redux';
+import { connect,useSelector } from 'react-redux';
 import {
-  Modal,
   Form,
   Select,
   Input,
-  Button,
   message,
   Tooltip,
   Checkbox,
@@ -19,21 +17,21 @@ import {
 } from '../../Redux/actions';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import { getCookie } from '../../Utility';
+import AsyncFormModal from './AsyncFormModal';
 
 function CreateDatasetModal({
   visible,
   cancel,
   tags,
-  userList,
   UpdateDatasetCreator,
   setContainersPermissionCreator,
   containersPermission,
 }) {
+  const {username} = useSelector(state=>state);
+  const cancelAxios = {cancelFunction:()=>{}};
   const [form] = Form.useForm();
   const onFinish = () => {};
   const [submitting, toggleSubmitting] = useState(false);
-  const username = getCookie('username');
 
   const handleChange = (value) => {
     console.log(`selected ${value}`);
@@ -49,17 +47,20 @@ function CreateDatasetModal({
             metadatas[key] = value;
           });
 
-        createProjectAPI({
-          dataset_name: values.name,
-          code: values.code,
-          tags: values.tags,
-          discoverable: values.discoverable,
-          roles: values.roles,
-          admin: [username],
-          type: 'Usecase',
-          metadatas,
-          description: values.description,
-        })
+        createProjectAPI(
+          {
+            dataset_name: values.name,
+            code: values.code,
+            tags: values.tags,
+            discoverable: values.discoverable,
+            roles: values.roles,
+            admin: [username],
+            type: 'Usecase',
+            metadatas,
+            description: values.description,
+          },
+          cancelAxios,
+        )
           .then((res) => {
             UpdateDatasetCreator(res.data.result, 'All Projects');
             toggleSubmitting(false);
@@ -69,8 +70,8 @@ function CreateDatasetModal({
             setContainersPermissionCreator([
               ...containersPermission,
               {
-                container_id: newContainer.id,
-                container_name: values.name,
+                containerId: newContainer.id,
+                containerName: values.name,
                 permission: 'admin',
                 code: values.code,
               },
@@ -92,38 +93,21 @@ function CreateDatasetModal({
               });
             }
           });
+          
       })
       .catch((info) => {
         console.log('Validate Failed:', info);
       });
   };
   return (
-    <Modal
+    <AsyncFormModal
+      form={form}
+      cancelAxios={cancelAxios}
       title="Create Project"
       visible={visible}
-      onCancel={() => {
-        cancel();
-        form.resetFields();
-      }}
-      footer={[
-        <Button
-          key="back"
-          onClick={() => {
-            cancel();
-            form.resetFields();
-          }}
-        >
-          Cancel
-        </Button>,
-        <Button
-          key="submit"
-          type="primary"
-          loading={submitting}
-          onClick={submitForm}
-        >
-          Submit
-        </Button>,
-      ]}
+      onCancel={cancel}
+      onOk={submitForm}
+      confirmLoading={submitting}
     >
       <Form
         form={form}
@@ -203,7 +187,7 @@ function CreateDatasetModal({
           <Checkbox.Group style={{ width: '100%' }}>
             <Row>
               <Col span={8}>
-                <Checkbox value="admin">
+                <Checkbox value="admin" checked disabled>
                   Admin&nbsp;
                   <Tooltip
                     title="Project Admin is able to add user into project as any roles in current project, 
@@ -247,21 +231,8 @@ function CreateDatasetModal({
             Make this project discoverable by all platform users
           </Checkbox>
         </Form.Item>
-
-        {/* <div style={{ paddingBottom: '5px' }}>Metadata (Optional):</div>
-        <DynamicKeyValue name="metadatas" label={'metadatas'} /> */}
-        {/* <Form.Item name="admin" label={'Admins'}>
-          <Select mode="tags" style={{ width: '100%' }} placeholder="admins">
-            {userList &&
-              userList.map((item) => {
-                return (
-                  <Select.Option value={item.name}>{item.name}</Select.Option>
-                );
-              })}
-          </Select>
-        </Form.Item> */}
       </Form>
-    </Modal>
+    </AsyncFormModal>
   );
 }
 

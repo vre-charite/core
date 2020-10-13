@@ -1,38 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import moment from 'moment';
-import { Progress, Collapse, Table, Button, Space, Input, Popover } from 'antd';
-import { getFilesByTypeAPI, downloadFilesAPI, } from '../../../../../APIs';
+import { Progress, Collapse, Button, Space, Popover } from 'antd';
+import { getFilesByTypeAPI, downloadFilesAPI } from '../../../../../APIs';
 import { CloudDownloadOutlined, SyncOutlined } from '@ant-design/icons';
-import Highlighter from 'react-highlight-words';
-import { SearchOutlined } from '@ant-design/icons';
-import { useCookies } from 'react-cookie';
 import { namespace, ErrorMessager } from '../../../../../ErrorMessages';
 import { appendDownloadListCreator } from '../../../../../Redux/actions';
-import { connect, useSelector } from 'react-redux';
+import { connect } from 'react-redux';
 import FilesTable from './FilesTable';
+import { getCurrentProject } from '../../../../../Utility';
 
 const { Panel } = Collapse;
 
 const ContainerDetailsContent = (props) => {
-  const { id, title, path, totalProcessedItem, processedData } = props;
-  const [pageSize, setPageSize] = useState(10);
-  const [page, setPage] = useState(0);
+  const { id, path, totalProcessedItem, processedData } = props;
+  const [pageSize] = useState(10);
+  const [page] = useState(0);
   const [totalItem, setTotalItem] = useState(0);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [downloadStatus, setProgress] = useState({});
-  const [groupDownloadStatus, setGroupProgress] = useState({});
+  const [groupDownloadStatus] = useState({});
   let [rawFiles, setRawFiles] = useState([]);
-  const [searchText, setSearchText] = useState([]);
-  const [searchedColumn, setSearchedColumn] = useState('');
-  const [searchInput, setSearchInput] = useState({});
+  const [searchText] = useState([]);
   const [reFreshing, setRefreshing] = useState(false);
-  const [sortColumn, setSortColumn] = useState('createTime');
-  const [order, setOrder] = useState('desc');
+  const [sortColumn] = useState('createTime');
+  const [order] = useState('desc');
   const [tableKey, setTableKey] = useState(0);
-
-  const containersPermission = useSelector((state) => state.containersPermission);
-
+  
   async function updateProcessedFiles(
     containerId,
     pageSize,
@@ -41,8 +34,6 @@ const ContainerDetailsContent = (props) => {
     column,
     text,
     order,
-    entity_type = null,
-    filePath = null,
   ) {
     let result;
     try {
@@ -55,8 +46,8 @@ const ContainerDetailsContent = (props) => {
       }
 
       let role = false;
-      const currentDataset = containersPermission && containersPermission.filter(el => el.container_id === Number(containerId));
-      if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+      const currentDataset = getCurrentProject(containerId);
+      if (currentDataset) role = currentDataset.permission;
 
       if (props.filePath) {
         filters.path = props.filePath;
@@ -71,7 +62,7 @@ const ContainerDetailsContent = (props) => {
           role === 'admin',
           'nfs_file_cp',
           filters,
-        )
+        );
       } else {
         result = await getFilesByTypeAPI(
           containerId,
@@ -86,7 +77,7 @@ const ContainerDetailsContent = (props) => {
         );
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       if (err.response) {
         const errorMessager = new ErrorMessager(
           namespace.dataset.files.getFilesByTypeAPI,
@@ -107,106 +98,6 @@ const ContainerDetailsContent = (props) => {
     setRefreshing(false);
   }
 
-  const handleSearch = (selectedKeys, confirm, dataIndex) => {
-    confirm();
-
-    setSearchedColumn(dataIndex);
-    setSearchText(selectedKeys[0]);
-    updateProcessedFiles(
-      props.datasetId,
-      pageSize,
-      page,
-      parsePath,
-      sortColumn,
-      selectedKeys[0],
-      order,
-    );
-  };
-
-  const handleReset = (clearFilters) => {
-    clearFilters();
-    setSearchedColumn('dataIndex');
-    setSearchText('');
-
-    updateProcessedFiles(
-      props.datasetId,
-      pageSize,
-      page,
-      parsePath,
-      sortColumn,
-      '',
-      order,
-    );
-  };
-
-  const getColumnSearchProps = (dataIndex) => ({
-    filterDropdown: ({
-      setSelectedKeys,
-      selectedKeys,
-      confirm,
-      clearFilters,
-    }) => (
-      <div style={{ padding: 8 }}>
-        <Input
-          ref={(node) => {
-            //this.searchInput = node;
-            setSearchInput(node);
-          }}
-          placeholder={`Search ${dataIndex}`}
-          value={selectedKeys[0]}
-          onChange={(e) =>
-            setSelectedKeys(e.target.value ? [e.target.value] : [])
-          }
-          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-          style={{ width: 188, marginBottom: 8, display: 'block' }}
-          autoFocus
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
-          </Button>
-          <Button
-            onClick={() => handleReset(clearFilters)}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Reset
-          </Button>
-        </Space>
-      </div>
-    ),
-    filterIcon: (filtered) => (
-      <SearchOutlined
-        style={{ color: filtered ? '#1890ff' : undefined, top: '60%' }}
-      />
-    ),
-    // onFilter: (value, record) =>
-    //   record[dataIndex] ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()) : '',
-    onFilterDropdownVisibleChange: (visible) => {
-      if (visible && Object.keys(searchInput).length > 0) {
-        // console.log('searchInput', searchInput);
-        setTimeout(() => searchInput.select());
-      }
-    },
-    render: (text) =>
-      searchedColumn === dataIndex ? (
-        <Highlighter
-          highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-          searchWords={[searchText]}
-          autoEscape
-          textToHighlight={text ? text.toString() : ''}
-        />
-      ) : (
-        text
-      ),
-  });
-
   const parsePath =
     typeof path === 'string' && path[0] === '/' ? path.substring(1) : path;
 
@@ -226,7 +117,7 @@ const ContainerDetailsContent = (props) => {
       searchText,
       order,
     );
-    setTableKey(tableKey+1);
+    setTableKey(tableKey + 1);
   }
 
   const onSelectChange = (selectedRowKeys) => {
@@ -239,55 +130,6 @@ const ContainerDetailsContent = (props) => {
     onChange: onSelectChange,
   };
 
-  const changePage = (pagination, param2, param3) => {
-    let order = 'asc';
-    if (param3 && param3.order !== 'ascend') order = 'desc';
-
-    if (param3) {
-      setSortColumn(param3.field);
-      setOrder(order);
-    }
-
-    setPage(pagination.current - 1);
-    if (pagination.pageSize) setPageSize(pagination.pageSize);
-
-    let isSearchingFile = false;
-
-    if (param2.fileName && param2.fileName.length > 0) {
-      isSearchingFile = true;
-      setTableKey(tableKey + 1);
-    }
-    if (param2.generateID && param2.generateID.length > 0) {
-      isSearchingFile = true;
-      setTableKey(tableKey + 1);
-    }
-
-    if (param2.owner && param2.owner.length > 0) {
-      isSearchingFile = true;
-      setTableKey(tableKey + 1);
-    }
-
-    if (!isSearchingFile) {
-      updateProcessedFiles(
-        props.datasetId,
-        pagination.pageSize,
-        pagination.current - 1,
-        parsePath,
-        param3 ? param3.field : 'createTime',
-        searchText,
-        order,
-      );
-    }
-  };
-
-  // const updateGroupProgress = (fileName, progress) => {
-  //   setGroupProgress((prev) => ({ ...prev, [fileName]: progress }));
-  // };
-
-  // const updateProgress = (fileName, progress) => {
-  //   setProgress((prev) => ({ ...prev, [fileName]: progress }));
-  // };
-
   const columns = [
     {
       title: 'Name',
@@ -296,7 +138,6 @@ const ContainerDetailsContent = (props) => {
       sorter: true,
       width: '35%',
       searchKey: 'name',
-      // ...getColumnSearchProps('name'),
       render: (text, record) => {
         let filename = text;
         if (text.length > 45) {
@@ -318,29 +159,27 @@ const ContainerDetailsContent = (props) => {
       sorter: true,
       width: '15%',
       searchKey: 'owner',
-      // ...getColumnSearchProps('owner'),
     },
     props.currentDataset && props.currentDataset.code === 'generate'
       ? {
           title: 'Generate ID',
-          dataIndex: 'generateID',
+          dataIndex: 'generateId',
           key: 'generateID',
-          sorter: (a, b) => a.generateID.localeCompare(b.generateID),
+          sorter: (a, b) => a.generateId.localeCompare(b.generateId),
           width: '15%',
           searchKey: 'generateID',
-          // ...getColumnSearchProps('generateID'),
         }
       : {},
-      {
-        title: 'Created',
-        dataIndex: 'createTime',
-        key: 'createTime',
-        sorter: true,
-        width: '20%',
-        render: (text, record) => {
-          return text && moment(text).format('YYYY-MM-DD');
-        },
+    {
+      title: 'Created',
+      dataIndex: 'createTime',
+      key: 'createTime',
+      sorter: true,
+      width: '20%',
+      render: (text, record) => {
+        return text && moment(text).format('YYYY-MM-DD');
       },
+    },
     {
       title: 'File Size',
       dataIndex: 'fileSize',
@@ -399,7 +238,7 @@ const ContainerDetailsContent = (props) => {
   const downloadFiles = () => {
     setLoading(true);
     let files = [];
-    selectedRowKeys.map((i) => {
+    selectedRowKeys.forEach((i) => {
       let file = i;
       var folder = file.substring(0, file.lastIndexOf('/') + 1);
       var filename = file.substring(file.lastIndexOf('/') + 1, file.length);
@@ -472,22 +311,6 @@ const ContainerDetailsContent = (props) => {
           </Panel>
         </Collapse>
       )}
-      {/* <Table
-        pagination={{
-          current: page + 1,
-          pageSize,
-          total: totalItem,
-          showQuickJumper: true,
-          showSizeChanger: true,
-        }}
-        rowKey={(record) => record.name}
-        rowSelection={rowSelection}
-        columns={columns}
-        dataSource={rawFiles}
-        onChange={changePage}
-        scroll={{ x: true }}
-        key={tableKey}
-      /> */}
       <FilesTable
         columns={columns}
         dataSource={rawFiles}

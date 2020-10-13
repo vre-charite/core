@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Row, Table, List, Avatar } from 'antd';
+import {  List, } from 'antd';
 import {
   MailOutlined,
   FacebookOutlined,
@@ -32,7 +32,9 @@ const getcard = (card, data, actions, state) => {
       res = <FileStats />;
       break;
     case 'userStats':
-      res = <UserStats />;
+      res = (size, exportState, onExportClick) => {
+        return <UserStats />;
+      }
       break;
     case 'uploaderStats':
       res = <UploaderStats />;
@@ -76,39 +78,12 @@ const getcard = (card, data, actions, state) => {
       );
       break;
     case 'files': {
-      const columns = [
-        {
-          title: 'File',
-          dataIndex: 'file',
-          key: 'file',
-        },
-        {
-          title: 'uploader',
-          dataIndex: 'uploader',
-          key: 'uploader',
-        },
-        { title: 'Upload Time', dataIndex: 'timeCreated', key: 'timeCreated' },
-      ];
-
-      const dataSource = [
-        { file: 'x-ray scan', uploader: 'Billy', timeCreated: '2020-06-19' },
-      ];
       res = (size, exportState, onExportClick) => {
         return <FileExplorer />;
       };
       break;
     }
     case 'datasets': {
-      const list = [
-        {
-          name: 'dataset1',
-          description: 'this is dataset1',
-        },
-        {
-          name: 'dataset2',
-          description: 'this is dataset2',
-        },
-      ];
       res = (size, exportState, onExportClick) => (
         <List
           className="demo-loadmore-list"

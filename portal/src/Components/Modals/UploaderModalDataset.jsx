@@ -1,37 +1,28 @@
-import React, { useState } from "react";
-import { Modal, Button, Form, Input, Select, Upload, message } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
-import { fileUpload } from "../../Utility";
-import { withRouter } from "react-router-dom";
-import { connect } from "react-redux";
-import { useCookies } from "react-cookie";
-import { FolderInput, FolderCascader } from "../../Components/Input";
-import _ from "lodash";
+import React, { useState } from 'react';
+import { Modal, Button, Form, Input, Select, Upload } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
+import { fileUpload } from '../../Utility';
+import { withRouter } from 'react-router-dom';
+import { connect, useSelector } from 'react-redux';
 const { TextArea } = Input;
 const { Option } = Select;
-const { Dragger } = Upload;
 
 const children = [];
 for (let i = 10; i < 36; i++) {
   children.push(<Option key={i.toString(36) + i}>{i.toString(36) + i}</Option>);
 }
 
-function handleChange(value) {}
-
 const UploaderModalDataset = ({
   isShown: visible,
   cancel,
   datasetList,
   match,
-  tags,
   datasetId,
 }) => {
   const [form] = Form.useForm();
   const [isLoading, setIsloading] = useState(false);
   const [cancelTokens, setCancelTokens] = useState([]);
-  const [cookies, setCookie] = useCookies(["username"]);
-  const [folderPath, setFolderPath] = useState("");
-
+  const { username } = useSelector((state) => state);
   const stopLoading = () => {
     setIsloading(false);
   };
@@ -50,7 +41,7 @@ const UploaderModalDataset = ({
         const data = Object.assign({}, values, {
           name: values.file.file.name,
           file_type: values.file.file.type,
-          uploader: cookies.username,
+          uploader: username,
         });
 
         // form.resetFields();
@@ -59,13 +50,13 @@ const UploaderModalDataset = ({
           data,
           addCancelToken,
           //   this.addProgress,
-          stopLoading
+          stopLoading,
         );
 
         cancel();
       })
       .catch((info) => {
-        console.log("Validate Failed:", info);
+        console.log('Validate Failed:', info);
         setIsloading(false);
       });
   };
@@ -75,9 +66,6 @@ const UploaderModalDataset = ({
       return false;
     },
   };
-
-  const currentDatasetId = match.params.containerId;
-  const currentDataset = _.find(datasetList, { id: currentDatasetId });
 
   return (
     <div>
@@ -105,7 +93,7 @@ const UploaderModalDataset = ({
           layout="vertical"
           name="form_in_modal"
           initialValues={{
-            modifier: "public",
+            modifier: 'public',
           }}
         >
           <Form.Item
@@ -115,18 +103,20 @@ const UploaderModalDataset = ({
             rules={[
               {
                 required: true,
-                message: "Please select a dataset",
+                message: 'Please select a dataset',
               },
             ]}
           >
             <Select
               onChange={(value) => {}}
               disabled={datasetId !== undefined}
-              style={{ width: "100%" }}
+              style={{ width: '100%' }}
             >
               {datasetList[0] &&
                 datasetList[0].datasetList.map((item) => (
-                  <Option key={item.id} value={item.id}>{item.name}</Option>
+                  <Option key={item.id} value={item.id}>
+                    {item.name}
+                  </Option>
                 ))}
             </Select>
           </Form.Item>
@@ -161,5 +151,5 @@ export default withRouter(
   connect((state) => {
     const { datasetList, tags } = state;
     return { datasetList, tags };
-  })(UploaderModalDataset)
+  })(UploaderModalDataset),
 );

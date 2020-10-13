@@ -2,8 +2,8 @@ const common = {
   // for app.js
   getDataset: 'common.getDataset',
   listAllContainersPermission: 'common.listAllContainersPermission',
-  emailFileList:'common.emailFileList',
-  logout:'common.logout',
+  emailFileList: 'common.emailFileList',
+  logout: 'common.logout',
 };
 const login = {
   auth: 'login.auth',
@@ -11,19 +11,20 @@ const login = {
   parseInviteHashAPI: 'login.parseInviteHashAPI',
 };
 const landing = {
-  createProject:'landing.createProject'
+  createProject: 'landing.createProject',
 };
 
 const dataset = {
   files: {
     uploadFileApi: 'dataset.files.uploadFileApi',
-    uploadRequestFail:'dataset.files.uploadRequestFail',
+    uploadRequestFail: 'dataset.files.uploadRequestFail',
     getRawFilesAPI: 'dataset.files.getRawFilesAPI',
     getChildrenDataset: 'dataset.files.getChildrenDataset',
     traverseFoldersContainersAPI: 'dataset.files.traverseFoldersContainersAPI',
     getFilesByTypeAPI: 'dataset.files.getFilesByTypeAPI',
     downloadFilesAPI: 'dataset.files.downloadFilesAPI',
-    processingFile:'dataset.files.processingFile',
+    processingFile: 'dataset.files.processingFile',
+    preUpload:'dataset.files.preUpload'
   },
 };
 
@@ -40,4 +41,16 @@ const teams = {
   removeUserFromDataset: 'teams.removeUserFromDataset',
 };
 
-export default { common, login, landing, dataset, selfRegister, teams };
+const contactUs = {
+  contactUsAPI: 'contactUs.contactUsAPI',
+};
+
+export default {
+  common,
+  login,
+  landing,
+  dataset,
+  selfRegister,
+  teams,
+  contactUs,
+};

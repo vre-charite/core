@@ -1,56 +1,50 @@
 import React, { useState, useRef } from 'react';
-import {
-  Table,
-  Button,
-  Space,
-  Collapse,
-  Progress,
-  Input,
-  Spin,
-  Popover,
-} from 'antd';
-import { connect } from 'react-redux';
+import { Button, Space, Collapse, Progress, Spin, Popover } from 'antd';
+import { connect, useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
-import { useCookies } from 'react-cookie';
 import { CloudDownloadOutlined, SyncOutlined } from '@ant-design/icons';
 import moment from 'moment';
 
-import Highlighter from 'react-highlight-words';
-import { SearchOutlined } from '@ant-design/icons';
 import { ErrorMessager, namespace } from '../../../../../ErrorMessages';
 import { appendDownloadListCreator } from '../../../../../Redux/actions';
 import { downloadFilesAPI, getFilesByTypeAPI } from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
 import FilesTable from './FilesTable';
+import { getCurrentProject } from '../../../../../Utility';
+import { setSuccessNum } from '../../../../../Redux/actions';
 
 const { Panel } = Collapse;
 
 function RawTable(props) {
+  const { path } = props;
+  const dispatch = useDispatch();
+
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [pageSize, setPageSize] = useState(10);
-  const [page, setPage] = useState(0);
+  const [pageSize] = useState(10);
+  const [page] = useState(0);
   const [totalItem, setTotalItem] = useState(0);
-  const [downloadStatus, setProgress] = useState({});
-  const [groupDownloadStatus, setGroupProgress] = useState({});
+  const [groupDownloadStatus] = useState({});
   let [rawFiles, setRawFiles] = useState([]);
   const [reFreshing, setRefreshing] = useState(false);
-  const [cookies, setCookie] = useCookies(['cookies']);
-  const [searchText, setSearchText] = useState([]);
-  const [searchedColumn, setSearchedColumn] = useState('');
-  const [searchInput, setSearchInput] = useState({});
-  const [sortColumn, setSortColumn] = useState('createTime');
-  const [order, setOrder] = useState('desc');
+  const [searchText] = useState([]);
+  const [searchInput] = useState({});
+  const [sortColumn] = useState('createTime');
+  const [order] = useState('desc');
   const [pageLoading, setPageLoading] = useState(true);
   const [isShown, toggleModal] = useState(false);
   const [tableKey, setTableKey] = useState(0);
 
   const mounted = useRef(false);
 
+  const parsePath =
+    typeof path === 'string' && path[0] === '/' ? path.substring(1) : path;
+
   function getRawFilesAndUpdateUI(
     containerId,
     pageSize,
     page,
+    path,
     column,
     text,
     order,
@@ -63,13 +57,23 @@ function RawTable(props) {
       }
     }
 
-    const currentDataset = props.containersPermission && props.containersPermission.filter(el => el.container_id === Number(containerId));
+    const currentDataset = getCurrentProject(containerId);
 
     let role = false;
 
-    if (currentDataset && currentDataset.length) role = currentDataset[0].permission;
+    if (currentDataset) role = currentDataset.permission;
 
-    return getFilesByTypeAPI(containerId, pageSize, page, null, column, order, role === 'admin', null, filters)
+    return getFilesByTypeAPI(
+      containerId,
+      pageSize,
+      page,
+      path,
+      column,
+      order,
+      role === 'admin',
+      null,
+      filters,
+    )
       .then((res) => {
         const { entities, approximateCount } = res.data.result;
 
@@ -95,110 +99,6 @@ function RawTable(props) {
       });
   }
 
-  const handleSearch = (selectedKeys, confirm, dataIndex) => {
-    confirm();
-
-    setSearchedColumn(dataIndex);
-    setSearchText(selectedKeys[0]);
-
-    getRawFilesAndUpdateUI(
-      props.projectId,
-      pageSize,
-      page,
-      sortColumn,
-      selectedKeys[0],
-      order,
-    );
-  };
-
-  const handleReset = (clearFilters) => {
-    clearFilters();
-    setSearchedColumn('dataIndex');
-    setSearchText('');
-    getRawFilesAndUpdateUI(
-      props.projectId,
-      pageSize,
-      page,
-      sortColumn,
-      '',
-      order,
-    );
-  };
-
-  const getColumnSearchProps = (dataIndex) => ({
-    filterDropdown: ({
-      setSelectedKeys,
-      selectedKeys,
-      confirm,
-      clearFilters,
-    }) => (
-      <div style={{ padding: 8 }}>
-        <Input
-          ref={(node) => {
-            //this.searchInput = node;
-            setSearchInput(node);
-          }}
-          placeholder={`Search ${dataIndex}`}
-          value={selectedKeys[0]}
-          onChange={(e) =>
-            setSelectedKeys(e.target.value ? [e.target.value] : [])
-          }
-          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-          style={{ width: 188, marginBottom: 8, display: 'block' }}
-          autoFocus
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
-          </Button>
-          <Button
-            onClick={() => handleReset(clearFilters)}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Reset
-          </Button>
-        </Space>
-      </div>
-    ),
-    filterIcon: (filtered) => (
-      <SearchOutlined
-        style={{ color: filtered ? '#1890ff' : undefined, top: '60%' }}
-      />
-    ),
-
-    onFilterDropdownVisibleChange: (visible) => {
-      if (searchedColumn !== dataIndex && searchText && searchText.length > 0) {
-      } else {
-        if (visible && searchInput && Object.keys(searchInput).length > 0) {
-          setTimeout(() => searchInput.select(), 100);
-        }
-      }
-
-      setSearchText('');
-      // if (visible && searchInput && Object.keys(searchInput).length > 0) {
-      //   setTimeout(() => searchInput.select(), 100);
-      // }
-    },
-    render: (text) =>
-      searchedColumn === dataIndex ? (
-        <Highlighter
-          highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-          searchWords={[searchText]}
-          autoEscape
-          textToHighlight={text ? text.toString() : ''}
-        />
-      ) : (
-        text
-      ),
-  });
-
   const columns = [
     {
       title: 'Name',
@@ -207,7 +107,6 @@ function RawTable(props) {
       sorter: true,
       width: '35%',
       searchKey: 'name',
-      // ...getColumnSearchProps('name'),
       render: (text, record) => {
         let filename = text;
         if (text.length > 45) {
@@ -229,17 +128,15 @@ function RawTable(props) {
       sorter: true,
       width: '15%',
       searchKey: 'owner',
-      // ...getColumnSearchProps('owner'),
     },
     props.currentDataset && props.currentDataset.code === 'generate'
       ? {
           title: 'Generate ID',
-          dataIndex: 'generateID',
+          dataIndex: 'generateId',
           key: 'generateID',
           sorter: true,
           width: '15%',
           searchKey: 'generateID',
-          // ...getColumnSearchProps('generateID'),
         }
       : {},
     {
@@ -287,7 +184,11 @@ function RawTable(props) {
               onClick={(e) => {
                 console.log('RawTable -> record', record);
 
-                downloadFilesAPI(props.projectId, files).catch((err) => {
+                downloadFilesAPI(props.projectId, files)
+                  .then(res => {
+                    dispatch(setSuccessNum(props.successNum + 1));
+                  })
+                  .catch((err) => {
                   if (err.response) {
                     const errorMessager = new ErrorMessager(
                       namespace.dataset.files.downloadFilesAPI,
@@ -325,7 +226,7 @@ function RawTable(props) {
       console.log('changed');
       fetchData();
     } else mounted.current = true;
-  }, [props.successNum])
+  }, [props.successNum]);
 
   const onSelectChange = (selectedRowKeys) => {
     setSelectedRowKeys(selectedRowKeys);
@@ -336,50 +237,10 @@ function RawTable(props) {
     onChange: onSelectChange,
   };
 
-  const changePage = (pagination, param2, param3) => {
-    let order = 'asc';
-    if (param3 && param3.order !== 'ascend') order = 'desc';
-
-    setPage(pagination.current - 1);
-    if (param3) {
-      setSortColumn(param3.field);
-      setOrder(order);
-    }
-
-    if (pagination.pageSize) setPageSize(pagination.pageSize);
-
-    let isSearchingFile = false;
-
-    if (param2.fileName && param2.fileName.length > 0) {
-      isSearchingFile = true;
-      setTableKey(tableKey + 1);
-    }
-    if (param2.generateID && param2.generateID.length > 0) {
-      isSearchingFile = true;
-      setTableKey(tableKey + 1);
-    }
-
-    if (param2.owner && param2.owner.length > 0) {
-      isSearchingFile = true;
-      setTableKey(tableKey + 1);
-    }
-
-    if (!isSearchingFile) {
-      getRawFilesAndUpdateUI(
-        props.projectId,
-        pagination.pageSize,
-        pagination.current - 1,
-        param3 ? param3.field : 'createTime',
-        searchText,
-        order,
-      );
-    }
-  };
-
   const downloadFiles = () => {
     setLoading(true);
     let files = [];
-    selectedRowKeys.map((i) => {
+    selectedRowKeys.forEach((i) => {
       let file = i;
       var folder = file.substring(0, file.lastIndexOf('/') + 1);
       var filename = file.substring(file.lastIndexOf('/') + 1, file.length);
@@ -412,12 +273,13 @@ function RawTable(props) {
       props.projectId,
       pageSize,
       page,
+      parsePath,
       sortColumn,
       searchText,
       order,
     );
 
-    setTableKey(tableKey+1)
+    setTableKey(tableKey + 1);
   }
 
   const hasSelected = selectedRowKeys.length > 0;
@@ -475,30 +337,18 @@ function RawTable(props) {
           </Panel>
         </Collapse>
       )}
-      {/* <Table
-        pagination={{
-          current: page + 1,
-          pageSize,
-          total: totalItem,
-          showQuickJumper: true,
-          showSizeChanger: true,
-        }}
-        rowKey={(record) => record.name}
-        rowSelection={rowSelection}
-        columns={columns}
-        dataSource={rawFiles}
-        onChange={changePage}
-        key={tableKey}
-      /> */}
+
       <FilesTable
         columns={columns}
         dataSource={rawFiles}
         totalItem={totalItem}
         updateTable={getRawFilesAndUpdateUI}
         projectId={props.projectId}
-        type="raw table"
+        type={props.type}
         rowSelection={rowSelection}
         tableKey={tableKey}
+        parsePath={parsePath}
+        successNum={props.successNum}
       />
       <GreenRoomUploader
         isShown={isShown}

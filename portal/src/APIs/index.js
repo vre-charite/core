@@ -14,6 +14,8 @@ import {
   uploadFileApi2,
   preUpload,
   combineChunks,
+  projectFileSummary,
+  checkUploadStatus,
 } from './file';
 import {
   getDatasetsAPI,
@@ -42,6 +44,8 @@ import {
   inviteUserApi,
   parseInviteHashAPI,
   UserSelfRegistrationAPI,
+  contactUsApi,
+  getAdminsOnDatasetAPI,
 } from './user';
 import { refreshTokenAPI, resetPasswordAPI } from './auth';
 
@@ -87,4 +91,8 @@ export {
   preUpload,
   uploadFileApi2,
   combineChunks,
+  contactUsApi,
+  getAdminsOnDatasetAPI,
+  projectFileSummary,
+  checkUploadStatus
 };

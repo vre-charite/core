@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Statistic, Row, Col } from 'antd';
+import { Statistic } from 'antd';
 import {
   FileOutlined,
   FolderOpenOutlined,
@@ -9,9 +9,7 @@ import { projectFileCountTotal, getUsersOnDatasetAPI } from '../../../../APIs';
 
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import _ from 'lodash';
 import styles from './index.module.scss';
-const { Title } = Typography;
 function FileStats(props) {
   const [rawCount, setRawCount] = useState(0);
   const [processedCount, setProcessedCount] = useState(0);
@@ -19,41 +17,22 @@ function FileStats(props) {
   const [uploaderCount, setUploaderCount] = useState(0);
 
   const {
-    containersPermission,
     match: {
       params: { datasetId },
     },
-    content,
-    datasetList,
   } = props;
-
-  const currentContainer =
-    containersPermission &&
-    containersPermission.find((ele) => {
-      return parseInt(ele.container_id) === parseInt(datasetId);
-    });
-
-  const printDetails = () => {
-    if (datasetList.length > 0) {
-      const currentDataset = _.find(
-        datasetList[0].datasetList,
-        (d) => d.id === parseInt(datasetId),
-      );
-      return;
-    }
-  };
 
   useEffect(() => {
     projectFileCountTotal(datasetId).then((res) => {
-      setRawCount(res.data.result['raw_file_count']);
-      setProcessedCount(res.data.result['process_file_count']);
+      setRawCount(res.data.result['rawFileCount']);
+      setProcessedCount(res.data.result['processFileCount']);
     });
     getUsersOnDatasetAPI(datasetId).then((res) => {
       let users = res.data.result;
       setAdminCount(users.filter((i) => i.permission === 'admin').length);
       setUploaderCount(users.filter((i) => i.permission === 'uploader').length);
     });
-  }, []);
+  }, [datasetId]);
 
   return (
     <>

@@ -1,10 +1,8 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Select,
   Card,
   PageHeader,
-  Typography,
   Layout,
   Table,
   Menu,
@@ -14,14 +12,11 @@ import {
   message,
   Row,
   Col,
-  Popconfirm,
   Modal,
 } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { DownOutlined } from '@ant-design/icons';
 import AddUserModal from './Components/AddUserModal';
-import styles from './index.module.scss';
-import { fakeDataGenerator } from '../../../Utility/index';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import {
@@ -31,14 +26,10 @@ import {
 } from '../../../APIs';
 import {
   objectKeysToSnakeCase,
-  apiErrorHandling,
   objectKeysToCamelCase,
-  getCookie,
 } from '../../../Utility';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
-const { Meta } = Card;
-const { Title } = Typography;
-const { Option } = Select;
+import { withCurrentProject } from '../../../Utility';
 const { Content } = Layout;
 const { TabPane } = Tabs;
 
@@ -153,25 +144,17 @@ class Teams extends Component {
   }
 
   render() {
-    console.log(this.props);
-    const username = getCookie('username');
+    const username = this.props.username;
     const projectAdmin =
       this.props.containersPermission &&
       this.props.containersPermission.some(
         (el) =>
-          el.container_id === Number(this.props.datasetId) &&
+          el.containerId === Number(this.props.datasetId) &&
           el.permission === 'admin',
       );
-    const role =
-      this.props.containersPermission &&
-      this.props.containersPermission.filter((i) => {
-        return i.container_id === parseInt(this.props.datasetId);
-      })[0]['permission'];
-    const projectName =
-      this.props.containersPermission &&
-      this.props.containersPermission.filter(
-        (el) => el.container_id === Number(this.props.datasetId),
-      )[0]['container_name'];
+    const projectName = this.props.currentProject?.containerName;
+    const role = this.props.currentProject?.permission;
+     
 
     const menu = (record, role) => (
       <Menu>
@@ -189,7 +172,9 @@ class Teams extends Component {
                 >
                   {i}
                 </Menu.Item>
-              );
+              )
+            }else{
+              return null;
             }
           })}
         <Menu.Divider />
@@ -268,38 +253,6 @@ class Teams extends Component {
       },
     ];
 
-    const AccessRequestColumns = [
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        key: 'name',
-      },
-      {
-        title: 'First Name',
-        dataIndex: 'firstName',
-        key: 'firstName',
-      },
-      {
-        title: 'Last Name',
-        dataIndex: 'lastName',
-        key: 'lastName',
-      },
-      {
-        title: 'Role',
-        dataIndex: 'role',
-        key: 'role',
-      },
-      {
-        title: 'Action',
-        key: 'action',
-        render: (text, record) => (
-          <>
-            <Button>Approve</Button>
-            <Button>Deny</Button>
-          </>
-        ),
-      },
-    ];
 
     const routes = [
       {
@@ -409,6 +362,6 @@ class Teams extends Component {
 }
 
 export default connect((state) => {
-  const { role, containersPermission } = state;
-  return { role, containersPermission };
-})(withRouter(Teams));
+  const { role, containersPermission,username } = state;
+  return { role, containersPermission,username };
+})(withCurrentProject(withRouter(Teams)));

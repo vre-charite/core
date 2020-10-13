@@ -1,4 +1,4 @@
-import { APPEND_DOWNLOAD_LIST, REMOVE_DOWNLOAD_LIST } from '../actionTypes';
+import { APPEND_DOWNLOAD_LIST, REMOVE_DOWNLOAD_LIST,CLEAR_DOWNLOAD_LIST } from '../actionTypes';
 
 const init = [];
 function downloadList(state = init, action) {
@@ -12,6 +12,9 @@ function downloadList(state = init, action) {
         (item) => item.downloadKey !== payload,
       );
       return newDownloadList;
+    }
+    case CLEAR_DOWNLOAD_LIST:{
+      return [];
     }
     default: {
       return state;

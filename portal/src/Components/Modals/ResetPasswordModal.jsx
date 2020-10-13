@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, message, Form, Input, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import PasswordValidator from 'password-validator';
-import axios from 'axios';
 
 import { resetPasswordAPI } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
@@ -10,6 +8,7 @@ import { namespace, ErrorMessager } from '../../ErrorMessages';
 const ResetPasswordModal = (props) => {
   const [userInfo, setUserInfo] = useState({});
   const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     const info = { username: props.username };
@@ -74,6 +73,18 @@ const ResetPasswordModal = (props) => {
       });
   };
 
+  const onPasswordChange = (e) => {
+    form.setFieldsValue(e.target.value);
+
+    const confirmPassword = form.getFieldValue('newPassword2');
+
+    if (!confirmPassword || e.target.value === confirmPassword) {
+      form.validateFields(['newPassword2'], () => Promise.resolve());
+    } else if (confirmPassword && e.target.value !== confirmPassword) {
+      form.validateFields(['newPassword2'], () => Promise.reject());
+    }
+  };
+
   return (
     <Modal
       title="Reset Password"
@@ -96,6 +107,7 @@ const ResetPasswordModal = (props) => {
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
         ref={FormInstance}
+        form={form}
       >
         <Form.Item
           label="Username"
@@ -121,7 +133,7 @@ const ResetPasswordModal = (props) => {
           label={
             <span>
               New Password&nbsp;
-              <Tooltip title="Project code (11~30 digits) should contain the following: 1 Uppercase, 1 Lowercase letters, 1 number and 1 Special character(@#$!%*?&^). ">
+              <Tooltip title="The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(@#$!%*?&^).">
                 <QuestionCircleOutlined />
               </Tooltip>
             </span>
@@ -138,7 +150,7 @@ const ResetPasswordModal = (props) => {
                 /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&^])[A-Za-z\d@#$!%*?&^]{11,30}$/g,
               ),
               message:
-                'The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character',
+                'The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(@#$!%*?&^).',
             },
             ({ getFieldValue }) => ({
               validator(rule, value) {
@@ -157,6 +169,7 @@ const ResetPasswordModal = (props) => {
             onCopy={(e) => e.preventDefault()}
             onPaste={(e) => e.preventDefault()}
             autocomplete="off"
+            onChange={onPasswordChange}
           />
         </Form.Item>
 
