@@ -33,7 +33,7 @@ class ConfigClass(object):
     EMAIL_SERVICE = "http://notification.utility:5065/v1/email"
     # EMAIL_SERVICE = "http://10.3.9.240:5065/v1/email"
     EMAIL_DEFAULT_NOTIFIER = "notification@vre"
-    EMAIL_ADMIN_CONNECTION = "zma@indocresearch.org"
+    EMAIL_ADMIN_CONNECTION = "hliu@indocresearch.org"
 
     # User Invitation
     env = os.environ.get('env')

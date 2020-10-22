@@ -31,7 +31,7 @@ class SrvContactUsManager(metaclass=MetaService):
         email_sender.send(
             subject,
             html_generated,
-            ['hliu@indocresearch.org'],
+            [ConfigClass.EMAIL_ADMIN_CONNECTION],
             msg_type='html')
 
         html_generated2 = confirm_email_body_generator(
