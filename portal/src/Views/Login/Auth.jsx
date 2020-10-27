@@ -12,7 +12,7 @@ import { axios } from '../../APIs/config';
 import styles from './index.module.scss';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { login } from '../../APIs/auth';
-import { withRouter } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -38,7 +38,12 @@ const { confirm } = Modal;
 class Auth extends Component {
   constructor(props) {
     super(props);
-    this.state = { visible: false, cookiesDrawer: false };
+    this.state = {
+      visible: false,
+      cookiesDrawer: false,
+      notificationKey: null,
+      btnLoading: false,
+    };
   }
   static propTypes = {
     cookies: instanceOf(Cookies).isRequired,
@@ -46,6 +51,11 @@ class Auth extends Component {
 
   componentDidMount() {
     this.setTermsOfUse();
+  }
+
+  componentWillUnmount() {
+    const key = this.state.notificationKey;
+    notification.close(key);
   }
 
   setTermsOfUse = () => {
@@ -58,6 +68,7 @@ class Auth extends Component {
         localStorage.setItem('cookies_notified', true);
       };
       const key = `open${Date.now()}`;
+      this.setState({ notificationKey: key });
       const btn = (
         <Button type="primary" size="small" onClick={closeNotification}>
           OK
@@ -78,9 +89,6 @@ class Auth extends Component {
                 onClick={() => {
                   closeNotification();
                   this.showModal();
-                  setTimeout(() => {
-                    document.getElementById('cookies-link').click();
-                  }, 10);
                 }}
               >
                 Click here for details and controls.
@@ -126,11 +134,13 @@ class Auth extends Component {
       return;
     }
 
+    this.setState({ btnLoading: true });
+
     login(values)
       .then((res) => {
         const { accessToken, refreshToken } = res.data.result;
         const sourceId = uuidv4();
-        localStorage.setItem('sessionId', `${values.username}-${sourceId}`)
+        localStorage.setItem('sessionId', `${values.username}-${sourceId}`);
 
         tokenManager.setCookies({
           access_token: accessToken,
@@ -142,6 +152,7 @@ class Auth extends Component {
         this.initApis(values.username);
         this.props.setIsLoginCreator(true);
         this.props.setUsernameCreator(values.username);
+        this.setState({ btnLoading: false });
         this.props.history.push('/uploader');
         broadcastManager.postMessage(
           'login',
@@ -154,6 +165,7 @@ class Auth extends Component {
         if (err.response) {
           const errorMessager = new ErrorMessager(namespace.login.auth);
           errorMessager.triggerMsg(err.response.status);
+          this.setState({ btnLoading: false });
         }
       });
   };
@@ -338,6 +350,7 @@ class Auth extends Component {
                           message: 'Please input your Password!',
                         },
                       ]}
+                      className="mb-1"
                     >
                       <Input
                         prefix={
@@ -349,12 +362,17 @@ class Auth extends Component {
                         onPaste={(e) => e.preventDefault()}
                       />
                     </Form.Item>
+                    <Link to="/account-assistant">
+                      Forgot password or username?{' '}
+                    </Link>
 
                     <Form.Item style={{ paddingTop: '20px' }}>
                       <Button
+                        id="auth_login_btn"
                         type="primary"
                         htmlType="submit"
                         className={styles['login-form-button']}
+                        loading={this.state.btnLoading}
                       >
                         Login
                       </Button>
@@ -370,7 +388,7 @@ class Auth extends Component {
               style={{ color: 'white' }}
               onClick={this.showModal}
             >
-              Terms of Use
+              <small>Terms of Use</small>
             </Button>{' '}
             <TermsOfUseModal
               visible={this.state.visible}
@@ -382,6 +400,17 @@ class Auth extends Component {
               cookiesDrawer={this.state.cookiesDrawer}
             />
           </div>
+          <small className={styles.copyright}>
+            Version 0.1.1. Copyright © {new Date().getFullYear()},{' '}
+            <a
+              href="https://www.indocresearch.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Indoc Research
+            </a>
+            . All Rights Reserved.
+          </small>
         </div>
       </>
     );

@@ -17,9 +17,11 @@ import UserStats from './Cards/UserStats';
 import UploaderStats from './Cards/UploaderStats';
 import UploaderHistory from './Cards/UploaderHistory';
 
+import FileStatModal from '../Canvas/Modals/FileStatModal'
+
 var _ = require('lodash');
 
-const getcard = (card, data, actions, state) => {
+const getcard = (card, data, actions, state, handleExpand) => {
   let res;
   switch (card.type) {
     case 'text':
@@ -33,7 +35,12 @@ const getcard = (card, data, actions, state) => {
       break;
     case 'userStats':
       res = (size, exportState, onExportClick) => {
-        return <UserStats />;
+        const onExpand = () => handleExpand(React.cloneElement(
+          <FileStatModal />,
+          {datasetId: state.currentDataset, currentUser: state.currentUser, isAdmin: state.currentRole === 'admin'}
+        ), card.title, '55vw');
+
+        return <UserStats onExpand={onExpand} />;
       }
       break;
     case 'uploaderStats':

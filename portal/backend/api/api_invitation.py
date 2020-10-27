@@ -3,7 +3,6 @@ from flask_jwt import jwt_required, current_identity
 from resources.decorator import check_role
 from config import ConfigClass
 from models.api_response import APIResponse, EAPIResponseCode
-from models.user_type import EUserType
 from models.api_meta_class import MetaAPI
 from models.invitation import InvitationForm
 from resources.swagger_modules import create_invitation_request_model, create_invitation_return_example
@@ -71,17 +70,25 @@ class APIInvitation(metaclass=MetaAPI):
                     invitation_hash)
                 is_valid = invitation_validation[0]
                 invitation_find = invitation_validation[1]
+                error_code = invitation_validation[2]
                 if is_valid:
                     form_data = json.loads(invitation_find[1])
                     invitation_form = InvitationForm(form_data)
                     my_res.set_code(EAPIResponseCode.success)
                     my_res.set_result(invitation_form.to_dict)
                 else:
-                    my_res.set_code(EAPIResponseCode.not_found),
-                    my_res.set_error_msg(
-                        'Invitation Not Found Or Expired: ' + invitation_hash)
-                    _logger.warning(
-                        'Invitation Not Found Or Expired: ' + invitation_hash)
+                    if error_code == 404:
+                        my_res.set_code(EAPIResponseCode.not_found),
+                        my_res.set_error_msg(
+                            'Invitation Not Found: ' + invitation_hash)
+                        _logger.warning(
+                            'Invitation Not Found: ' + invitation_hash)
+                    else:
+                        my_res.set_code(EAPIResponseCode.unauthorized),
+                        my_res.set_error_msg(
+                            'Invitation Expired: ' + invitation_hash)
+                        _logger.warning(
+                            'Invitation Expired: ' + invitation_hash)
                 return my_res.to_dict, my_res.code
             except Exception as e:
                 _logger.fatal(str(e))

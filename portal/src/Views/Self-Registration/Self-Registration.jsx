@@ -96,7 +96,7 @@ function SelfRegistration(props) {
           errorMessager.triggerMsg(err.response.status);
         }
       });
-  }, [props.match.params]);
+  }, []);
 
   const onCancel = () => {
     setVisible(false);
@@ -235,7 +235,7 @@ function SelfRegistration(props) {
                   label={
                     <span>
                       Password&nbsp;
-                      <Tooltip title="The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(@#$!%*?&^).">
+                      <Tooltip title="The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).">
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </span>
@@ -249,10 +249,10 @@ function SelfRegistration(props) {
                     },
                     {
                       pattern: new RegExp(
-                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&^])[A-Za-z\d@#$!%*?&^]{11,30}$/g,
+                        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_!%&/()=?*+#,.;])[A-Za-z\d-_!%&/()=?*+#,.;]{11,30}$/g,
                       ),
                       message:
-                        'The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(@#$!%*?&^).',
+                        'The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).',
                     },
                   ]}
                 >
@@ -293,7 +293,7 @@ function SelfRegistration(props) {
                         value
                           ? Promise.resolve()
                           : Promise.reject(
-                              'Please accept the terms of use to proceed',
+                              'Please read and accept the terms of use to proceed',
                             ),
                     },
                   ]}

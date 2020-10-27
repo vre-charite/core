@@ -25,7 +25,7 @@ const ContainerDetailsContent = (props) => {
   const [sortColumn] = useState('createTime');
   const [order] = useState('desc');
   const [tableKey, setTableKey] = useState(0);
-  
+
   async function updateProcessedFiles(
     containerId,
     pageSize,
@@ -91,6 +91,8 @@ const ContainerDetailsContent = (props) => {
     setRawFiles(
       entities.map((item) => ({
         ...item.attributes,
+        tags: item.labels,
+        guid:item.guid,
         key: item.attributes.name,
       })),
     );

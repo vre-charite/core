@@ -26,6 +26,7 @@
     "jwt-decode": "^2.2.0",
     "node-sass": "^4.14.1",
     "password-validator": "^5.1.0",
+    "pino": "^6.7.0",
     "pm2": "^4.4.0",
     "react": "^16.13.1",
     "react-beautiful-dnd": "^13.0.0",
@@ -50,10 +51,14 @@
     "build-staging": "export REACT_APP_ENV=staging; react-scripts build",
     "build-charite": "export REACT_APP_ENV=charite; react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "e2e": "jest"
   },
   "eslintConfig": {
     "extends": "react-app"
+  },
+  "jest": {
+    "preset": "jest-puppeteer"
   },
   "browserslist": {
     "production": [
@@ -68,7 +73,10 @@
     ]
   },
   "devDependencies": {
-    "cz-conventional-changelog": "^3.2.0"
+    "cz-conventional-changelog": "^3.2.0",
+    "jest": "^24.9.0",
+    "jest-puppeteer": "^4.4.0",
+    "puppeteer": "^5.3.1"
   },
   "config": {
     "commitizen": {

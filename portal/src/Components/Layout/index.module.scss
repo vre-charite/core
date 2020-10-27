@@ -1,3 +1,21 @@
+@import '../../Styles/includeMedia.scss';
+
+.container {
+  max-width: 560px;
+  margin: 30px auto;
+}
+
+.forgot {
+  @include media('>576px') {
+    float: right;
+    display: inline;
+  }
+  display: block;
+}
+.title {
+  text-align: center;
+}
+
 .toggle {
   background-color: #1b9cd0;
   padding: 10px 5px;
@@ -43,7 +61,7 @@
 }
 
 .download_list {
-  max-height: 500px;
+  max-height: calc((100vh - 128px - 90px) / 2);
   overflow-y: scroll;
 }
 
@@ -77,9 +95,38 @@
   max-width: 350px;
   visibility: hidden;
   transition: all 0.4s;
-  z-index: 1;
+  z-index: 101;
   &.active {
     right: 90px;
     visibility: visible;
+  }
+}
+
+.footer {
+  padding: 20px 50px 10px !important;
+  color: rgba(0, 0, 0, 0.5) !important;
+  line-height: 1.5;
+  text-align: center;
+  @include media('>desktop') {
+    text-align: right;
+  }
+}
+
+.tou {
+  padding-left: 5px !important;
+  padding-top: 0 !important;
+  // margin-top: -3px;
+}
+
+.menu {
+  // display: block !important;
+  @include media('>desktop') {
+    float: left;
+    // display: flex !important;
+  }
+}
+.copyright {
+  @include media('<=desktop') {
+    display: block;
   }
 }

@@ -24,7 +24,6 @@ function AddUserModal(props) {
     cancelAddUser();
   };
 
-
   /**
    * Invite user from outside
    * @param {number} projectId
@@ -139,7 +138,7 @@ function AddUserModal(props) {
 
   return (
     <Modal
-      title="Add user to project"
+      title="Add a member to project"
       visible={isAddUserModalShown}
       onOk={() => {
         onSubmit();
@@ -172,6 +171,9 @@ function AddUserModal(props) {
               containerDetails['roles'] &&
               containerDetails['roles'].map((i) => {
                 if (i !== 'member') {
+                  if (i === 'uploader') {
+                    return <Radio value="contributor">contributor</Radio>;
+                  }
                   return <Radio value={i}>{i}</Radio>;
                 }
               })}

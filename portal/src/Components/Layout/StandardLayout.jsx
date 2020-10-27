@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from 'antd';
 import AppHeader from './Header';
+import Footer from './Footer';
 
 import RightSlider from './RightSlider';
 import { withRouter } from 'react-router-dom';
@@ -26,7 +27,6 @@ function StandardLayout(props) {
     children,
   } = props;
 
-
   useEffect(() => {
     initFunc();
   }, [...observationVars]);
@@ -36,7 +36,10 @@ function StandardLayout(props) {
       <AppHeader />
       <Content>
         <Layout>
-          {children}
+          <Layout>
+            {children}
+            <Footer />
+          </Layout>
           {rightContent && <RightSlider>{rightContent}</RightSlider>}
         </Layout>
       </Content>

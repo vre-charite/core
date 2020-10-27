@@ -31,7 +31,7 @@ function preUpload(containerId, data, sessionId) {
     method: 'POST',
     data,
     headers: {
-      'Session-ID': sessionId
+      'Session-ID': sessionId,
     },
   });
 }
@@ -42,7 +42,7 @@ function combineChunks(containerId, data, sessionId) {
     method: 'POST',
     data,
     headers: {
-      'Session-ID': sessionId
+      'Session-ID': sessionId,
     },
   });
 }
@@ -52,7 +52,17 @@ function checkUploadStatus(containerId, sessionId) {
     url: `/v1/upload/containers/${containerId}/upload-state`,
     method: 'GET',
     headers: {
-      'Session-ID': sessionId
+      'Session-ID': sessionId,
+    },
+  });
+}
+
+function deleteUploadStatus(containerId, sessionId) {
+  return devOpAxios({
+    url: `/v1/upload/containers/${containerId}/upload-state`,
+    method: 'DELETE',
+    headers: {
+      'Session-ID': sessionId,
     },
   });
 }
@@ -177,7 +187,7 @@ function getFilesByTypeAPI(
 
   if (pipeline) {
     params.stage = 'processed';
-    params.pipeline = _.snakeCase(pipeline);
+    params.process_pipeline = _.snakeCase(pipeline);
     params['entityType'] = entityType ? entityType : 'nfs_file_processed';
   }
 
@@ -201,7 +211,7 @@ function checkDownloadStatusAPI(
   taskId,
   removeDownloadListCreator,
   setSuccessNumDispatcher,
-  successNum
+  successNum,
 ) {
   return devOpAxios({
     url: `/v1/containers/${containerId}/file?task_id=${taskId}`,
@@ -341,15 +351,15 @@ function projectFileCountToday(containerId, admin_view) {
     return axios({
       url: `v1/files/containers/${containerId}/files/count/daily?admin_view=false`,
       params: {
-        action: 'all'
-      }
+        action: 'all',
+      },
     });
   } else {
     return axios({
       url: `v1/files/containers/${containerId}/files/count/daily`,
       params: {
-        action: 'all'
-      }
+        action: 'all',
+      },
     });
   }
 }
@@ -369,16 +379,60 @@ function projectFileSummary(containerId, admin_view, params) {
   if (admin_view === false) {
     return axios({
       url: `v1/files/containers/${containerId}/files/count/daily?admin_view=false`,
-      params: objectKeysToSnakeCase({...params})
+      params: objectKeysToSnakeCase({ ...params }),
     });
   } else {
     return axios({
       url: `v1/files/containers/${containerId}/files/count/daily`,
-      params: objectKeysToSnakeCase({...params})
+      params: objectKeysToSnakeCase({ ...params }),
     });
   }
 }
 
+/**
+ * List all tags existed in the project and its frequency
+ *
+ * @param {int} containerId containerId
+ * @VRE-314
+ */
+function listProjectTagsAPI(containerId, query, pattern, length) {
+  return devOpAxios({
+    url: `/v1/containers/${containerId}/tags`,
+    params: { query, pattern, length },
+  });
+}
+
+/**
+ * Add new tags to existed file entities
+ *
+ * @param {int} containerId containerId
+ * @param {dict} data data
+ * @VRE-314
+ */
+function addProjectTagsAPI(containerId, data) {
+  return devOpAxios({
+    url: `/v1/containers/${containerId}/tags`,
+    method: 'POST',
+    data,
+  });
+}
+
+/**
+ * Delete new tags to existed file entities
+ *
+ * @param {int} containerId containerId
+ * @param {str} tag tag
+ * @param {array} taglist taglist
+ * @param {str} guid
+ * @VRE-314
+ */
+function deleteProjectTagsAPI(containerId, params) {
+  return devOpAxios({
+    url: `/v1/containers/${containerId}/tags`,
+    method: 'DELETE',
+    data: params
+  });
+}
 export {
   uploadFileApi,
   getFilesAPI,
@@ -397,4 +451,8 @@ export {
   combineChunks,
   projectFileSummary,
   checkUploadStatus,
+  listProjectTagsAPI,
+  deleteUploadStatus,
+  addProjectTagsAPI,
+  deleteProjectTagsAPI
 };

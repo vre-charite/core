@@ -24,4 +24,55 @@ function resetPasswordAPI(data) {
   });
 }
 
-export { login, refreshTokenAPI, resetPasswordAPI };
+/* send reset password email to user
+ * @param {string} username
+ */
+function sendResetPasswordEmailAPI(username) {
+  return axios({
+    url: '/users/reset/send-email',
+    method: 'POST',
+    data: { ...username, realm: 'vre' },
+  });
+}
+
+/* send username through email
+ * @param {string} email
+ */
+function sendUsernameEmailAPI(email) {
+  return axios({
+    url: '/users/reset/send-username',
+    method: 'POST',
+    data: { ...email, realm: 'vre' },
+  });
+}
+
+/* Update password
+ * @param {object} data: should include token, password, password_confirm
+ */
+function resetForgottenPasswordAPI(data) {
+  return axios({
+    url: '/users/reset/password',
+    method: 'POST',
+    data: { ...data, realm: 'vre' },
+  });
+}
+
+/* Check reset token
+ * @param {string} token
+ */
+function checkTokenAPI(token) {
+  return axios({
+    url: `/users/reset/check-token?token=${token}&realm=vre`,
+    method: 'GET',
+  });
+}
+
+export {
+  login,
+  refreshTokenAPI,
+  resetPasswordAPI,
+  sendResetPasswordEmailAPI,
+  sendUsernameEmailAPI,
+  resetForgottenPasswordAPI,
+  checkTokenAPI,
+};

@@ -1,13 +1,11 @@
 import { message } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  combineChunks, preUpload,
-  uploadFileApi2
-} from '../../APIs';
+import { combineChunks, preUpload, uploadFileApi2 } from '../../APIs';
 import { cancelRequestReg } from '../../APIs/config';
 import { ErrorMessager, namespace } from '../../ErrorMessages';
 import {
-  setNewUploadIndicator, updateUploadItemCreator
+  setNewUploadIndicator,
+  updateUploadItemCreator,
 } from '../../Redux/actions';
 import { store } from '../../Redux/store';
 import { sleep } from '../common';
@@ -16,10 +14,7 @@ const USER_LOGOUT = 'user logged out';
 const [
   updateUploadItemDispatcher,
   setNewUploadIndicatorDispatcher,
-] = reduxActionWrapper([
-  updateUploadItemCreator,
-  setNewUploadIndicator,
-]);
+] = reduxActionWrapper([updateUploadItemCreator, setNewUploadIndicator]);
 const _ = require('lodash');
 
 const Promise = require('bluebird');
@@ -51,18 +46,24 @@ function slice(file, piece = 1024 * 1024 * 5) {
   return chunks;
 }
 
-
-
 /**
- * 
- * @param {*} data 
- * @param {*} resolve 
- * @param {*} reject 
+ *
+ * @param {*} data
+ * @param {*} resolve
+ * @param {*} reject
  */
 async function fileUpload(data, resolve, reject) {
   const MAX_LENGTH = 1024 * 1024 * 2;
   const uuid = uuidv4();
-  const { uploadKey, generateID, datasetId, uploader, file, projectCode } = data;
+  const {
+    uploadKey,
+    generateID,
+    datasetId,
+    uploader,
+    file,
+    projectCode,
+    tags,
+  } = data;
 
   setNewUploadIndicatorDispatcher();
 
@@ -137,7 +138,7 @@ async function fileUpload(data, resolve, reject) {
   bodyFormData.append('resumableIdentifier', file.uid + uuid);
   bodyFormData.append('resumableFilename', file.name);
   if (generateID) bodyFormData.append('generateID', generateID);
-  const sessionId = localStorage.getItem('sessionId')
+  const sessionId = localStorage.getItem('sessionId');
   preUpload(datasetId, bodyFormData, sessionId)
     .then((res) => {
       Promise.map(
@@ -154,8 +155,8 @@ async function fileUpload(data, resolve, reject) {
               });
             })
             .catch(async (err) => {
-              const {isLogin} = store.getState();
-              if(!isLogin) return Promise.reject( new Error(USER_LOGOUT))
+              const { isLogin } = store.getState();
+              if (!isLogin) return Promise.reject(new Error(USER_LOGOUT));
               await sleep(5000);
               retry(chunk, index, 3);
             });
@@ -172,7 +173,7 @@ async function fileUpload(data, resolve, reject) {
           formData.append('resumableTotalChunks', chunks.length);
           formData.append('resumableTotalSize', file.size);
           formData.append('uploader', uploader);
-
+          if (tags) formData.append('tags', tags);
           if (generateID) formData.append('generateID', generateID);
           const result = await combineChunks(datasetId, formData, sessionId);
           if (
@@ -186,7 +187,11 @@ async function fileUpload(data, resolve, reject) {
           if (!taskId) {
             await sleep(1000);
 
-            const checkedResult = await combineChunks(datasetId, formData, sessionId);
+            const checkedResult = await combineChunks(
+              datasetId,
+              formData,
+              sessionId,
+            );
             if (
               checkedResult.status === 200 &&
               checkedResult.data &&
@@ -210,7 +215,7 @@ async function fileUpload(data, resolve, reject) {
         })
         .catch((err) => {
           reject();
-          if(err.message === USER_LOGOUT) return;
+          if (err.message === USER_LOGOUT) return;
           if (err.response) {
             const errorMessager = new ErrorMessager(
               namespace.dataset.files.uploadFileApi,
@@ -229,25 +234,26 @@ async function fileUpload(data, resolve, reject) {
             progress: uploadedSize / totalSize,
             status: 'error',
             uploadedTime: Date.now(),
-            projectCode
+            projectCode,
           });
         });
     })
     .catch((err) => {
       reject();
-      const errorMessager = new ErrorMessager(namespace?.dataset?.files?.preUpload);
-      errorMessager.triggerMsg(err?.response?.status,null,{fileName:file.name})
+      const errorMessager = new ErrorMessager(
+        namespace?.dataset?.files?.preUpload,
+      );
+      errorMessager.triggerMsg(err?.response?.status, null, {
+        fileName: file.name,
+      });
       updateUploadItemDispatcher({
         uploadKey,
         progress: uploadedSize / totalSize,
         status: 'error',
         uploadedTime: Date.now(),
-        projectCode
+        projectCode,
       });
     });
 }
 
-
-
 export { fileUpload };
-

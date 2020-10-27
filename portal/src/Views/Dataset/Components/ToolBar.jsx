@@ -24,13 +24,17 @@ const ToolBar = ({
     _.some(containersPermission, (item) => {
       return (
         parseInt(item.containerId) === parseInt(params.datasetId) &&
-        item.permission === "admin"
+        item.permission === 'admin'
       );
     });
 
   return (
     <>
-      <Menu mode="inline" selectedKeys={[pathname.split('/')[3]]} className={style.menu}>
+      <Menu
+        mode="inline"
+        selectedKeys={[pathname.split('/')[3]]}
+        className={style.menu}
+      >
         <Menu.Item key="canvas">
           <Link to="canvas">
             <PieChartOutlined />
@@ -52,11 +56,10 @@ const ToolBar = ({
           <Menu.Item key="teams">
             <Link to="teams">
               <TeamOutlined />
-              <span>Teams</span>
+              <span>Members</span>
             </Link>
           </Menu.Item>
         )}
-
       </Menu>
       <GreenRoomUploader
         isShown={isShown}

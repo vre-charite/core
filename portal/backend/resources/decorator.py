@@ -4,33 +4,31 @@ from config import ConfigClass
 from functools import wraps
 import json
 from flask import request
+from models.user_type import EUserRole, map_role_front_to_sys, map_role_neo4j_to_sys
+from services.user_services.user_authorization import user_accessible
 
 
 def check_role(required_role, parent=None):
     def inner_function(function):
-        roles = {
-            "admin": 4,  # highest permission
-            "member": 3,
-            "uploader": 2,
-            "visitor": 1  # lowest permission
-        }
+        required_role_mapped = map_role_front_to_sys(required_role)
 
         @wraps(function)
         def wrapper(*args, **kwargs):
 
             user_id = current_identity["user_id"]
             role = current_identity["role"]
+            role_mapped = map_role_front_to_sys(role)
             #########################################
             # note here this admin is platform wise #
             # and require_role is project wise      #
             #########################################
             # check if user is platform admin
-            if(role == "admin"):
+            if(role_mapped == EUserRole.admin):
                 res = function(*args, **kwargs)
                 return res
 
             # required role is site admin
-            if required_role == "site-admin":
+            if required_role_mapped == EUserRole.site_admin:
                 return {'result': 'Permission Denied'}, 401
 
             if(parent):
@@ -55,10 +53,9 @@ def check_role(required_role, parent=None):
                 return {'result': 'Permission Denied'}, 401
 
             for item in relations:
-                r = item["r"]["type"]
-                if(roles[r] >= roles[required_role]):
-                    # if current role is not lower than requried role
-                    # pass authorization and continue function
+                role_neo4j_mapped = map_role_neo4j_to_sys(item["r"]["type"])
+                if(user_accessible(required_role_mapped, role_neo4j_mapped)):
+                    # if user accessible pass authorization and continue function
                     res = function(*args, **kwargs)
                     return res
 

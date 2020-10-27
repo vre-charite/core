@@ -16,24 +16,31 @@ import { withCurrentProject } from '../../../Utility';
 const { Content } = Layout;
 
 const defaultLayout = {
-  'initial': { lg: [] },
+  initial: { lg: [] },
   //Admin panel
-  'admin': {
+  admin: {
     lg: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
       { i: '2', x: 12, y: 0, w: 3, h: 4 },
       { i: '3', x: 15, y: 0, w: 9, h: 4 },
-      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+      { i: '1', x: 0, y: 7, w: 24, h: 8 },
     ],
     sm: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
       { i: '2', x: 0, y: 4, w: 3, h: 4 },
       { i: '3', x: 3, y: 4, w: 9, h: 4 },
-      { i: '1', x: 0, y: 8, w: 24, h: 7.5 },
+      { i: '1', x: 0, y: 8, w: 24, h: 8 },
     ],
   },
   //Uploader panel
-  'uploader': {
+  uploader: {
+    lg: [
+      { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '3', x: 15, y: 0, w: 12, h: 4 },
+      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+    ],
+  },
+  contributor: {
     lg: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
       { i: '3', x: 15, y: 0, w: 12, h: 4 },
@@ -41,7 +48,7 @@ const defaultLayout = {
     ],
   },
   //Member panel
-  'member': {
+  member: {
     lg: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
       { i: '3', x: 15, y: 0, w: 12, h: 4 },
@@ -74,7 +81,8 @@ class Canvas extends Component {
       uploader: false,
       currentRole: '',
       datasetName: '',
-      modalWidth: '95vw'
+      modalWidth: '95vw',
+      currentUser: null,
     };
   }
   findStudyId() {
@@ -83,6 +91,7 @@ class Canvas extends Component {
   }
   componentDidMount() {
     // this.init();
+    this.setState({ currentUser: this.props.username })
     this.fetchDatasetName();
     this.updatePermision();
   }
@@ -132,6 +141,12 @@ class Canvas extends Component {
         this.setState({
           roleIndex: 4,
           currentRole: 'uploader',
+          updateCount: this.state.updateCount + 1,
+        });
+      } else if (role === 'contributor') {
+        this.setState({
+          roleIndex: 6,
+          currentRole: 'contributor',
           updateCount: this.state.updateCount + 1,
         });
       } else {
@@ -359,8 +374,21 @@ class Canvas extends Component {
           {route.breadcrumbName}
         </span>
       ) : (
-        <Link to="/uploader">{route.breadcrumbName}</Link>
-      );
+          <Link to="/uploader">{route.breadcrumbName}</Link>
+        );
+    }
+
+    let currentRole = this.state.currentRole;
+
+    if (['uploader', 'contributor'].includes(currentRole))
+      currentRole = 'Project Contributor';
+
+    if (currentRole === 'admin') {
+      if (this.props.role === 'admin') {
+        currentRole = 'Portal Administrator';
+      } else {
+        currentRole = 'Project Administrator';
+      }
     }
 
     return (
@@ -368,100 +396,102 @@ class Canvas extends Component {
         {loading ? (
           <Spin />
         ) : (
-          <>
-            <Content className="content">
-              <Row style={{ paddingBottom: '10px' }}>
-                <Col span={1} />
-                <Col
-                  span={22}
-                  style={{
-                    paddingTop: '10px',
-                  }}
-                >
-                  <Row>
-                    <PageHeader
-                      ghost={false}
-                      style={{
-                        border: '1px solid rgb(235, 237, 240)',
-                        width: '-webkit-fill-available',
-                        marginTop: '10px',
-                      }}
-                      title={
-                        <span
-                          style={{
-                            maxWidth: '1000px',
-                            display: 'inline-block',
-                            verticalAlign: 'bottom',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          Project: {this.state.datasetName}
-                        </span>
-                      }
-                      subTitle={`Your role is ${this.state.currentRole}.`}
-                      extra={[
-                        <Button type="" onClick={this.handleResetLayout}>
-                          Reset Layout
-                        </Button>,
-                      ]}
-                      breadcrumb={{ routes, itemRender }}
-                    />
-                  </Row>
-                  <DragArea
-                    key={this.state.updateCount}
-                    onLayoutChange={this.onLayoutChange}
-                    layout={this.state.layout[this.state.currentRole]}
-                    handleSaveLayout={this.handleSaveLayout}
-                    handleResetLayout={this.handleResetLayout}
+            <>
+              <Content className="content">
+                <Row style={{ paddingBottom: '10px' }}>
+                  <Col span={1} />
+                  <Col
+                    span={22}
+                    style={{
+                      paddingTop: '10px',
+                    }}
                   >
-                    {cardTypes[this.state.currentRole] && cardTypes[this.state.currentRole].map((card) => {
-                      return (
-                        <div key={card.key}>
-                          <BasicCard
-                            title={card.title}
-                            expandable={card.expandable}
-                            exportable={card.exportable}
-                            handleExpand={this.handleExpand}
-                            defaultSize={card.defaultSize}
-                            expandComponent={card.expandComponent}
-                            content={getCard(
-                              card,
-                              data,
-                              this.actions,
-                              this.state,
-                            )}
-                            datasetId={this.state.currentDataset}
-                            currentUser={this.props.username}
-                            isAdmin={this.state.currentRole === 'admin'}
-                          />
-                        </div>
-                      );
-                    })}
-                  </DragArea>
-                </Col>
-                <Col span={1} />
-                <Modal
-                  title={modalTitle}
-                  visible={modalVisible}
-                  onCancel={this.handleExpandClose}
-                  style={{ minWidth: this.state.modalWidth }}
-                  footer={null}
-                >
-                  {content}
-                </Modal>
-              </Row>
-            </Content>
-          </>
-        )}
+                    <Row>
+                      <PageHeader
+                        ghost={false}
+                        style={{
+                          border: '1px solid rgb(235, 237, 240)',
+                          width: '100%',
+                          marginTop: '10px',
+                        }}
+                        title={
+                          <span
+                            style={{
+                              maxWidth: '1000px',
+                              display: 'inline-block',
+                              verticalAlign: 'bottom',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            Project: {this.state.datasetName}
+                          </span>
+                        }
+                        subTitle={`Your role is ${currentRole}.`}
+                        extra={[
+                          <Button type="" onClick={this.handleResetLayout}>
+                            Reset Layout
+                        </Button>,
+                        ]}
+                        breadcrumb={{ routes, itemRender }}
+                      />
+                    </Row>
+                    <DragArea
+                      key={this.state.updateCount}
+                      onLayoutChange={this.onLayoutChange}
+                      layout={this.state.layout[this.state.currentRole]}
+                      handleSaveLayout={this.handleSaveLayout}
+                      handleResetLayout={this.handleResetLayout}
+                    >
+                      {cardTypes[this.state.currentRole] &&
+                        cardTypes[this.state.currentRole].map((card) => {
+                          return (
+                            <div key={card.key}>
+                              <BasicCard
+                                title={card.title}
+                                expandable={card.expandable}
+                                exportable={card.exportable}
+                                handleExpand={this.handleExpand}
+                                defaultSize={card.defaultSize}
+                                expandComponent={card.expandComponent}
+                                content={getCard(
+                                  card,
+                                  data,
+                                  this.actions,
+                                  this.state,
+                                  this.handleExpand,
+                                )}
+                                datasetId={this.state.currentDataset}
+                                currentUser={this.props.username}
+                                isAdmin={this.state.currentRole === 'admin'}
+                              />
+                            </div>
+                          );
+                        })}
+                    </DragArea>
+                  </Col>
+                  <Col span={1} />
+                  <Modal
+                    title={modalTitle}
+                    visible={modalVisible}
+                    onCancel={this.handleExpandClose}
+                    style={{ minWidth: this.state.modalWidth }}
+                    footer={null}
+                  >
+                    {content}
+                  </Modal>
+                </Row>
+              </Content>
+            </>
+          )}
       </>
     );
   }
 }
 export default connect(
   (state) => {
-    const { datasetList, containersPermission, username } = state;
-    return { datasetList, containersPermission, username };
+    const { datasetList, containersPermission, username, role } = state;
+    return { datasetList, containersPermission, username, role };
   },
   { AddDatasetCreator },
 )(withCurrentProject(withRouter(Canvas)));

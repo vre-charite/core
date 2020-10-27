@@ -1,19 +1,40 @@
 import React, { useState, useRef } from 'react';
-import { Button, Space, Collapse, Progress, Spin, Popover } from 'antd';
+import {
+  Button,
+  Space,
+  Collapse,
+  Progress,
+  Spin,
+  Typography,
+  Select,
+  Tag,
+} from 'antd';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
-import { CloudDownloadOutlined, SyncOutlined } from '@ant-design/icons';
+import {
+  CloudDownloadOutlined,
+  EditOutlined,
+  SyncOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
 import moment from 'moment';
 
 import { ErrorMessager, namespace } from '../../../../../ErrorMessages';
 import { appendDownloadListCreator } from '../../../../../Redux/actions';
-import { downloadFilesAPI, getFilesByTypeAPI } from '../../../../../APIs';
+import {
+  downloadFilesAPI,
+  getFilesByTypeAPI,
+  listProjectTagsAPI,
+} from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
 import FilesTable from './FilesTable';
 import { getCurrentProject } from '../../../../../Utility';
 import { setSuccessNum } from '../../../../../Redux/actions';
 
 const { Panel } = Collapse;
+const { Option } = Select;
+const { Paragraph } = Typography;
+const _ = require('lodash');
 
 function RawTable(props) {
   const { path } = props;
@@ -33,8 +54,13 @@ function RawTable(props) {
   const [order] = useState('desc');
   const [pageLoading, setPageLoading] = useState(true);
   const [isShown, toggleModal] = useState(false);
+  const [isQuery, toggleQueryPanel] = useState(false);
   const [tableKey, setTableKey] = useState(0);
-
+  const [isEdit, toggleEditModal] = useState(false);
+  const [tagList, setTagList] = useState([]);
+  const [data, setData] = useState([]);
+  const [value, setValue] = useState([]);
+  const [fetching, setFetching] = useState(false);
   const mounted = useRef(false);
 
   const parsePath =
@@ -48,6 +74,7 @@ function RawTable(props) {
     column,
     text,
     order,
+    tags,
   ) {
     const filters = {};
 
@@ -56,6 +83,7 @@ function RawTable(props) {
         filters[item.key] = item.value;
       }
     }
+    filters['tags'] = tags;
 
     const currentDataset = getCurrentProject(containerId);
 
@@ -78,10 +106,15 @@ function RawTable(props) {
         const { entities, approximateCount } = res.data.result;
 
         setRawFiles(
-          entities.map((item) => ({
-            ...item.attributes,
-            key: item.attributes.name,
-          })),
+          entities.map((item) => {
+            return {
+              ...item.attributes,
+              tags: item.labels,
+              guid: item.guid,
+              guid: item.guid,
+              key: item.attributes.name,
+            };
+          }),
         );
         setTotalItem(approximateCount);
         setRefreshing(false);
@@ -107,19 +140,6 @@ function RawTable(props) {
       sorter: true,
       width: '35%',
       searchKey: 'name',
-      render: (text, record) => {
-        let filename = text;
-        if (text.length > 45) {
-          filename = filename.slice(0, 45);
-          filename = `${filename}...`;
-
-          const content = <span>{text}</span>;
-
-          return <Popover content={content}>{filename}</Popover>;
-        }
-
-        return filename;
-      },
     },
     {
       title: 'Created By',
@@ -131,13 +151,13 @@ function RawTable(props) {
     },
     props.currentDataset && props.currentDataset.code === 'generate'
       ? {
-          title: 'Generate ID',
-          dataIndex: 'generateId',
-          key: 'generateID',
-          sorter: true,
-          width: '15%',
-          searchKey: 'generateID',
-        }
+        title: 'Generate ID',
+        dataIndex: 'generateId',
+        key: 'generateID',
+        sorter: true,
+        width: '15%',
+        searchKey: 'generateID',
+      }
       : {},
     {
       title: 'Created',
@@ -160,10 +180,10 @@ function RawTable(props) {
         return text < 1024
           ? text.toString().concat(' B')
           : text < 1024 * 1024
-          ? (text / 1024).toFixed(2).toString().concat(' KB')
-          : text < 1024 * 1024 * 1024
-          ? (text / (1024 * 1024)).toFixed(2).toString().concat(' MB')
-          : (text / (1024 * 1024 * 1024)).toFixed(2).toString().concat(' GB');
+            ? (text / 1024).toFixed(2).toString().concat(' KB')
+            : text < 1024 * 1024 * 1024
+              ? (text / (1024 * 1024)).toFixed(2).toString().concat(' MB')
+              : (text / (1024 * 1024 * 1024)).toFixed(2).toString().concat(' GB');
       },
       sorter: true,
       width: '10%',
@@ -182,21 +202,19 @@ function RawTable(props) {
           <Space size="middle">
             <CloudDownloadOutlined
               onClick={(e) => {
-                console.log('RawTable -> record', record);
-
                 downloadFilesAPI(props.projectId, files)
-                  .then(res => {
+                  .then((res) => {
                     dispatch(setSuccessNum(props.successNum + 1));
                   })
                   .catch((err) => {
-                  if (err.response) {
-                    const errorMessager = new ErrorMessager(
-                      namespace.dataset.files.downloadFilesAPI,
-                    );
-                    errorMessager.triggerMsg(err.response.status);
-                  }
-                  return;
-                });
+                    if (err.response) {
+                      const errorMessager = new ErrorMessager(
+                        namespace.dataset.files.downloadFilesAPI,
+                      );
+                      errorMessager.triggerMsg(err.response.status);
+                    }
+                    return;
+                  });
               }}
             >
               Download
@@ -223,10 +241,15 @@ function RawTable(props) {
 
   useEffect(() => {
     if (mounted.current) {
-      console.log('changed');
       fetchData();
     } else mounted.current = true;
-  }, [props.successNum]);
+  }, [props.successNum, value]);
+
+  useEffect(() => {
+    listProjectTagsAPI(props.projectId, null, null, 10).then((res) => {
+      setTagList(res.data.result);
+    });
+  }, [props.projectId]);
 
   const onSelectChange = (selectedRowKeys) => {
     setSelectedRowKeys(selectedRowKeys);
@@ -277,12 +300,71 @@ function RawTable(props) {
       sortColumn,
       searchText,
       order,
+      value,
     );
 
     setTableKey(tableKey + 1);
   }
 
   const hasSelected = selectedRowKeys.length > 0;
+  let lastFetchId = 0;
+  const fetchTags = (value) => {
+    value = value.toLowerCase();
+    lastFetchId += 1;
+    const fetchId = lastFetchId;
+    setData([]);
+    setFetching(true);
+    listProjectTagsAPI(props.projectId, true, value, 3).then((res) => {
+      if (fetchId !== lastFetchId) {
+        // for fetch callback order
+        return;
+      }
+      const data = res.data.result.map((i) => ({
+        text: i.name,
+        value: i.name,
+      }));
+      setData(data);
+      setFetching(false);
+    });
+  };
+
+  const handleChange = (value) => {
+    if (value.length !== 0) {
+      value = value.map(i => i.toLowerCase())
+      let newTag = value.pop()
+      let index = value.indexOf(newTag)
+      if (index > -1) {
+        value.splice(index, 1)
+      } else {
+        value.push(newTag)
+      }
+    }
+    setValue(value);
+    setData([]);
+    setFetching(false);
+  };
+
+  function tagRender(props) {
+    const { label, closable, onClose } = props;
+
+    return (
+      <Tag
+        color="blue"
+        closable={closable}
+        onClose={onClose}
+        style={{ marginRight: 3 }}
+      >
+        {label}
+      </Tag>
+    );
+  }
+
+  const addTag = (e) => {
+    const newTag = e.target.innerText;
+    if (!_.includes(value, newTag)) {
+      setValue([...value, newTag]);
+    }
+  };
 
   return (
     <Spin spinning={pageLoading}>
@@ -297,6 +379,7 @@ function RawTable(props) {
         </Button>
 
         <Button
+          id='raw_table_upload'
           type="primary"
           onClick={() => toggleModal(true)}
           style={{ marginLeft: 20 }}
@@ -308,19 +391,79 @@ function RawTable(props) {
           {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
         </span>
         <Button
-          type="link"
+          shape="circle"
           onClick={() => {
             !reFreshing && fetchData();
           }}
           style={{
             float: 'right',
             fontSize: '20px',
-            top: '-5px',
+            marginLeft: '5px',
+            display: 'flex'
+          }}
+          icon={
+            <SyncOutlined
+              spin={reFreshing}
+              style={{ position: 'static', margin: '5px 0 0 7px' }}
+            />}
+        >
+
+        </Button>
+        {/* <Button
+          shape="round"
+          icon={<SearchOutlined />}
+          onClick={() => {
+            return toggleQueryPanel(!isQuery);
+          }}
+          style={{ float: 'right' }}
+        >
+          {isQuery ? 'Close Search Panel' : 'Search Tags'}
+        </Button> */}
+      </div>
+
+      {isQuery && (
+        <div
+          style={{
+            padding: '20px 0px 10px 0px',
+            backgroundColor: '#FAFAFA',
           }}
         >
-          <SyncOutlined spin={reFreshing} style={{ position: 'static' }} />
-        </Button>
-      </div>
+          <div style={{ width: '70%', margin: '0 auto' }}>
+            <Select
+              mode="tags"
+              tagRender={tagRender}
+              value={value}
+              placeholder={'Search tags...'}
+              notFoundContent={fetching ? <Spin size="small" /> : null}
+              onSearch={fetchTags}
+              onChange={handleChange}
+              style={{ width: '100%', padding: '20px 0px' }}
+              autoFocus
+            >
+              {data.map((d) => (
+                <Option key={d.value}>{d.text}</Option>
+              ))}
+            </Select>
+
+            <div>
+              <Paragraph
+                ellipsis={{ rows: 2, expandable: true, symbol: 'more' }}
+              >
+                <p style={{ fontWeight: 'bold', display: 'inline' }}>
+                  Popular:
+                </p>{' '}
+                {tagList.length > 0
+                  ? tagList.map((i) => (
+                    <Tag color="blue" onClick={addTag}>
+                      {i.name}
+                    </Tag>
+                  ))
+                  : 'No tag found in the project.'}
+              </Paragraph>
+            </div>
+          </div>
+        </div>
+      )}
       {Object.keys(groupDownloadStatus).length !== 0 && (
         <Collapse
           bordered={false}
@@ -349,6 +492,7 @@ function RawTable(props) {
         tableKey={tableKey}
         parsePath={parsePath}
         successNum={props.successNum}
+        tags={value}
       />
       <GreenRoomUploader
         isShown={isShown}

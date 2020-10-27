@@ -5,6 +5,7 @@ import { FileTextOutlined } from '@ant-design/icons';
 import styles from './index.module.scss';
 import { setUploadListCreator, setPanelActiveKey } from '../../Redux/actions';
 import { useIsMount } from '../../Utility';
+import { deleteUploadStatus } from '../../APIs';
 
 const { Panel } = Collapse;
 
@@ -80,8 +81,14 @@ function FilePanel() {
       }
     }
   };
-  const cleanUploadList = () => {
-    dispatch(setUploadListCreator([])); //TODO
+  const cleanUploadList = async () => {
+    const sessionId = localStorage.getItem('sessionId');
+
+    const res = await deleteUploadStatus(0, sessionId);
+
+    if (res.status === 200 && res.data.code === 200) {
+      dispatch(setUploadListCreator([]));
+    }
   };
   const isCleanButtonDisabled = () => {
     if (uploadList.length === 0) {
@@ -206,14 +213,14 @@ function FilePanel() {
         onChange={callback}
         className={styles.fileCollapse + ' ' + (visibility && styles.active)}
       >
-        <Panel header={uploadHeader} key="upload">
+        <Panel id={`file_panel_upload`} header={uploadHeader} key="upload">
           <List
             size="small"
             dataSource={uploadList}
-            className={uploadList.length > 0 ? styles.download_list : ''}
+            className={styles.download_list}
             renderItem={(item) => (
               <>
-                <List.Item style={{ overflowWrap: 'anywhere' }}>
+                <List.Item id={`upload_item_${item.fileName}`} style={{ overflowWrap: 'anywhere' }}>
                   <List.Item.Meta
                     title={
                       <>
@@ -251,10 +258,11 @@ function FilePanel() {
             Clear Upload history
           </Button>
         </Panel>
-        <Panel header={downloadHeader} key="download">
+        <Panel id={`file_panel_download`} header={downloadHeader} key="download">
           <List
             size="small"
             dataSource={downloadList}
+            className={styles.download_list}
             renderItem={(item) => (
               <List.Item>
                 <List.Item.Meta

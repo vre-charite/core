@@ -56,7 +56,7 @@ const [
   removeDownloadListDispatcher,
   setDonwloadClearIdDispatcher,
   setUploadListDispatcher,
-  setSuccessNumDispatcher
+  setSuccessNumDispatcher,
 ] = reduxActionWrapper([
   AddDatasetCreator,
   setContainersPermissionCreator,
@@ -257,7 +257,7 @@ function App() {
     if (arr.length > 0) {
       window.onbeforeunload = confirmation;
     } else {
-      window.onbeforeunload = () => {};
+      window.onbeforeunload = () => { };
     }
   };
 
@@ -309,10 +309,10 @@ function App() {
                 null,
                 datasetList,
               ) ? (
-                <item.component />
-              ) : (
-                <Redirect to="/uploader" />
-              );
+                  <item.component />
+                ) : (
+                  <Redirect to="/uploader" />
+                );
             }}
           ></Route>
         ))}
@@ -323,4 +323,4 @@ function App() {
 }
 
 export default withRouter(App);
-// cicd
+//cicd

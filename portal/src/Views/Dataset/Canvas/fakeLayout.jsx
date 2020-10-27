@@ -50,7 +50,15 @@ const cardsAttr = {
     info,
     {
       ...userStats,
-      title: 'Uploader Statistics',
+      title: 'Contributor Statistics',
+    },
+    files
+  ],
+  'contributor': [
+    info,
+    {
+      ...userStats,
+      title: 'Contributor Statistics',
     },
     files
   ],
@@ -58,8 +66,7 @@ const cardsAttr = {
     info,
     {
       ...userStats,
-      type: 'uploaderStats',
-      title: 'Uploader Statistics',
+      title: 'Contributor Statistics',
     },
     files,
   ],

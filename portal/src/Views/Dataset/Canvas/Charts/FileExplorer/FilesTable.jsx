@@ -1,6 +1,8 @@
-import { Table, Input, Button, Space } from 'antd';
+import { Table, Input, Button, Space, Tag, Popover, Typography } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import React from 'react';
+import FileTags from './FileTags';
+const { Paragraph } = Typography;
 
 class FilesTable extends React.Component {
   constructor(props) {
@@ -13,6 +15,7 @@ class FilesTable extends React.Component {
       order: 'desc',
       sortColumn: 'createTime',
       selectedRowKeys: [],
+      tags: []
     };
   }
 
@@ -25,6 +28,9 @@ class FilesTable extends React.Component {
         sortColumn: 'createTime',
         searchedColumn: '',
         searchText: '',
+        inputVisible: false,
+        inputValue: '',
+        tags: this.props.tags
       });
     }
   }
@@ -36,42 +42,42 @@ class FilesTable extends React.Component {
       confirm,
       clearFilters,
     }) => (
-      <div style={{ padding: 8 }}>
-        <Input
-          ref={(node) => {
-            this.searchInput = node;
-            // if(!this.clearFilters) this.clearFilters = clearFilters;
-          }}
-          placeholder={`Search ${dataIndex}`}
-          value={selectedKeys[0]}
-          onChange={(e) =>
-            setSelectedKeys(e.target.value ? [e.target.value] : [])
-          }
-          onPressEnter={() =>
-            this.handleSearch(selectedKeys, confirm, dataIndex)
-          }
-          style={{ width: 188, marginBottom: 8, display: 'block' }}
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
-            icon={<SearchOutlined />}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
+        <div style={{ padding: 8 }}>
+          <Input
+            ref={(node) => {
+              this.searchInput = node;
+              // if(!this.clearFilters) this.clearFilters = clearFilters;
+            }}
+            placeholder={`Search ${dataIndex}`}
+            value={selectedKeys[0]}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            onPressEnter={() =>
+              this.handleSearch(selectedKeys, confirm, dataIndex)
+            }
+            style={{ width: 188, marginBottom: 8, display: 'block' }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => this.handleSearch(selectedKeys, confirm, dataIndex)}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
           </Button>
-          <Button
-            onClick={() => this.handleReset(clearFilters)}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Reset
+            <Button
+              onClick={() => this.handleReset(clearFilters)}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
           </Button>
-        </Space>
-      </div>
-    ),
+          </Space>
+        </div>
+      ),
     filterIcon: (filtered) => (
       <SearchOutlined
         style={{ color: filtered ? '#1890ff' : undefined, top: '60%' }}
@@ -84,7 +90,33 @@ class FilesTable extends React.Component {
         }, 100);
       }
     },
-    render: (text) => text,
+    render: (text, record) => {
+      if (dataIndex === 'name') {
+        let filename = text;
+        if (text.length > 45) {
+          filename = filename.slice(0, 45);
+          filename = `${filename}...`;
+
+          const content = <span>{text}</span>;
+
+          return (
+            <>
+              <Popover content={content}>{filename}</Popover>
+              {/* {record.tags && <FileTags tags={record.tags} pid={this.props.projectId} guid={record.guid} />} */}
+            </>
+          );
+        }
+
+        return (
+          <>
+            <div>{filename}</div>
+            {/* {record.tags && <FileTags tags={record.tags} pid={this.props.projectId} guid={record.guid} />}           */}
+          </>
+        );
+      } else {
+        return text;
+      }
+    },
   });
 
   handleSearch = (selectedKeys, confirm, dataIndex) => {
@@ -156,8 +188,8 @@ class FilesTable extends React.Component {
       param3 ? param3.columnKey : 'createTime',
       searchText,
       order,
+      this.props.tags
     );
-
   };
 
   render() {
@@ -177,6 +209,7 @@ class FilesTable extends React.Component {
       });
     return (
       <Table
+        id={`files_table`}
         columns={columns}
         dataSource={this.props.dataSource}
         onChange={this.onChange}

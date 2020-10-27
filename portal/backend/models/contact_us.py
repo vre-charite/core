@@ -3,7 +3,7 @@ class ContactUsForm:
         if event:
             self._attribute_map = event
         else:
-            _attribute_map = {
+            self._attribute_map = {
                 'email': '',  # by default success
                 'category': '',  # empty when success
                 'description': '',

@@ -9,6 +9,10 @@ const login = {
   auth: 'login.auth',
   refresh: 'login.refresh',
   parseInviteHashAPI: 'login.parseInviteHashAPI',
+  forgotPassword: 'login.forgotPassword',
+  resetForgottenPassword: 'login.resetForgottenPassword',
+  checkToken: 'login.checkToken',
+  forgotUsername: 'login.forgotUsername',
 };
 const landing = {
   createProject: 'landing.createProject',
@@ -24,7 +28,7 @@ const dataset = {
     getFilesByTypeAPI: 'dataset.files.getFilesByTypeAPI',
     downloadFilesAPI: 'dataset.files.downloadFilesAPI',
     processingFile: 'dataset.files.processingFile',
-    preUpload:'dataset.files.preUpload'
+    preUpload: 'dataset.files.preUpload',
   },
 };
 

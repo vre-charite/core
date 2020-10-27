@@ -9,7 +9,7 @@ import { broadcastManager } from '../../Service/broadcastManager';
 import { namespace as ServiceNamespace } from '../../Service/namespace';
 
 /**
- * 
+ *
  * @param {{visible:boolean,setRefreshModal:(isShouldRefreshModal:boolean)=>void}} param0
  */
 function CreateDatasetModal({ visible, setRefreshModal }) {
@@ -66,6 +66,7 @@ function CreateDatasetModal({ visible, setRefreshModal }) {
 
   return (
     <Modal
+      id={`refresh_modal`}
       title="Warning"
       visible={visible}
       maskClosable={false}
@@ -75,13 +76,19 @@ function CreateDatasetModal({ visible, setRefreshModal }) {
         logout();
       }}
       footer={[
-        <Button key="back" onClick={logout}>
+        <Button id={'refresh_modal_logout'} key="back" onClick={logout}>
           Logout
         </Button>,
-        <Button key="submit" type="primary" onClick={() => refreshToken()}>
+        <Button
+          id="refresh_modal_refresh"
+          key="submit"
+          type="primary"
+          onClick={() => refreshToken()}
+        >
           Refresh
         </Button>,
       ]}
+      style={{ zIndex: 9999 }}
     >
       {`Your session will expire in ${secondsToGo}s. Please click “Refresh” if you wish to remain logged in.`}
     </Modal>

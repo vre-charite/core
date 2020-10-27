@@ -31,7 +31,6 @@ function errorHandler(error) {
         config: { baseURL, url },
       },
     } = error;
-    console.log(status);
     switch (status) {
       case 401: {
         console.log('???', window.location.pathname);
@@ -41,9 +40,9 @@ function errorHandler(error) {
           window.location.pathname !== '/vre' &&
           window.location.pathname !== '/vre/'
         ) {
-          message.error(
-            'The session is expired or token is invalid. Please log in again',
-          );
+          // message.error(
+          //   'The session is expired or token is invalid. Please log in again',
+          // );
           console.log('logout in config.js since 401');
         }
 

@@ -72,7 +72,8 @@ const UploadFileToFolder = ({
   };
 
   const props = {
-    beforeUpload() {
+    beforeUpload(file) {
+      console.log(file)
       return false;
     },
   };

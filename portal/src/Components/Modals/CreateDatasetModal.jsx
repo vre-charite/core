@@ -41,6 +41,7 @@ function CreateDatasetModal({
     form
       .validateFields()
       .then((values) => {
+        toggleSubmitting(true);
         const metadatas = {};
         values.metadatas &&
           values.metadatas.forEach(({ key, value }) => {
@@ -209,10 +210,10 @@ function CreateDatasetModal({
                 </Checkbox>
               </Col> */}
               <Col span={8}>
-                <Checkbox value="uploader">
-                  Uploader&nbsp;
+                <Checkbox value="contributor">
+                  Contributor&nbsp;
                   <Tooltip
-                    title="Project uploader is able to upload data into Green Room, 
+                    title="Project Contributor is able to upload data into Green Room, 
                   view/download data only being uploaded by self in Green Room"
                   >
                     <QuestionCircleOutlined />

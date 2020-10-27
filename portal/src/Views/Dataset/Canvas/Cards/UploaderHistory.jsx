@@ -1,16 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Button,
-  Space,
-  Collapse,
-  Progress,
-  Spin,
-  Popover,
-} from 'antd';
-import {
-  CloudDownloadOutlined,
-  SyncOutlined,
-} from '@ant-design/icons';
+import { Button, Space, Collapse, Progress, Spin, Popover } from 'antd';
+import { CloudDownloadOutlined, SyncOutlined } from '@ant-design/icons';
 import { getFilesByTypeAPI, downloadFilesAPI } from '../../../../APIs';
 import GreenRoomUploader from '../../Components/GreenRoomUploader';
 import { appendDownloadListCreator } from '../../../../Redux/actions';
@@ -19,7 +9,7 @@ import FilesTable from '../Charts/FileExplorer/FilesTable';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import _ from 'lodash';
-import {getCurrentProject} from '../../../../Utility'
+import { getCurrentProject } from '../../../../Utility';
 import moment from 'moment';
 
 const { Panel } = Collapse;
@@ -48,7 +38,6 @@ function UploaderHistory(props) {
     },
   } = props;
 
-
   function getRawFilesAndUpdateUI(
     containerId,
     pageSize,
@@ -69,7 +58,7 @@ function UploaderHistory(props) {
 
     let role = false;
 
-    if (currentDataset ) role = currentDataset.permission;
+    if (currentDataset) role = currentDataset.permission;
 
     return getFilesByTypeAPI(
       containerId,
@@ -88,6 +77,7 @@ function UploaderHistory(props) {
         setRawFiles(
           entities.map((item) => ({
             ...item.attributes,
+            tags: item.labels,
             key: item.attributes.name,
           })),
         );

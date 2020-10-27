@@ -133,7 +133,7 @@ const ResetPasswordModal = (props) => {
           label={
             <span>
               New Password&nbsp;
-              <Tooltip title="The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(@#$!%*?&^).">
+              <Tooltip title="The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).">
                 <QuestionCircleOutlined />
               </Tooltip>
             </span>
@@ -147,10 +147,10 @@ const ResetPasswordModal = (props) => {
             },
             {
               pattern: new RegExp(
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&^])[A-Za-z\d@#$!%*?&^]{11,30}$/g,
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_!%&/()=?*+#,.;])[A-Za-z\d-_!%&/()=?*+#,.;]{11,30}$/g,
               ),
               message:
-                'The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(@#$!%*?&^).',
+                'The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).',
             },
             ({ getFieldValue }) => ({
               validator(rule, value) {

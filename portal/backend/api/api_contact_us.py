@@ -3,7 +3,6 @@ from flask_jwt import jwt_required, current_identity
 from resources.decorator import check_role
 from config import ConfigClass
 from models.api_response import APIResponse, EAPIResponseCode
-from models.user_type import EUserType
 from models.api_meta_class import MetaAPI
 from models.contact_us import ContactUsForm
 from resources.swagger_modules import contact_us_model, contact_us_return_example

@@ -16,6 +16,10 @@ import {
   combineChunks,
   projectFileSummary,
   checkUploadStatus,
+  listProjectTagsAPI,
+  deleteUploadStatus,
+  addProjectTagsAPI,
+  deleteProjectTagsAPI
 } from './file';
 import {
   getDatasetsAPI,
@@ -47,7 +51,14 @@ import {
   contactUsApi,
   getAdminsOnDatasetAPI,
 } from './user';
-import { refreshTokenAPI, resetPasswordAPI } from './auth';
+import {
+  refreshTokenAPI,
+  resetPasswordAPI,
+  sendResetPasswordEmailAPI,
+  sendUsernameEmailAPI,
+  resetForgottenPasswordAPI,
+  checkTokenAPI,
+} from './auth';
 
 export {
   refreshTokenAPI,
@@ -85,6 +96,10 @@ export {
   checkDownloadStatusAPI,
   emailUploadedFileListAPI,
   resetPasswordAPI,
+  sendResetPasswordEmailAPI,
+  sendUsernameEmailAPI,
+  resetForgottenPasswordAPI,
+  checkTokenAPI,
   projectFileCountTotal,
   projectFileCountToday,
   updateDatasetInfoAPI,
@@ -94,5 +109,9 @@ export {
   contactUsApi,
   getAdminsOnDatasetAPI,
   projectFileSummary,
-  checkUploadStatus
+  checkUploadStatus,
+  listProjectTagsAPI,
+  deleteUploadStatus,
+  addProjectTagsAPI,
+  deleteProjectTagsAPI
 };

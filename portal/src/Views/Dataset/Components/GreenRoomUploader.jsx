@@ -1,16 +1,9 @@
 import React, { useState, useContext } from 'react';
-import {
-  Modal,
-  Button,
-  Form,
-  Input,
-  Select,
-  Upload,
-} from 'antd';
+import { Modal, Button, Form, Input, Select, Upload, Tag, Spin } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
-import { uploadStarter,useCurrentProject } from '../../../Utility';
+import { uploadStarter, useCurrentProject } from '../../../Utility';
 import { withRouter } from 'react-router-dom';
-import { connect ,useSelector} from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import {
   appendUploadListCreator,
   updateUploadItemCreator,
@@ -18,6 +11,8 @@ import {
 } from '../../../Redux/actions';
 import _ from 'lodash';
 import { UploadQueueContext } from '../../../Context';
+import { listProjectTagsAPI } from '../../../APIs';
+import { validateTag } from '../../../Utility';
 const { Option } = Select;
 
 const GreenRoomUploader = ({
@@ -29,13 +24,19 @@ const GreenRoomUploader = ({
 }) => {
   const [form] = Form.useForm();
   const [isLoading, setIsloading] = useState(false);
+  const [tags, setTags] = useState([]);
+  const [data, setData] = useState([]);
+  const [value, setValue] = useState([]);
+  const [fetching, setFetching] = useState(false);
+
   const q = useContext(UploadQueueContext);
   const [currentDataset] = useCurrentProject();
-  const {username} = useSelector(state=>state);
+  const { username } = useSelector((state) => state);
   const handleOk = () => {
     form
       .validateFields()
       .then((values) => {
+        console.log('handleOk -> values', values);
         setIsloading(true);
         const data = Object.assign({}, values, {
           name: values.file.file.name,
@@ -61,6 +62,60 @@ const GreenRoomUploader = ({
     },
   };
 
+  let lastFetchId = 0;
+  const fetchTags = (value) => {
+    value = value.toLowerCase();
+    lastFetchId += 1;
+    const fetchId = lastFetchId;
+    setData([]);
+    setFetching(true);
+    listProjectTagsAPI(datasetId, true, value, 3).then((res) => {
+      if (fetchId !== lastFetchId) {
+        // for fetch callback order
+        return;
+      }
+      const data = res.data.result.map((i) => ({
+        text: i.name,
+        value: i.name,
+      }));
+      setData(data);
+      setFetching(false);
+    });
+  };
+
+  const handleChange = (value) => {
+    if (value.length !== 0) {
+      value = value.map(i => i.toLowerCase())
+      let newTag = value.pop()
+      let index = value.indexOf(newTag)
+      if (index > -1) {
+        value.splice(index, 1)
+      } else {
+        value.push(newTag)
+      }
+    }
+    setValue(value);
+    setData([]);
+    setFetching(false);
+    form.setFieldsValue({ tags: value });
+  };
+
+  function tagRender(props) {
+    const { label, closable, onClose } = props;
+
+
+    return (
+      <Tag
+        color="blue"
+        closable={closable}
+        onClose={onClose}
+        style={{ marginRight: 3 }}
+      >
+        {label.toLowerCase()}
+      </Tag>
+    );
+  }
+
   return (
     <div>
       <Modal
@@ -73,6 +128,7 @@ const GreenRoomUploader = ({
             Close
           </Button>,
           <Button
+            id='file_upload_submit_btn'
             key="submit"
             type="primary"
             loading={isLoading}
@@ -190,6 +246,47 @@ const GreenRoomUploader = ({
           ) : null}
 
           <Form.Item
+            name="tags"
+            label="File Tags"
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(rule, value) {
+                  if (!value) {
+                    return Promise.resolve();
+                  }
+                  if (value.length > 10) {
+                    return Promise.reject(
+                      'Up to 10 tags per file！',
+                    );
+                  }
+                  let i;
+                  for (i of value) {
+                    if (!validateTag(i)) {
+                      return Promise.reject(
+                        'Tag should be 1-32 lowercase alphanumeric characters.',
+                      );
+                    }
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+          >
+            <Select
+              mode="tags"
+              tagRender={tagRender}
+              value={value}
+              notFoundContent={fetching ? <Spin size="small" /> : null}
+              onSearch={fetchTags}
+              onChange={handleChange}
+            >
+              {data.map((d) => (
+                <Option key={d.value}>{d.text.toLowerCase()}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
             rules={[
               {
                 required: true,
@@ -215,7 +312,7 @@ const GreenRoomUploader = ({
             label="Upload file"
           >
             <Upload multiple {...props}>
-              <Button>
+              <Button id='form_in_modal_select_file'>
                 <UploadOutlined />
                 Select Files
               </Button>

@@ -17,7 +17,7 @@ import { UpdateDatasetCreator } from '../../../../Redux/actions';
 import { useCurrentProject, objectKeysToSnakeCase } from '../../../../Utility';
 import { objectKeysToCamelCase } from '../../../../Utility';
 const { TextArea } = Input;
-const { Paragraph } = Typography;
+const { Paragraph, Title } = Typography;
 
 function Description(props) {
   const [editView, setEditView] = useState(false);
@@ -108,7 +108,41 @@ function Description(props) {
     if (datasetInfo) {
       return (
         <>
-          <Descriptions layout="vertical" bordered size="small">
+          <>
+            {!currentContainer ||
+            currentContainer['permission'] !== 'admin' ? null : editView ? (
+              <div style={{ marginTop: '12px', float: 'right' }}>
+                <Button type="link" onClick={(e) => setEditView(false)}>
+                  Cancel
+                </Button>
+                <Button type="primary" onClick={saveDatasetInfo}>
+                  Save
+                </Button>
+              </div>
+            ) : (
+              <Button
+                style={{ marginTop: '14px', float: 'right' }}
+                onClick={(e) => setEditView(true)}
+              >
+                Edit
+              </Button>
+            )}
+            <small>
+              Created at {datasetInfo.timeCreated.split('T')[0]} | Project code:{' '}
+              {datasetInfo.code}
+            </small>
+            <Title
+              level={4}
+              ellipsis={{
+                rows: 1,
+              }}
+              style={{ paddingRight: '10px' }}
+            >
+              {datasetInfo.name}
+            </Title>
+          </>
+
+          <Descriptions bordered size="small" column={1}>
             <Descriptions.Item label="Project Name">
               {editView ? (
                 <Input
@@ -118,12 +152,6 @@ function Description(props) {
               ) : (
                 <>{datasetInfo.name}</>
               )}
-            </Descriptions.Item>
-            <Descriptions.Item label="Project Code">
-              <>{datasetInfo.code}</>
-            </Descriptions.Item>
-            <Descriptions.Item label="Created">
-              <>{datasetInfo.timeCreated.split('T')[0]}</>
             </Descriptions.Item>
             <Descriptions.Item label="Visibility" span={1}>
               {editView ? (
@@ -164,6 +192,7 @@ function Description(props) {
                 </>
               )}
             </Descriptions.Item>
+       
             <Descriptions.Item label="Project Administrators" span={1}>
               <Paragraph
                 style={{
@@ -208,25 +237,6 @@ function Description(props) {
               )}
             </Descriptions.Item>
           </Descriptions>
-
-          {!currentContainer ||
-          currentContainer['permission'] !== 'admin' ? null : editView ? (
-            <div style={{ marginTop: '20px', float: 'right' }}>
-              <Button type="link" onClick={(e) => setEditView(false)}>
-                Cancel
-              </Button>
-              <Button type="primary" onClick={saveDatasetInfo}>
-                Save
-              </Button>
-            </div>
-          ) : (
-            <Button
-              style={{ marginTop: '20px', float: 'right' }}
-              onClick={(e) => setEditView(true)}
-            >
-              Edit
-            </Button>
-          )}
         </>
       );
     }

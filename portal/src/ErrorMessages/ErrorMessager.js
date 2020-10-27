@@ -1,6 +1,7 @@
 import namespace from './namespace';
 import { message } from 'antd';
 import _ from 'lodash';
+import { store } from '../Redux/store'
 /**
  * Create a error message object to trigger the error message
  * @param {string} name the namespace of the API
@@ -34,13 +35,88 @@ export default function ErrorMessager(name) {
       400: (err, params) => {
         message.error('Your old password is not correct');
       },
+      403: (err, params) => {
+        message.error('This reset password is not permitted.');
+      },
+      406: (err, params) => {
+        message.error(
+          'The password format is not valid. The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).',
+        );
+      },
       500: (err, params) => {
         message.error(
           'Internal Error occurs when trying to reset password, please try again later',
         );
       },
       default: (err, params) => {
-        message.error('something wrong when reset password');
+        message.error('Something wrong when resetting your password');
+      },
+    },
+    [namespace.login.forgotPassword]: {
+      403: (err, params) => {
+        message.error('This reset password link is invalid or expired.');
+      },
+      406: (err, params) => {
+        message.error(
+          'The password format is not valid. The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).',
+        );
+      },
+      404: (err, params) => {
+        message.error('This username does not exist.');
+      },
+      500: (err, params) => {
+        message.error(
+          'Internal Error occurs when trying to reset password, please try again later',
+        );
+      },
+      default: (err, params) => {
+        message.error('Something wrong when sending reset password email.');
+      },
+    },
+    [namespace.login.forgotUsername]: {
+      404: (err, params) => {
+        message.error('This email address does not exist.');
+      },
+      500: (err, params) => {
+        message.error(
+          'Internal Error occurs when trying to get username, please try again later',
+        );
+      },
+      default: (err, params) => {
+        message.error('something wrong when send your username through email');
+      },
+    },
+    [namespace.login.checkToken]: {
+      400: (err, params) => {
+        message.error('This reset password link is not valid.');
+      },
+      500: (err, params) => {
+        message.error(
+          'Internal Error occurs when trying to reset password, please try again later',
+        );
+      },
+      default: (err, params) => {
+        message.error(
+          'something wrong when verifiying your identity with the link.',
+        );
+      },
+    },
+    [namespace.login.resetForgottenPassword]: {
+      403: (err, params) => {
+        message.error('This reset password link is invalid or expired.');
+      },
+      400: (err, params) => {
+        message.error(
+          'The password format is not valid, please check the password requirement.',
+        );
+      },
+      500: (err, params) => {
+        message.error(
+          'Internal Error occurs when trying to reset password, please try again later',
+        );
+      },
+      default: (err, params) => {
+        message.error('something wrong when resetting your password');
       },
     },
     [namespace.login.refresh]: {
@@ -57,6 +133,9 @@ export default function ErrorMessager(name) {
       },
     },
     [namespace.login.parseInviteHashAPI]: {
+      401: (err, params) => {
+        message.error('Sorry, your invitation is expired.');
+      },
       404: (err, params) => {
         message.error('Sorry, your invitation is not found.');
       },
@@ -212,6 +291,11 @@ export default function ErrorMessager(name) {
           'Invalid input. Please ensure all information has been entered correctly and try again.',
         );
       },
+      401: (err, params) => {
+        message.error(
+          'Invite link is expired',
+        );
+      },
       500: (err, params) => {
         message.error(
           'Internal Error occurs when trying to register, please try again later',
@@ -365,7 +449,7 @@ export default function ErrorMessager(name) {
   };
 
   this.messageObj = _namespaces[name];
-
+  this.namespace = name;
   if (this.messageObj === undefined) {
     throw new Error(`the namespace doesn't exist`);
   }
@@ -390,4 +474,8 @@ ErrorMessager.prototype.triggerMsg = function (errorCode, err, params) {
       ? this.messageObj[errorCode]
       : this.messageObj['default'];
   _.isFunction(messageFunc) && messageFunc(err, params);
+  if(this.namespace === namespace?.dataset?.files?.uploadFileApi && parseInt(errorCode) === 403 ){
+    return;
+  }
+  console.log('error message logging',store.getState());
 };

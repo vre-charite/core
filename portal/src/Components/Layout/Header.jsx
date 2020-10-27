@@ -17,6 +17,7 @@ import { connect } from 'react-redux';
 import _ from 'lodash';
 import styles from './index.module.scss';
 import ResetPasswordModal from '../Modals/ResetPasswordModal';
+import SupportDrawer from '../Tools/SupportDrawer';
 import { UploadQueueContext } from '../../Context';
 import { userAuthManager } from '../../Service/userAuthManager';
 import { broadcastManager } from '../../Service/broadcastManager';
@@ -36,6 +37,7 @@ class AppHeader extends Component {
       modalVisible: false,
       loading: false,
       showNotifications: [],
+      drawer: false,
     };
   }
   logout = async () => {
@@ -47,7 +49,13 @@ class AppHeader extends Component {
     modal = confirm({
       title: 'Are you sure you want to log out?',
       icon: <ExclamationCircleOutlined />,
-      content: `By clicking on “OK“, you will be logged out on all the opened VRE tabs. If you're uploading/downloading, all the progress will be lost.`,
+      content: (
+        <>
+          By clicking on "OK", you will be logged out on all the opened VRE
+          tabs. <br />
+          If you're uploading/downloading, all the progress will be lost.
+        </>
+      ),
       onOk() {
         doLogout();
       },
@@ -62,7 +70,7 @@ class AppHeader extends Component {
         ServiceNamespace.broadCast.CLICK_HEADER_LOGOUT,
       );
       userAuthManager.logout(ServiceNamespace.userAuthLogout.LOGOUT_HEADER);
-      localStorage.removeItem('sessionId')
+      localStorage.removeItem('sessionId');
     };
   };
 
@@ -116,6 +124,16 @@ class AppHeader extends Component {
       // this.setState({ showNotifications: ['notifications'] });
     }
   }
+  showDrawer = () => {
+    this.setState({
+      drawer: true,
+    });
+  };
+  onClose = () => {
+    this.setState({
+      drawer: false,
+    });
+  };
 
   render() {
     const uploadListContent = (
@@ -184,7 +202,7 @@ class AppHeader extends Component {
             key="user"
             style={{ float: 'right', paddingRight: '25px' }}
             title={
-              <span>
+              <span id='header_username'>
                 <UserOutlined />
                 {username || 'Error'}
               </span>
@@ -201,7 +219,7 @@ class AppHeader extends Component {
               </Button>
             </Menu.Item>
             <Menu.Item key="logout">
-              <Button type="link" onClick={this.logout}>
+              <Button id='header_logout' type="link" onClick={this.logout}>
                 <span style={{ color: 'red' }}>Logout</span>
               </Button>
             </Menu.Item>
@@ -223,8 +241,12 @@ class AppHeader extends Component {
           > */}
           {/* {uploadListContent} */}
           {/* </SubMenu> */}
-          <Menu.Item key="support" style={{ float: 'right' }}>
-            <Link to="/support">Support</Link>
+          <Menu.Item
+            key="support"
+            style={{ float: 'right' }}
+            onClick={this.showDrawer}
+          >
+            Support
             {/* <a href="/files/test.pdf" download target="_self"></a> */}
           </Menu.Item>
         </Menu>
@@ -233,6 +255,7 @@ class AppHeader extends Component {
           username={username || 'Error'}
           handleCancel={this.handleCancel}
         />
+        <SupportDrawer onClose={this.onClose} visible={this.state.drawer} />
       </Header>
     );
   }

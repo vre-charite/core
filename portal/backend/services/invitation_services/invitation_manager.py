@@ -9,7 +9,7 @@ from resources.utils import helper_now_utc
 from config import ConfigClass
 from hashlib import md5
 import json
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 class SrvInvitationManager(metaclass=MetaService):
 
@@ -26,13 +26,16 @@ class SrvInvitationManager(metaclass=MetaService):
         self._logger.info('start validating invitation code...........')
         invitation_detail = self.read_invitation(invitation_code)
         if not invitation_detail:
-            return (False, None)
+            self._logger.info('[Error] invalid invitation')
+            return (False, None, 404)
         expiry_dt = invitation_detail[2]
         now_dt = helper_now_utc().replace(tzinfo=None)
         diff_dt_days = (expiry_dt - now_dt).days
-        is_valid = True if invitation_detail and diff_dt_days > 0 else False
-        self._logger.info('[Info] valid invitation' if is_valid else '[Error] invalid invitation')
-        return (is_valid, invitation_detail)
+        if not diff_dt_days > 0:
+            self._logger.info('[Error] expired invitation')
+            return (False, invitation_detail, 401)
+        self._logger.info('[Info] valid invitation')
+        return (True, invitation_detail, 200)
 
     def read_invitation(self, invitation_code):
         '''
@@ -82,5 +85,11 @@ class SrvInvitationManager(metaclass=MetaService):
             msg_type='html')
         return 'Saved'
 
-    def deactivate_invitation(self):
-        pass
+    def deactivate_invitation(self, invitation_code):
+        query = f"UPDATE {self.table_full_name} set expiry_timestamp=%(expiry)s where invitation_code=%(invitation_code)s"
+        sql_params = {
+            "expiry": datetime.now(),
+            "invitation_code": invitation_code,
+        }
+        self.rds_singleton.simple_query(query, sql_params, iffetch=False)
+        self._logger.info(str(invitation_code) + ' Invitation deactivated')

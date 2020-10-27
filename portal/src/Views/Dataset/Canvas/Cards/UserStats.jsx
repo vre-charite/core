@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {  Statistic,  Timeline, Tabs } from 'antd';
+import {  Statistic,  Timeline, Tabs, Button } from 'antd';
 import { CloudUploadOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import { projectFileCountToday } from '../../../../APIs';
 
@@ -30,6 +30,9 @@ function UserStats(props) {
       setDownloadLog(res.data.result['recentDownload']);
     });
   }, [datasetId, props.successNum]);
+
+  const operations = <Button type="primary" size="small" onClick={props.onExpand}>Advanced Search</Button>;
+
   return (
     <>
       <div className={styles.userStats}>
@@ -56,7 +59,10 @@ function UserStats(props) {
         />
       </div>
       <br />
-      <Tabs defaultActiveKey="1">
+      <Tabs 
+        defaultActiveKey="1" 
+        tabBarExtraContent={operations}
+      >
         <TabPane tab="Upload Logs" key="1">
           <Timeline>
             {uploadLog.map((i) => {

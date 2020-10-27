@@ -6,7 +6,7 @@ import {
   traverseFoldersContainersAPI,
   getFilesByTypeAPI,
 } from '../../../../../APIs';
-import { getChildrenTree,withCurrentProject } from '../../../../../Utility';
+import { getChildrenTree, withCurrentProject } from '../../../../../Utility';
 import ContainerDetailsContent from './ContainerDetailsContent';
 import RawTable from './RawTable';
 import { withRouter } from 'react-router-dom';
@@ -91,13 +91,15 @@ class FilesContent extends Component {
       let { entities, approximateCount } = result.data.result;
       entities = entities.map((item) => ({
         ...item.attributes,
+        tags: item.labels,
+        guid:item.guid,
         key: item.attributes.name,
       }));
       this.setState({ rawData: entities, totalItem: approximateCount });
 
       return { entities, approximateCount };
     } catch (err) {
-      console.log(err)
+      console.log(err);
       if (err.response) {
         const errorMessager = new ErrorMessager(
           namespace.dataset.files.getFilesByTypeAPI,
@@ -152,18 +154,23 @@ class FilesContent extends Component {
   //Fetch tree data, create default panel
   fetch = async () => {
     const { datasetId } = this.props;
-    let currentRole = this.props.containersPermission && this.props.containersPermission.filter(el => el.containerId === Number(datasetId))
-    if (currentRole && currentRole.length > 0) currentRole = currentRole[0].permission;
+    let currentRole =
+      this.props.containersPermission &&
+      this.props.containersPermission.filter(
+        (el) => el.containerId === Number(datasetId),
+      );
+    if (currentRole && currentRole.length > 0)
+      currentRole = currentRole[0].permission;
 
     this.setState({
       currentRole,
-    })
+    });
 
     let allFolders;
 
     await this.fetchRawData();
 
-    if (!['uploader'].includes(currentRole)) {
+    if (!['uploader', 'contributor'].includes(currentRole)) {
       try {
         allFolders = await traverseFoldersContainersAPI(datasetId);
       } catch (err) {
@@ -175,43 +182,41 @@ class FilesContent extends Component {
         }
         return;
       }
-  
+
       // Compute tree data
       let pureFolders = this.computePureFolders(
         allFolders.data.result.gr,
         // subContainers.data.result.children,
         undefined,
       );
-  
+
       const coreFolders = this.computePureFolders(
         allFolders.data.result.vre,
         // subContainers.data.result.children,
         undefined,
       );
-  
+
       const treeData = getChildrenTree(pureFolders, 0, '');
       const treeData2 = getChildrenTree(coreFolders, 'core', '');
-  
+
       const processedFolder = _.find(treeData, (ele) => {
         return ele.title === 'processed';
       });
-  
+
       const newTree = this.state.treeData;
-  
+
       if (processedFolder) {
-        newTree.push(
-          {
-              title: 'Processed',
-              key: '1',
-              icon: <FolderOutlined />,
-              disabled: true,
-              children: processedFolder.children
-          },
-        )
+        newTree.push({
+          title: 'Processed',
+          key: '1',
+          icon: <FolderOutlined />,
+          disabled: true,
+          children: processedFolder.children,
+        });
       }
-      
+
       // newTree[2].children = treeData2;  copy files workflow
-  
+
       const newPanes = this.state.panes;
       const pane = {};
       const firstPane = newTree[0];
@@ -228,7 +233,7 @@ class FilesContent extends Component {
         />
       );
       newPanes.push(pane);
-  
+
       this.setState((prev) => ({
         treeData: newTree,
         treeKey: prev.treeKey + 1,
@@ -366,8 +371,7 @@ class FilesContent extends Component {
             activeKey: selectedKeys[0].toString(),
             panes,
           });
-        } 
-        else {
+        } else {
           console.log('no matching keys');
         }
       }
@@ -375,57 +379,55 @@ class FilesContent extends Component {
 
     return (
       <>
-        {
-          !['uploader'].includes(this.state.currentRole) ? (
-            <Row>
-              <Col span={4}>
-                <Tree
-                  showIcon
-                  defaultExpandedKeys={['1', '2']}
-                  defaultSelectedKeys={['0']}
-                  switcherIcon={<DownOutlined />}
-                  onSelect={onSelect}
-                  treeData={treeData}
-                  key={treeKey}
-                />
-              </Col>
-              <Col span={20}>
-                <div>
-                  <Tabs
-                    hideAdd
-                    onChange={this.onChange}
-                    activeKey={this.state.activeKey.toString()}
-                    type="editable-card"
-                    onEdit={this.onEdit}
-                    style={{
-                      paddingLeft: '30px',
-                      borderLeft: '1px solid rgb(240,240,240)',
-                    }}
-                  >
-                    {this.state.panes.map((pane) => (
-                      <TabPane tab={pane.title} key={pane.key.toString()}>
-                        <div
-                          style={{
-                            minHeight: '300px',
-                          }}
-                        >
-                          {pane.content}
-                        </div>
-                      </TabPane>
-                    ))}
-                  </Tabs>
-                </div>
-              </Col>
-            </Row>
-          ) : (
-            <RawTable 
-              projectId={this.props.match.params.datasetId}
-              currentDataset={currentDataset}
-              rawData={this.state.rawData}
-              totalItem={this.state.totalItem}
-            />
-          )
-        }
+        {!['uploader', 'contributor'].includes(this.state.currentRole) ? (
+          <Row>
+            <Col span={4}>
+              <Tree
+                showIcon
+                defaultExpandedKeys={['1', '2']}
+                defaultSelectedKeys={['0']}
+                switcherIcon={<DownOutlined />}
+                onSelect={onSelect}
+                treeData={treeData}
+                key={treeKey}
+              />
+            </Col>
+            <Col span={20}>
+              <div>
+                <Tabs
+                  hideAdd
+                  onChange={this.onChange}
+                  activeKey={this.state.activeKey.toString()}
+                  type="editable-card"
+                  onEdit={this.onEdit}
+                  style={{
+                    paddingLeft: '30px',
+                    borderLeft: '1px solid rgb(240,240,240)',
+                  }}
+                >
+                  {this.state.panes.map((pane) => (
+                    <TabPane tab={pane.title} key={pane.key.toString()}>
+                      <div
+                        style={{
+                          minHeight: '300px',
+                        }}
+                      >
+                        {pane.content}
+                      </div>
+                    </TabPane>
+                  ))}
+                </Tabs>
+              </div>
+            </Col>
+          </Row>
+        ) : (
+          <RawTable
+            projectId={this.props.match.params.datasetId}
+            currentDataset={currentDataset}
+            rawData={this.state.rawData}
+            totalItem={this.state.totalItem}
+          />
+        )}
       </>
     );
   }
@@ -435,4 +437,4 @@ export default connect((state) => ({
   datasetList: state.datasetList,
   containersPermission: state.containersPermission,
   uploadList: state.uploadList,
-}))( withCurrentProject(withRouter(FilesContent))  );
+}))(withCurrentProject(withRouter(FilesContent)));

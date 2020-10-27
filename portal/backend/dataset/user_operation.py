@@ -166,9 +166,14 @@ class user_registry(Resource):
 
             hashId = post_data.get("token", None)
             srv_invitation_manager = SrvInvitationManager()
-            if not hashId or not srv_invitation_manager.validate_invitation_code(hashId):
-                _logger.error('Error: invitation link is not valid')
-                return {'result': 'Invalid HashID.'}, 400
+            invite_data = srv_invitation_manager.validate_invitation_code(hashId)
+            if not hashId or not invite_data[0]:
+                if invite_data[2] == 401:
+                    _logger.error('Error: invitation link is expired')
+                    return {'result': 'Expired HashID.'}, 401
+                else:
+                    _logger.error('Error: invitation link is not valid')
+                    return {'result': 'Invalid HashID.'}, 400
 
             # Check if payload is sufficient
             email = post_data.get('email', None)
@@ -247,6 +252,9 @@ class user_registry(Resource):
                 return {'result': 'neo add relation'+json.loads(res.text)}, res.status_code
             _logger.info(
                 'Done with adding relationship between user node and container in neo4j')
+
+            #Deactivate invitation
+            srv_invitation_manager.deactivate_invitation(hashId)
 
         except Exception as e:
             _logger.error(

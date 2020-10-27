@@ -236,14 +236,7 @@ class Uploader extends Component {
   };
 
   render() {
-    const {
-      uploader,
-      datasetId,
-      sortby,
-      order,
-      sortReset,
-      selectedTab,
-    } = this.state;
+    const { sortby, order, sortReset, selectedTab } = this.state;
     const { datasetList: tabs = [] } = this.props;
 
     let projectNoPermission = [];
@@ -295,7 +288,7 @@ class Uploader extends Component {
         <Menu.Item key="1" value="time-desc">
           Last created
         </Menu.Item>
-        <Menu.Item key="2" value="time-asc">
+        <Menu.Item id="uploadercontent_first_created" key="2" value="time-asc">
           First Created
         </Menu.Item>
         <Menu.Item key="3" value="name-asc">
@@ -318,7 +311,11 @@ class Uploader extends Component {
         <Content className={`content ${styles.wrapper}`}>
           <Row>
             <Col span={12}>
-              <Tabs defaultActiveKey="My Projects" onChange={this.onTabChange}>
+              <Tabs
+                id="uploadercontent_tabs"
+                defaultActiveKey="My Projects"
+                onChange={this.onTabChange}
+              >
                 {this.tagsData.map((tag) => (
                   <TabPane tab={tag} key={tag} />
                 ))}
@@ -330,7 +327,7 @@ class Uploader extends Component {
                   <Button onClick={this.resetSort}>Reset sort</Button>
                 )}
                 <Dropdown overlay={sortPanel} placement="bottomRight">
-                  <Button>
+                  <Button id="uploadercontent_dropdown">
                     <SortAscendingOutlined />
                     Sort {`${sortby && sortby.slice(0, 4)} : ${order}`}
                     <DownOutlined />
@@ -341,6 +338,7 @@ class Uploader extends Component {
           </Row>
           {tabs.map((tab, index) => (
             <List
+              id="uploadercontent_project_list"
               itemLayout="horizontal"
               size="large"
               pagination={{
@@ -354,6 +352,7 @@ class Uploader extends Component {
               dataSource={allProjects}
               renderItem={(item) => (
                 <List.Item
+                  id={`uploader_content_${item?.code}`}
                   key={item.id}
                   className={styles.card}
                   actions={[
@@ -437,46 +436,9 @@ class Uploader extends Component {
                                 </Tag>
                               ))
                             : null}
-
-                          {/* {Object.keys(item).map((key) => {
-                            return key.startsWith('_') ? (
-                              <Tag
-                                key={key}
-                                color={
-                                  this.props.role === 'admin' ||
-                                  _.some(
-                                    this.props.containersPermission,
-                                    (o) => {
-                                      return (
-                                        parseInt(o.containerId) ===
-                                        parseInt(item.id)
-                                      );
-                                    },
-                                  )
-                                    ? 'green'
-                                    : // : '#CCCC'
-                                    this.props.containersPermission.some(
-                                        (el) =>
-                                          parseInt(el.containerId) ===
-                                          parseInt(item.id),
-                                      )
-                                    ? 'green'
-                                    : '#CCCC'
-                                }
-                              >
-                                {key.substr(1)}:{item[key]}
-                              </Tag>
-                            ) : null;
-                          })} */}
                         </span>
                       </Paragraph>
                     }
-                    // description={
-                    //   'Created at ' +
-                    //   (item.created_time
-                    //     ? item.created_time
-                    //     : '2020-08-22 11:45')
-                    // }
                     description={
                       <>
                         <span
@@ -486,10 +448,6 @@ class Uploader extends Component {
                           }}
                         >
                           Project code: {item.code && item.code}
-                          {/* Created at{' '}
-                          {item.created_at
-                            ? item.created_at
-                            : '2020-08-22 10:45'} */}
                         </span>
                         <br />
                         <Paragraph
@@ -514,16 +472,6 @@ class Uploader extends Component {
             />
           ))}
         </Content>
-        {/* {uploader && (
-          <UploadFileToFolder
-            isShown={uploader}
-            datasetId={datasetId}
-            datasetList={this.props.datasetList}
-            cancel={() => {
-              this.handleCancelUploader();
-            }}
-          />
-        )} */}
       </>
     );
   }

@@ -13,6 +13,8 @@ import {
   Row,
   Col,
   Modal,
+  Space,
+  Divider,
 } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { DownOutlined } from '@ant-design/icons';
@@ -24,10 +26,7 @@ import {
   //addUserToDatasetAPI,
   removeUserFromDatasetApi,
 } from '../../../APIs';
-import {
-  objectKeysToSnakeCase,
-  objectKeysToCamelCase,
-} from '../../../Utility';
+import { objectKeysToSnakeCase, objectKeysToCamelCase } from '../../../Utility';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
 import { withCurrentProject } from '../../../Utility';
 const { Content } = Layout;
@@ -153,18 +152,34 @@ class Teams extends Component {
           el.permission === 'admin',
       );
     const projectName = this.props.currentProject?.containerName;
-    const role = this.props.currentProject?.permission;
-     
+    let role = this.props.currentProject?.permission;
 
     const menu = (record, role) => (
-      <Menu>
+      <Menu id="teams_role_dropdown">
         {this.props.containerDetails &&
           this.props.containerDetails['roles'].map((i) => {
             if (i !== 'member') {
+              if (i === 'uploader') {
+                return (
+                  <Menu.Item
+                    id="teams_role_dropdown_contributor"
+                    onClick={() => {
+                      this.confirmModal(
+                        record.name,
+                        record.permission,
+                        'contributor',
+                      );
+                    }}
+                    disabled={role === i}
+                    key="0"
+                  >
+                    contributor
+                  </Menu.Item>
+                );
+              }
               return (
                 <Menu.Item
                   onClick={() => {
-                    // this.changeRole(record.name, record.permission, "uploader");
                     this.confirmModal(record.name, record.permission, i);
                   }}
                   disabled={role === i}
@@ -172,21 +187,20 @@ class Teams extends Component {
                 >
                   {i}
                 </Menu.Item>
-              )
-            }else{
+              );
+            } else {
               return null;
             }
           })}
-        <Menu.Divider />
-        <Menu.Item
+        {/* <Menu.Divider /> */}
+        {/* <Menu.Item
           onClick={() => {
-            // this.removeUser(record.name);
             this.confirmModal(record.name, record.permission, 'delete');
           }}
           key="2"
         >
-          delete
-        </Menu.Item>
+          remove
+        </Menu.Item> */}
       </Menu>
     );
 
@@ -220,6 +234,13 @@ class Teams extends Component {
         title: 'Role',
         dataIndex: 'permission',
         key: 'role',
+        render: (text) => {
+          if (text === 'uploader') {
+            return 'contributor';
+          }
+
+          return text;
+        },
       },
       {
         title: 'Action',
@@ -236,23 +257,32 @@ class Teams extends Component {
 
           return (
             isEnable && (
-              <Dropdown
-                overlay={menu(record, record.permission)}
-                trigger={['click']}
-              >
-                <a
-                  className="ant-dropdown-link"
-                  onClick={(e) => e.preventDefault()}
+              <Space>
+                <Dropdown
+                  overlay={menu(record, record.permission)}
+                  trigger={['click']}
                 >
-                  Change role <DownOutlined />
+                  <a
+                    className="ant-dropdown-link"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    Change role <DownOutlined />
+                  </a>
+                </Dropdown>
+                <Divider type="vertical" />
+                <a
+                  onClick={() => {
+                    this.confirmModal(record.name, record.permission, 'delete');
+                  }}
+                >
+                  Remove
                 </a>
-              </Dropdown>
+              </Space>
             )
           );
         },
       },
     ];
-
 
     const routes = [
       {
@@ -283,6 +313,12 @@ class Teams extends Component {
       ) : (
         <Link to="/uploader">{route.breadcrumbName}</Link>
       );
+    }
+
+    if (this.props.role === 'admin') {
+      role = 'Portal Administrator';
+    } else {
+      role = 'Project Administrator';
     }
 
     return (
@@ -325,13 +361,13 @@ class Teams extends Component {
                     onClick={this.showAddUserModal}
                     className="mb-2"
                   >
-                    Add User
+                    Add Member
                   </Button>,
                 ]}
               />
               <Card style={{ marginBottom: '20px' }}>
                 <Tabs defaultActiveKey="1">
-                  <TabPane tab="Users" key="1">
+                  <TabPane tab="Members" key="1">
                     <Table
                       dataSource={this.props.userListOnDataset}
                       columns={columns}
@@ -362,6 +398,6 @@ class Teams extends Component {
 }
 
 export default connect((state) => {
-  const { role, containersPermission,username } = state;
-  return { role, containersPermission,username };
+  const { role, containersPermission, username } = state;
+  return { role, containersPermission, username };
 })(withCurrentProject(withRouter(Teams)));

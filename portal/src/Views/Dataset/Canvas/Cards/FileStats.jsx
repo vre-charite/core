@@ -30,7 +30,7 @@ function FileStats(props) {
     getUsersOnDatasetAPI(datasetId).then((res) => {
       let users = res.data.result;
       setAdminCount(users.filter((i) => i.permission === 'admin').length);
-      setUploaderCount(users.filter((i) => i.permission === 'uploader').length);
+      setUploaderCount(users.filter((i) => i.permission === 'contributor').length);
     });
   }, [datasetId]);
 
@@ -74,7 +74,7 @@ function FileStats(props) {
       </div>
       <div className={styles.stats}>
         <Statistic
-          title="Uploaders"
+          title="Contributors"
           value={uploaderCount}
           prefix={<UserOutlined />}
           valueStyle={{
