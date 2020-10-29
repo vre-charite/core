@@ -93,17 +93,6 @@ function SupportDrawer(props) {
         }
       }
     >
-      <Anchor affix={false}>
-        <Link href="#user-guide" title="User Guide" />
-        <Link href="#faq" title="FAQ">
-          <Link href="#account" title="Account Information" />
-          <Link href="#projects" title="Projects" />
-          <Link href="#security" title="Site security" />
-          <Link href="#file" title="File upload" />
-        </Link>
-        <Link href="#contact-us" title="Contact Us" />
-      </Anchor>
-      <br />
       <Button
         onMouseDown={mouseDown}
         type="link"
@@ -135,7 +124,7 @@ function SupportDrawer(props) {
           </p>
           <Button type="primary" ghost>
             <a
-              href="/vre/files/VRE User Manual 2020-10-20.pdf"
+              href="/vre/files/VRE User Manual Release 0.1.1 2020-10-28.pdf"
               download
               target="_self"
             >
@@ -156,7 +145,20 @@ function SupportDrawer(props) {
           <ContactUsForm />
         </Panel>
       </Collapse> */}
-
+      <Title level={4} id="content">
+        Table of Content
+      </Title>
+      <Anchor affix={false}>
+        <Link href="#user-guide" title="User Guide" />
+        <Link href="#faq" title="FAQ">
+          <Link href="#account" title="Account Information" />
+          <Link href="#projects" title="Projects" />
+          <Link href="#security" title="Site security" />
+          <Link href="#file" title="File upload" />
+        </Link>
+        <Link href="#contact-us" title="Contact Us" />
+      </Anchor>
+      <Divider />
       <Title level={4} id="user-guide">
         User Guide
       </Title>
@@ -166,7 +168,7 @@ function SupportDrawer(props) {
       </p>
       <Button type="primary" ghost>
         <a
-          href="/vre/files/VRE User Manual 2020-10-20.pdf"
+          href="/vre/files/VRE User Manual Release 0.1.1 2020-10-28.pdf"
           download
           target="_self"
         >

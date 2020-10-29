@@ -35,7 +35,7 @@ function SupportContent() {
           </p>
           <Button type="primary">
             <a
-              href="/vre/files/VRE User Manual 2020-10-20.pdf"
+              href="/vre/files/VRE User Manual Release 0.1.1 2020-10-28.pdf"
               download
               target="_self"
             >
