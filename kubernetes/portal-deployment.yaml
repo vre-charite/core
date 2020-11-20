@@ -77,4 +77,3 @@ spec:
     app: portal
     env: charite
   type: ClusterIP
-

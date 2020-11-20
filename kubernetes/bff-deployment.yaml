@@ -63,4 +63,3 @@ spec:
     app: bff
     env: charite
   type: LoadBalancer
-
