@@ -42,9 +42,9 @@ class ConfigClass(object):
         EMAIL_DEFAULT_NOTIFIER = "vre-support@charite.de"
         EMAIL_ADMIN_CONNECTION = "vre-support@charite.de"
 
-        INVITATION_URL_PREFIX = "http://10.32.42.226/vre/self-registration"
+        INVITATION_URL_PREFIX = "https://vre.charite.de/vre/self-registration"
         INVITATION_EXPIRY_DAYS = 14
-        INVITATION_URL_LOGIN = 'http://10.32.42.226/vre/'
+        INVITATION_URL_LOGIN = 'https://vre.charite.de/vre/'
     elif env == "staging":
         INVITATION_URL_PREFIX = "https://nx.indocresearch.org/vre/self-registration"
         INVITATION_EXPIRY_DAYS = 14

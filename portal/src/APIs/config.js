@@ -81,8 +81,8 @@ if (process.env.REACT_APP_ENV === 'staging') {
 
 // for charite env
 if (process.env.REACT_APP_ENV === 'charite') {
-  kongAPI = 'http://10.32.42.226/vre/api/vre/portal';
-  devOpServerUrl = 'http://10.32.42.226/vre/api/vre/portal/dataops';
+  kongAPI = 'https://vre.charite.de/vre/api/vre/portal';
+  devOpServerUrl = 'https://vre.charite.de/vre/api/vre/portal/dataops';
 }
 
 const authService = 'http://auth.utility:5061';
