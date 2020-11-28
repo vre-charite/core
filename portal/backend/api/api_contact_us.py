@@ -16,11 +16,11 @@ import json
 api_ns_contact = module_api.namespace(
     'Contact Us Restful', description='Portal Contact Us Restful', path='/v1')
 
+
 class APIContactUs(metaclass=MetaAPI):
     def api_registry(self):
         api_ns_contact.add_resource(
             self.ContactUsRestful, '/contact')
-
 
     class ContactUsRestful(Resource):
         @api_ns_contact.expect(contact_us_model)
@@ -39,12 +39,14 @@ class APIContactUs(metaclass=MetaAPI):
             access_token = request.headers.get("Authorization", None)
             # init form
             post_json = request.get_json()
-            _logger.info("Start Creating Contact Us Email: {}".format(post_json))
+            _logger.info(
+                "Start Creating Contact Us Email: {}".format(post_json))
             contact_form = ContactUsForm(post_json)
             # init invitation managemer
             contact_mgr = SrvContactUsManager()
             # save invitation
-            contact_mgr.save_invitation(contact_form, access_token, current_identity)
+            contact_mgr.save_invitation(
+                contact_form, access_token, current_identity)
             my_res.set_result('[SUCCEED] Invitation Saved, Email Sent')
             _logger.info('Contact Us Email Sent')
             my_res.set_code(EAPIResponseCode.success)

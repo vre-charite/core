@@ -23,11 +23,14 @@ class APIDateSet(metaclass=MetaAPI):
 
         # Actions on multiple users
         datasets_entity_ns.add_resource(dataset_users, '/<dataset_id>/users')
+        datasets_entity_ns.add_resource(DatasetUsersQuery, '/<dataset_id>/users/query')
         datasets_entity_ns.add_resource(dataset_admins, '/<dataset_id>/admins')
 
         # Actions on the specific user
         datasets_entity_ns.add_resource(
             dataset_user, '/<dataset_id>/users/<username>')
+        datasets_entity_ns.add_resource(
+            DatasetUserProjectStatus, '/<dataset_id>/users/<username>/status')
 
         # Actions on users
         users_entity_ns.add_resource(users, '/platform')
@@ -36,3 +39,7 @@ class APIDateSet(metaclass=MetaAPI):
             user_dataset_query, '/<username>/datasets')
         users_entity_ns.add_resource(
             user_default_dataset, '/<username>/default')
+
+        # users management
+        users_entity_ns.add_resource(
+            DatasetUserManagement, '/action')

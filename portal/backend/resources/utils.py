@@ -1,12 +1,72 @@
 # from app import neo4j_connection
+from flask import request
 from config import ConfigClass
 import requests
 import json
+import math
 from datetime import timezone 
 import datetime
+import pytz
+from models.api_response import APIResponse, EAPIResponseCode
+
+
+def remove_user_from_project_group(container_id, username, logger):
+    # Remove user from keycloak group with the same name as the project
+    res = requests.get(
+        url=ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/node/{container_id}",
+    )
+    project_name = json.loads(res.content)[0]["code"]
+    payload = {
+        "realm": "vre",
+        "username": username,
+        "groupname": project_name,
+    }
+    res = requests.delete(
+        url=ConfigClass.AUTH_SERVICE + "admin/users/group",
+        params=payload
+    )
+    if(res.status_code != 200):
+        logger.error(f"Error removing user from group in keycloak: {res.text} {res.status_code}")
+
+
+def add_user_to_project_group(container_id, username, logger):
+    # Add user to keycloak group with the same name as the project
+    res = requests.get(
+        url=ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/node/{container_id}",
+    )
+    project_name = json.loads(res.content)[0]["code"]
+    payload = {
+        "realm": "vre",
+        "username": username,
+        "groupname": project_name,
+    }
+    res = requests.post(
+        url=ConfigClass.AUTH_SERVICE + "admin/users/group",
+        json=payload
+    )
+    if(res.status_code != 200):
+        logger.error(f"Error adding user to group in keycloak: {res.text} {res.status_code}")
 
 
 ######################################################### DATASET API #################################################
+
+def convert_from_utc(timestamp):
+    dt = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+    dt = pytz.utc.localize(dt)
+    return dt.astimezone(pytz.timezone(ConfigClass.TIMEZONE)).strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def check_user_exists(token, username):
+    url = ConfigClass.NEO4J_SERVICE + "nodes/User/query"
+    headers = {
+        'Authorization': token
+    }
+    res = requests.post(
+        url=url,
+        headers=headers,
+        json={"name": username}
+    )
+    return json.loads(res.text)
 
 def list_containers(token, label, payload=None):
     url = ConfigClass.NEO4J_SERVICE + "nodes/%s/query" % label
@@ -57,6 +117,53 @@ def check_container_exist(token, label, container_id):
         headers=headers
     )
     return json.loads(res.text)
+
+def neo4j_query_with_pagination(url, data, partial=False):
+    page = int(data.get('page', 0))
+    page_size = int(data.get('page_size', 25))
+    data = data.copy()
+    if data.get("page"):
+        del data["page"]
+    if data.get("page_size"):
+        del data["page_size"]
+
+    # Get token from reuqest's header
+    access_token = request.headers.get("Authorization", None)
+    page_data = {
+        "limit": page_size,
+        "skip": page * page_size,
+        "partial": partial,
+        **data
+    }
+    headers = {
+        'Authorization': access_token
+    }
+    # Request to get page results
+    res = requests.post(
+        url=url,
+        headers=headers,
+        json=page_data,
+    )
+    del page_data["limit"]
+    del page_data["skip"]
+    if "order_by" in page_data:
+        del page_data["order_by"]
+    if "order_type" in page_data:
+        del page_data["order_type"]
+
+    # Get page count
+    count_res = requests.post(
+        url=url + "/count",
+        headers=headers,
+        json={"count": True, **page_data},
+    )
+    total = json.loads(count_res.content).get("count")
+    response = APIResponse()
+    response.set_result(json.loads(res.content))
+    response.set_page(page)
+    response.set_total(total)
+    response.set_num_of_pages(math.ceil(total / page_size))
+    return response
 
 ################################################### User Function ########################################
 

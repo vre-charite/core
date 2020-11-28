@@ -1,10 +1,13 @@
 const {baseUrl,testFileBasePath} = require('../config')
 const { reduxLog, screenShot, apiLog } = require('../Utility/log');
 const { catchErrorMessage } = require('../Utility/errorMessage');
+const {singleDownload} = require('./singleDownload');
+const {login} = require('../Utility/login')
 const moduleName = 'downloading';
-
+const testProjectCode = 'testcode5196';
 let page;
 const getPage = () => page;
+jest.setTimeout(20 * 60 * 1000);
 describe('downloading',()=>{
     beforeAll(async () => {
         const reduxLogger = reduxLog(moduleName);
@@ -29,6 +32,10 @@ describe('downloading',()=>{
             screenShotLogger(String(Date.now()))
         })
     })
-
-    
+    login(it,getPage,'admin','admin');
+    it('select project', async () => {
+        await page.waitForSelector(`#uploader_content_${testProjectCode}`);
+        await page.click(`#uploader_content_${testProjectCode} h4 a`)
+    });
+    singleDownload(it,'download single File',getPage,expect);
 })

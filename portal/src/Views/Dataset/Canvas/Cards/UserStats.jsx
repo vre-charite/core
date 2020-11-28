@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import {  Statistic,  Timeline, Tabs, Button } from 'antd';
+import { Statistic, Timeline, Tabs, Button } from 'antd';
 import { CloudUploadOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import { projectFileCountToday } from '../../../../APIs';
 
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
+import moment from 'moment';
 
+import { timeConvert } from '../../../../Utility';
 import styles from './index.module.scss';
 const { TabPane } = Tabs;
 
@@ -21,17 +23,41 @@ function UserStats(props) {
     },
   } = props;
 
-
   useEffect(() => {
     projectFileCountToday(datasetId).then((res) => {
-      setUploadCount(res.data.result['uploadCount']);
-      setDownloadCount(res.data.result['downloadCount']);
-      setUploadLog(res.data.result.recentUpload);
-      setDownloadLog(res.data.result['recentDownload']);
+      let uploadLog = [];
+      let downloadLog = [];
+
+      if (res.data.result['recentUpload']) {
+        uploadLog = res.data.result['recentUpload'].filter((i) => {
+          let { createTime} = i['attributes'];
+          const localTime = timeConvert(createTime, 'datetime');
+          
+          return (moment().startOf('day') < moment(localTime) && moment().endOf('day') > moment(localTime)) ;
+        })
+      }
+
+      if (res.data.result['recentDownload']) {
+        downloadLog = res.data.result['recentDownload'].filter((i) => {
+          let { createTime} = i['attributes'];
+          const localTime = timeConvert(createTime, 'datetime');
+          
+          return (moment().startOf('day') < moment(localTime) && moment().endOf('day') > moment(localTime)) ;
+        })
+      }
+
+      setUploadCount(uploadLog.length);
+      setDownloadCount(downloadLog.length);
+      setUploadLog(uploadLog);
+      setDownloadLog(downloadLog);
     });
   }, [datasetId, props.successNum]);
 
-  const operations = <Button type="primary" size="small" onClick={props.onExpand}>Advanced Search</Button>;
+  const operations = (
+    <Button type="primary" size="small" onClick={props.onExpand}>
+      Advanced Search
+    </Button>
+  );
 
   return (
     <>
@@ -59,17 +85,14 @@ function UserStats(props) {
         />
       </div>
       <br />
-      <Tabs 
-        defaultActiveKey="1" 
-        tabBarExtraContent={operations}
-      >
+      <Tabs defaultActiveKey="1" tabBarExtraContent={operations}>
         <TabPane tab="Upload Logs" key="1">
           <Timeline>
             {uploadLog.map((i) => {
               let { owner, createTime, fileName } = i['attributes'];
               return (
-                <Timeline.Item color="green">
-                  {owner} uploaded {fileName} at {createTime}
+                <Timeline.Item color="green" key={createTime}>
+                  {owner} uploaded {fileName} at {timeConvert(createTime, 'datetime')}
                 </Timeline.Item>
               );
             })}
@@ -81,7 +104,7 @@ function UserStats(props) {
               let { downloader, createTime, fileName } = i['attributes'];
               return (
                 <Timeline.Item color="green">
-                  {downloader} downloaded {fileName} at {createTime}
+                  {downloader} downloaded {fileName} at {timeConvert(createTime, 'datetime')}
                 </Timeline.Item>
               );
             })}

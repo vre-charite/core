@@ -5,14 +5,16 @@ import Support from '../Views/Support/Support';
 import ErrorPage from '../Views/ErrorPage/ErrorPage';
 import SelfRegistration from '../Views/Self-Registration/Self-Registration';
 import AccountAssistant from '../Views/AccountAssistant/AccountAssistant';
+import UserManagement from '../Views/UsersManagement';
+
 const authedRoutes = [
   {
-    path: '/uploader',
+    path: '/landing',
     component: Uploader,
     protectedType: 'isLogin',
   },
   {
-    path: '/dataset/:datasetId',
+    path: '/project/:datasetId',
     component: Dataset,
     protectedType: 'isLogin',
   },
@@ -21,6 +23,12 @@ const authedRoutes = [
     component: Support,
     protectedType: 'isLogin',
   },
+  {
+    path: '/users',
+    component: UserManagement,
+    protectedType: 'isLogin',
+  },
+
 
   /*   {
     path: "/admin",

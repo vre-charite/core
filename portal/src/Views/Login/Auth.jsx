@@ -33,6 +33,8 @@ import { namespace as serviceNamespace } from '../../Service/namespace';
 import { getDatasetsAPI, listAllContainersPermission } from '../../APIs';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import CoookiesDrawer from './CookiesDrawer';
+import { withTranslation } from 'react-i18next';
+
 const { confirm } = Modal;
 
 class Auth extends Component {
@@ -147,19 +149,20 @@ class Auth extends Component {
           refresh_token: refreshToken,
           sessionId: `${values.username}-${sourceId}`,
         });
+        tokenManager.setTimeSkew(accessToken);
+
         tokenManager.refreshToken(accessToken);
 
         this.initApis(values.username);
         this.props.setIsLoginCreator(true);
         this.props.setUsernameCreator(values.username);
         this.setState({ btnLoading: false });
-        this.props.history.push('/uploader');
+        this.props.history.push('/landing');
         broadcastManager.postMessage(
           'login',
           serviceNamespace.broadCast.USER_CLICK_LOGIN,
           values.username,
         );
-        message.success(`Welcome back, ${values.username}`);
       })
       .catch((err) => {
         if (err.response) {
@@ -231,9 +234,7 @@ class Auth extends Component {
     return (
       <>
         <Alert
-          message="This release of the VRE is exclusively for testing purposes by Charité staff. 
-            The upload of files containing clinical and/or research data of any type is strictly forbidden. 
-            By proceeding, you are agreeing to these terms."
+          message="This release of the VRE is exclusively for testing purposes. The upload of files containing clinical and/or research data of any type is strictly forbidden. By proceeding, you are agreeing to these terms."
           type="warning"
           showIcon
           style={{ float: 'right', width: '100%', zIndex: '10' }}
@@ -316,6 +317,7 @@ class Auth extends Component {
                     src={require('../../Images/vre-logo.png')}
                     className={styles.icon}
                     alt="icon"
+                    draggable={false}
                   />
                   <Form
                     name="normal_login"
@@ -331,7 +333,7 @@ class Auth extends Component {
                       rules={[
                         {
                           required: true,
-                          message: 'Please input your Username!',
+                          message: this.props.t('common.username.empty'),
                         },
                       ]}
                     >
@@ -347,7 +349,7 @@ class Auth extends Component {
                       rules={[
                         {
                           required: true,
-                          message: 'Please input your Password!',
+                          message: this.props.t('common.password.empty'),
                         },
                       ]}
                       className="mb-1"
@@ -401,7 +403,7 @@ class Auth extends Component {
             />
           </div>
           <small className={styles.copyright}>
-            Version 0.1.1. Copyright © {new Date().getFullYear()},{' '}
+            Version 0.2.0. Copyright © {new Date().getFullYear()},{' '}
             <a
               href="https://www.indocresearch.org/"
               target="_blank"
@@ -417,19 +419,21 @@ class Auth extends Component {
   }
 }
 
-export default withRouter(
-  withCookies(
-    connect((state) => ({ uploadList: state.uploadList }), {
-      AddDatasetCreator,
-      setUserListCreator,
-      setTagsCreator,
-      setMetadatasCreator,
-      setPersonalDatasetIdCreator,
-      setContainersPermissionCreator,
-      setUserRoleCreator,
-      setRefreshModal,
-      setIsLoginCreator,
-      setUsernameCreator,
-    })(Auth),
+export default withTranslation('formErrorMessages')(
+  withRouter(
+    withCookies(
+      connect((state) => ({ uploadList: state.uploadList }), {
+        AddDatasetCreator,
+        setUserListCreator,
+        setTagsCreator,
+        setMetadatasCreator,
+        setPersonalDatasetIdCreator,
+        setContainersPermissionCreator,
+        setUserRoleCreator,
+        setRefreshModal,
+        setIsLoginCreator,
+        setUsernameCreator,
+      })(Auth),
+    ),
   ),
 );

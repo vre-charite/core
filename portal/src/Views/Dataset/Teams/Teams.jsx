@@ -16,6 +16,7 @@ import {
   Space,
   Divider,
 } from 'antd';
+import moment from 'moment';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { DownOutlined } from '@ant-design/icons';
 import AddUserModal from './Components/AddUserModal';
@@ -25,10 +26,20 @@ import {
   changeUserRoleInDatasetAPI,
   //addUserToDatasetAPI,
   removeUserFromDatasetApi,
+  setUserStatusFromDatasetApi,
 } from '../../../APIs';
 import { objectKeysToSnakeCase, objectKeysToCamelCase } from '../../../Utility';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
-import { withCurrentProject } from '../../../Utility';
+import {
+  withCurrentProject,
+  formatRole,
+  convertRole,
+  timeConvert,
+} from '../../../Utility';
+import SearchTable from '../../../Components/Table/SearchTable';
+import { withTranslation } from 'react-i18next';
+import InvitationTable from '../../../Components/Table/InvitationTable';
+
 const { Content } = Layout;
 const { TabPane } = Tabs;
 
@@ -37,6 +48,17 @@ class Teams extends Component {
     super(props);
     this.state = {
       isAddUserModalShown: false,
+
+      total: 0,
+      users: [],
+
+      searchText: [],
+      searchedColumn: '',
+      page: 0,
+      pageSize: 10,
+      order: 'desc',
+      sortColumn: 'time_created',
+      searchFilters: {},
     };
 
     this.changeRole = this.changeRole.bind(this);
@@ -45,11 +67,16 @@ class Teams extends Component {
   }
 
   componentDidMount() {
-    this.getUsers();
+    const data = {
+      page: 0,
+      pageSize: 10,
+      orderBy: 'time_created',
+      orderType: 'desc',
+    };
+    this.getUsers(data);
   }
 
   showAddUserModal = () => {
-    console.log('show it!');
     this.setState({
       isAddUserModalShown: true,
     });
@@ -61,11 +88,33 @@ class Teams extends Component {
     });
   };
 
-  getUsers() {
+  getUsers(data = null) {
+    if (!data) {
+      data = {
+        page: this.state.page,
+        pageSize: this.state.pageSize,
+        orderBy: this.state.orderBy || 'time_created',
+        orderType: this.state.order,
+        // startParams: this.state.searchFilters,
+      };
+
+      if (
+        Object.keys(this.state.searchFilters) &&
+        Object.keys(this.state.searchFilters).length > 0
+      )
+        data['startParams'] = this.state.searchFilters;
+    }
+
     this.props
-      .getUsersOnDatasetAPI(this.props.datasetId)
+      .getUsersOnDatasetAPI(this.props.datasetId, data)
       .then((res) => {
-        this.props.setUserListOnDataset(objectKeysToCamelCase(res.data.result));
+        const users = res.data.result.filter(
+          (user) => user.projectStatus !== 'disable',
+        );
+        this.props.setUserListOnDataset(objectKeysToCamelCase(users));
+        this.setState({
+          total: res.data.total,
+        });
       })
       .catch((err) => {
         if (err.response) {
@@ -86,7 +135,7 @@ class Teams extends Component {
     )
       .then(async (result) => {
         await this.getUsers();
-        message.success('Role successfully updated.');
+        message.success(this.props.t('success:teams.roleUpdated'));
       })
       .catch((err) => {
         if (err.response) {
@@ -106,7 +155,11 @@ class Teams extends Component {
     removeUserFromDatasetApi(username, datasetId)
       .then(async (res) => {
         await this.getUsers();
-        message.success(`User ${username} has been removed.`);
+        message.success(
+          `${this.props.t(
+            'success:teams.userRemoved.0',
+          )} ${username} ${this.props.t('success:teams.userRemoved.1')}`,
+        );
       })
       .catch((err) => {
         if (err.response) {
@@ -121,16 +174,46 @@ class Teams extends Component {
       });
   };
 
+  restoreUser = (username) => {
+    const { datasetId } = this.props.match.params;
+    setUserStatusFromDatasetApi(username, datasetId, 'active')
+      .then(async (res) => {
+        await this.getUsers();
+        message.success(
+          `${this.props.t(
+            'success:teams.userRestored.0',
+          )} ${username} ${this.props.t('success:teams.userRestored.1')}`,
+        );
+      })
+      .catch((err) => {
+        if (err.response) {
+          if (err.response && err.response.status === 404) this.getUsers();
+          const errorMessager = new ErrorMessager(
+            namespace.teams.restoreUserFromDataset,
+          );
+          errorMessager.triggerMsg(err.response.status, null, {
+            username: username,
+          });
+        }
+      });
+  };
+
   confirmModal(user, permission, action) {
     const _this = this;
-    let content = `Are you sure change user ${user} role to ${action}?`;
+    let content = '';
 
-    if (action === 'delete') content = `Are you sure delete user ${user}?`;
+    if (action === 'delete') {
+      content = `Are you sure you wish to remove user ${user} from this project?`;
+    } else {
+      content = `Are you sure you wish to change the role for user ${user} to ${formatRole(
+        action,
+      )}?`;
+    }
     Modal.confirm({
-      title: 'Confrim',
+      title: 'Confirm',
       icon: <ExclamationCircleOutlined />,
       content,
-      okText: 'Ok',
+      okText: 'OK',
       cancelText: 'Cancel',
       onOk() {
         if (action === 'delete') {
@@ -141,6 +224,76 @@ class Teams extends Component {
       },
     });
   }
+
+  handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+  };
+
+  handleReset = (clearFilters, dataIndex) => {
+    clearFilters();
+    let filters = this.state.searchText;
+    filters = filters.filter((el) => el.key !== dataIndex);
+    this.setState({ searchText: filters });
+  };
+
+  onChange = async (pagination, param2, param3) => {
+    let order = 'asc';
+    const filters = {
+      page: this.state.page,
+      pageSize: this.state.pageSize,
+      orderBy: 'time_created',
+      orderType: 'desc',
+    };
+
+    const startParams = {};
+
+    if (param3 && param3.order !== 'ascend') order = 'desc';
+
+    this.setState({ page: pagination.current - 1 });
+    filters.page = pagination.current - 1;
+
+    if (param3) {
+      this.setState({ order: order });
+
+      if (param3.columnKey) {
+        filters.orderBy = param3.columnKey;
+        this.setState({ sortColumn: param3.columnKey });
+      }
+      filters.orderType = order;
+    }
+
+    if (pagination.pageSize) {
+      this.setState({ pageSize: pagination.pageSize });
+      filters.pageSize = pagination.pageSize;
+    }
+
+    let searchText = [];
+
+    if (param2.name && param2.name.length > 0) {
+      searchText.push({
+        key: 'name',
+        value: param2.name[0],
+      });
+
+      startParams['name'] = param2.name[0];
+    }
+
+    if (param2.email && param2.email.length > 0) {
+      searchText.push({
+        value: param2.email[0],
+        key: 'email',
+      });
+
+      startParams['email'] = param2.email[0];
+    }
+
+    this.setState({ searchText: searchText, searchFilters: startParams });
+
+    if (Object.keys(startParams) && Object.keys(startParams).length > 0)
+      filters['start_params'] = startParams;
+
+    this.getUsers(filters);
+  };
 
   render() {
     const username = this.props.username;
@@ -159,33 +312,19 @@ class Teams extends Component {
         {this.props.containerDetails &&
           this.props.containerDetails['roles'].map((i) => {
             if (i !== 'member') {
-              if (i === 'uploader') {
-                return (
-                  <Menu.Item
-                    id="teams_role_dropdown_contributor"
-                    onClick={() => {
-                      this.confirmModal(
-                        record.name,
-                        record.permission,
-                        'contributor',
-                      );
-                    }}
-                    disabled={role === i}
-                    key="0"
-                  >
-                    contributor
-                  </Menu.Item>
-                );
-              }
               return (
                 <Menu.Item
                   onClick={() => {
-                    this.confirmModal(record.name, record.permission, i);
+                    this.confirmModal(
+                      record.name,
+                      record.permission,
+                      convertRole(i),
+                    );
                   }}
                   disabled={role === i}
                   key="0"
                 >
-                  {i}
+                  {formatRole(i)}
                 </Menu.Item>
               );
             } else {
@@ -209,37 +348,41 @@ class Teams extends Component {
         title: 'Username',
         dataIndex: 'name',
         key: 'name',
+        sorter: true,
+        searchKey: 'name',
       },
       {
         title: 'Email',
         dataIndex: 'email',
         key: 'email',
+        sorter: true,
+        searchKey: 'email',
       },
       {
         title: 'First Name',
         dataIndex: 'firstName',
-        key: 'firstName',
+        sorter: true,
+        key: 'first_name',
       },
       {
         title: 'Last Name',
         dataIndex: 'lastName',
-        key: 'lastName',
+        sorter: true,
+        key: 'last_name',
       },
       {
         title: 'Join Date',
         dataIndex: 'timeCreated',
-        key: 'timeCreated',
+        sorter: true,
+        key: 'time_created',
+        render: (text) => text && timeConvert(text, 'datetime'),
       },
       {
         title: 'Role',
         dataIndex: 'permission',
         key: 'role',
         render: (text) => {
-          if (text === 'uploader') {
-            return 'contributor';
-          }
-
-          return text;
+          return formatRole(text);
         },
       },
       {
@@ -258,17 +401,27 @@ class Teams extends Component {
           return (
             isEnable && (
               <Space>
-                <Dropdown
-                  overlay={menu(record, record.permission)}
-                  trigger={['click']}
-                >
+                {record.projectStatus === 'hibernate' ? (
                   <a
-                    className="ant-dropdown-link"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={() => {
+                      this.restoreUser(record.name);
+                    }}
                   >
-                    Change role <DownOutlined />
+                    Restore
                   </a>
-                </Dropdown>
+                ) : (
+                  <Dropdown
+                    overlay={menu(record, record.permission)}
+                    trigger={['click']}
+                  >
+                    <a
+                      className="ant-dropdown-link"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      Change role <DownOutlined />
+                    </a>
+                  </Dropdown>
+                )}
                 <Divider type="vertical" />
                 <a
                   onClick={() => {
@@ -286,37 +439,62 @@ class Teams extends Component {
 
     const routes = [
       {
-        path: 'index',
+        path: '/landing',
         breadcrumbName: 'Projects',
       },
       {
-        path: 'first',
+        path: `/project/${this.props.match.params.datasetId}/canvas`,
         breadcrumbName: projectName,
+      },
+      {
+        path: 'second',
+        breadcrumbName: 'Members',
       },
     ];
 
     function itemRender(route, params, routes, paths) {
-      const last = routes.indexOf(route) === routes.length - 1;
-      return last ? (
-        <span
-          style={{
-            maxWidth: 'calc(100% - 74px)',
-            display: 'inline-block',
-            verticalAlign: 'bottom',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {route.breadcrumbName}
-        </span>
-      ) : (
-        <Link to="/uploader">{route.breadcrumbName}</Link>
-      );
+      const index = routes.indexOf(route);
+      if (index === 0) {
+        return <Link to={route.path}>{route.breadcrumbName}</Link>;
+      } else if (index === 1) {
+        return (
+          <span
+            style={{
+              maxWidth: 'calc(100% - 74px)',
+              display: 'inline-block',
+              verticalAlign: 'bottom',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            <Link to={route.path}>{route.breadcrumbName}</Link>
+          </span>
+        );
+      } else {
+        return <>{route.breadcrumbName}</>;
+      }
+      // const second = routes.indexOf(route) === 1;
+      // return second ? (
+      //   <Link to={route.path}>{route.breadcrumbName}</Link>
+      // ) : (
+      //     <span
+      //       style={{
+      //         maxWidth: 'calc(100% - 74px)',
+      //         display: 'inline-block',
+      //         verticalAlign: 'bottom',
+      //         whiteSpace: 'nowrap',
+      //         overflow: 'hidden',
+      //         textOverflow: 'ellipsis',
+      //       }}
+      //     >
+      //       <Link to={route.path}>{route.breadcrumbName}</Link>
+      //     </span>
+      //   );
     }
 
     if (this.props.role === 'admin') {
-      role = 'Portal Administrator';
+      role = 'Platform Administrator';
     } else {
       role = 'Project Administrator';
     }
@@ -325,9 +503,8 @@ class Teams extends Component {
       <>
         <Content className={'content'}>
           <Row style={{ paddingBottom: '10px' }}>
-            <Col span={1} />
             <Col
-              span={22}
+              span={24}
               style={{
                 paddingTop: '10px',
               }}
@@ -366,23 +543,34 @@ class Teams extends Component {
                 ]}
               />
               <Card style={{ marginBottom: '20px' }}>
-                <Tabs defaultActiveKey="1">
-                  <TabPane tab="Members" key="1">
-                    <Table
+                <Tabs onChange={this.callback} type="card">
+                  <TabPane tab="Members" key="users">
+                    <SearchTable
                       dataSource={this.props.userListOnDataset}
                       columns={columns}
+                      totalItem={this.state.total}
+                      pageSize={this.state.pageSize}
+                      page={this.state.page}
+                      onChange={this.onChange}
+                      handleReset={this.handleReset}
+                      handleSearch={this.handleSearch}
+                      setClassName={(record) => {
+                        return record.projectStatus === 'hibernate'
+                          ? 'disabled '
+                          : ' ';
+                      }}
+                      tableKey="projectUsers"
                     />
                   </TabPane>
-                  {/* <TabPane tab="Access Request" key="2">
-                <Table
-                  columns={AccessRequestColumns}
-                  dataSource={fakeDataGenerator(100)}
-                />
-              </TabPane> */}
+                  <TabPane tab="Invitations" key="invitations">
+                    <InvitationTable
+                      projectId={parseInt(this.props.datasetId)}
+                      tableKey="projectInvitations"
+                    />
+                  </TabPane>
                 </Tabs>
               </Card>
             </Col>
-            <Col span={1} />
           </Row>
         </Content>
         <AddUserModal
@@ -400,4 +588,4 @@ class Teams extends Component {
 export default connect((state) => {
   const { role, containersPermission, username } = state;
   return { role, containersPermission, username };
-})(withCurrentProject(withRouter(Teams)));
+})(withCurrentProject(withRouter(withTranslation('success')(Teams))));

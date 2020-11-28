@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
-import { useHistory, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { history } from '../../Routes';
 import { Card, Form, Input, Button, Layout, Typography, Space } from 'antd';
 import styles from './index.module.scss';
 import { sendResetPasswordEmailAPI } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
+import { useTranslation } from 'react-i18next';
 
 const { Content } = Layout;
 const { Title } = Typography;
 
 function Login() {
-  let history = useHistory();
   const [loading, setLoading] = useState(false);
+  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     setLoading(true);
+
     sendResetPasswordEmailAPI(values)
       .then((res) => {
         if (res && res.status === 200) {
@@ -41,6 +44,7 @@ function Login() {
   const onFinishFailed = (errorInfo) => {
     console.log('Failed:', errorInfo);
   };
+
   return (
     <Content className={'content'}>
       <div className={styles.container}>
@@ -70,7 +74,7 @@ function Login() {
               rules={[
                 {
                   required: true,
-                  message: 'Please input your username!',
+                  message: t('formErrorMessages:common.username.empty'),
                 },
               ]}
               className="mb-2"
@@ -81,19 +85,22 @@ function Login() {
             </Form.Item>
 
             <Link to="/account-assistant/forgot-username">
-              Do not remember username?
+              Forgot username?
             </Link>
             <br />
             <br />
             <Form.Item>
-              <Space>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Submit
-                </Button>
-                <Button>
-                  <Link to="/">Cancel</Link>
-                </Button>
-              </Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                style={{ float: 'right' }}
+              >
+                Submit
+              </Button>
+              <Button disabled={loading}>
+                <Link to="/">Back to Home Page</Link>
+              </Button>
             </Form.Item>
           </Form>
         </Card>

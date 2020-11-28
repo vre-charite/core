@@ -1,3 +1,7 @@
-.linkDisable{
-    cursor: not-allowed;
+.linkDisable {
+  cursor: not-allowed;
+}
+html,
+body {
+  min-width: 950px;
 }

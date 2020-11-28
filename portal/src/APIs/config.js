@@ -1,8 +1,13 @@
-import axios, { AxiosPromise, AxiosResponse, AxiosError,CancelTokenSource } from 'axios';
+import axios, {
+  AxiosPromise,
+  AxiosResponse,
+  AxiosError,
+  CancelTokenSource,
+} from 'axios';
 import { message } from 'antd';
 import _ from 'lodash';
 import camelcaseKeys from 'camelcase-keys';
-import { activeManager } from '../Service/activeManager'
+import { activeManager } from '../Service/activeManager';
 
 /**
  * For axios to handle the success response
@@ -17,8 +22,8 @@ function successHandler(response) {
 }
 
 /**
- * 
- * @param {AxiosError} error 
+ *
+ * @param {AxiosError} error
  */
 function errorHandler(error) {
   if (error.response) {
@@ -50,7 +55,6 @@ function errorHandler(error) {
       }
     }
   } else if (error.request) {
-
     if (error.request.status === 0) {
     }
   } else {
@@ -60,7 +64,7 @@ function errorHandler(error) {
 
     // If caused by axios canceltoken, it will have an error message.
     if (error.message) {
-      message.error('the request has been cancelled');
+      message.error(error.message || 'The request has been cancelled');
     } else {
       // Else, print the vague message.
       message.error('Error Network: please check your network connection');
@@ -139,7 +143,6 @@ const authServerAxios = axios.create({ baseURL: authService });
 authServerAxios.defaults.headers.post['Content-Type'] = 'application/json';
 authServerAxios.defaults.timeout = 10000;
 
-
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 //authServerAxios.interceptors.response.use(successHandler, errorHandler);
 
@@ -148,16 +151,15 @@ const invitationAxios = axios.create({ baseURL: 'http://bff.utility:5060' });
 invitationAxios.defaults.headers.post['Content-Type'] = 'application/json';
 invitationAxios.defaults.timeout = 10000;
 
-
-[serverAxios, tempAxios, devOpServer,
-  authServerAxios,
-  invitationAxios,].forEach(item => [
-    item.interceptors.request.use(request => {
-      request.headers['Authorization'] = axios.defaults.headers.common['Authorization'];
-      return request
-    })
-  ]);
-
+[serverAxios, tempAxios, devOpServer, authServerAxios, invitationAxios].forEach(
+  (item) => [
+    item.interceptors.request.use((request) => {
+      request.headers['Authorization'] =
+        axios.defaults.headers.common['Authorization'];
+      return request;
+    }),
+  ],
+);
 
 export {
   axios,

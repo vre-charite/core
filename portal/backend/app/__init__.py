@@ -7,6 +7,7 @@ from flask_jwt import JWT,  JWTError
 import jwt as pyjwt
 import importlib
 import json
+from services.logger_services.logger_factory_service import SrvLoggerFactory
 
 # from hdfs import InsecureClient
 # from hdfs.ext.kerberos import KerberosClient
@@ -22,6 +23,7 @@ import json
 executor = Executor()
 app = Flask(__name__, static_folder="../build/static",
             template_folder="../build")
+
 
 
 def create_app(extra_config_settings={}):
@@ -89,6 +91,8 @@ def create_app(extra_config_settings={}):
         print("###### identify")
         username = payload.get('preferred_username', None)
 
+        _logger = SrvLoggerFactory('jwt_identify').get_logger()
+
         # check if preferred_username is encoded in token
         if(not username):
             raise Exception("preferred_username is required in jwt token.")
@@ -110,9 +114,15 @@ def create_app(extra_config_settings={}):
             email = users[0]['email']
             first_name = users[0]['first_name']
             last_name = users[0]['last_name']
-            role = users[0]['role']
+
+            _logger.info(str(users))
+
+            role = None
+            if 'role' in users[0]:
+                role = users[0]['role']
 
         except Exception as e:
+            _logger.error(str(e))
             raise JWTError(description='Error', error=e)
 
         return {"user_id": user_id, "username": username, "role": role, "email": email, "first_name": first_name, "last_name": last_name}

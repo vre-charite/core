@@ -23,7 +23,7 @@ function AppFooter(props) {
         </Button> */}
       </Space>
       <small className={styles.copyright}>
-        Version 0.1.1. Copyright © {new Date().getFullYear()},{' '}
+        Version 0.2.0. Copyright © {new Date().getFullYear()},{' '}
         <a
           href="https://www.indocresearch.org/"
           target="_blank"

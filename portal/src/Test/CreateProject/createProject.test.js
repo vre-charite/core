@@ -1,8 +1,8 @@
-const { FILE } = require('dns');
 const path = require('path');
-const { devServerBaseUrl, baseUrl } = require('../config');
+const { baseUrl } = require('../config');
 const { login } = require('../Utility/login.js');
-jest.setTimeout(700000);
+const { checkErrorMessage } = require('../Utility/errorMessage');
+jest.setTimeout(30 * 1000);
 
 describe('Create Project', () => {
   let page;
@@ -23,7 +23,7 @@ describe('Create Project', () => {
     const PROJECT_NAME = `testproject${Math.floor(
       1000 + Math.random() * 9999,
     )}`;
-    await page.goto(`${baseUrl}/vre/uploader`);
+    await page.goto(`${baseUrl}/uploader`);
 
     const createPrjectonBtn = await page.waitForSelector(
       'aside.ant-layout-sider>div>ul>li',
@@ -44,8 +44,7 @@ describe('Create Project', () => {
 
     await page.waitForResponse(
       (response) =>
-        response.url() === `${devServerBaseUrl}/v1/datasets/` &&
-        response.status() === 200,
+        response.url().includes('/datasets') && response.status() === 200,
     );
 
     //wait for dom to be updated
@@ -63,12 +62,12 @@ describe('Create Project', () => {
     expect(`${PROJECT_NAME}`).toBe(projectNameText.trim());
   });
 
-  it('Create Project Successfully after refresh modal', async () => {
+  it.skip('Create Project Successfully after refresh modal', async () => {
     const PROJECT_CODE = `testcode${Math.floor(1000 + Math.random() * 9999)}`;
     const PROJECT_NAME = `testproject${Math.floor(
       1000 + Math.random() * 9999,
     )}`;
-    await page.goto(`${baseUrl}/vre/uploader`);
+    await page.goto(`${baseUrl}/uploader`);
     const refreshModalBtn = await page.waitForSelector(
       '#refresh_modal_refresh',
       {
@@ -82,11 +81,9 @@ describe('Create Project', () => {
 
     await refreshModalBtn.click();
 
-    await page.waitFor(3000);
+    await page.waitForTimeout(3000);
 
     await createPrjectonBtn.click();
-
-    await page.waitFor(10000);
 
     await page.type('#create_dataset_code', PROJECT_CODE);
 
@@ -102,12 +99,11 @@ describe('Create Project', () => {
 
     await page.waitForResponse(
       (response) =>
-        response.url() === `${devServerBaseUrl}/v1/datasets/` &&
-        response.status() === 200,
+        response.url().includes('/datasets') && response.status() === 200,
     );
 
     //wait for dom to be updated
-    await page.waitFor(2000);
+    await page.waitForTimeout(2000);
 
     const projecTitle = await page.waitForSelector(
       'h4.ant-list-item-meta-title',
@@ -121,12 +117,55 @@ describe('Create Project', () => {
     expect(`${PROJECT_NAME}`).toBe(projectNameText.trim());
   });
 
+  it(`Create project with existing project code`, async () => {
+    await page.waitForSelector(
+      'ul.ant-list-items li .ant-list-item-meta-description span',
+    );
+    //get an existing project code
+    const projectCode = await page.$eval(
+      'ul.ant-list-items li .ant-list-item-meta-description span',
+      (span) => span.textContent.split(':')[1].trim(),
+    );
+    const PROJECT_NAME = `testproject${Math.floor(
+      1000 + Math.random() * 9999,
+    )}`;
+
+    await page.goto(`${baseUrl}/uploader`);
+
+    const createPrjectonBtn = await page.waitForSelector(
+      'aside.ant-layout-sider>div>ul>li',
+    );
+
+    await page.waitForTimeout(3000);
+
+    await createPrjectonBtn.click();
+
+    await page.type('#create_dataset_code', projectCode);
+
+    await page.type('#create_dataset_name', PROJECT_NAME);
+
+    await page.type('#create_dataset_description', DESC);
+
+    const submitCreateProjectBtn = await page.waitForSelector(
+      '.ant-modal-footer .ant-btn.ant-btn-primary',
+      { visible: true },
+    );
+    await submitCreateProjectBtn.click();
+    //wait for the request get a 403
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes('/datasets') && response.status() === 403,
+    );
+    //wait for error message shown
+    await checkErrorMessage(page, 'The project code has been taken');
+  });
+
   it('Upload file after creating Project', async () => {
     const PROJECT_CODE = `testcode${Math.floor(1000 + Math.random() * 9999)}`;
     const PROJECT_NAME = `testproject${Math.floor(
       1000 + Math.random() * 9999,
     )}`;
-    await page.goto(`${baseUrl}/vre/uploader`);
+    await page.goto(`${baseUrl}/uploader`);
 
     const createPrjectonBtn = await page.waitForSelector(
       'aside.ant-layout-sider>div>ul>li',
@@ -147,8 +186,7 @@ describe('Create Project', () => {
 
     await page.waitForResponse(
       (response) =>
-        response.url() === `${devServerBaseUrl}/v1/datasets/` &&
-        response.status() === 200,
+        response.url().includes('/datasets') && response.status() === 200,
     );
 
     //wait for dom to be updated
@@ -160,7 +198,12 @@ describe('Create Project', () => {
 
     await projecTitle.click();
 
-    const projectId = page.url().split('/')[5];
+    const projectUrl = await page.evaluate(
+      (element) => element.getAttribute('href'),
+
+      projecTitle,
+    );
+    const projectId = projectUrl.split('/')[3];
 
     const FILENAME = 'projectList.test.js';
     const filePath = path.resolve('./src/Test/ProjectList/', FILENAME);
@@ -169,21 +212,17 @@ describe('Create Project', () => {
     await page.waitForSelector('#form_in_modal_file');
     const inputUploadHandler = await page.$('#form_in_modal_file');
     inputUploadHandler.uploadFile(filePath);
-    await page.waitForSelector('#file_upload_submit_btn');
-    await page.$eval('#file_upload_submit_btn', (elem) => elem.click());
+
+    await page.click('#file_upload_submit_btn');
 
     await page.waitForResponse(
       (response) =>
-        response.url() ===
-          `${devServerBaseUrl}/v1/files/containers/${projectId}/files/count/daily?action=all` &&
-        response.status() === 200,
+        response.url().includes('action=all') && response.status() === 200,
     );
-
-    await page.waitForTimeout(2000);
 
     //get first file name from table
     let fileNamefileExplorer = await page.waitForSelector(
-      '.ant-table-row.ant-table-row-level-0 > td:nth-child(2) > div',
+      '.ant-table-row.ant-table-row-level-0 > td:nth-child(2)',
     );
 
     const fileNameText = await page.evaluate(

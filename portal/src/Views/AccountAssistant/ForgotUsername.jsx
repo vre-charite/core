@@ -1,22 +1,25 @@
-import React, { useState } from 'react';
-import { useHistory, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { history } from '../../Routes';
 import { Card, Form, Input, Button, Layout, Typography, Space } from 'antd';
 import styles from './index.module.scss';
 
 import { sendUsernameEmailAPI } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
+import { useTranslation } from 'react-i18next';
 
 const { Content } = Layout;
 const { Title } = Typography;
 
 function Login() {
-  let history = useHistory();
   const [loading, setLoading] = useState(false);
+  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
+
   const onFinish = (values) => {
     setLoading(true);
+
     sendUsernameEmailAPI(values)
       .then((res) => {
-        console.log('onFinish -> res', res);
         if (res?.status === 200) {
           setLoading(false);
           history.push('/account-assistant/forgot-username-confirmation');
@@ -37,6 +40,7 @@ function Login() {
   const onFinishFailed = (errorInfo) => {
     console.log('Failed:', errorInfo);
   };
+
   return (
     <Content className={'content'}>
       <div className={styles.container}>
@@ -67,13 +71,15 @@ function Login() {
               rules={[
                 {
                   required: true,
-                  message: 'Please input your email.',
+                  message: t('formErrorMessages:common.email.empty'),
                 },
-                { type: 'email', message: 'Please input a valid email.' },
+                {
+                  type: 'email',
+                  message: t('formErrorMessages:common.email.valid'),
+                },
               ]}
               className="mb-2"
-              extra="By submitting this form, your username
-              will be sent to this email address if there's record in our database."
+              extra="Please provide the email address associated with your VRE user account.   Once verified as an authentic VRE account, an email will be sent to you containing your username.​"
             >
               <Input placeholder="Your email address" />
             </Form.Item>
@@ -82,14 +88,17 @@ function Login() {
             <br />
             <br />
             <Form.Item>
-              <Space>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Submit
-                </Button>
-                <Button>
-                  <Link to="/">Cancel</Link>
-                </Button>
-              </Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                style={{ float: 'right' }}
+              >
+                Submit
+              </Button>
+              <Button disabled={loading}>
+                <Link to="/">Back to Home Page</Link>
+              </Button>
             </Form.Item>
           </Form>
         </Card>

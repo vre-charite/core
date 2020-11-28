@@ -48,7 +48,8 @@ class UserAuthManager {
     autoRefreshMonitor() {
         const time = 60 //refresh every 60 seconds 
         const func = () => {
-            const { downloadList } = store.getState();
+            let { downloadList } = store.getState();
+            downloadList = downloadList.filter(el => el.status === 'pending');
             const tasks = q.length() + q.running() + downloadList.length;
             console.log(tasks, 'tasks')
             if (tasks !== 0||activeManager.isActive()) {
@@ -106,6 +107,7 @@ class UserAuthManager {
         const res = await refreshTokenAPI({ refreshtoken: refreshTokenOld })
         const { accessToken, refreshToken } = res.data.result;
         tokenManager.setCookies({ 'access_token': accessToken, 'refresh_token': refreshToken });
+        tokenManager.setTimeSkew(accessToken);
         tokenManager.refreshToken(accessToken);
         return res;
     }
@@ -126,7 +128,7 @@ class UserAuthManager {
         q.kill();
         if(shouldClearCookie)tokenManager.clearCookies();
         resetReduxState(shouldClearUsername);
-        tokenManager.refreshToken('no token');
+        tokenManager.refreshToken();
         history.push('/');
     }
 }

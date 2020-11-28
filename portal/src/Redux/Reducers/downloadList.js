@@ -1,4 +1,4 @@
-import { APPEND_DOWNLOAD_LIST, REMOVE_DOWNLOAD_LIST,CLEAR_DOWNLOAD_LIST } from '../actionTypes';
+import { APPEND_DOWNLOAD_LIST, REMOVE_DOWNLOAD_LIST,CLEAR_DOWNLOAD_LIST, UPDATE_DOWNLOAD_ITEM, SET_DOWNLOAD_LIST } from '../actionTypes';
 
 const init = [];
 function downloadList(state = init, action) {
@@ -15,6 +15,20 @@ function downloadList(state = init, action) {
     }
     case CLEAR_DOWNLOAD_LIST:{
       return [];
+    }
+    case UPDATE_DOWNLOAD_ITEM: {
+      console.log(payload)
+      const newDownloadList = state.map((el) => {
+        if (el.downloadKey === payload.key) el.status = payload.status;
+        
+        return el;
+      });
+
+      return newDownloadList;
+    }
+    case SET_DOWNLOAD_LIST: {
+      console.log(payload)
+      return payload;
     }
     default: {
       return state;

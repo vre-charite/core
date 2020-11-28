@@ -1,7 +1,7 @@
 jest.setTimeout(700000);
 const { login } = require('../Utility/login.js');
 const { devServerBaseUrl, baseUrl } = require('../config');
-describe('Invite User', () => {
+describe('Invite User Site Admin', () => {
   let page;
   const getPage = () => page;
 
@@ -23,7 +23,31 @@ describe('Invite User', () => {
   login(it, getPage, 'admin', 'admin');
 
   it('add user not in platform and self register', async () => {
-    await page.goto(`${baseUrl}/vre/dataset/17/teams`);
+    //Go to first project created
+    const btn = await page.waitForSelector('#uploadercontent_dropdown');
+    await btn.click();
+    const btn2 = await page.waitForSelector('#uploadercontent_first_created');
+    await btn2.click();
+
+    //wait for dom to be updated
+    await page.waitForTimeout(2000);
+
+    const projecTitle = await page.waitForSelector(
+      'h4.ant-list-item-meta-title>div>a',
+    );
+
+    const projectUrl = await page.evaluate(
+      (element) => element.getAttribute('href'),
+
+      projecTitle,
+    );
+    const projectId = projectUrl.split('/')[3];
+
+    await projecTitle.click();
+
+    await page.goto(`${baseUrl}/project/${projectId}/teams`);
+
+    await page.waitForTimeout(2000);
 
     const addUserBtn = await page.waitForSelector(
       'div.ant-page-header-heading>span>button.ant-btn.mb-2.ant-btn-primary',
@@ -47,8 +71,7 @@ describe('Invite User', () => {
 
     await page.waitForResponse(
       (response) =>
-        response.url() === `${devServerBaseUrl}/v1/invitations` &&
-        response.status() === 200,
+        response.url().includes('/invitations') && response.status() === 200,
     );
 
     console.log('New user Test Email', EMAIL);
@@ -101,14 +124,35 @@ describe('Invite User', () => {
 
     await page.waitForResponse(
       (response) =>
-        response.url() === `${devServerBaseUrl}/v1/users/new` &&
-        response.status() === 200,
+        response.url().includes('/users/new') && response.status() === 200,
     );
   });
   login(it, getPage, 'admin', 'admin');
 
   it('Check if add user with empty email shows error', async () => {
-    await page.goto(`${baseUrl}/vre/dataset/17/teams`);
+    await page.goto(baseUrl);
+    const btn = await page.waitForSelector('#uploadercontent_dropdown');
+    await btn.click();
+    const btn2 = await page.waitForSelector('#uploadercontent_first_created');
+    await btn2.click();
+
+    //wait for dom to be updated
+    await page.waitForTimeout(2000);
+
+    const projecTitle = await page.waitForSelector(
+      'h4.ant-list-item-meta-title>div>a',
+    );
+
+    const projectUrl = await page.evaluate(
+      (element) => element.getAttribute('href'),
+
+      projecTitle,
+    );
+    const projectId = projectUrl.split('/')[3];
+
+    await projecTitle.click();
+
+    await page.goto(`${baseUrl}/project/${projectId}/teams`);
 
     const addUserBtn = await page.waitForSelector(
       'div.ant-page-header-heading>span>button.ant-btn.mb-2.ant-btn-primary',
@@ -132,7 +176,31 @@ describe('Invite User', () => {
     expect(errorMessageText).toBe('Please input email!');
   });
   it('Add user already in project', async () => {
-    await page.goto(`${baseUrl}/vre/dataset/17/teams`);
+    await page.goto(baseUrl);
+
+    //Go to first project created
+    const btn = await page.waitForSelector('#uploadercontent_dropdown');
+    await btn.click();
+    const btn2 = await page.waitForSelector('#uploadercontent_first_created');
+    await btn2.click();
+
+    //wait for dom to be updated
+    await page.waitForTimeout(2000);
+
+    const projecTitle = await page.waitForSelector(
+      'h4.ant-list-item-meta-title>div>a',
+    );
+
+    const projectUrl = await page.evaluate(
+      (element) => element.getAttribute('href'),
+
+      projecTitle,
+    );
+    const projectId = projectUrl.split('/')[3];
+
+    await projecTitle.click();
+
+    await page.goto(`${baseUrl}/project/${projectId}/teams`);
 
     const addUserBtn = await page.waitForSelector(
       'div.ant-page-header-heading>span>button.ant-btn.mb-2.ant-btn-primary',
@@ -162,12 +230,85 @@ describe('Invite User', () => {
 
     expect(errorMessageText.trim()).toBe(expectErrorMessage);
   });
+
+  it('Change user role in project', async () => {
+    await page.goto(baseUrl);
+
+    //Go to first project created
+    const btn = await page.waitForSelector('#uploadercontent_dropdown');
+    await btn.click();
+    const btn2 = await page.waitForSelector('#uploadercontent_first_created');
+    await btn2.click();
+
+    //wait for dom to be updated
+    await page.waitForTimeout(2000);
+
+    const projecTitle = await page.waitForSelector(
+      'h4.ant-list-item-meta-title>div>a',
+    );
+
+    const projectUrl = await page.evaluate(
+      (element) => element.getAttribute('href'),
+
+      projecTitle,
+    );
+    const projectId = projectUrl.split('/')[3];
+
+    await projecTitle.click();
+
+    await page.goto(`${baseUrl}/project/${projectId}/teams`);
+
+    const changeRole = await page.waitForSelector(
+      'tbody>tr:first-child > td:last-child a',
+    );
+
+    await changeRole.click();
+
+    await page.evaluate(() => {
+      document.querySelector('#teams_role_dropdown > li:last-child').click();
+    });
+
+    const confirmOkBtn = await page.waitForSelector(
+      'div.ant-modal-confirm-btns > button.ant-btn.ant-btn-primary',
+    );
+
+    await confirmOkBtn.click();
+
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes('/users') && response.status() === 200,
+    );
+  });
   //Note : only username with autotest can be deleted
   it('Remove user from project', async () => {
-    await page.goto(`${baseUrl}/vre/dataset/17/teams`);
+    await page.goto(baseUrl);
+
+    //Go to first project created
+    const btn = await page.waitForSelector('#uploadercontent_dropdown');
+    await btn.click();
+    const btn2 = await page.waitForSelector('#uploadercontent_first_created');
+    await btn2.click();
+
+    //wait for dom to be updated
+    await page.waitForTimeout(2000);
+
+    const projecTitle = await page.waitForSelector(
+      'h4.ant-list-item-meta-title>div>a',
+    );
+
+    const projectUrl = await page.evaluate(
+      (element) => element.getAttribute('href'),
+
+      projecTitle,
+    );
+    const projectId = projectUrl.split('/')[3];
+
+    await projecTitle.click();
+
+    await page.goto(`${baseUrl}/project/${projectId}/teams`);
 
     const removeButton = await page.waitForSelector(
-      'tbody>tr:last-child > td:last-child > div > div:last-child',
+      'tbody>tr:first-child> td:last-child > div > div:last-child',
     );
 
     await removeButton.click();
@@ -197,68 +338,7 @@ describe('Invite User', () => {
 
     await page.waitForResponse(
       (response) =>
-        response.url() === `${devServerBaseUrl}/v1/datasets/17/users` &&
-        response.status() === 200,
-    );
-  });
-
-  it('Change user role in project', async () => {
-    await page.goto(`${baseUrl}/vre/dataset/17/teams`);
-
-    const changeRole = await page.waitForSelector(
-      'tbody>tr:last-child > td:last-child a',
-    );
-
-    await changeRole.click();
-
-    await page.evaluate(() => {
-      document.querySelector('#teams_role_dropdown_contributor').click();
-    });
-
-    const confirmOkBtn = await page.waitForSelector(
-      'div.ant-modal-confirm-btns > button.ant-btn.ant-btn-primary',
-    );
-
-    await confirmOkBtn.click();
-
-    await page.waitForResponse(
-      (response) =>
-        response.url() === `${devServerBaseUrl}/v1/datasets/17/users` &&
-        response.status() === 200,
-    );
-  });
-
-  it('Change user role in project', async () => {
-    await page.goto(`${baseUrl}/vre/dataset/17/teams`);
-
-    const changeRole = await page.waitForSelector(
-      'tbody>tr:last-child > td:last-child a',
-    );
-
-    await changeRole.click();
-
-    await page.evaluate(() => {
-      document.querySelector('#teams_role_dropdown_contributor').click();
-    });
-
-    const confirmOkBtn = await page.waitForSelector(
-      'div.ant-modal-confirm-btns > button.ant-btn.ant-btn-primary',
-    );
-
-    await confirmOkBtn.click();
-
-    await page.waitForResponse(
-      (response) =>
-        response.url() === `${devServerBaseUrl}/v1/datasets/17/users` &&
-        response.status() === 200,
-    );
-  });
-
-  it('Check if current role is disabled', async () => {
-    await page.goto(`${baseUrl}/vre/dataset/17/teams`);
-
-    const changeRole = await page.waitForSelector(
-      'tbody>tr:last-child > td:last-child a',
+        response.url().includes('/users') && response.status() === 200,
     );
   });
 });

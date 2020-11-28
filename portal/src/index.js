@@ -1,22 +1,23 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { /* BrowserRouter as  */ Router } from "react-router-dom";
-import { CookiesProvider } from "react-cookie";
-import App from "./App";
-import { Provider } from "react-redux";
-import {store,persistor} from "./Redux/store";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { /* BrowserRouter as  */ Router } from 'react-router-dom';
+import { CookiesProvider } from 'react-cookie';
+import App from './App';
+import { Provider } from 'react-redux';
+import { store, persistor } from './Redux/store';
 import { PersistGate } from 'redux-persist/integration/react';
-import {history} from './Routes'
+import { history } from './Routes';
+import './i18n';
 
 ReactDOM.render(
   <CookiesProvider>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <Router /* basename={"/vre"} */ history={history} forceRefresh={false}>
-            <App />
+          <App />
         </Router>
       </PersistGate>
     </Provider>
   </CookiesProvider>,
-  document.getElementById("root")
+  document.getElementById('root'),
 );

@@ -91,9 +91,12 @@ class Canvas extends Component {
   }
   componentDidMount() {
     // this.init();
-    this.setState({ currentUser: this.props.username })
+    this.setState({ currentUser: this.props.username });
     this.fetchDatasetName();
     this.updatePermision();
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 0);
   }
 
   init = () => {
@@ -374,8 +377,8 @@ class Canvas extends Component {
           {route.breadcrumbName}
         </span>
       ) : (
-          <Link to="/uploader">{route.breadcrumbName}</Link>
-        );
+        <Link to="/landing">{route.breadcrumbName}</Link>
+      );
     }
 
     let currentRole = this.state.currentRole;
@@ -385,7 +388,7 @@ class Canvas extends Component {
 
     if (currentRole === 'admin') {
       if (this.props.role === 'admin') {
-        currentRole = 'Portal Administrator';
+        currentRole = 'Platform Administrator';
       } else {
         currentRole = 'Project Administrator';
       }
@@ -396,94 +399,93 @@ class Canvas extends Component {
         {loading ? (
           <Spin />
         ) : (
-            <>
-              <Content className="content">
-                <Row style={{ paddingBottom: '10px' }}>
-                  <Col span={1} />
-                  <Col
-                    span={22}
-                    style={{
-                      paddingTop: '10px',
-                    }}
-                  >
-                    <Row>
-                      <PageHeader
-                        ghost={false}
-                        style={{
-                          border: '1px solid rgb(235, 237, 240)',
-                          width: '100%',
-                          marginTop: '10px',
-                        }}
-                        title={
-                          <span
-                            style={{
-                              maxWidth: '1000px',
-                              display: 'inline-block',
-                              verticalAlign: 'bottom',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            Project: {this.state.datasetName}
-                          </span>
-                        }
-                        subTitle={`Your role is ${currentRole}.`}
-                        extra={[
-                          <Button type="" onClick={this.handleResetLayout}>
-                            Reset Layout
+          <>
+            <Content className="content">
+              <Row style={{ paddingBottom: '10px' }}>
+                <Col
+                  span={24}
+                  style={{
+                    paddingTop: '10px',
+                  }}
+                >
+                  <Row>
+                    <PageHeader
+                      ghost={false}
+                      style={{
+                        border: '1px solid rgb(235, 237, 240)',
+                        width: '100%',
+                        marginTop: '10px',
+                      }}
+                      title={
+                        <span
+                          style={{
+                            maxWidth: '1000px',
+                            display: 'inline-block',
+                            verticalAlign: 'bottom',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          Project: {this.state.datasetName}
+                        </span>
+                      }
+                      subTitle={`Your role is ${currentRole}.`}
+                      extra={[
+                        <Button type="" onClick={this.handleResetLayout}>
+                          Reset Layout
                         </Button>,
-                        ]}
-                        breadcrumb={{ routes, itemRender }}
-                      />
-                    </Row>
-                    <DragArea
-                      key={this.state.updateCount}
-                      onLayoutChange={this.onLayoutChange}
-                      layout={this.state.layout[this.state.currentRole]}
-                      handleSaveLayout={this.handleSaveLayout}
-                      handleResetLayout={this.handleResetLayout}
-                    >
-                      {cardTypes[this.state.currentRole] &&
-                        cardTypes[this.state.currentRole].map((card) => {
-                          return (
-                            <div key={card.key}>
-                              <BasicCard
-                                title={card.title}
-                                expandable={card.expandable}
-                                exportable={card.exportable}
-                                handleExpand={this.handleExpand}
-                                defaultSize={card.defaultSize}
-                                expandComponent={card.expandComponent}
-                                content={getCard(
-                                  card,
-                                  data,
-                                  this.actions,
-                                  this.state,
-                                  this.handleExpand,
-                                )}
-                                datasetId={this.state.currentDataset}
-                                currentUser={this.props.username}
-                                isAdmin={this.state.currentRole === 'admin'}
-                              />
-                            </div>
-                          );
-                        })}
-                    </DragArea>
-                  </Col>
-                  <Col span={1} />
-                  <Modal
-                    title={modalTitle}
-                    visible={modalVisible}
-                    onCancel={this.handleExpandClose}
-                    style={{ minWidth: this.state.modalWidth }}
-                    footer={null}
+                      ]}
+                      breadcrumb={{ routes, itemRender }}
+                    />
+                  </Row>
+                  <DragArea
+                    key={this.state.updateCount}
+                    onLayoutChange={this.onLayoutChange}
+                    layout={this.state.layout[this.state.currentRole]}
+                    handleSaveLayout={this.handleSaveLayout}
+                    handleResetLayout={this.handleResetLayout}
                   >
-                    {content}
-                  </Modal>
-                </Row>
-              </Content>
-            </>
-          )}
+                    {cardTypes[this.state.currentRole] &&
+                      cardTypes[this.state.currentRole].map((card) => {
+                        return (
+                          <div key={card.key}>
+                            <BasicCard
+                              title={card.title}
+                              expandable={card.expandable}
+                              exportable={card.exportable}
+                              handleExpand={this.handleExpand}
+                              defaultSize={card.defaultSize}
+                              expandComponent={card.expandComponent}
+                              content={getCard(
+                                card,
+                                data,
+                                this.actions,
+                                this.state,
+                                this.handleExpand,
+                              )}
+                              datasetId={this.state.currentDataset}
+                              currentUser={this.props.username}
+                              isAdmin={this.state.currentRole === 'admin'}
+                            />
+                          </div>
+                        );
+                      })}
+                  </DragArea>
+                </Col>
+                <Modal
+                  title={modalTitle}
+                  visible={modalVisible}
+                  onCancel={this.handleExpandClose}
+                  style={{ minWidth: this.state.modalWidth }}
+                  footer={null}
+                  maskClosable={false}
+                >
+                  {content}
+                </Modal>
+              </Row>
+            </Content>
+          </>
+        )}
       </>
     );
   }

@@ -13,7 +13,7 @@ function Error404(props) {
         extra={
           <Button
             onClick={() => {
-              props.history.push('/uploader');
+              props.history.push('/landing');
             }}
             type="primary"
           >

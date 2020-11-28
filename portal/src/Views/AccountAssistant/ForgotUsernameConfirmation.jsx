@@ -13,18 +13,18 @@ function ActivateUser(props) {
         <Card>
           <Result
             status="success"
-            title="Your request is sent!"
+            title="Your request has been sent!"
             subTitle={
               <>
                 An email with your username has been sent to your mailbox.{' '}
                 <br />
-                You can use this username to find your password or login
+                You can use this username to reset your password or login
                 directly.
               </>
             }
             extra={[
               <Button type="primary" key="home">
-                <Link to="/">Back to home page</Link>
+                <Link to="/">Back to Home Page</Link>
               </Button>,
             ]}
           />

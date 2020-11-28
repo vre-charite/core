@@ -23,7 +23,7 @@ class InvitationForm:
 
     @property
     def project_id(self):
-        return self._attribute_map['projectId']
+        return self._attribute_map.get('projectId')
 
     @project_id.setter
     def project_id(self, project_id):

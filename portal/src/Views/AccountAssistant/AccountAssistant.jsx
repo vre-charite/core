@@ -11,7 +11,6 @@ function Support(props) {
   };
 
   const match = useRouteMatch();
-  console.log(routes);
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Switch>

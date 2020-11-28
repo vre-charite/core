@@ -4,6 +4,9 @@ from .api_invitation import APIInvitation
 from .api_report import APIReport
 from .api_auth import APIAuthService
 from .api_contact_us import APIContactUs
+from .api_cataloguing import APICataloguing
+from .api_time import APITimestamp
+from .api_notification import APINotification
 from dataset.route_registry import APIDateSet
 
 apis = [
@@ -12,7 +15,10 @@ apis = [
     APIDateSet(),
     APIReport(),
     APIAuthService(),
-    APIContactUs()
+    APIContactUs(),
+    APICataloguing(),
+    APITimestamp(),
+    APINotification()
 ]
 
 

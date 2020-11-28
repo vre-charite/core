@@ -7,7 +7,6 @@ import {
   getFilesByTypeAPI,
 } from '../../../../../APIs';
 import { getChildrenTree, withCurrentProject } from '../../../../../Utility';
-import ContainerDetailsContent from './ContainerDetailsContent';
 import RawTable from './RawTable';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
@@ -17,9 +16,29 @@ import {
   FolderOpenOutlined,
   DownOutlined,
   FolderOutlined,
+  HomeOutlined,
+  CloudServerOutlined,
 } from '@ant-design/icons';
+import { pipelines } from '../../../../../Utility/pipelines';
+import Collapse from '../../../../../Components/Collapse/Collapse';
 
 const { TabPane } = Tabs;
+
+function getTitle(title) {
+  if (title.startsWith('Core')) {
+    return (
+      <>
+        <CloudServerOutlined /> {title}
+      </>
+    );
+  } else {
+    return (
+      <>
+        <HomeOutlined /> {title}
+      </>
+    );
+  }
+}
 
 /**
  * props: need datasetId
@@ -32,15 +51,16 @@ class FilesContent extends Component {
     super(props);
 
     this.state = {
-      activeKey: '0',
+      activeKey: 'greenroom-raw',
       panes: [], //folder panes
       treeData: [
         {
           title: 'Raw',
-          key: '0',
+          key: 'greenroom-raw',
           icon: <FolderOpenOutlined />,
         },
       ], //folder view data
+      coreTreeData: [],
       treeKey: 0, //to mark refresh
       rawData: [],
       totalItem: 0,
@@ -50,6 +70,7 @@ class FilesContent extends Component {
       currentRole: null,
     };
   }
+
   componentDidMount() {
     this.fetch();
     const { datasetId } = this.props;
@@ -60,7 +81,7 @@ class FilesContent extends Component {
 
     this.setState((prev) => ({
       treeData: treeData,
-      treeKey: this.state.treeKey + 1, //This is causing a warning ? Why do we need this?
+      // treeKey: this.state.treeKey + 1, //This is causing a warning ? Why do we need this?
       currentDataset,
     }));
   }
@@ -92,8 +113,9 @@ class FilesContent extends Component {
       entities = entities.map((item) => ({
         ...item.attributes,
         tags: item.labels,
-        guid:item.guid,
+        guid: item.guid,
         key: item.attributes.name,
+        typeName: item.typeName,
       }));
       this.setState({ rawData: entities, totalItem: approximateCount });
 
@@ -133,6 +155,9 @@ class FilesContent extends Component {
       entities = entities.map((item) => ({
         ...item.attributes,
         key: item.attributes.name,
+        typeName: item.typeName,
+        guid: item.guid,
+        tags: item.labels,
       }));
       this.setState({
         processedData: entities,
@@ -190,14 +215,7 @@ class FilesContent extends Component {
         undefined,
       );
 
-      const coreFolders = this.computePureFolders(
-        allFolders.data.result.vre,
-        // subContainers.data.result.children,
-        undefined,
-      );
-
-      const treeData = getChildrenTree(pureFolders, 0, '');
-      const treeData2 = getChildrenTree(coreFolders, 'core', '');
+      const treeData = getChildrenTree(pureFolders, 'greenroom', '');
 
       const processedFolder = _.find(treeData, (ele) => {
         return ele.title === 'processed';
@@ -208,21 +226,67 @@ class FilesContent extends Component {
       if (processedFolder) {
         newTree.push({
           title: 'Processed',
-          key: '1',
+          key: 'greenroom-processed',
           icon: <FolderOutlined />,
           disabled: true,
           children: processedFolder.children,
         });
       }
 
-      // newTree[2].children = treeData2;  copy files workflow
+      //Calculate the core folders
+      let coreFolders = allFolders.data.result.vre;
 
+      //core folders only care about items "raw" or "processed"
+      coreFolders = coreFolders
+        .filter(
+          (el) =>
+            Object.keys(el) &&
+            (Object.keys(el)[0] === 'raw' ||
+              Object.keys(el)[0] === 'processed') &&
+            el[Object.keys(el)[0]]?.length,
+        )
+        .map((el) => {
+          //Uppercasing the first letter of folder name
+          const title =
+            Object.keys(el)[0].charAt(0).toUpperCase() +
+            Object.keys(el)[0].slice(1);
+          const content = el[Object.keys(el)[0]];
+          delete el[Object.keys(el)[0]];
+          el[title] = content;
+
+          return el;
+        });
+
+      let coreTreeData = getChildrenTree(coreFolders, 'core', '');
+
+      //If there are processed data folder, add it to the tree
+      if (coreTreeData) {
+        const processedCoreFolder = _.find(coreTreeData, (ele) => {
+          return ele.title === 'processed';
+        });
+
+        coreTreeData.push({
+          title: 'Processed',
+          key: 'core-processed',
+          icon: <FolderOutlined />,
+          disabled: true,
+          children: processedCoreFolder?.children,
+        });
+      }
+
+      this.setState({
+        coreTreeData: coreTreeData?.map((el) => {
+          return { ...el, children: undefined };
+        }),
+      });
+
+      //Calculate default pane
       const newPanes = this.state.panes;
       const pane = {};
       const firstPane = newTree[0];
       pane.id = firstPane.id;
       pane.path = firstPane.path;
-      pane.title = firstPane.title;
+      pane.title = getTitle(`Green Room - ${firstPane.title}  `);
       pane.key = firstPane.key;
       pane.content = (
         <RawTable
@@ -254,11 +318,16 @@ class FilesContent extends Component {
 
   //Tab
   onChange = (activeKey) => {
-    this.setState({ activeKey });
+    this.setState((prev) => {
+      return { activeKey, treeKey: prev.treeKey + 1 };
+    });
   };
 
   onEdit = (targetKey, action) => {
     this[action](targetKey);
+    this.setState((prev) => {
+      return { treeKey: prev.treeKey + 1 };
+    });
   };
 
   remove = (targetKey) => {
@@ -282,7 +351,13 @@ class FilesContent extends Component {
   };
 
   render() {
-    const { treeData, treeKey, currentDataset } = this.state;
+    const {
+      treeData,
+      coreTreeData,
+      treeKey,
+      currentDataset,
+      activeKey,
+    } = this.state;
 
     const onSelect = async (selectedKeys, info) => {
       if (selectedKeys.length === 0) {
@@ -298,12 +373,15 @@ class FilesContent extends Component {
 
       if (isOpen) {
         //set active pane
-        this.setState({ activeKey: selectedKeys[0] });
+        this.setState((prev) => {
+          return { activeKey: selectedKeys[0], treeKey: prev.treeKey + 1 };
+        });
       } else {
         //Render raw table if 0
-        if (selectedKeys[0] === '0') {
+        if (selectedKeys[0] === 'greenroom-raw') {
+          const title = getTitle(`Green Room - ${info.node.title}  `);
           const pane = {
-            title: info.node.title,
+            title: title,
             content: (
               <RawTable
                 {...info.node}
@@ -318,42 +396,36 @@ class FilesContent extends Component {
             id: info.node.id,
           };
           panes.push(pane);
-          this.setState({
-            activeKey: selectedKeys[0].toString(),
-            panes,
+          this.setState((prev) => {
+            return {
+              activeKey: selectedKeys[0].toString(),
+              panes,
+              treeKey: prev.treeKey + 1,
+            };
           });
-        } else if (selectedKeys[0] === '1') {
-          //Render the notification if 1
-          const pane = {
-            title: info.node.title,
-            content: <p>Please click on the pipeline name to view files.</p>,
-            key: info.node.key.toString(),
-            id: info.node.id,
-          };
-          panes.push(pane);
-          this.setState({
-            activeKey: selectedKeys[0].toString(),
-            panes,
-          });
-        } else if (selectedKeys[0] === '1-dicomEdit') {
+        } else if (selectedKeys[0] === 'greenroom-processed-dicomEdit') {
           // Render container details table if pipleline
           const currentDatasetProccessed = this.props.currentProject;
+          info.node.path = pipelines['GENERATE_PROCESS'];
 
-          const {
-            processedData,
-            totalProcessedItem,
-          } = await this.fetchProcesseData(info.node.path, null);
+          // const {
+          //   processedData,
+          //   totalProcessedItem,
+          // } = await this.fetchProcesseData(pipelines['GENERATE_PROCESS'], null);
+
+          const result = await this.fetchProcesseData(
+            pipelines['GENERATE_PROCESS'],
+            null,
+          );
+
+          const processedData = result && result.processedData;
+          const totalProcessedItem = result && result.totalProcessedItem;
+
+          const title = getTitle(`Green Room - ${info.node.title}  `);
 
           const pane = {
-            title: info.node.title,
+            title: title,
             content: (
-              // <ContainerDetailsContent
-              //   {...info.node}
-              //   datasetId={this.props.match.params.datasetId}
-              //   currentDataset={currentDatasetProccessed}
-              //   processedData={processedData}
-              //   totalProcessedItem={totalProcessedItem}
-              // />
               <RawTable
                 {...info.node}
                 projectId={this.props.match.params.datasetId}
@@ -361,38 +433,100 @@ class FilesContent extends Component {
                 rawData={processedData}
                 totalItem={totalProcessedItem}
                 type="processed table"
+                hideUpload={true}
               />
             ),
             key: info.node.key.toString(),
             id: info.node.id,
           };
           panes.push(pane);
-          this.setState({
-            activeKey: selectedKeys[0].toString(),
-            panes,
+          this.setState((prev) => {
+            return {
+              activeKey: selectedKeys[0].toString(),
+              panes,
+              treeKey: prev.treeKey + 1,
+            };
+          });
+        } else if (selectedKeys[0].startsWith('core')) {
+          const currentDatasetProccessed = this.props.currentProject;
+          // for data copy
+
+          const {
+            processedData,
+            totalProcessedItem,
+          } = await this.fetchProcesseData(pipelines['DATA_COPY'], null);
+          info.node.path = pipelines['DATA_COPY'];
+
+          const title = getTitle(`Core - ${info.node.title}  `);
+
+          const pane = {
+            title: title,
+            content: (
+              <RawTable
+                {...info.node}
+                projectId={this.props.match.params.datasetId}
+                currentDataset={currentDatasetProccessed}
+                rawData={processedData}
+                totalItem={totalProcessedItem}
+                type="processed table"
+                hideUpload={true}
+              />
+            ),
+            key: info.node.key.toString(),
+            id: info.node.id,
+          };
+          panes.push(pane);
+          this.setState((prev) => {
+            return {
+              activeKey: selectedKeys[0].toString(),
+              panes,
+              treeKey: prev.treeKey + 1,
+            };
           });
         } else {
           console.log('no matching keys');
         }
       }
     };
-
     return (
       <>
         {!['uploader', 'contributor'].includes(this.state.currentRole) ? (
           <Row>
-            <Col span={4}>
-              <Tree
-                showIcon
-                defaultExpandedKeys={['1', '2']}
-                defaultSelectedKeys={['0']}
-                switcherIcon={<DownOutlined />}
-                onSelect={onSelect}
-                treeData={treeData}
-                key={treeKey}
-              />
+            <Col xs={24} sm={24} md={24} lg={24} xl={4}>
+              <Collapse
+                title={'Green Room'}
+                icon={<HomeOutlined />}
+                active={activeKey.startsWith('greenroom')}
+              >
+                <Tree
+                  showIcon
+                  defaultExpandedKeys={['greenroom-raw', 'greenroom-processed']}
+                  defaultSelectedKeys={[activeKey]}
+                  switcherIcon={<DownOutlined />}
+                  onSelect={onSelect}
+                  treeData={treeData}
+                  key={treeKey}
+                />
+              </Collapse>
+              {coreTreeData?.length > 0 && this.state.currentRole === 'admin' && (
+                <Collapse
+                  title={'Core'}
+                  icon={<CloudServerOutlined />}
+                  active={activeKey.startsWith('core')}
+                >
+                  <Tree
+                    showIcon
+                    defaultExpandedKeys={['core-raw']}
+                    defaultSelectedKeys={[activeKey]}
+                    switcherIcon={<DownOutlined />}
+                    onSelect={onSelect}
+                    treeData={coreTreeData}
+                    key={treeKey}
+                  />
+                </Collapse>
+              )}
             </Col>
-            <Col span={20}>
+            <Col xs={24} sm={24} md={24} lg={24} xl={20}>
               <div>
                 <Tabs
                   hideAdd

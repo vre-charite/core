@@ -5,17 +5,19 @@ const logFilePath = './src/Test/ProjectList/projectList.log';
 const fileLogger = require('pino')(pino.destination(logFilePath));
 const { login } = require('../Utility/login.js');
 const { toNamespacedPath } = require('path');
+const { baseUrl } = require('../config');
 jest.setTimeout(60000);
 
-describe('project List', () => {
+describe('projectList', () => {
   let page;
   const getPage = () => page;
   beforeAll(async () => {
     page = await context.newPage();
-    await page.goto('http://localhost:3000');
+    await page.goto(baseUrl);
     await page.setViewport({ width: 1366, height: 768 });
   });
   login(it, getPage, 'admin', 'admin');
+
   it('First Project Should be Generate', async () => {
     const btn = await page.waitForSelector('#uploadercontent_dropdown');
     await btn.click();
@@ -101,7 +103,7 @@ describe('project List', () => {
     let checkUrl = await page.evaluate(() => location.href);
 
     //chcek if url includes part of project url
-    const urlTrue = checkUrl.indexOf('/vre/dataset/') > -1 ? true : false;
+    const urlTrue = checkUrl.indexOf('/vre/project/') > -1 ? true : false;
 
     expect(urlTrue).toBe(true);
 
@@ -117,18 +119,16 @@ describe('project List', () => {
     expect(text).toMatch('Project: GENERATE');
   });
 
-  it('Shows warning message', async () => {
-    const warningMessage = await page.$(
-      '#root > section > header > div > span.ant-alert-message',
+  it('Banner on the top of the page to indicate that VRE release is for testing purpose', async () => {
+    await page.waitForSelector(
+      '.ant-alert.ant-alert-warning .ant-alert-message',
     );
-
-    const text = await page.evaluate(
-      (element) => element.textContent,
-      warningMessage,
+    const text =
+      'This release of the VRE is exclusively for testing purposes. The upload of files containing clinical and/or research data of any type is strictly forbidden. By proceeding, you are agreeing to these terms.';
+    const textDom = await page.$eval(
+      '.ant-alert.ant-alert-warning .ant-alert-message',
+      (span) => span.innerText,
     );
-
-    expect(text).toMatch(
-      'This release of the VRE is exclusively for testing purposes by Charité staff.  The upload of files containing clinical and/or research data of any type is strictly forbidden.  By proceeding, you are agreeing to these terms.',
-    );
+    await expect(textDom).toMatch(text);
   });
 });

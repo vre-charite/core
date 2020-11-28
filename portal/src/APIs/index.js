@@ -19,7 +19,10 @@ import {
   listProjectTagsAPI,
   deleteUploadStatus,
   addProjectTagsAPI,
-  deleteProjectTagsAPI
+  deleteProjectTagsAPI,
+  fileLineageAPI,
+  checkDownloadStatus,
+  deleteDownloadStatus,
 } from './file';
 import {
   getDatasetsAPI,
@@ -37,6 +40,7 @@ import {
   traverseFoldersContainersAPI,
   listAllContainersPermission,
   removeUserFromDatasetApi,
+  setUserStatusFromDatasetApi,
   updateDatasetInfoAPI,
 } from './datasetsAPI';
 import {
@@ -50,6 +54,13 @@ import {
   UserSelfRegistrationAPI,
   contactUsApi,
   getAdminsOnDatasetAPI,
+  getPortalUsers,
+  getUserOnProjectAPI,
+  guacomoleAPI,
+  checkUserPlatformRole,
+  getUserProjectListAPI,
+  updateUserStatusAPI,
+  getInvitationsAPI,
 } from './user';
 import {
   refreshTokenAPI,
@@ -59,7 +70,9 @@ import {
   resetForgottenPasswordAPI,
   checkTokenAPI,
 } from './auth';
-
+import {
+  sendEmailToAll
+} from './tools';
 export {
   refreshTokenAPI,
   uploadFileApi,
@@ -84,6 +97,10 @@ export {
   createFolderApi,
   listAllContainersPermission,
   removeUserFromDatasetApi,
+  setUserStatusFromDatasetApi,
+  getUserProjectListAPI,
+  updateUserStatusAPI,
+  getInvitationsAPI,
   checkIsUserExistAPI,
   checkEmailExistAPI,
   inviteUserApi,
@@ -113,5 +130,13 @@ export {
   listProjectTagsAPI,
   deleteUploadStatus,
   addProjectTagsAPI,
-  deleteProjectTagsAPI
+  deleteProjectTagsAPI,
+  fileLineageAPI,
+  checkDownloadStatus,
+  deleteDownloadStatus,
+  getPortalUsers,
+  getUserOnProjectAPI,
+  guacomoleAPI,
+  checkUserPlatformRole,
+  sendEmailToAll
 };

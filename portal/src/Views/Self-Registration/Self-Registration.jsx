@@ -28,6 +28,7 @@ import { apiErrorHandling } from '../../Utility';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
+import { useTranslation } from 'react-i18next';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -52,23 +53,37 @@ const tailLayout = {
 function SelfRegistration(props) {
   const [validatingStatus, setValidatingStatus] = useState('');
   const [info, setInfo] = useState({
-    role: 'hello',
+    role: '',
     projectId: 'project',
     email: null,
   });
   const [visible, setVisible] = useState(false);
   const [btnDisable, setBtnDisable] = useState(true);
-
+  const { t, i18n } = useTranslation([
+    'tooltips',
+    'success',
+    'formErrorMessages',
+  ]);
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+
   const submitForm = (values) => {
-    const params = {
+    setLoading(true);
+    let params = {
       ...values,
-      ...info,
+      // ...info,
       token: props.match.params.invitationHash,
     };
+    if (info.projectId) {
+      params = { ...params, ...info, status: 'active' };
+    } else {
+      params = { ...params, portalRole: info.role, email: info.email, status: 'active' };
+    }
+    console.log(params);
     UserSelfRegistrationAPI(params)
       .then((res) => {
-        message.success('Sign-up successful!');
+        message.success(t('success:selfRegistration'));
+        setLoading(false);
         props.history.push('/');
       })
       .catch((err) => {
@@ -77,6 +92,7 @@ function SelfRegistration(props) {
             namespace.selfRegister.selfRegistration,
           );
           errorMessager.triggerMsg(err.response.status);
+          setLoading(false);
         }
       });
   };
@@ -163,14 +179,21 @@ function SelfRegistration(props) {
                   rules={[
                     {
                       required: true,
-                      message: 'Please input your username',
+                      message: t('formErrorMessages:common.username.empty'),
                     },
                     {
-                      pattern: '^[a-z0-9_-]+$',
-                      message: 'Only lower case letters and numbers allowed',
+                      pattern: '^[a-z0-9]{1,32}$',
+                      // pattern: "^[^A-Z/\\<>]{1,32}$",
+                      message: t('formErrorMessages:common.username.valid'),
                     },
                     ({ getFieldValue }) => ({
                       validator: async (rule, value) => {
+                        // const hasBackslash = value.indexOf('\\');
+                        // if (hasBackslash !== -1)
+                        //   return Promise.reject(
+                        //     t('formErrorMessages:common.username.valid'),
+                        //   );
+
                         if (!value.length) {
                           setValidatingStatus('error');
                           return;
@@ -200,7 +223,9 @@ function SelfRegistration(props) {
                   rules={[
                     {
                       required: true,
-                      message: 'Please input your first name',
+                      message: t(
+                        'formErrorMessages:selfRegister.firstName.empty',
+                      ),
                       whitespace: true,
                     },
                   ]}
@@ -213,7 +238,9 @@ function SelfRegistration(props) {
                   rules={[
                     {
                       required: true,
-                      message: 'Please input your last name',
+                      message: t(
+                        'formErrorMessages:selfRegister.lastName.empty',
+                      ),
                       whitespace: true,
                     },
                   ]}
@@ -223,7 +250,7 @@ function SelfRegistration(props) {
                 <Form.Item label="Email">
                   <Input value={info.email} disabled />
                 </Form.Item>
-                {/* 
+                {/*
                 <Form.Item label="Project ID">
                   <Input value={info.projectId} disabled />
                 </Form.Item> */}
@@ -235,7 +262,7 @@ function SelfRegistration(props) {
                   label={
                     <span>
                       Password&nbsp;
-                      <Tooltip title="The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).">
+                      <Tooltip title={t('password')}>
                         <QuestionCircleOutlined />
                       </Tooltip>
                     </span>
@@ -244,15 +271,14 @@ function SelfRegistration(props) {
                   rules={[
                     {
                       required: true,
-                      message: 'Please input your password',
+                      message: t('formErrorMessages:common.password.empty'),
                       whitespace: true,
                     },
                     {
                       pattern: new RegExp(
                         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_!%&/()=?*+#,.;])[A-Za-z\d-_!%&/()=?*+#,.;]{11,30}$/g,
                       ),
-                      message:
-                        'The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).',
+                      message: t('formErrorMessages:common.password.valid'),
                     },
                   ]}
                 >
@@ -264,7 +290,9 @@ function SelfRegistration(props) {
                   rules={[
                     {
                       required: true,
-                      message: 'Please confirm your password!',
+                      message: t(
+                        'formErrorMessages:common.confirmPassword.empty',
+                      ),
                     },
 
                     ({ getFieldValue }) => ({
@@ -274,7 +302,7 @@ function SelfRegistration(props) {
                         }
 
                         return Promise.reject(
-                          'The two passwords that you entered do not match!',
+                          t('formErrorMessages:common.confirmPassword.valid'),
                         );
                       },
                     }),
@@ -293,7 +321,7 @@ function SelfRegistration(props) {
                         value
                           ? Promise.resolve()
                           : Promise.reject(
-                              'Please read and accept the terms of use to proceed',
+                              t('formErrorMessages:selfRegister.tou.valid'),
                             ),
                     },
                   ]}
@@ -304,7 +332,7 @@ function SelfRegistration(props) {
                   </Checkbox>
                 </Form.Item>
                 <Form.Item wrapperCol={6}>
-                  <Button type="primary" htmlType="submit">
+                  <Button type="primary" htmlType="submit" loading={loading}>
                     Submit
                   </Button>
                 </Form.Item>

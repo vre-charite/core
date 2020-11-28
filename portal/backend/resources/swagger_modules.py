@@ -26,6 +26,7 @@ new_user_module = module_api.model("new_user", {
     "last_name": fields.String,
     "project_id":fields.Integer,
     "role":fields.String,
+    "portal_role":fields.String,
     "token":fields.String
 })
 
@@ -228,3 +229,7 @@ success_return = '''
         result: success
     }
 '''
+
+dataset_user_status= module_api.model("dataset_user_status", {
+    "status": fields.String,
+})

@@ -9,7 +9,7 @@ function ContactUs() {
       <Card title="Contact Us" style={{ marginBottom: '10px' }}>
         <Result
           status="success"
-          title="Your request is sent!"
+          title="Your request has been sent!"
           subTitle={
             <>
               <p>

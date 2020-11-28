@@ -1,5 +1,5 @@
 from flask_restx import Api, Resource, fields
-from flask import request
+from flask import request, Response, redirect
 from config import ConfigClass
 from models.api_response import APIResponse, EAPIResponseCode
 from models.api_meta_class import MetaAPI
@@ -15,7 +15,7 @@ api_ns_hello = module_api.namespace('Hello VRE', description='For backend servic
 ## for backend services down/on testing
 class APIHelloWorld(metaclass=MetaAPI):
     def api_registry(self):
-        api_ns_hello.add_resource(self.Restful, '/helloworld/') ## for browser
+        api_ns_hello.add_resource(self.Restful, '/helloworld/test_gua') ## for browser
         api_ns_hello.add_resource(self.Restful, '/helloworld') ## for curl/postman
     class Restful(Resource):
         ## init logger
@@ -37,7 +37,12 @@ class APIHelloWorld(metaclass=MetaAPI):
             hello_content = my_srv.get_content()
             my_res.set_code(EAPIResponseCode.success)
             my_res.set_result(hello_content)
-            return my_res.to_dict, my_res.code
+            res = Response()
+            res.status_code = 301
+            res.headers['Location'] = 'http://10.3.7.225:8000/vre/guacamole/#/'
+            res.headers['REMOTE_USER'] = 'guacadmin'
+            res.headers['Access-Control-Allow-Origin'] = '*'
+            return res
         def post(self):
             '''
             Hello Wolrd PlaceHolder

@@ -1,11 +1,12 @@
 //const basePath = 'C:\\Users\\combo\\Desktop\\upload-test\\';
 const _ = require('lodash');
-const path = require('path')
+const path = require('path');
+const {searchAndClickProject} = require('../ProjectList/clickProject')
 function uploadMultipleFilesGenerate(it, testTitle, getPage, fileNames, basePath) {
     if (!_.isFunction(getPage)) throw new TypeError('getPage should be a function');
     it(testTitle, async () => {
         const page = getPage();
-        const filePaths = fileNames.map(filePath => path.resolve(basePath, 'mojito10\\', filePath));
+        const filePaths = fileNames.map(filePath => path.resolve(basePath, filePath));
         await page.waitForSelector('#raw_table_upload');
         await page.$eval('#raw_table_upload', elem => elem.click());
         await page.waitForSelector('#form_in_modal_gid');
@@ -24,8 +25,13 @@ function gotoGenerate(it,testTitle,getPage,baseUrl){
     if (!_.isFunction(getPage)) throw new TypeError('getPage should be a function');
     it(testTitle,async ()=>{
         const page = getPage();
-        await page.goto(`${baseUrl}/vre/dataset/17/canvas`);
-        await expect(page.url()).toMatch(`${baseUrl}/vre/dataset/17/canvas`);
+        await page.goto(`${baseUrl}/uploader`);
+        try{
+            await searchAndClickProject(page,'generate')
+        }catch(err){
+            console.log(err)
+        }
+        
     })
 }
 module.exports = { uploadMultipleFilesGenerate,gotoGenerate }

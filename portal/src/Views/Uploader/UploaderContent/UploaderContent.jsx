@@ -12,11 +12,18 @@ import {
   Dropdown,
   Menu,
   Space,
+  Card,
+  Form,
+  Input,
+  Select,
+  DatePicker,
 } from 'antd';
 import {
   BarChartOutlined,
   DownOutlined,
   SortAscendingOutlined,
+  CaretUpOutlined,
+  CaretDownOutlined,
 } from '@ant-design/icons';
 
 import { connect } from 'react-redux';
@@ -24,10 +31,13 @@ import { AddDatasetCreator, setDatasetCreator } from '../../../Redux/actions';
 import styles from './index.module.scss';
 import _ from 'lodash';
 import moment from 'moment';
+import { convertUTCDateToLocalDate } from '../../../Utility';
 
 const { Paragraph, Text } = Typography;
 const { TabPane } = Tabs;
 const { Content } = Layout;
+const { RangePicker } = DatePicker;
+
 const IconText = ({ icon, text }) => (
   <span style={{ color: '#1890ff' }}>
     {React.createElement(icon, { style: { marginRight: 8 } })}
@@ -35,6 +45,7 @@ const IconText = ({ icon, text }) => (
   </span>
 );
 const initPane = '0';
+const formRef = React.createRef();
 
 class Uploader extends Component {
   constructor(props) {
@@ -53,6 +64,8 @@ class Uploader extends Component {
       sortReset: false,
       pageSize: 10,
       selectedTab: 'My Projects',
+      isSearch: false,
+      filters: {},
     };
   }
 
@@ -235,13 +248,58 @@ class Uploader extends Component {
     });
   };
 
+  onToggleSearchPanel = () => {
+    this.setState({ isSearch: !this.state.isSearch });
+  };
+
+  onFinish = (values) => {
+    const filters = {};
+
+    for (const key in values) {
+      if (values[key]) {
+        filters[key] = values[key];
+      }
+    }
+    this.setState({ filters });
+  };
+
+  onTagClose = (key, value) => {
+    let filters = this.state.filters;
+
+    if (!value) {
+      filters = _.omit(filters, key);
+      this.setState({ filters });
+    } else {
+      let tags = filters.tags;
+      tags = _.remove(tags, (el) => el === value);
+      this.setState({ filter: { ...filters, tags } });
+    }
+  };
+
   render() {
-    const { sortby, order, sortReset, selectedTab } = this.state;
+    const {
+      uploader,
+      datasetId,
+      sortby,
+      order,
+      sortReset,
+      selectedTab,
+      filters,
+    } = this.state;
     const { datasetList: tabs = [] } = this.props;
+
+    if (Object.keys(filters))
+      formRef.current && formRef.current.setFieldsValue(filters);
 
     let projectNoPermission = [];
 
     let projectPermission = [];
+
+    let filtersNameText = null;
+    let filtersCodeText = null;
+    let filtersDateText = null;
+    let filtersTagText = null;
+    let filtersDescriptionText = null;
 
     if (
       this.props.datasetList &&
@@ -276,6 +334,164 @@ class Uploader extends Component {
     projectPermission = _.uniq([...projectPermission]);
     projectPermission = _.orderBy(projectPermission, [sortby], [order]);
 
+    for (const key in filters) {
+      if (filters[key]) {
+        if (key === 'name') {
+          projectPermission = projectPermission.filter((el) =>
+            el.name.toLowerCase().includes(filters['name'].toLowerCase()),
+          );
+          projectNoPermission = projectNoPermission.filter((el) =>
+            el.name.toLowerCase().includes(filters['name'].toLowerCase()),
+          );
+
+          filtersNameText = (
+            <div>
+              <span>Project Name:</span>
+              <Tag
+                style={{ marginLeft: 5 }}
+                color="cyan"
+                key="name"
+                // closable
+                // onClose={() => this.onTagClose('name', null)}
+              >
+                {filters[key]}
+              </Tag>
+            </div>
+          );
+        }
+
+        if (key === 'code') {
+          projectPermission = projectPermission.filter((el) =>
+            el.code.toLowerCase().includes(filters['code'].toLowerCase()),
+          );
+          projectNoPermission = projectNoPermission.filter((el) =>
+            el.code.toLowerCase().includes(filters['code'].toLowerCase()),
+          );
+
+          filtersCodeText = (
+            <div>
+              <span>Project Code:</span>
+              <Tag
+                style={{ marginLeft: 5 }}
+                color="cyan"
+                key="code"
+                // closable
+                // onClose={() => this.onTagClose('code', null)}
+              >
+                {filters[key]}
+              </Tag>
+            </div>
+          );
+        }
+
+        if (key === 'date') {
+          const dateRange = filters['date'];
+          projectPermission = projectPermission.filter((el) => {
+            return (
+              moment(convertUTCDateToLocalDate(el.timeCreated)) >=
+                moment(dateRange[0]).startOf('day') &&
+              moment(convertUTCDateToLocalDate(el.timeCreated)) <=
+                moment(dateRange[1]).endOf('day')
+            );
+          });
+          projectNoPermission = projectNoPermission.filter((el) => {
+            return (
+              moment(convertUTCDateToLocalDate(el.timeCreated)) >=
+                moment(dateRange[0]).startOf('day') &&
+              moment(convertUTCDateToLocalDate(el.timeCreated)) <=
+                moment(dateRange[1]).endOf('day')
+            );
+          });
+
+          filtersDateText = (
+            <div>
+              <span>Created Time:</span>
+              <Tag
+                style={{ marginLeft: 5 }}
+                color="cyan"
+                key="date"
+                // closable
+                // onClose={() => this.onTagClose('date', null)}
+              >
+                {`${moment(dateRange[0]).format('YYYY-MM-DD')} - ${moment(
+                  dateRange[1],
+                ).format('YYYY-MM-DD')}`}
+              </Tag>
+            </div>
+          );
+        }
+
+        if (key === 'tags') {
+          const tags = filters['tags'];
+
+          if (tags.length > 0) {
+            filtersTagText = (
+              <div>
+                <span>Tags:</span>
+                {tags.map((tag) => (
+                  <Tag
+                    style={{ marginLeft: 5 }}
+                    color="cyan"
+                    key={tag}
+                    // closable
+                    // onClose={() => this.onTagClose('tags', tag)}
+                  >
+                    {tag}
+                  </Tag>
+                ))}
+              </div>
+            );
+
+            projectPermission = projectPermission.filter((el) => {
+              let isMatch = false;
+
+              for (const tag of tags) {
+                isMatch = el.tags && el.tags.some((item) => item === tag);
+
+                if (isMatch) return true;
+              }
+            });
+
+            projectNoPermission = projectNoPermission.filter((el) => {
+              let isMatch = false;
+
+              for (const tag of tags) {
+                isMatch = el.tags && el.tags.some((item) => item === tag);
+
+                if (isMatch) return true;
+              }
+            });
+          }
+        }
+
+        if (key === 'description') {
+          projectPermission = projectPermission.filter(
+            (el) =>
+              el.description &&
+              el.description
+                .toLowerCase()
+                .includes(filters['description'].toLowerCase()),
+          );
+          projectNoPermission = projectNoPermission.filter(
+            (el) =>
+              el.description &&
+              el.description
+                .toLowerCase()
+                .includes(filters['description'].toLowerCase()),
+          );
+
+          filtersDescriptionText = (
+            <div>
+              <span>description:</span>
+              <Tag style={{ marginLeft: 5 }} color="cyan" key="description">
+                {filters[key]}
+              </Tag>
+            </div>
+          );
+        }
+      }
+    }
+
     //Get projects based on selctedTags
     const allProjects = this.getProjectsWithTab({
       selectedTab,
@@ -306,20 +522,121 @@ class Uploader extends Component {
       </Menu>
     );
 
+    const disabledDate = (current) => {
+      return current && current >= moment().endOf('day');
+    };
+
+    const SearchPanel = (
+      <Card title="Search">
+        <Form ref={formRef} onFinish={this.onFinish} initialValues={filters}>
+          <Row>
+            <Col span={5}>Project Name</Col>
+            <Col span={5} style={{ paddingLeft: 5 }}>
+              Project Code
+            </Col>
+            <Col span={7} style={{ paddingLeft: 8 }}>
+              Created Time
+            </Col>
+            <Col span={7} style={{ paddingLeft: 14 }}>
+              Tags
+            </Col>
+          </Row>
+
+          <Row gutter={24} style={{ marginTop: 10 }}>
+            <Col span={5}>
+              <Form.Item name="name">
+                <Input placeholder="Project Name" />
+              </Form.Item>
+            </Col>
+
+            <Col span={5}>
+              <Form.Item name="code">
+                <Input placeholder="Project Code" />
+              </Form.Item>
+            </Col>
+
+            <Col span={7}>
+              <Form.Item name="date">
+                <RangePicker disabledDate={disabledDate} />
+              </Form.Item>
+            </Col>
+
+            <Col span={7} style={{ float: 'left' }}>
+              <Form.Item
+                name="tags"
+                rules={[
+                  {
+                    pattern: new RegExp(/^\S*$/), // Format BXT-1234
+                    message: 'Tag should not contain space.',
+                  },
+                ]}
+              >
+                <Select mode="tags" showSearch></Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col span={12}>Description</Col>
+          </Row>
+
+          <Row gutter={24} style={{ marginTop: 10 }}>
+            <Col span={12}>
+              <Form.Item name="description">
+                <Input style={{ maxWidth: 380 }} placeholder="Description" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col
+              span={24}
+              style={{
+                textAlign: 'right',
+              }}
+            >
+              <Button type="primary" htmlType="submit">
+                Search
+              </Button>
+              <Button
+                style={{
+                  margin: '0 8px',
+                }}
+                onClick={() => {
+                  this.setState({ filters: {} });
+                  formRef.current.resetFields();
+                  formRef.current.setFieldsValue({
+                    name: undefined,
+                    code: undefined,
+                    date: undefined,
+                    tags: undefined,
+                    description: undefined,
+                  });
+                }}
+              >
+                Clear
+              </Button>
+            </Col>
+          </Row>
+        </Form>
+      </Card>
+    );
+
     return (
       <>
         <Content className={`content ${styles.wrapper}`}>
           <Row>
             <Col span={12}>
-              <Tabs
-                id="uploadercontent_tabs"
-                defaultActiveKey="My Projects"
-                onChange={this.onTabChange}
-              >
-                {this.tagsData.map((tag) => (
-                  <TabPane tab={tag} key={tag} />
-                ))}
-              </Tabs>
+              <Space style={{ float: 'left', marginBottom: '16px' }}>
+                <Button onClick={this.onToggleSearchPanel}>
+                  Search Panel
+                  {this.state.isSearch ? (
+                    <CaretUpOutlined />
+                  ) : (
+                    <CaretDownOutlined />
+                  )}
+                </Button>
+              </Space>
             </Col>
             <Col span={12}>
               <Space style={{ float: 'right', marginBottom: '16px' }}>
@@ -336,6 +653,83 @@ class Uploader extends Component {
               </Space>
             </Col>
           </Row>
+
+          {this.state.isSearch ? SearchPanel : null}
+
+          {/* {
+            Object.keys(filters) && Object.keys(filters).length ? (
+              <div id="filters" style={{ marginTop: 20 }}>
+                <strong>
+                  Search Result For:
+                </strong>
+    
+                <Row gutter={24}>
+                  {
+                    filters['name'] && (
+                      <Col span={6} style={{ marginTop: 10 }}>
+                        {filtersNameText}
+                      </Col>
+                    )
+                  }
+    
+                  {
+                    filters['code'] && (
+                      <Col span={6} style={{ marginTop: 10 }}>
+                        {filtersCodeText}
+                      </Col>
+                    )
+                  }
+    
+                  {
+                    filters['date'] && (
+                      <Col span={8} style={{ marginTop: 10 }}>
+                        {filtersDateText}
+                      </Col>
+                    )
+                  }
+    
+                  {
+                    filters['tags'] && (
+                      <Col span={8} style={{ marginTop: 10 }}>
+                        {filtersTagText}
+                      </Col>
+                    )
+                  }
+
+                  {
+                    filters['description'] && (
+                      <Col span={8} style={{ marginTop: 10 }}>
+                        {filtersDescriptionText}
+                      </Col>
+                    )
+                  }
+    
+                </Row>
+              </div>
+            ) : null
+          } */}
+
+          {Object.keys(filters) && Object.keys(filters).length ? (
+            <div id="filters" style={{ marginTop: 20 }}>
+              <strong>
+                {allProjects.length > 1
+                  ? `${allProjects.length} projects`
+                  : `${allProjects.length} project`}{' '}
+                found
+              </strong>
+            </div>
+          ) : null}
+
+          <Tabs
+            id="uploadercontent_tabs"
+            defaultActiveKey="My Projects"
+            onChange={this.onTabChange}
+            style={{ marginTop: 10 }}
+          >
+            {this.tagsData.map((tag) => (
+              <TabPane tab={tag} key={tag} />
+            ))}
+          </Tabs>
           {tabs.map((tab, index) => (
             <List
               id="uploadercontent_project_list"
@@ -360,7 +754,7 @@ class Uploader extends Component {
                       _.some(this.props.containersPermission, (o) => {
                         return parseInt(o.containerId) === parseInt(item.id);
                       })) && (
-                      <Link to={`/dataset/${item.id}/canvas`}>
+                      <Link to={`/project/${item.id}/canvas`}>
                         <IconText
                           icon={BarChartOutlined}
                           text="View"
@@ -376,6 +770,9 @@ class Uploader extends Component {
                         style={{
                           fontSize: '20px',
                           marginBottom: '4px',
+                          maxWidth: 875,
+                          overflowWrap: 'break-word',
+                          wordBreak: 'break-all',
                         }}
                         ellipsis={{
                           rows: 2,
@@ -385,7 +782,7 @@ class Uploader extends Component {
                         _.some(this.props.containersPermission, (o) => {
                           return parseInt(o.containerId) === parseInt(item.id);
                         }) ? (
-                          <Link to={`/dataset/${item.id}/canvas`}>
+                          <Link to={`/project/${item.id}/canvas`}>
                             {item.name + ' '}
                           </Link>
                         ) : this.props.containersPermission.some(
@@ -453,6 +850,9 @@ class Uploader extends Component {
                         <Paragraph
                           style={{
                             color: 'rgba(0,0,0,0.8)',
+                            maxWidth: 875,
+                            overflowWrap: 'break-word',
+                            wordBreak: 'break-all',
                           }}
                           ellipsis={{
                             rows: 3,

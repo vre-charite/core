@@ -27,33 +27,36 @@ function resetPasswordAPI(data) {
 /* send reset password email to user
  * @param {string} username
  */
-function sendResetPasswordEmailAPI(username) {
+function sendResetPasswordEmailAPI(username, cancelToken) {
   return axios({
     url: '/users/reset/send-email',
     method: 'POST',
     data: { ...username, realm: 'vre' },
+    cancelToken,
   });
 }
 
 /* send username through email
  * @param {string} email
  */
-function sendUsernameEmailAPI(email) {
+function sendUsernameEmailAPI(email, cancelToken) {
   return axios({
     url: '/users/reset/send-username',
     method: 'POST',
     data: { ...email, realm: 'vre' },
+    cancelToken,
   });
 }
 
 /* Update password
  * @param {object} data: should include token, password, password_confirm
  */
-function resetForgottenPasswordAPI(data) {
+function resetForgottenPasswordAPI(data, cancelToken) {
   return axios({
     url: '/users/reset/password',
     method: 'POST',
     data: { ...data, realm: 'vre' },
+    cancelToken,
   });
 }
 

@@ -10,6 +10,8 @@ import {
 import { store } from '../../Redux/store';
 import { sleep } from '../common';
 import reduxActionWrapper from '../reduxActionWrapper';
+import i18n from '../../i18n';
+
 const USER_LOGOUT = 'user logged out';
 const [
   updateUploadItemDispatcher,
@@ -140,7 +142,7 @@ async function fileUpload(data, resolve, reject) {
   if (generateID) bodyFormData.append('generateID', generateID);
   const sessionId = localStorage.getItem('sessionId');
   preUpload(datasetId, bodyFormData, sessionId)
-    .then((res) => {
+    .then((preRes) => {
       Promise.map(
         chunks,
         function (chunk, index) {
@@ -152,6 +154,7 @@ async function fileUpload(data, resolve, reject) {
                 progress: uploadedSize / totalSize,
                 status: 'uploading',
                 projectCode,
+                taskId: preRes.data && preRes.data.result && preRes.data.result.taskId
               });
             })
             .catch(async (err) => {
@@ -207,11 +210,15 @@ async function fileUpload(data, resolve, reject) {
             uploadKey,
             progress: 1,
             status: 'pending',
-            taskId,
+            taskId: preRes.data && preRes.data.result && preRes.data.result.taskId,
             projectCode,
             uploadedTime: Date.now(),
           });
-          message.success(`File ${file.name} was successfully uploaded.`);
+          message.success(
+            `${i18n.t('success:fileUpload.0')} ${file.name} ${i18n.t(
+              'success:fileUpload.1',
+            )}`,
+          );
         })
         .catch((err) => {
           reject();

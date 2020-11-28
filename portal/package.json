@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "/vre",
   "dependencies": {
+    "@antv/g6": "^3.8.1",
     "@antv/graphin": "^1.4.1",
     "@antv/graphin-components": "^1.4.1",
     "@react-pdf/renderer": "^1.6.11",
@@ -22,9 +23,14 @@
     "detect-browser": "^5.1.1",
     "guacamole-common-js": "^1.1.0-b",
     "history": "^4.9.0",
+    "i18next": "^19.8.3",
+    "i18next-http-backend": "^1.0.21",
+    "install": "^0.13.0",
     "js-file-download": "^0.4.12",
     "jwt-decode": "^2.2.0",
+    "moment-timezone": "^0.5.31",
     "node-sass": "^4.14.1",
+    "npm": "^6.14.8",
     "password-validator": "^5.1.0",
     "pino": "^6.7.0",
     "pm2": "^4.4.0",
@@ -35,6 +41,7 @@
     "react-grid-layout": "^0.18.3",
     "react-highlight-words": "^0.16.0",
     "react-hotkeys-hook": "^2.3.1",
+    "react-i18next": "^11.7.3",
     "react-jvectormap": "0.0.16",
     "react-redux": "^7.2.0",
     "react-router-dom": "^5.1.2",
@@ -52,7 +59,7 @@
     "build-charite": "export REACT_APP_ENV=charite; react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "e2e": "jest"
+    "e2e": "jest --bail"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -84,3 +91,4 @@
     }
   }
 }
+

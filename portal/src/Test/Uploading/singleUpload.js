@@ -1,7 +1,7 @@
 const path = require('path');
 const _ = require('lodash');
 
-function uploadSingleFile(it, testTitle, getPage, fileName,basePath) {
+function uploadSingleFile(it, testTitle, getPage, fileName,basePath, isGenerate = false, generateId='ABC-1234') {
     if (!_.isFunction(getPage)) throw new TypeError('getPage should be a function');
     it(testTitle, async () => {
         const page = getPage();
@@ -9,6 +9,10 @@ function uploadSingleFile(it, testTitle, getPage, fileName,basePath) {
         await page.waitForSelector('#raw_table_upload');
         await page.$eval('#raw_table_upload', elem => elem.click());
         await page.waitForSelector('#form_in_modal_file');
+        if (isGenerate) {
+            await page.type('#form_in_modal_gid', generateId);
+            await page.type('#form_in_modal_gid_repeat', generateId);
+        }
         const inputUploadHandler = await page.$('#form_in_modal_file');
         inputUploadHandler.uploadFile(filePath);
         await page.waitForSelector('#file_upload_submit_btn');
@@ -42,7 +46,8 @@ function checkStatus(it, testTitle, getPage, fileName) {
             } else {
                 return false;
             }
-        }, { timeout: 0 }, fileName)
+        }, { timeout: 0 }, fileName);
+        console.log(fileName,'upload finish')
     })
 };
 
@@ -59,6 +64,7 @@ function checkFirstItem(it, testTitle, getPage, fileName, expect) {
             const firstFileName = await page.evaluate(element => element.textContent, firstCell);
             await expect(fileName).toMatch(firstFileName);
         }
+        console.log(`${fileName} checked first item`)
     })
 }
 

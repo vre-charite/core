@@ -15,9 +15,18 @@ function createUserAPI(data) {
   });
 }
 
-function getUsersOnDatasetAPI(datasetId) {
+function getUsersOnDatasetAPI(datasetId, params) {
   return axios({
     url: `/v1/datasets/${datasetId}/users`,
+    params: objectKeysToSnakeCase(params),
+  });
+}
+
+function getUserOnProjectAPI(datasetId, data) {
+  return axios({
+    url: `/v1/datasets/${datasetId}/users/query`,
+    method: 'POST',
+    data: objectKeysToSnakeCase(data),
   });
 }
 
@@ -82,29 +91,11 @@ function parseInviteHashAPI(hash) {
  * @param {string} projectId
  * @param {string} hash
  */
-function UserSelfRegistrationAPI({
-  username,
-  password,
-  email,
-  firstName,
-  lastName,
-  role,
-  projectId,
-  token,
-}) {
+function UserSelfRegistrationAPI(params) {
   return axios({
     url: `/v1/users/new`,
     method: 'post',
-    data: objectKeysToSnakeCase({
-      username,
-      password,
-      email,
-      firstName,
-      lastName,
-      role,
-      projectId,
-      token,
-    }),
+    data: objectKeysToSnakeCase(params),
   });
 }
 
@@ -129,6 +120,66 @@ function getAdminsOnDatasetAPI(datasetId) {
   });
 }
 
+function getPortalUsers(params) {
+  return axios({
+    url: `/v1/users/platform`,
+    params: objectKeysToSnakeCase(params),
+  });
+}
+
+function guacomoleAPI() {
+  return axios({
+    url: `/v1/helloworld/test_gua`,
+  });
+}
+
+function checkUserPlatformRole(email) {
+  return axios({
+    url: `/v1/invitation/check/${email}`,
+    method: 'GET',
+  });
+}
+
+/**
+ * Get all the projects this user belongs to
+ *
+ * @param {*} username string
+ * @returns
+ */
+function getUserProjectListAPI(username) {
+  return axios({
+    url: `/v1/users/${username}/datasets`,
+    method: 'GET',
+  });
+}
+
+/**
+ * Set user status in the platform users page
+ *
+ * @param {object} data {id, email, status: action}
+ * @returns
+ */
+function updateUserStatusAPI(data) {
+  return axios({
+    url: `/v1/users/action`,
+    method: 'PUT',
+    data,
+  });
+}
+
+/**
+ * get all the invitations on the platform
+ *
+ * @returns
+ */
+function getInvitationsAPI(params) {
+  return axios({
+    url: `/v1/invitation-list`,
+    method: 'POST',
+    data: objectKeysToSnakeCase(params),
+  });
+}
+
 export {
   getAllUsersAPI,
   createUserAPI,
@@ -140,4 +191,11 @@ export {
   UserSelfRegistrationAPI,
   contactUsApi,
   getAdminsOnDatasetAPI,
+  getPortalUsers,
+  getUserOnProjectAPI,
+  guacomoleAPI,
+  checkUserPlatformRole,
+  getUserProjectListAPI,
+  updateUserStatusAPI,
+  getInvitationsAPI,
 };

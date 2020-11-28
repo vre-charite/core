@@ -45,6 +45,8 @@ class datasets(Resource):
                 payload = {"type": "Usecase"} if param == "usecase" else None
                 result = list_containers(access_token, "Dataset", payload)
 
+                _logger.info('success in calling neo4j')
+
                 role = current_identity["role"]
                 username = current_identity["username"]
 
@@ -58,27 +60,31 @@ class datasets(Resource):
                     "end_label": "Dataset",
                     "start_params": {"name": username}
                 }
-                res = requests.post(url=url, json=payload)
+                res = requests.post(url=url, json=payload, timeout=10)
+                _logger.info(res.json())
+                if res.status_code == 200:
+                    visible_projects = [
+                        x for x in result if x.get('discoverable', False)]
 
-                visible_projects = [
-                    x for x in result if x.get('discoverable', False)]
+                    accessible_projects = [x['end_node']
+                                           for x in json.loads(res.text)]
 
-                accessible_projects = [x['end_node']
-                                       for x in json.loads(res.text)]
+                    # Iterating and using extend to convert
+                    for i in accessible_projects:
+                        for j in visible_projects:
+                            if i['id'] == j['id']:
+                                break
+                        else:
+                            visible_projects.append(i)
 
-                # Iterating and using extend to convert
-                for i in accessible_projects:
-                    for j in visible_projects:
-                        if i['id'] == j['id']:
-                            break
-                    else:
-                        visible_projects.append(i)
-
+                    _logger.info('Fetching succeed.')
+                    return {'result': visible_projects}, 200
+                else:
+                    _logger.error(res.text)
+                    return {'error_msg': res.text}, 403
         except Exception as e:
-            _logger.error('Error in gfetching project info: {}'.format(str(e)))
+            _logger.error('Error in fetching project info: {}'.format(str(e)))
             return {'result': 'Error %s' % str(e)}, 403
-
-        return {'result': visible_projects}, 200
 
     @ datasets_entity_ns.expect(dataset_module)
     @ datasets_entity_ns.response(200, dataset_sample_return)
@@ -149,7 +155,7 @@ class datasets(Resource):
             if container_type == "Usecase":
                 path = [root, root+"/raw", root+"/processed", root +
                         "/workdir", root+"/trash", root+'/logs']  # Top-level folders
-                vre_path = [root]
+                vre_path = [root, root + "/raw"]
             else:
                 path = [root]
                 vre_path = [root]

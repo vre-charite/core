@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { connect,useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { connect, useSelector } from 'react-redux';
 import {
   Form,
   Select,
@@ -18,6 +18,8 @@ import {
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import AsyncFormModal from './AsyncFormModal';
+import { useTranslation } from 'react-i18next';
+import { trimString } from '../../Utility';
 
 function CreateDatasetModal({
   visible,
@@ -27,14 +29,27 @@ function CreateDatasetModal({
   setContainersPermissionCreator,
   containersPermission,
 }) {
-  const {username} = useSelector(state=>state);
-  const cancelAxios = {cancelFunction:()=>{}};
+  const { username } = useSelector((state) => state);
+  const cancelAxios = { cancelFunction: () => {} };
   const [form] = Form.useForm();
   const onFinish = () => {};
   const [submitting, toggleSubmitting] = useState(false);
+  const [description, setDescription] = useState('');
+  const { t, i18n } = useTranslation([
+    'tooltips',
+    'success',
+    'formErrorMessages',
+  ]);
+
+  useEffect(() => {}, [description]);
 
   const handleChange = (value) => {
-    console.log(`selected ${value}`);
+    console.log(value);
+  };
+
+  const onDescriptionChange = (e) => {
+    setDescription(e.target.value);
+    form.setFieldsValue({ description: e.target.value });
   };
 
   const submitForm = () => {
@@ -42,11 +57,25 @@ function CreateDatasetModal({
       .validateFields()
       .then((values) => {
         toggleSubmitting(true);
+
+        let isTagHasSpace = false;
+
+        isTagHasSpace =
+          values.tags && values.tags.some((el) => el.indexOf(' ') >= 0);
+
+        if (isTagHasSpace) {
+          message.error('Tag can not contain space.');
+          toggleSubmitting(false);
+          return;
+        }
+
         const metadatas = {};
         values.metadatas &&
           values.metadatas.forEach(({ key, value }) => {
             metadatas[key] = value;
           });
+
+        if(values.description) values.description = trimString(values.description);
 
         createProjectAPI(
           {
@@ -55,7 +84,7 @@ function CreateDatasetModal({
             tags: values.tags,
             discoverable: values.discoverable,
             roles: values.roles,
-            admin: [username],
+            // admin: [username],
             type: 'Usecase',
             metadatas,
             description: values.description,
@@ -79,7 +108,7 @@ function CreateDatasetModal({
             ]);
             cancel();
             form.resetFields();
-            message.success('Project created successfully.');
+            message.success(t('success:createProject'));
           })
           .catch((err) => {
             console.log(err);
@@ -94,12 +123,22 @@ function CreateDatasetModal({
               });
             }
           });
-          
       })
       .catch((info) => {
         console.log('Validate Failed:', info);
+        toggleSubmitting(false);
       });
   };
+
+  const validator = (rule, value, callback) => {
+    if (rule && rule.field === 'tags') {
+      const invalidTag = value && value.some((el) => el.length > 32);
+      if (invalidTag) callback(t('formErrorMessages:project.tags.valid'));
+    }
+
+    callback();
+  };
+
   return (
     <AsyncFormModal
       form={form}
@@ -109,6 +148,7 @@ function CreateDatasetModal({
       onCancel={cancel}
       onOk={submitForm}
       confirmLoading={submitting}
+      id={'create_project_modal'}
     >
       <Form
         form={form}
@@ -121,10 +161,7 @@ function CreateDatasetModal({
           label={
             <span>
               Project Code&nbsp;
-              <Tooltip
-                title="Project code should only contains lowercase letters, numbers and within 32
-            digits."
-              >
+              <Tooltip title={t('create_project.project_code')}>
                 <QuestionCircleOutlined />
               </Tooltip>
             </span>
@@ -137,12 +174,11 @@ function CreateDatasetModal({
             rules={[
               {
                 required: true,
-                message: 'Please input project code.',
+                message: t('formErrorMessages:project.code.empty'),
               },
               {
                 pattern: new RegExp(/^[a-z0-9]{1,32}$/g), // Format BXT-1234
-                message:
-                  'Project code should only contains lowercase letters and numbers and within 32 digits.',
+                message: t('formErrorMessages:project.code.valid'),
               },
             ]}
           >
@@ -151,21 +187,72 @@ function CreateDatasetModal({
         </Form.Item>
 
         <Form.Item
-          label="Project Name"
+          label={
+            <span>
+              Project Name&nbsp;
+              <Tooltip title={t('create_project.project_name')}>
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
           name="name"
           rules={[
             {
               required: true,
-              message: 'Please input project name.',
+              message: t('formErrorMessages:project.name.empty'),
+            },
+            {
+              validator:(rule,value)=>{
+                const isLengthValid= (value.length >= 1 && value.length <= 100) && (trimString(value) && trimString(value).length > 0);
+                return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:project.name.valid'));
+              },
             },
           ]}
         >
           <Input />
         </Form.Item>
-        <Form.Item label={'Description'} name="description">
-          <Input.TextArea></Input.TextArea>
+        <Form.Item
+          label={'Description'}
+          name="description"
+          rules={[
+            {
+              validator:(rule,value)=>{
+                const isLengthValid= !value || (value.length <= 250);
+                return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:project.description.valid'));
+              },
+            },
+          ]}
+        >
+          <Input.TextArea
+            maxLength={250}
+            onChange={onDescriptionChange}
+          ></Input.TextArea>
+          <span style={{ float: 'right' }}>{`${
+            form.getFieldValue('description')
+              ? form.getFieldValue('description').length
+              : 0
+          }/250`}</span>
         </Form.Item>
-        <Form.Item name="tags" label={'Tags'}>
+        <Form.Item
+          name="tags"
+          label={
+            <span>
+              Tags&nbsp;
+              <Tooltip title={t('create_project.tags')}>
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          rules={[
+            {
+              pattern: new RegExp(/^\S*$/), // Format BXT-1234
+              message: t('formErrorMessages:project.tags.space'),
+            },
+            {
+              validator: validator,
+            },
+          ]}
+        >
           <Select
             mode="tags"
             style={{ width: '100%' }}
@@ -179,21 +266,26 @@ function CreateDatasetModal({
           </Select>
         </Form.Item>
         <Form.Item
-          label="Roles"
+          // label="Roles"
           name="roles"
+          label={
+            <span>
+              Roles&nbsp;
+              <Tooltip title={t('create_project.roles')}>
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
           initialValue={['admin']}
           required
           style={{ marginBottom: '5px' }}
         >
           <Checkbox.Group style={{ width: '100%' }}>
             <Row>
-              <Col span={8}>
+              <Col span={10}>
                 <Checkbox value="admin" checked disabled>
-                  Admin&nbsp;
-                  <Tooltip
-                    title="Project Admin is able to add user into project as any roles in current project, 
-                  upload data into Green Room, view/download all data in Green Room."
-                  >
+                Project Administrator&nbsp;
+                  <Tooltip title={t('create_project.role_admin')}>
                     <QuestionCircleOutlined />
                   </Tooltip>
                 </Checkbox>
@@ -202,20 +294,17 @@ function CreateDatasetModal({
                 <Checkbox value="member">
                   Member&nbsp;
                   <Tooltip
-                    title="Project member is able to upload data into Green Room, 
+                    title="Project member is able to upload data into Green Room,
                   view/download data only being uploaded by self in Green Room."
                   >
                     <QuestionCircleOutlined />
                   </Tooltip>
                 </Checkbox>
               </Col> */}
-              <Col span={8}>
+              <Col span={10}>
                 <Checkbox value="contributor">
                   Contributor&nbsp;
-                  <Tooltip
-                    title="Project Contributor is able to upload data into Green Room, 
-                  view/download data only being uploaded by self in Green Room"
-                  >
+                  <Tooltip title={t('create_project.role_contributor')}>
                     <QuestionCircleOutlined />
                   </Tooltip>
                 </Checkbox>

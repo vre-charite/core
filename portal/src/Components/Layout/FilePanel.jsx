@@ -3,9 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Button, Tooltip, Collapse, Tag, List, Progress, Badge } from 'antd';
 import { FileTextOutlined } from '@ant-design/icons';
 import styles from './index.module.scss';
-import { setUploadListCreator, setPanelActiveKey } from '../../Redux/actions';
+import { setUploadListCreator, setPanelActiveKey, setDownloadListCreator } from '../../Redux/actions';
 import { useIsMount } from '../../Utility';
-import { deleteUploadStatus } from '../../APIs';
+import { deleteUploadStatus, deleteDownloadStatus } from '../../APIs';
 
 const { Panel } = Collapse;
 
@@ -81,6 +81,7 @@ function FilePanel() {
       }
     }
   };
+
   const cleanUploadList = async () => {
     const sessionId = localStorage.getItem('sessionId');
 
@@ -90,6 +91,16 @@ function FilePanel() {
       dispatch(setUploadListCreator([]));
     }
   };
+
+  const cleanDownloadList = async () => {
+    const sessionId = localStorage.getItem('sessionId');
+    const res = await deleteDownloadStatus(sessionId);
+
+    if (res.status === 200) {
+      dispatch(setDownloadListCreator([]));
+    }
+  }
+
   const isCleanButtonDisabled = () => {
     if (uploadList.length === 0) {
       return true;
@@ -102,6 +113,13 @@ function FilePanel() {
     }
     return false;
   };
+
+  const isDownloadCleanButtonDisabled = () => {
+    if (downloadList.length === 0) {
+      return true;
+    }
+    return false;
+  }; 
 
   let uploadHeader = 'No file is uploading';
 
@@ -176,14 +194,25 @@ function FilePanel() {
   const processDownloadList = downloadList.filter(
     (el) => el.status === 'pending',
   );
+  const successDownloadList = downloadList.filter(
+    (el) => el.status === 'success',
+  );
 
   if (processDownloadList && processDownloadList.length > 0)
     downloadHeader = `${processDownloadList.length} file is being downloaded`;
   if (processDownloadList && processDownloadList.length > 1)
     downloadHeader = `${processDownloadList.length} files are being downloaded`;
 
-  let defaultKey = ['upload'];
+  if (successDownloadList && successDownloadList.length > 0)
+    downloadHeader = `${successDownloadList.length} file downloaded successfully`;
+  if (successDownloadList && successDownloadList.length > 1)
+    downloadHeader = `${successDownloadList.length} files downloaded successfully`;
 
+  if (processDownloadList.length && successDownloadList.length) {
+    downloadHeader = `${processDownloadList.length} ${processDownloadList.length === 1 ? 'file is' : 'files are'} being downloaded. ${successDownloadList.length}  ${successDownloadList.length === 1 ? 'file is' : 'files are'} downloaded successfully`
+  }
+
+  let defaultKey = ['upload'];
   if (processDownloadList && processDownloadList.length > 0)
     defaultKey = ['download'];
   if (uploadingList && uploadingList.length > 0) defaultKey = ['upload'];
@@ -264,17 +293,34 @@ function FilePanel() {
             dataSource={downloadList}
             className={styles.download_list}
             renderItem={(item) => (
-              <List.Item>
-                <List.Item.Meta
-                  title={
-                    <>
-                      {item.downloadKey} {statusTags(item.status, 'download')}
-                    </>
-                  }
-                />
+              <List.Item id={`upload_item_${item.filename}`} style={{ overflowWrap: 'anywhere' }}>
+                  <List.Item.Meta
+                    title={
+                      <>
+                        {statusTags(item.status, 'download')}
+                        {item.filename}
+                      </>
+                    }
+                    description={
+                      <>
+                        <small style={{ float: 'right' }}>
+                          Project: {item.container}
+                        </small>
+                      </>
+                    }
+                  />
               </List.Item>
             )}
           />
+          <Button
+            danger
+            disabled={isDownloadCleanButtonDisabled()}
+            onClickCapture={cleanDownloadList}
+            size="small"
+            style={{ marginTop: 8, marginLeft: 16 }}
+          >
+            Clear Download history
+          </Button>
         </Panel>
       </Collapse>
     </>

@@ -11,7 +11,7 @@ export default class RightSlider extends React.Component {
         reverseArrow={true}
         trigger={null}
         theme="light"
-        style={{ zIndex: '9' }}
+        style={{ zIndex: '9', float: 'right' }}
       >
         {this.props.children}
       </Sider>

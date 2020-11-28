@@ -10,9 +10,9 @@ def update_role_email_body_generator(username, admin_name, project_name, new_rol
                 <a href="{}">{}</a><br>\
                 <p>If you are having difficulty accessing the link please copy and paste the following into your browser:</p>\
                 <p>{}</p><br>\
-                <p>If you believe this modification was made in error please contact your project admin <a href="mailto: {}">{}</a></p>
+                <p>If you believe this modification was made in error please contact the Platform Administrator: <a href="mailto: {}">{}</a></p>
                 <br><br><br><br>\
-                <p>This is an automated message please do not reply.<br>Should you require assistance please contact: <a href="mailto: {}">{}</a></p><br>\
+                <p>This is an automated message. Should you require assistance please contact: <a href="mailto: {}">{}</a></p><br>\
             </body>\
         </html>'''.format(username, admin_name, project_name, new_role, login_url, login_url, login_url, admin_email, admin_email, admin_email, admin_email)
     )
@@ -30,9 +30,9 @@ def invite_user_email_body_generator(username, admin_name, project_name, role, l
                 <a href="{}">{}</a><br>\
                 <p>If you are having difficulty accessing the link please copy and paste the following into your browser:</p>\
                 <p>{}</p><br>\
-                <p>If you believe this modification was made in error please contact your project admin <a href="mailto: {}">{}</a></p>
+                <p>If you believe this modification was made in error please contact the Platform Administrator: <a href="mailto: {}">{}</a></p>
                 <br><br><br><br>\
-                <p>This is an automated message please do not reply.<br>Should you require assistance please contact: <a href="mailto: {}">{}</a></p><br>\
+                <p>This is an automated message. Should you require assistance please contact: <a href="mailto: {}">{}</a></p><br>\
             </body>\
         </html>'''.format(username, admin_name, project_name, role, login_url, login_url, login_url, admin_email, admin_email, admin_email, admin_email)
     )

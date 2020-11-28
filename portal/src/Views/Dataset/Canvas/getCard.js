@@ -100,7 +100,7 @@ const getcard = (card, data, actions, state, handleExpand) => {
             <List.Item
               actions={[
                 <a key="list-loadmore-edit">
-                  <Link to={`/dataset/${parseInt(item.id)}/canvas`}>Enter</Link>{' '}
+                  <Link to={`/project/${parseInt(item.id)}/canvas`}>Enter</Link>{' '}
                 </a>,
                 <a key="list-loadmore-more">More</a>,
               ]}

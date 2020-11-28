@@ -1,0 +1,84 @@
+{
+  "userguide": "User Guide",
+  "userguide_content": "Download the User Guide to learn more about the VRE platform services, tools and workflows.​",
+  "download_guide_button_text": "Download Guide",
+  "faq_title": "Frequently asked questions",
+
+  "drawers": [
+    {
+      "title": "Account Information",
+      "panel": [
+        {
+          "question": "I forgot my username or password. What should I do?",
+          "answer": "Please contact the VRE Support Team at vre-support@charite.de for assistance with changing your username or password"
+        },
+        {
+          "question": "How can I change my password?",
+          "answer": "After logging in, click on your username in the top right corner of any page and select &   \"Reset Password\""
+        },
+        {
+          "question": "How can I change my email address?",
+          "answer": "Your email address is associated with your approved membership in one or more VRE research projects and is your identity throughout the platform. To change your email address, you will need to request a new user account from your Project Administrator."
+        }
+      ]
+    },
+    {
+      "title": "Projects",
+      "panel": [
+        {
+          "question": "What is my role and what are the different user roles within a Project?",
+          "answer": "Your user role is displayed in the Project Canvas in the Project Information Card, beside the Project Name. The available user roles are as follows:",
+          "Administrator": "The Project Administrator, a Principal Investigator or delegate who has overall responsibility under GDPR as Data Controller for the project data and has the authority to invite other research members to the project. Administrators can view all project data, modify project information, and add additional users to the project.",
+          "Contributor": "A member of the project invited by the Administrator. Users with the Contributor role can upload data to the project, view the list of files they uploaded using the File Explorer, and download the files they uploaded. Contributor users cannot browse or download data added by another user."
+        },
+        {
+          "question": "What is a Project?",
+          "answer": "A Project is a data storage and processing container that holds all the data files for a VRE-approved research project. VRE-approved means that the research project has been assessed by the Charite VRE Governance Manager and Data Protection Officer as having all the necessary approvals and safeguards in place for data processing to occur in the VRE."
+        },
+        {
+          "question": "What is the difference between Project Code and Project Name?",
+          "answer": " The Project Code is a persistent character-based code created by the VRE Onboarding Team that uniquely identifies the Project in the VRE. Once created, it cannot be changed. The Project Name is a user-friendly, descriptive title that makes it easier for users to find the Project in the VRE. The Project Name can only be changed by the project Administrator."
+        },
+        {
+          "question": "What is Project Visibility and how can I change it?",
+          "answer": "Visibility is a Project attribute that controls whether a Project's basic information (Project Title, Project Code and description) are visible to all VRE users in the Landing Page. Visibility does not affect which users can be added to a Project.",
+          "visibility": "The Visibility of a Project is controlled by the Administrator and can be edited on the Project Information page by selecting or deselecting the checkbox “Make this project discoverable by all platform users”. If the checkbox is selected, any user logged into the VRE can see the Project’s Title, Code, and description in the VRE landing page, but only invited Team Members can enter the Project. If the option is deselected, no users outside of the invited Project Team Members will be able to see the Project in the Landing Page."
+        },
+        {
+          "question": "What is the Members Panel and who can access it?",
+          "answer": "The Members Panel is used to add users to a Project. Project and Platform Administrators can access the Members Panel in the right Sidebar."
+        }
+      ]
+    },
+    {
+      "title": "Site security",
+      "panel": [
+        {
+          "question": "Why do I receive warnings that my session will expire?",
+          "answer": "The platform detects users that have been inactive for five or more minutes. This is done for security reasons and to help increase overall speed of the platform. Before expiring inactive sessions,the VRE will warn you. To confirm that your session is active, click 'Refresh'. If your session has expired, you will be required to log back in with your username and password."
+        }
+      ]
+    },
+    {
+      "title": "File upload",
+      "panel": [
+        {
+          "question": "Who can upload a data file to the VRE?",
+          "answer": "A file can only be uploaded into an approved Project by an invited Project Member (Administrator or Contributor). As an invited Project Member of the Project, you have been authorized to contribute data to the project. All VRE members are responsible for abiding by the Platform Terms of Use and all Project Members must ensure that they only upload authorized data that is appropriate to the Project. Please contact your Project Administrator if you believe you should have a different user role."
+        },
+        {
+          "question": "How do I upload a file?",
+          "answer": "After logging into the VRE, navigate to your Project and click on Upload in the File Explorer card or click on the Upload icon in the Right Sidebar. You can select one or multiple files from your local drive to upload to the VRE."
+        },
+        {
+          "question": "How do I know my file uploaded successfully?",
+          "answer": "The Files Panel will appear in the bottom right of your screen after you initiate a file upload. Your most recent upload will appear at the bottom of the list and will have a green \"Success\" indicator if uploaded successfully. If you need to open or close the Files Panel, click on the Files Panel icon at the bottom of the Right Sidebar. Files will be listed as \"Uploading\" if the upload is in progress, \"Success\" if the file was uploaded without issue, or \"Error\" if the attempted upload was unsuccessful."
+        },
+        {
+          "question": "Are files encrypted upon upload?",
+          "answer": "SSR encryption is applied to all data uploaded to the VRE Portal both at rest and in transit."
+        }
+      ]
+    }
+  ]
+}

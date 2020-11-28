@@ -7,6 +7,7 @@ import { tokenManager } from '../../Service/tokenManager';
 import { userAuthManager } from '../../Service/userAuthManager';
 import { broadcastManager } from '../../Service/broadcastManager';
 import { namespace as ServiceNamespace } from '../../Service/namespace';
+import { useTranslation } from 'react-i18next';
 
 /**
  *
@@ -16,8 +17,11 @@ function CreateDatasetModal({ visible, setRefreshModal }) {
   const [secondsToGo, setTimer] = useState(tokenManager.getTokenTimeRemain());
   const [listenerId, setListenerId] = useState('default');
   const { refreshTokenModal, username } = useSelector((state) => state);
+  const { t, i18n } = useTranslation('modals');
 
+  const [isRefreshing,setIsRefreshing] = useState(false);
   const refreshToken = () => {
+    setIsRefreshing(true);
     userAuthManager
       .extendAuth()
       .then((res) => {
@@ -33,7 +37,10 @@ function CreateDatasetModal({ visible, setRefreshModal }) {
           const errorMessager = new ErrorMessager(namespace.login.refresh);
           errorMessager.triggerMsg(err.response.status);
         }
+      }).finally(()=>{
+        setIsRefreshing(false);
       });
+;
   };
 
   useEffect(() => {
@@ -62,35 +69,35 @@ function CreateDatasetModal({ visible, setRefreshModal }) {
       ServiceNamespace.broadCast.REFRESH_MODAL_LOGOUT,
     );
     localStorage.removeItem('sessionId');
+    setRefreshModal(false);
   };
 
   return (
     <Modal
       id={`refresh_modal`}
-      title="Warning"
+      title={t('refreshModal.title')}
       visible={visible}
       maskClosable={false}
-      // icon={<ExclamationCircleOutlined />}
-      onCancel={() => {
-        setRefreshModal(false);
-        logout();
-      }}
       footer={[
-        <Button id={'refresh_modal_logout'} key="back" onClick={logout}>
+        <Button disabled={isRefreshing}  id={'refresh_modal_logout'} key="back" onClick={logout}>
           Logout
         </Button>,
         <Button
           id="refresh_modal_refresh"
           key="submit"
           type="primary"
+          loading={isRefreshing}
           onClick={() => refreshToken()}
         >
           Refresh
         </Button>,
       ]}
-      style={{ zIndex: 9999 }}
+      // style={{ zIndex: 9999 }}
+      zIndex={9999}
     >
-      {`Your session will expire in ${secondsToGo}s. Please click “Refresh” if you wish to remain logged in.`}
+      {`${t('refreshModal.text.0')} ${secondsToGo}s. ${t(
+        'refreshModal.text.1',
+      )}`}
     </Modal>
   );
 }

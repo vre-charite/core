@@ -62,7 +62,7 @@ function FileStats(props) {
       </div>
       <div className={styles.stats}>
         <Statistic
-          title="Admins"
+          title="Project Administrators"
           value={adminCount}
           prefix={<UserOutlined />}
           valueStyle={{

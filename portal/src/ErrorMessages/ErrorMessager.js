@@ -1,449 +1,496 @@
 import namespace from './namespace';
 import { message } from 'antd';
 import _ from 'lodash';
-import { store } from '../Redux/store'
+import { store } from '../Redux/store';
+import i18n from '../i18n';
 /**
  * Create a error message object to trigger the error message
  * @param {string} name the namespace of the API
  */
+
 export default function ErrorMessager(name) {
   const _namespaces = {
     [namespace.landing.createProject]: {
       403: (err, params) => {
-        message.error('The project code has been taken');
+        message.error(i18n.t('errormessages:createProject.403.0'));
       },
       default: (err, params) => {
-        message.error('something went wrong when creating new project');
+        message.error(i18n.t('errormessages:createProject.default.0'));
       },
     },
     [namespace.login.auth]: {
+      400: (err, params) => {
+        message.error(i18n.t('errormessages:login.400.0'));
+      },
       401: (err, params) => {
-        message.error('Please input the correct username and password');
+        message.error(i18n.t('errormessages:login.401.0'));
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to login, please try again later',
-        );
+        message.error(i18n.t('errormessages:login.500.0'));
       },
       default: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to login, please try again later',
-        );
+        message.error(i18n.t('errormessages:login.default.0'));
       },
     },
     [namespace.login.resetPassword]: {
       400: (err, params) => {
-        message.error('Your old password is not correct');
+        message.error(i18n.t('errormessages:resetPassword.400.0'));
       },
       403: (err, params) => {
-        message.error('This reset password is not permitted.');
+        message.error(i18n.t('errormessages:resetPassword.403.0'));
       },
       406: (err, params) => {
-        message.error(
-          'The password format is not valid. The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).',
-        );
+        message.error(i18n.t('errormessages:resetPassword.406.0'));
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to reset password, please try again later',
-        );
+        message.error(i18n.t('errormessages:resetPassword.500.0'));
       },
       default: (err, params) => {
-        message.error('Something wrong when resetting your password');
+        message.error(i18n.t('errormessages:resetPassword.default.0'));
       },
     },
     [namespace.login.forgotPassword]: {
       403: (err, params) => {
-        message.error('This reset password link is invalid or expired.');
+        message.error(i18n.t('errormessages:forgotPassword.403.0'));
       },
       406: (err, params) => {
-        message.error(
-          'The password format is not valid. The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).',
-        );
+        message.error(i18n.t('errormessages:forgotPassword.406.0'));
       },
       404: (err, params) => {
-        message.error('This username does not exist.');
+        message.error(i18n.t('errormessages:forgotPassword.404.0'));
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to reset password, please try again later',
-        );
+        message.error(i18n.t('errormessages:forgotPassword.500.0'));
       },
       default: (err, params) => {
-        message.error('Something wrong when sending reset password email.');
+        message.error(i18n.t('errormessages:forgotPassword.default.0'));
       },
     },
     [namespace.login.forgotUsername]: {
       404: (err, params) => {
-        message.error('This email address does not exist.');
+        message.error(i18n.t('errormessages:forgotUserName.404.0'));
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to get username, please try again later',
-        );
+        message.error(i18n.t('errormessages:forgotUserName.500.0'));
       },
       default: (err, params) => {
-        message.error('something wrong when send your username through email');
+        message.error(i18n.t('errormessages:forgotUserName.default.0'));
       },
     },
     [namespace.login.checkToken]: {
       400: (err, params) => {
-        message.error('This reset password link is not valid.');
+        message.error(i18n.t('errormessages:checkToken.400.0'));
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to reset password, please try again later',
-        );
+        message.error(i18n.t('errormessages:checkToken.500.0'));
       },
       default: (err, params) => {
-        message.error(
-          'something wrong when verifiying your identity with the link.',
-        );
+        message.error(i18n.t('errormessages:checkToken.default.0'));
       },
     },
     [namespace.login.resetForgottenPassword]: {
       403: (err, params) => {
-        message.error('This reset password link is invalid or expired.');
+        message.error(i18n.t('errormessages:resetForgottenPassword.403.0'));
       },
       400: (err, params) => {
-        message.error(
-          'The password format is not valid, please check the password requirement.',
-        );
+        message.error(i18n.t('errormessages:resetForgottenPassword.400.0'));
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to reset password, please try again later',
-        );
+        message.error(i18n.t('errormessages:resetForgottenPassword.500.0'));
       },
       default: (err, params) => {
-        message.error('something wrong when resetting your password');
+        message.error(i18n.t('errormessages:resetForgottenPassword.default.0'));
       },
     },
     [namespace.login.refresh]: {
       403: (err, params) => {
-        message.error('Refresh was forbidden');
+        message.error(i18n.t('errormessages:refresh.403.0'));
       },
       500: (err, params) => {
-        message.error(
-          'An Internal Error has occurred while attempting to refresh. Please try again later.',
-        );
+        message.error(i18n.t('errormessages:refresh.500.0'));
       },
       default: (err, params) => {
-        message.error('something wrong when refresh');
+        message.error(i18n.t('errormessages:refresh.default.0'));
       },
     },
     [namespace.login.parseInviteHashAPI]: {
       401: (err, params) => {
-        message.error('Sorry, your invitation is expired.');
+        message.error(i18n.t('errormessages:parseInviteHashAPI.401.0'));
       },
       404: (err, params) => {
-        message.error('Sorry, your invitation is not found.');
+        message.error(i18n.t('errormessages:parseInviteHashAPI.404.0'));
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to fetch invitation details please try again later',
-        );
+        message.error(i18n.t('errormessages:parseInviteHashAPI.500.0'));
       },
       default: (err, params) => {
-        message.error('something wrong when refresh');
+        message.error(i18n.t('errormessages:parseInviteHashAPI.default.0'));
       },
     },
     [namespace.dataset.files.uploadFileApi]: {
       403: (err, params) => {
         message.error(
-          `${params.fileName} file already exists within the project.`,
+          `${params.fileName} ${i18n.t('errormessages:uploadFileApi.403.0')}`,
         );
       },
       500: (err, params) => {
         message.error(
-          `An Internal Error has occurred while attempting to upload file ${params.fileName}. Please try again later.`,
+          `${i18n.t('errormessages:uploadFileApi.500.0')} ${
+            params.fileName
+          }. ${i18n.t('errormessages:uploadFileApi.500.1')}`,
         );
       },
       502: (err, params) => {
         message.error(
-          `An Internal Error has occurred while attempting to upload file ${params.fileName}. Please try again later.`,
+          `${i18n.t('errormessages:uploadFileApi.502.0')} ${
+            params.fileName
+          }. ${i18n.t('errormessages:uploadFileApi.502.1')}`,
         );
       },
       default: (err, params) => {
-        message.error(`Something went wrong when uploading ${params.fileName}`);
+        message.error(
+          `${i18n.t('errormessages:uploadFileApi.default.0')} ${
+            params.fileName
+          }`,
+        );
       },
     },
     [namespace.dataset.files.uploadRequestFail]: {
       default: (err, params) => {
-        message.error(`Failed to upload ${params.fileName}, please try again`);
+        message.error(
+          `${i18n.t('errormessages:uploadRequestFail.default.0')} ${
+            params.fileName
+          }, ${i18n.t('errormessages:uploadRequestFail.default.1')}`,
+        );
       },
     },
     [namespace.dataset.files.getRawFilesAPI]: {
       403: (err, params) => {
-        message.error(
-          "Sorry, you don't have access to get raw files from this project",
-        );
+        message.error(`${i18n.t('errormessages:getRawFilesAPI.403.0')}`);
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to get raw files, please try again later',
-        );
+        message.error(`${i18n.t('errormessages:getRawFilesAPI.500.0')}`);
       },
       404: (err, params) => {
         message.error(
-          `Sorry, Cannot find raw files in project ${params.datasetId}`,
+          `${i18n.t('errormessages:getRawFilesAPI.404.0')} ${params.datasetId}`,
         );
       },
       default: (err, params) => {
-        message.error('Something went wrong when getting raw files');
+        message.error(`${i18n.t('errormessages:getRawFilesAPI.default.0')}`);
       },
     },
     [namespace.dataset.files.getChildrenDataset]: {
       403: (err, params) => {
-        message.error(
-          "Sorry, you don't have access to get children dataset from this project",
-        );
+        message.error(`${i18n.t('errormessages:getChildrenDataset.403.0')}`);
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to get children dataset, please try again later',
-        );
+        message.error(`${i18n.t('errormessages:getChildrenDataset.500.0')}`);
       },
       default: (err, params) => {
-        message.error('Something went wrong when getting children dataset');
+        message.error(
+          `${i18n.t('errormessages:getChildrenDataset.default.0')}`,
+        );
       },
     },
     [namespace.dataset.files.traverseFoldersContainersAPI]: {
       403: (err, params) => {
         message.error(
-          "Sorry, you don't have access to traverse folders in this project",
+          `${i18n.t('errormessages:traverseFoldersContainersAPI.403.0')}`,
         );
       },
       500: (err, params) => {
         message.error(
-          'An Internal Error has occurred while attempting to traverse folders. Please try again later.',
+          `${i18n.t('errormessages:traverseFoldersContainersAPI.500.0')}`,
         );
       },
       404: (err, params) => {
         message.error(
-          `Sorry, cannot find the folders in project ${params.datasetId}`,
+          `${i18n.t('errormessages:traverseFoldersContainersAPI.404.0')}`,
         );
       },
       default: (err, params) => {
         message.error(
-          'An Internal Error has occurred while attempting to traverse folders. Please try again later.',
+          `${i18n.t('errormessages:traverseFoldersContainersAPI.default.0')}`,
         );
       },
     },
     [namespace.dataset.files.getFilesByTypeAPI]: {
       403: (err, params) => {
-        message.error('You do not have access to retrieve processed files.');
+        message.error(`${i18n.t('errormessages:getFilesByTypeAPI.403.0')}`);
       },
       500: (err, params) => {
-        message.error(
-          'An Internal Error has occurred while trying to process files. Please try again later.',
-        );
+        message.error(`${i18n.t('errormessages:getFilesByTypeAPI.500.0')}`);
       },
       default: (err, params) => {
-        message.error(
-          'An Internal Error has occurred while trying to process files. Please try again later.',
-        );
+        message.error(`${i18n.t('errormessages:getFilesByTypeAPI.default.0')}`);
       },
     },
     [namespace.dataset.files.downloadFilesAPI]: {
       403: (err, params) => {
-        message.error(
-          'Sorry your access does not permit you to download file(s).',
-        );
+        message.error(`${i18n.t('errormessages:downloadFilesAPI.403.0')}`);
       },
       500: (err, params) => {
-        message.error(
-          'An Internal Error has occurred while attempting to download file(s). Please try again later.',
-        );
+        message.error(`${i18n.t('errormessages:downloadFilesAPI.500.0')}`);
       },
       default: (err, params) => {
-        message.error(
-          'An Internal Error has occurred while attempting to download file(s). Please try again later.',
-        );
+        message.error(`${i18n.t('errormessages:downloadFilesAPI.default.0')}`);
       },
     },
     [namespace.dataset.files.processingFile]: {
       default: (err, params) => {
-        message.error(
-          `failed to process file ${params.fileName}, please upload again later`,
-        );
+        message.error(`${i18n.t('errormessages:processingFile.default.0')}`);
       },
     },
     [namespace.dataset.files.preUpload]: {
       403: (err, params) => {
-        message.error(`Sorry, ${params.fileName} cannot be uploaded.`);
+        message.error(
+          `${i18n.t('errormessages:preUpload.403.0')} ${
+            params.fileName
+          } ${i18n.t('errormessages:preUpload.403.1')}`,
+        );
       },
       409: (err, params) => {
-        message.error(`File ${params.fileName} already exists!`);
+        message.error(
+          `${i18n.t('errormessages:preUpload.409.0')} ${
+            params.fileName
+          } ${i18n.t('errormessages:preUpload.409.1')}`,
+        );
       },
       500: (err, params) => {
         message.error(
-          `An Internal Error has occurred while attempting to upload file ${params.fileName}. Please try again later.`,
+          `${i18n.t('errormessages:preUpload.500.0')} ${
+            params.fileName
+          }. ${i18n.t('errormessages:preUpload.500.1')}`,
         );
       },
       default: (err, params) => {
-        message.error(`Failed to upload ${params.fileName}`);
+        message.error(
+          `${i18n.t('errormessages:preUpload.default.0')} ${params.fileName}`,
+        );
       },
     },
     [namespace.selfRegister.selfRegistration]: {
       400: (err, params) => {
-        message.error(
-          'Invalid input. Please ensure all information has been entered correctly and try again.',
-        );
+        message.error(`${i18n.t('errormessages:selfRegistration.400.0')}`);
       },
       401: (err, params) => {
-        message.error(
-          'Invite link is expired',
-        );
+        message.error(`${i18n.t('errormessages:selfRegistration.401.0')}`);
       },
       500: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to register, please try again later',
-        );
+        message.error(`${i18n.t('errormessages:selfRegistration.500.0')}`);
       },
       default: (err, params) => {
-        message.error(
-          'Internal Error occurs when trying to register, please try again later',
-        );
+        message.error(`${i18n.t('errormessages:selfRegistration.default.0')}`);
       },
     },
     [namespace.teams.inviteUser]: {
       403: (err, params) => {
         message.error(
-          `User ${params.email} was not invited due to an authorization error.`,
+          `${i18n.t('errormessages:selfRegistration.403.0')} ${
+            params.email
+          }, ${i18n.t('errormessages:selfRegistration.403.1')}`,
         );
       },
       404: (err, params) => {
         message.error(
-          `An Internal Error has occurred while inviting ${params.email} to the project. Please try sending an invitation later.`,
+          `${i18n.t('errormessages:selfRegistration.404.0')} ${
+            params.email
+          } ${i18n.t('errormessages:selfRegistration.404.1')}`,
         );
       },
       500: (err, params) => {
         message.error(
-          'Internal Error occurs when trying to invite user, please try again later',
+          `${i18n.t('errormessages:selfRegistration.500.0')} ${
+            params.email
+          } ${i18n.t('errormessages:selfRegistration.500.1')}`,
         );
       },
       default: (err, params) => {
         message.error(
-          'Internal Error occurs when trying to invite user, please try again later',
+          `${i18n.t('errormessages:selfRegistration.500.0')} ${
+            params.email
+          } ${i18n.t('errormessages:selfRegistration.500.1')}`,
         );
       },
     },
     [namespace.teams.checkEmailExistAPI]: {
       403: (err, params) => {
         message.error(
-          `User by email ${params.email} already exists in the project.`,
+          `${i18n.t('errormessages:checkEmailExistAPI.403.0')} ${
+            params.email
+          } ${i18n.t('errormessages:checkEmailExistAPI.403.1')}`,
         );
       },
       500: (err, params) => {
-        message.error(
-          'An Internal Error occurred while validating user list. Please try again later.',
-        );
+        message.error(`${i18n.t('errormessages:checkEmailExistAPI.500.0')}`);
       },
       default: (err, params) => {
         message.error(
-          'An Internal Error occurred while validating user list. Please try again later.',
+          `${i18n.t('errormessages:checkEmailExistAPI.default.0')}`,
+        );
+      },
+    },
+    [namespace.teams.checkUserPlatformRole]: {
+      403: (err, params) => {
+        message.error(`${i18n.t('errormessages:checkUserPlatformRole.403.0')}`);
+      },
+      500: (err, params) => {
+        message.error(`${i18n.t('errormessages:checkUserPlatformRole.500.0')}`);
+      },
+      default: (err, params) => {
+        message.error(
+          `${i18n.t('errormessages:checkUserPlatformRole.default.0')}`,
         );
       },
     },
     [namespace.teams.addUsertoDataSet]: {
       403: (err, params) => {
         message.error(
-          `User ${params.email} is already a project member. To modify permissions for ${params.email} please use the user management module. `,
+          `${params.email} ${i18n.t('errormessages:addUsertoDataSet.403.0')} ${
+            params.email
+          } ${i18n.t('errormessages:addUsertoDataSet.403.1')}`,
         );
       },
       500: (err, params) => {
         message.error(
-          'Internal error when trying add user to project, please try again later',
+          `${i18n.t('errormessages:addUsertoDataSet.500.0')} ${
+            params.email
+          } ${i18n.t('errormessages:addUsertoDataSet.500.1')}`,
         );
       },
     },
     [namespace.teams.changeRoleInDataset]: {
       403: (err, params) => {
         message.error(
-          `Unable to change role for ${params.name}, please try again later`,
+          `${i18n.t('errormessages:changeRoleInDataset.403.0')} ${
+            params.name
+          }, ${i18n.t('errormessages:changeRoleInDataset.403.1')}`,
         );
       },
       404: (err, params) => {
-        message.error(`User ${params.name} not exist in this project.`);
+        message.error(
+          `${i18n.t('errormessages:changeRoleInDataset.403.0')} ${
+            params.name
+          }, ${i18n.t('errormessages:changeRoleInDataset.403.1')}`,
+        );
       },
       500: (err, params) => {
         message.error(
-          `An Internal Error occurred while attempting to modify role for user ${params.name}. Please try again later.`,
+          `${i18n.t('errormessages:changeRoleInDataset.500.0')} ${
+            params.name
+          }, ${i18n.t('errormessages:changeRoleInDataset.500.1')}`,
         );
       },
     },
     [namespace.teams.getUsersOnDataset]: {
       403: (err, params) => {
-        message.error(
-          `Unable to fetch users on dataset, please try again later`,
-        );
+        message.error(`${i18n.t('errormessages:getUsersOnDataset.403.0')}`);
       },
       404: (err, params) => {
-        message.error(
-          `Something went wrong when trying to fetch users on dataset, please try again later`,
-        );
+        message.error(`${i18n.t('errormessages:getUsersOnDataset.404.0')}`);
       },
       500: (err, params) => {
-        message.error(
-          'An Internal Error has occurred. Cannot fetch users from dataset. Please try again later.',
-        );
+        message.error(`${i18n.t('errormessages:getUsersOnDataset.500.0')}`);
       },
     },
     [namespace.teams.removeUserFromDataset]: {
       403: (err, params) => {
         message.error(
-          `Removal of user ${params.username} from dataset unsuccessful. Please try again later.`,
+          `${i18n.t('errormessages:removeUserFromDataset.403.0')} ${
+            params.username
+          } ${i18n.t('errormessages:removeUserFromDataset.403.1')}`,
         );
       },
       404: (err, params) => {
-        message.error(`User ${params.username} not exist in this project.`);
+        message.error(`${i18n.t('errormessages:removeUserFromDataset.404.0')}`);
       },
       500: (err, params) => {
+        message.error(`${i18n.t('errormessages:removeUserFromDataset.500.0')}`);
+      },
+    },
+    [namespace.teams.restoreUserFromDataset]: {
+      403: (err, params) => {
         message.error(
-          'An Internal Error occurred while attempting to remove user from dataset. Please try again later.',
+          `${i18n.t('errormessages:removeUserFromDataset.403.0')} ${
+            params.username
+          } ${i18n.t('errormessages:removeUserFromDataset.403.1')}`,
         );
+      },
+      404: (err, params) => {
+        message.error(`${i18n.t('errormessages:removeUserFromDataset.404.0')}`);
+      },
+      500: (err, params) => {
+        message.error(`${i18n.t('errormessages:removeUserFromDataset.500.0')}`);
       },
     },
     [namespace.common.getDataset]: {
       default: (err, params) => {
-        message.error('Internal Error: Unable to load projects list');
+        message.error(`${i18n.t('errormessages:getDataset.default.0')}`);
       },
     },
     [namespace.common.listAllContainersPermission]: {
       401: (err, params) => {
-        message.error('Unauthorized to set containers permission');
-      },
-      404: (err, params) => {
-        message.error('Error when trying to set containers permission');
-      },
-      default: (err, params) => {
         message.error(
-          'An Internal Error occurred when trying to set containers permission',
+          `${i18n.t('errormessages:listAllContainersPermission.401.0')}`,
         );
       },
-    },
-    [namespace.common.emailFileList]: {
-      default: (err, params) => {
-        message.error('Failed to clean the file upload list');
+      404: (err, params) => {
+        message.error(
+          `${i18n.t('errormessages:listAllContainersPermission.404.0')}`,
+        );
       },
-    },
-    [namespace.common.logout]: {
       default: (err, params) => {
         message.error(
-          'Internal Error occurs when trying to logout, please try again later',
+          `${i18n.t('errormessages:listAllContainersPermission.default.0')}`,
         );
       },
     },
     [namespace.contactUs.contactUsAPI]: {
       401: (err, params) => {
-        message.error('Unauthorized to send a request to admin');
+        message.error(`${i18n.t('errormessages:contactUsAPI.401.0')}`);
       },
       404: (err, params) => {
-        message.error('Error when trying to send a request to admin');
+        message.error(`${i18n.t('errormessages:contactUsAPI.404.0')}`);
       },
       default: (err, parames) => {
-        message.error('Failed sending email to admin.');
+        message.error(`${i18n.t('errormessages:contactUsAPI.default.0')}`);
+      },
+    },
+
+    [namespace.userManagement.inviteUserApi]: {
+      400: (err, params) => {
+        message.error(
+          `${i18n.t('errormessages:inviteUserApi.400.0')} ${
+            params.email
+          } ${i18n.t('errormessages:inviteUserApi.400.1')}`,
+        );
+      },
+    },
+    [namespace.userManagement.getPortalUsers]: {
+      400: (err, params) => {
+        message.error(`${i18n.t('errormessages:getPortalUsers.400.0')}`);
+      },
+      default: (err, parames) => {
+        message.error(`${i18n.t('errormessages:getPortalUsers.default.0')}`);
+      },
+    },
+    [namespace.userManagement.updateUserStatusAPI]: {
+      400: (err, params) => {
+        message.error(`${i18n.t('errormessages:updateUserStatusAPI.400.0')}`);
+      },
+      default: (err, parames) => {
+        message.error(
+          `${i18n.t('errormessages:updateUserStatusAPI.default.0')}`,
+        );
+      },
+    },
+    [namespace.userManagement.getInvitationsAPI]: {
+      400: (err, params) => {
+        message.error(`${i18n.t('errormessages:getInvitationsAPI.400.0')}`);
+      },
+      default: (err, parames) => {
+        message.error(`${i18n.t('errormessages:getInvitationsAPI.default.0')}`);
       },
     },
   };
@@ -474,8 +521,11 @@ ErrorMessager.prototype.triggerMsg = function (errorCode, err, params) {
       ? this.messageObj[errorCode]
       : this.messageObj['default'];
   _.isFunction(messageFunc) && messageFunc(err, params);
-  if(this.namespace === namespace?.dataset?.files?.uploadFileApi && parseInt(errorCode) === 403 ){
+  if (
+    this.namespace === namespace?.dataset?.files?.preUpload &&
+    parseInt(errorCode) === 409
+  ) {
     return;
   }
-  console.log('error message logging',store.getState());
+  console.log('error message logging', store.getState());
 };

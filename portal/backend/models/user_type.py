@@ -40,3 +40,13 @@ def map_role_neo4j_to_sys(role: int):
         'contributor': EUserRole.contributor,
         'visitor': EUserRole.visitor
     }.get(role, None)
+
+def map_neo4j_to_frontend(role: str):
+    return {
+        'site-admin': 'Platform Administrator', 
+        'admin': 'Project Administrator', 
+        'member': 'Member',
+        'contributor': 'Contributor',
+        'uploader': 'Contributor',
+        'visitor': 'Visitor'
+    }.get(role, 'Member')

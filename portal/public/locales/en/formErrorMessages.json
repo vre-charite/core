@@ -1,0 +1,145 @@
+{
+  "common": {
+    "username": {
+      "empty": "Please enter your username",
+      "valid": "The username should be 1 ~ 32 characters, lowercase letters and numbers."
+    },
+    "password": {
+      "empty": "Please enter your password",
+      "valid": "The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;)."
+    },
+    "confirmPassword": {
+      "empty": "Please confirm your password",
+      "valid": "The two passwords that you entered do not match!"
+    },
+    "email": {
+      "empty": "Please enter a valid email address",
+      "valid": "Please enter a valid email address"
+    }
+  },
+  "project": {
+    "code": {
+      "empty": "Please enter the project code",
+      "valid": "Project code should only contains lowercase letters and numbers and within 32 digits."
+    },
+    "name": {
+      "empty": "Please enter a project name",
+      "valid": "Project name should be within 1 ~ 100 characters."
+    },
+    "tags": {
+      "empty": "",
+      "valid": "Tag should be within 1 ~ 32 characters.",
+      "space": "Tag should not contain space."
+    },
+    "description": {
+      "valid": "Description should be within 1 ~ 250 characters."
+    },
+    "generate": {
+      "id": {
+        "empty": "Please enter a valid Generate ID",
+        "valid": "Please enter a valid Generate ID"
+      },
+      "confirmId": {
+        "empty": "Please confirm your Generate ID",
+        "valid": "The two Generate IDs that you entered do not match!"
+      }
+    },
+    "card": {
+      "update": {
+        "name": {
+          "empty": "Project Name is required.",
+          "valid": "Project name should be within 1 ~ 250 characters."
+        },
+        "tags": {
+          "valid": "Tag should be within 1 ~ 32 characters.",
+          "space": "Project tag should not contain space."
+        }
+      },
+      "save": {
+        "name": {
+          "valid": "Project name should be within 1 ~ 250 characters.",
+          "empty": "Project Name is required."
+        },
+        "tags": {
+          "space": "Project tag should not contain space. Please correct",
+          "valid": "Tag should be within 1 ~ 32 characters."
+        }
+      }
+    },
+    "upload": {
+      "file": {
+        "empty": "Please select a file for upload",
+        "valid": "File already selected for uploading. Please select a different file."
+      },
+      "tags": {
+        "limit": "Up to 10 tags per file！",
+        "valid": "Tag should only contain 1 ~ 32 lowercase letters and/or numbers."
+      }
+    },
+    "filePanel": {
+      "tags": {
+        "limit": "Up to 10 tags per file！",
+        "valid": "Tag should only contain 1 ~ 32 lowercase letters and/or numbers.",
+        "exists": "Tag is already exists."
+      }
+    },
+    "fileStatSearch": {
+      "date": {
+        "empty": "Please select a date range"
+      },
+      "user": {
+        "empty": "Please select a user"
+      },
+      "type": {
+        "empty": "Please select a type"
+      }
+    },
+    "addMemberModal": {
+      "role": {
+        "empty": "Please select a role"
+      }
+    }
+  },
+  "selfRegister": {
+    "firstName": {
+      "empty": "Please enter your first name"
+    },
+    "lastName": {
+      "empty": "Please enter your last name"
+    },
+    "tou": {
+      "valid": "Please read and accept the terms of use to proceed"
+    }
+  },
+  "contactUs": {
+    "category": {
+      "empty": "Please select a category"
+    },
+    "title": {
+      "empty": "Please provide a title",
+      "valid": "Title should be 2-200 characters"
+    },
+
+    "description": {
+      "empty": "Please provide a description",
+      "valid": "Description should be 10-1000 characters"
+    }
+  },
+  "resetPassword": {
+    "oldPassword": {
+      "empty": "Please enter your old password"
+    },
+    "newPassword": {
+      "empty": "Please enter your new password",
+      "valid": "New password can not be the same as the old password"
+    },
+    "confirmPassword": {
+      "empty": "Please confirm your new password"
+    }
+  },
+  "platformUserManagement": {
+    "role": {
+      "empty": "Please select a role"
+    }
+  }
+}

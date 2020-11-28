@@ -17,7 +17,7 @@ function ActivateUser(props) {
             subTitle={<>You can now login with the new password.</>}
             extra={[
               <Button type="primary" key="home">
-                <Link to="/">Back to home page</Link>
+                <Link to="/">Back to Home Page</Link>
               </Button>,
             ]}
           />

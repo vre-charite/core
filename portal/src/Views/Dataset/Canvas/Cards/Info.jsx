@@ -8,14 +8,31 @@ import {
   Checkbox,
   message,
   Typography,
+  Row,
 } from 'antd';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import _ from 'lodash';
-import { updateDatasetInfoAPI, getAdminsOnDatasetAPI } from '../../../../APIs';
+import {
+  updateDatasetInfoAPI,
+  getAdminsOnDatasetAPI,
+  listAllContainersPermission,
+} from '../../../../APIs';
 import { UpdateDatasetCreator } from '../../../../Redux/actions';
-import { useCurrentProject, objectKeysToSnakeCase } from '../../../../Utility';
+import {
+  useCurrentProject,
+  objectKeysToSnakeCase,
+  timeConvert,
+  trimString,
+  reduxActionWrapper,
+} from '../../../../Utility';
 import { objectKeysToCamelCase } from '../../../../Utility';
+import { useTranslation } from 'react-i18next';
+import {
+  setContainersPermissionCreator,
+  setUserRoleCreator,
+} from '../../../../Redux/actions';
+import { useSelector } from 'react-redux';
 const { TextArea } = Input;
 const { Paragraph, Title } = Typography;
 
@@ -24,7 +41,10 @@ function Description(props) {
   const [datasetInfo, setDatasetInfo] = useState(null);
   const [datasetUpdate, setDatasetUpdate] = useState(null);
   const [userListOnDataset, setUserListOnDataset] = useState(null);
-
+  const [tagErrorMsg, setTagErrorMsg] = useState(null);
+  const [nameErrorMsg, setNameErrorMsg] = useState(null);
+  const { t, i18n } = useTranslation(['formErrorMessages']);
+  const [isSaving, setIsSaving] = useState(false);
   const {
     containersPermission,
     match: {
@@ -32,6 +52,13 @@ function Description(props) {
     },
     datasetList,
   } = props;
+
+  const [
+    setContainersPermissionDispatcher,
+    setUserRoleDispatcher,
+  ] = reduxActionWrapper([setContainersPermissionCreator, setUserRoleCreator]);
+
+  const { username } = useSelector((state) => state);
 
   useEffect(() => {
     if (datasetList.length > 0) {
@@ -60,15 +87,57 @@ function Description(props) {
 
   const saveDatasetInfo = () => {
     // check information (name is required)
-    console.log('Description -> datasetUpdate', datasetUpdate);
-    if (!datasetUpdate['name']) {
-      message.error('Project Name is required.');
+    setIsSaving(true);
+    if (
+      !datasetUpdate['name'] ||
+      trimString(datasetUpdate['name']).length === 0
+    ) {
+      message.error(t('formErrorMessages:project.card.save.name.empty'));
+      setIsSaving(false);
       return;
     }
 
+    if (datasetUpdate['name'] && datasetUpdate['name'].length > 250) {
+      message.error(t('formErrorMessages:project.card.save.name.valid'));
+      setIsSaving(false);
+      return;
+    }
+
+    const tags = datasetUpdate['tags'];
+    let isTagContainSpace = false;
+    isTagContainSpace = tags && tags.filter((el) => el.includes(' '));
+    if (isTagContainSpace && isTagContainSpace.length) {
+      message.error({
+        content: `${t('formErrorMessages:project.card.update.tags.space')}`,
+        style: { marginTop: '20vh' },
+        duration: 5,
+      });
+      setIsSaving(false);
+      return;
+    }
+
+    let isTagError = tags && tags.some((el) => el.length > 32);
+    if (isTagError) {
+      message.error(`${t('formErrorMessages:project.card.save.tags.valid')}`);
+      setIsSaving(false);
+      return;
+    }
+
+    if (datasetUpdate['description']) {
+      datasetUpdate['description'] = trimString(datasetUpdate['description']);
+    }
+
+    let data2Update = {};
+
+    for (const key in datasetUpdate) {
+      if (!['timeCreated', 'timeLastmodified'].includes(key)) {
+        data2Update[key] = datasetUpdate[key];
+      }
+    }
+
     // call API to update project info
-    updateDatasetInfoAPI(datasetId, objectKeysToSnakeCase(datasetUpdate)).then(
-      (res) => {
+    updateDatasetInfoAPI(datasetId, objectKeysToSnakeCase(data2Update))
+      .then((res) => {
         let newDataInfo = res.data.result[0];
         let index = datasetList[0].datasetList.findIndex(
           (d) => d.id === parseInt(datasetId),
@@ -77,16 +146,61 @@ function Description(props) {
           ...datasetList,
           (datasetList[0].datasetList[index] = newDataInfo),
         ];
-        console.log('saveDatasetInfo -> newDatasetList', newDatasetList);
-        UpdateDatasetCreator(newDatasetList, 'All Projects');
+        console.log(newDatasetList);
+        props.UpdateDatasetCreator(
+          newDatasetList[0].datasetList,
+          'All Projects',
+        );
+        updateContainerPremission();
         setDatasetInfo(newDataInfo);
+        setDatasetUpdate(newDataInfo);
         setEditView(false);
-      },
-    );
+      })
+      .finally(() => {
+        setIsSaving(false);
+      });
+  };
+
+  const updateContainerPremission = async () => {
+    const {
+      data: { result: containersPermission },
+    } = await listAllContainersPermission(username);
+    setContainersPermissionDispatcher(containersPermission.permission);
+    setUserRoleDispatcher(containersPermission.role);
   };
 
   const updateDatasetInfo = (field, value) => {
+    if (field === 'tags') {
+      let isTagInvalid = true;
+
+      isTagInvalid = value && value.some((el) => el.includes(' '));
+
+      if (isTagInvalid) {
+        message.error(t('formErrorMessages:project.card.update.tags.space'));
+        setTagErrorMsg(t('formErrorMessages:project.card.update.tags.space'));
+      } else {
+        setTagErrorMsg(null);
+      }
+
+      isTagInvalid = value && value.some((el) => el.length > 32);
+      if (isTagInvalid) {
+        message.error(t('formErrorMessages:project.card.update.tags.valid'));
+        setTagErrorMsg(t('formErrorMessages:project.card.update.tags.valid'));
+      }
+    }
+
+    if (field === 'name') {
+      let isNameInvalid = value.length > 250;
+      if (isNameInvalid) {
+        message.error(t('formErrorMessages:project.card.update.name.valid'));
+        setNameErrorMsg(t('formErrorMessages:project.card.update.name.valid'));
+      } else {
+        setNameErrorMsg(null);
+      }
+    }
+
     setDatasetUpdate({ ...datasetUpdate, [field]: value });
+    // setDatasetInfo({ ...datasetInfo, [field]: value })
   };
 
   function tagRender(props) {
@@ -104,6 +218,23 @@ function Description(props) {
     );
   }
 
+  const tagsErrorMsg = (
+    <Row>
+      <span style={{ padding: 10, marginBottom: -10, color: 'red' }}>
+        {tagErrorMsg}
+      </span>
+    </Row>
+  );
+
+  let selectStyle = { width: '100%' };
+
+  if (tagErrorMsg) {
+    selectStyle = {
+      width: '100%',
+      borderColor: 'red',
+    };
+  }
+
   const printDetails = () => {
     if (datasetInfo) {
       return (
@@ -112,10 +243,23 @@ function Description(props) {
             {!currentContainer ||
             currentContainer['permission'] !== 'admin' ? null : editView ? (
               <div style={{ marginTop: '12px', float: 'right' }}>
-                <Button type="link" onClick={(e) => setEditView(false)}>
+                <Button
+                  disabled={isSaving}
+                  type="link"
+                  onClick={(e) => {
+                    setEditView(false);
+                    setDatasetInfo(datasetInfo);
+                    setDatasetUpdate(datasetInfo);
+                    setTagErrorMsg(null);
+                  }}
+                >
                   Cancel
                 </Button>
-                <Button type="primary" onClick={saveDatasetInfo}>
+                <Button
+                  loading={isSaving}
+                  type="primary"
+                  onClick={saveDatasetInfo}
+                >
                   Save
                 </Button>
               </div>
@@ -128,10 +272,10 @@ function Description(props) {
               </Button>
             )}
             <small>
-              Created at {datasetInfo.timeCreated.split('T')[0]} | Project code:{' '}
-              {datasetInfo.code}
+              Created on {timeConvert(datasetInfo.timeCreated, 'date')} |
+              Project code: {datasetInfo.code}
             </small>
-            <Title
+            {/*             <Title
               level={4}
               ellipsis={{
                 rows: 1,
@@ -139,7 +283,7 @@ function Description(props) {
               style={{ paddingRight: '10px' }}
             >
               {datasetInfo.name}
-            </Title>
+            </Title> */}
           </>
 
           <Descriptions bordered size="small" column={1}>
@@ -174,15 +318,21 @@ function Description(props) {
             </Descriptions.Item>
             <Descriptions.Item label="Tags" span={1}>
               {editView ? (
-                <Select
-                  mode="tags"
-                  defaultValue={datasetInfo.tags ? datasetInfo.tags : []}
-                  style={{ width: '100%' }}
-                  onChange={(value) => updateDatasetInfo('tags', value)}
-                  tagRender={tagRender}
-                >
-                  {datasetInfo.tags ? datasetInfo.tags : []}
-                </Select>
+                <div>
+                  <Row>
+                    <Select
+                      mode="tags"
+                      defaultValue={datasetInfo.tags ? datasetInfo.tags : []}
+                      style={{ ...selectStyle }}
+                      onChange={(value) => updateDatasetInfo('tags', value)}
+                      tagRender={tagRender}
+                    >
+                      {datasetInfo.tags ? datasetInfo.tags : []}
+                    </Select>
+                  </Row>
+
+                  {tagErrorMsg && tagsErrorMsg}
+                </div>
               ) : (
                 <>
                   {datasetInfo.tags &&
@@ -192,7 +342,7 @@ function Description(props) {
                 </>
               )}
             </Descriptions.Item>
-       
+
             <Descriptions.Item label="Project Administrators" span={1}>
               <Paragraph
                 style={{
@@ -226,12 +376,21 @@ function Description(props) {
             </Descriptions.Item>
             <Descriptions.Item label="Description" span={3}>
               {editView ? (
-                <TextArea
-                  defaultValue={datasetInfo.description}
-                  onChange={(e) =>
-                    updateDatasetInfo('description', e.target.value)
-                  }
-                />
+                <div>
+                  <TextArea
+                    defaultValue={datasetInfo.description}
+                    onChange={(e) =>
+                      updateDatasetInfo('description', e.target.value)
+                    }
+                    showCount
+                    maxLength={250}
+                  />
+                  <span style={{ float: 'right' }}>{`${
+                    datasetUpdate.description
+                      ? datasetUpdate.description.length
+                      : 0
+                  }/250`}</span>
+                </div>
               ) : (
                 <>{datasetInfo.description}</>
               )}

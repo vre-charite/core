@@ -4,6 +4,8 @@ import { SwapOutlined, PauseOutlined } from '@ant-design/icons';
 import SupportCollapse from './SupportCollapse';
 import ContactUsForm from './ContactUsForm';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import styles from './index.module.scss';
 
 const { Panel } = Collapse;
 const { Title, Paragraph } = Typography;
@@ -12,6 +14,8 @@ const { Link } = Anchor;
 function SupportDrawer(props) {
   const [placement, setPlacement] = useState('right');
   const [width, setWidth] = useState(400);
+  const { t, i18n } = useTranslation('support');
+  const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
     function handleResize() {
@@ -75,9 +79,34 @@ function SupportDrawer(props) {
     }
   }
 
+  const rightArrow = (
+    <svg
+      onClick={() => {
+        setIsOpen((state) => !state);
+      }}
+      viewBox="0 0 1024 1024"
+      focusable="false"
+      data-icon="caret-right"
+      width="1em"
+      height="1em"
+      fill="currentColor"
+      aria-hidden="true"
+      /* style={{
+        position: 'absolute',
+        top: 38,
+        cursor: 'pointer',
+        transform: `rotate(${isOpen ? 90 : 0}deg)`,
+      }} */
+      className={styles.arrow + ' ' + (isOpen && styles.active)}
+    >
+      <path d="M715.8 493.5L335 165.1c-14.2-12.2-35-1.2-35 18.5v656.8c0 19.7 20.8 30.7 35 18.5l380.8-328.4c10.9-9.4 10.9-27.6 0-37z"></path>
+    </svg>
+  );
+
   return (
     <Drawer
       title="Support"
+      id="support-drawer"
       placement={placement}
       closable={false}
       onClose={props.onClose}
@@ -93,6 +122,31 @@ function SupportDrawer(props) {
         }
       }
     >
+      <Title level={4} id="toc">
+        Contents
+      </Title>
+      <Anchor
+        style={{ position: 'relative', overflow: 'hidden' }}
+        getContainer={() => {
+          return document.querySelector('#support-drawer');
+        }}
+        affix={false}
+      >
+        <Link href="#user-guide" title="User Guide" />
+        {rightArrow}
+        <div style={{ paddingLeft: 15 }}>
+          <Link href="#faq" title="FAQ">
+            <div className={styles.subHeader + ' ' + (isOpen && styles.active)}>
+              <Link href="#account" title="Account Information" />
+              <Link href="#projects" title="Projects" />
+              <Link href="#security" title="Site security" />
+              <Link href="#file" title="File upload" />
+            </div>
+          </Link>
+        </div>
+        <Link href="#contact-us" title="Contact Us" />
+      </Anchor>
+      <br />
       <Button
         onMouseDown={mouseDown}
         type="link"
@@ -115,7 +169,6 @@ function SupportDrawer(props) {
       >
         <SwapOutlined />
       </Button>
-
       {/* <Collapse border={false}>
         <Panel header="Recommended resources" key="a">
           <p>
@@ -145,40 +198,23 @@ function SupportDrawer(props) {
           <ContactUsForm />
         </Panel>
       </Collapse> */}
-      <Title level={4} id="content">
-        Table of Content
-      </Title>
-      <Anchor affix={false}>
-        <Link href="#user-guide" title="User Guide" />
-        <Link href="#faq" title="FAQ">
-          <Link href="#account" title="Account Information" />
-          <Link href="#projects" title="Projects" />
-          <Link href="#security" title="Site security" />
-          <Link href="#file" title="File upload" />
-        </Link>
-        <Link href="#contact-us" title="Contact Us" />
-      </Anchor>
-      <Divider />
       <Title level={4} id="user-guide">
-        User Guide
+        {t('userguide')}
       </Title>
-      <p>
-        Download the User Guide (pdf) to learn more about the VRE platform
-        services, tools and workflows.​
-      </p>
+      <p>{t('userguide_content')}</p>
+
       <Button type="primary" ghost>
         <a
           href="/vre/files/VRE User Manual Release 0.1.1 2020-10-28.pdf"
           download
           target="_self"
         >
-          {' '}
-          Download Guide
+          {t('download_guide_button_text')}
         </a>
       </Button>
       <Divider />
       <Title level={4} id="faq">
-        Frequently asked questions
+        {t('faq_title')}
       </Title>
       <SupportCollapse />
       {/* <div

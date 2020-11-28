@@ -9,7 +9,7 @@ def confirm_email_body_generator(title, category, description, email):
                 <p>Issue category: {}</p>\
                 <p>Issue description:</p>\
                 <p>{}</p><br><br><br>\
-                <p>This is an automated message please do not reply.<br>Should you require assistance please contact: {}</p><br>\
+                <p>This is an automated message. Should you require assistance please contact: {}</p><br>\
             </body>\
         </html>'''.format(title, category, description, email)
     )

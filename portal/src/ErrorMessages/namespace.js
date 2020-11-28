@@ -43,10 +43,19 @@ const teams = {
   getUsersOnDataset: 'teams.getUsersOnDataset',
   changeRoleInDataset: 'teams.changeRoleInDataset',
   removeUserFromDataset: 'teams.removeUserFromDataset',
+  restoreUserFromDataset: 'teams.restoreUserFromDataset',
+  checkUserPlatformRole: 'teams.checkUserPlatformRole',
 };
 
 const contactUs = {
   contactUsAPI: 'contactUs.contactUsAPI',
+};
+
+const userManagement = {
+  inviteUserApi: 'userManagement.inviteUserApi',
+  getPortalUsers: 'userManagement.getPortalUsers',
+  updateUserStatusAPI: 'userManagement.updateUserStatusAPI',
+  getInvitationsAPI: 'userManagement.getInvitationsAPI',
 };
 
 export default {
@@ -57,4 +66,5 @@ export default {
   selfRegister,
   teams,
   contactUs,
+  userManagement,
 };

@@ -15,5 +15,13 @@
   "license": "ISC",
   "dependencies": {
     "react-beforeunload": "^2.2.2"
+  },
+  "devDependencies": {
+    "cz-conventional-changelog": "^3.3.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

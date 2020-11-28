@@ -1,0 +1,9 @@
+{
+  "refreshModal": {
+    "title": "Warning",
+    "text": [
+      "Your session will expire in",
+      "Please click “Refresh” if you wish to remain logged in."
+    ]
+  }
+}

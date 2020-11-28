@@ -67,6 +67,32 @@ function deleteUploadStatus(containerId, sessionId) {
   });
 }
 
+function checkDownloadStatus(sessionId) {
+  return devOpAxios({
+    url: `/v1/download-state`,
+    method: 'GET',
+    headers: {
+      'Session-ID': `DOWNLOAD${sessionId}`,
+    },
+    params: {
+      container_id: 0,
+    },
+  });
+}
+
+function deleteDownloadStatus(sessionId) {
+  return devOpAxios({
+    url: `/v1/download-state`,
+    method: 'DELETE',
+    headers: {
+      'Session-ID': `DOWNLOAD${sessionId}`,
+    },
+    params: {
+      container_id: 0,
+    },
+  });
+}
+
 /**
  * Get a list of files from the study
  *
@@ -170,12 +196,12 @@ function getFilesByTypeAPI(
   entityType,
   filters,
 ) {
-  let pipelineArr = null;
-  if (path) pipelineArr = path.split('/');
+  // let pipelineArr = null;
+  // if (path) pipelineArr = path.split('/');
 
-  let pipeline = null;
-  if (pipelineArr && pipelineArr.length > 1)
-    pipeline = pipelineArr[pipelineArr.length - 1];
+  let pipeline = path;
+  // if (pipelineArr && pipelineArr.length > 1)
+  //   pipeline = pipelineArr[pipelineArr.length - 1];
 
   let params = {
     page,
@@ -209,7 +235,7 @@ function getFilesByTypeAPI(
 function checkDownloadStatusAPI(
   containerId,
   taskId,
-  removeDownloadListCreator,
+  updateDownloadItemDispatch,
   setSuccessNumDispatcher,
   successNum,
 ) {
@@ -220,18 +246,11 @@ function checkDownloadStatusAPI(
     .then((res) => {
       const { status } = res.data.result;
       if (status === 'success') {
-        removeDownloadListCreator(taskId);
+        updateDownloadItemDispatch({ key: taskId, status: 'success' });
         setSuccessNumDispatcher(successNum + 1);
         // Start to download zip file
         const token = res.data.result['token'];
         const url = `${devOpServerUrl}/v1/files/download?token=${token}`;
-        // var link = document.createElement('a');
-        // link.style.display = 'none';
-        // document.body.appendChild(link);
-        // link.setAttribute('download', null);
-        // link.setAttribute('href', url);
-        // link.click();
-        // document.body.removeChild(link);
         window.open(url, '_blank');
       } else if (status === 'error') {
         // Stop check status
@@ -253,30 +272,46 @@ function downloadFilesAPI(
   files,
   setLoading,
   appendDownloadListCreator,
+  sessionId,
 ) {
   return axios({
     url: `/v1/files/containers/${containerId}/file`,
     method: 'POST',
     data: { files: files },
     timeout: 10000000000000000,
+    headers: {
+      'Session-ID': `DOWNLOAD${sessionId}`,
+    },
   }).then((res) => {
     if (setLoading) {
       setLoading(false);
     }
     if (res.data.result['taskId']) {
       message.info(
-        "Preparing download... The file will start to download when it's ready.",
+        "Your download is being prepared...The file will start to download when it's ready.",
         6,
       );
       let item = {
         downloadKey: res.data.result['taskId'],
-        projectId: containerId,
+        container: res.data.result['container'],
         status: 'pending',
+        filename: res.data.result['taskId'],
+        projectId: containerId,
       };
       appendDownloadListCreator(item);
       // Start to check zipping process
     } else {
       const token = res.data.result;
+
+      let item = {
+        downloadKey: res.data.result,
+        container: res.data.container,
+        status: 'success',
+        filename: res.data.filename,
+        projectId: containerId,
+      };
+      appendDownloadListCreator(item);
+
       const url = `${devOpServerUrl}/v1/files/download?token=${token}`;
       window.open(url, '_blank');
     }
@@ -430,9 +465,18 @@ function deleteProjectTagsAPI(containerId, params) {
   return devOpAxios({
     url: `/v1/containers/${containerId}/tags`,
     method: 'DELETE',
-    data: params
+    data: params,
   });
 }
+
+function fileLineageAPI(key, typeName) {
+  return axios({
+    url: `/v1/lineage`,
+    method: 'GET',
+    params: { full_path: key, direction: 'INPUT', type_name: typeName },
+  });
+}
+
 export {
   uploadFileApi,
   getFilesAPI,
@@ -454,5 +498,8 @@ export {
   listProjectTagsAPI,
   deleteUploadStatus,
   addProjectTagsAPI,
-  deleteProjectTagsAPI
+  deleteProjectTagsAPI,
+  fileLineageAPI,
+  checkDownloadStatus,
+  deleteDownloadStatus,
 };

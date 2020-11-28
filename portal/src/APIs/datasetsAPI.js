@@ -1,4 +1,4 @@
-import { serverAxios , axios } from './config';
+import { serverAxios, axios } from './config';
 
 /**
  * Get all the datasets
@@ -49,7 +49,7 @@ function createProjectAPI(data, cancelAxios) {
     cancelToken: new CancelToken(function executor(c) {
       // An executor function receives a cancel function as a parameter
       cancelAxios.cancelFunction = c;
-    })
+    }),
   });
 }
 
@@ -137,6 +137,22 @@ function removeUserFromDatasetApi(username, datasetId) {
 }
 
 /**
+ * set a user status in a container
+ *
+ * @param {string} username
+ * @param {number} datasetId
+ */
+function setUserStatusFromDatasetApi(username, datasetId, action) {
+  return serverAxios({
+    url: `/v1/datasets/${datasetId}/users/${username}/status`,
+    method: 'PUT',
+    data: {
+      status: action, // active, disable, hibernate
+    },
+  });
+}
+
+/**
  * given the dataset id, get the children datasets
  *
  * @param {number} datasetId the dataset id
@@ -212,5 +228,6 @@ export {
   traverseFoldersContainersAPI,
   listAllContainersPermission,
   removeUserFromDatasetApi,
+  setUserStatusFromDatasetApi,
   updateDatasetInfoAPI,
 };

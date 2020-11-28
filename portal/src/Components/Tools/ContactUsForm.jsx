@@ -18,6 +18,8 @@ import jwtDecode from 'jwt-decode';
 import { tokenManager } from '../../Service/tokenManager';
 import { contactUsApi } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
+import { useTranslation } from 'react-i18next';
+import { trimString } from '../../Utility';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -25,6 +27,8 @@ const { Title, Paragraph } = Typography;
 
 function ContactUsForm(props) {
   const [form] = Form.useForm();
+  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const username = useSelector((state) => state.username);
@@ -114,7 +118,7 @@ function ContactUsForm(props) {
               rules={[
                 {
                   required: true,
-                  message: 'Please select a category',
+                  message: t('formErrorMessages:contactUs.category.empty'),
                 },
               ]}
             >
@@ -146,11 +150,15 @@ function ContactUsForm(props) {
               rules={[
                 {
                   required: true,
-                  message: 'Please input description.',
+                  message: t('formErrorMessages:contactUs.title.empty'),
                 },
                 {
-                  pattern: new RegExp(/^(?=.{2,200}$).*/g), // 2-100 letters
-                  message: 'Title should be 2-200 characters',
+                  // pattern: new RegExp(/^(?=.{2,200}$).*/g), // 2-100 letters
+                  // message: t('formErrorMessages:contactUs.title.valid'),
+                  validator:(rule,value)=>{
+                    const isLengthValid= (trimString(value) && trimString(value).length >= 2 && trimString(value).length <= 200);
+                    return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:contactUs.title.valid'));
+                  }
                 },
               ]}
             >
@@ -162,11 +170,16 @@ function ContactUsForm(props) {
               rules={[
                 {
                   required: true,
-                  message: 'Please input description.',
+                  message: t('formErrorMessages:contactUs.description.empty'),
                 },
                 {
-                  pattern: new RegExp(/^(?=.{10,1000}$).*/g), // 10-1000 letters
-                  message: 'Description should be 10-500 characters',
+                  //pattern: new RegExp(/^(?=.{10,1000}$).*/g), // 10-1000 letters
+                  message: t('formErrorMessages:contactUs.description.valid'),
+                  validator:(rule,value)=>{
+                    console.log(trimString(value) && trimString(value).length)
+                    const isLengthValid= (trimString(value) && trimString(value).length >= 10 && trimString(value).length <= 1000);
+                    return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:contactUs.description.valid'));
+                  }
                 },
               ]}
             >

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useHistory, Link, withRouter } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
+import { history } from '../../Routes';
 import {
-  message,
   Card,
   Form,
   Input,
@@ -16,19 +16,20 @@ import styles from './index.module.scss';
 
 import { resetForgottenPasswordAPI, checkTokenAPI } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
+import { useTranslation } from 'react-i18next';
 
 const { Content } = Layout;
 const { Title } = Typography;
 
 function Login(props) {
-  let history = useHistory();
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
+
   const FormInstance = React.createRef();
   const token = props.location.search.split('=')[1];
 
   useEffect(() => {
-    console.log('Login -> token', { token });
     checkTokenAPI(token)
       .then((res) => {
         const { username } = res.data.result;
@@ -46,7 +47,10 @@ function Login(props) {
   const onFinish = (values) => {
     setLoading(true);
 
-    resetForgottenPasswordAPI({ ...values, token })
+    resetForgottenPasswordAPI({
+      ...values,
+      token,
+    })
       .then((res) => {
         setLoading(false);
         history.push('/account-assistant/reset-password-confirmation');
@@ -77,6 +81,7 @@ function Login(props) {
       form.validateFields(['password_confirm'], () => Promise.reject());
     }
   };
+
   return (
     <Content className={'content'}>
       <div className={styles.container}>
@@ -103,7 +108,10 @@ function Login(props) {
               label="Username"
               name="username"
               rules={[
-                { required: true, message: 'Please input your username!' },
+                {
+                  required: true,
+                  message: t('formErrorMessages:common.username.empty'),
+                },
               ]}
             >
               <Input disabled />
@@ -113,7 +121,7 @@ function Login(props) {
               label={
                 <span>
                   New Password&nbsp;
-                  <Tooltip title="The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).">
+                  <Tooltip title={t('password')}>
                     <QuestionCircleOutlined />
                   </Tooltip>
                 </span>
@@ -122,7 +130,9 @@ function Login(props) {
               rules={[
                 {
                   required: true,
-                  message: 'Please input your password',
+                  message: t(
+                    'formErrorMessages:resetPassword.newPassword.empty',
+                  ),
                   whitespace: true,
                 },
                 {
@@ -148,7 +158,9 @@ function Login(props) {
               rules={[
                 {
                   required: true,
-                  message: 'Please confirm your password!',
+                  message: t(
+                    'formErrorMessages:resetPassword.confirmPassword.empty',
+                  ),
                 },
 
                 ({ getFieldValue }) => ({
@@ -158,7 +170,7 @@ function Login(props) {
                     }
 
                     return Promise.reject(
-                      'The two passwords that you entered do not match!',
+                      t('formErrorMessages:common.confirmPassword.empty'),
                     );
                   },
                 }),
@@ -172,16 +184,18 @@ function Login(props) {
             </Form.Item>
 
             <br />
-            <br />
             <Form.Item>
-              <Space>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Submit
-                </Button>
-                <Button>
-                  <Link to="/">Cancel</Link>
-                </Button>
-              </Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                style={{ float: 'right' }}
+              >
+                Submit
+              </Button>
+              <Button disabled={loading}>
+                <Link to="/">Back to Home Page</Link>
+              </Button>
             </Form.Item>
           </Form>
         </Card>

@@ -1,20 +1,30 @@
 //for  logging
 const path = require('path');
 const { login } = require('../Utility/login.js');
+const { clickProject } = require('../ProjectList/clickProject');
+const { changePage } = require('./changePage');
+const { baseUrl } = require('../config');
 jest.setTimeout(60000);
 
-describe('File Explorer', () => {
+//Project ID to use for this test.
+const PROJECT_ID = 487;
+
+describe('fileExplorer', () => {
   let page;
   const getPage = () => page;
 
   beforeAll(async () => {
     page = await context.newPage();
-    await page.goto('http://localhost:3000');
+    await page.goto(baseUrl);
     await page.setViewport({ width: 1920, height: 1008 });
   });
   login(it, getPage, 'admin', 'admin');
+  // it('change page index', async () => {
+  //   await clickProject(page, 'testcode10263');
+  // });
+  // changePage(it, 'change page', getPage, 20, 'Next Page');
   it('Sorting File Explorer', async () => {
-    await page.goto('localhost:3000/vre/dataset/17/canvas');
+    await page.goto(`${baseUrl}/project/${PROJECT_ID}/canvas`);
     //frist file name text
     let fileName = await page.waitForSelector(
       '.ant-table-row.ant-table-row-level-0 > td:nth-child(2)',
@@ -71,7 +81,7 @@ describe('File Explorer', () => {
 
     const filePath = path.resolve('./src/Test/ProjectList/', FILENAME);
 
-    await page.goto('localhost:3000/vre/dataset/17/canvas');
+    await page.goto(`${baseUrl}/project/${PROJECT_ID}/canvas`);
     await page.waitForSelector('#raw_table_upload');
     await page.$eval('#raw_table_upload', (elem) => elem.click());
     await page.type('#form_in_modal_gid', GENERATE_ID);
@@ -84,9 +94,7 @@ describe('File Explorer', () => {
 
     await page.waitForResponse(
       (response) =>
-        response.url() ===
-          'http://10.3.7.220/vre/api/vre/portal/v1/files/containers/17/files/count/daily?action=all' &&
-        response.status() === 200,
+        response.url().includes('/count/daily') && response.status() === 200,
     );
 
     //wait for dom to be updated
@@ -110,7 +118,6 @@ describe('File Explorer', () => {
     const GENERATE_ID = `TES-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const filePath = path.resolve('./src/Test/ProjectList/', FILENAME);
-    await page.goto('localhost:3000/vre/dataset/17/canvas');
 
     const page2Button = await page.waitForSelector(
       '.ant-pagination.ant-table-pagination.ant-table-pagination-right > li:nth-child(3)',
@@ -130,9 +137,7 @@ describe('File Explorer', () => {
 
     await page.waitForResponse(
       (response) =>
-        response.url() ===
-          'http://10.3.7.220/vre/api/vre/portal/v1/files/containers/17/files/count/daily?action=all' &&
-        response.status() === 200,
+        response.url().includes('/count/daily') && response.status() === 200,
     );
 
     const page1Button = await page.waitForSelector(
@@ -149,7 +154,7 @@ describe('File Explorer', () => {
   });
 
   it('Check role on Canvas and Teams Page', async () => {
-    await page.goto('localhost:3000/vre/dataset/17/canvas', {
+    await page.goto(`${baseUrl}/project/${PROJECT_ID}/canvas`, {
       waitUntil: 'networkidle0',
     });
 
@@ -162,7 +167,7 @@ describe('File Explorer', () => {
       subHeading,
     );
 
-    await page.goto('http://localhost:3000/vre/dataset/17/teams', {
+    await page.goto(`${baseUrl}/project/${PROJECT_ID}/teams`, {
       waitUntil: 'networkidle0',
     });
 
@@ -179,7 +184,7 @@ describe('File Explorer', () => {
   });
 
   it('Check Mail to Link', async () => {
-    await page.goto('localhost:3000/vre/dataset/17/canvas', {
+    await page.goto(`${baseUrl}/project/${PROJECT_ID}/canvas`, {
       waitUntil: 'networkidle0',
     });
 
@@ -192,13 +197,14 @@ describe('File Explorer', () => {
       projectAdminFirst,
     );
 
+    const adminTexts = await page.$$eval('div.ant-typography.ant-typography-ellipsis > a', as => as.map(item => item.textContent.replace(',', '')));
     const hrefAttr = await page.evaluate(
       (element) => element.getAttribute('href'),
       projectAdminFirst,
     );
 
     //check if shows fist name, last name
-    expect(adminText.replace(',', '')).toBe('admin admin');
+    expect(adminTexts.includes('admin admin')).toBeTruthy();
     //check if attribute is mail to link
     expect(hrefAttr.split(':')[0]).toBe('mailto');
   });

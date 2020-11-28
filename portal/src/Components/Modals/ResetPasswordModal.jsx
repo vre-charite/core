@@ -4,11 +4,17 @@ import { QuestionCircleOutlined } from '@ant-design/icons';
 
 import { resetPasswordAPI } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
-
+import { useTranslation } from 'react-i18next';
 const ResetPasswordModal = (props) => {
   const [userInfo, setUserInfo] = useState({});
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t, i18n } = useTranslation([
+    'tooltips',
+    'success',
+    'formErrorMessages',
+  ]);
 
   useEffect(() => {
     const info = { username: props.username };
@@ -51,7 +57,7 @@ const ResetPasswordModal = (props) => {
         })
           .then((res) => {
             if (res && res.status === 200) {
-              message.success('Reset password successfully');
+              message.success(t('success:resetPassword'));
               setLoading(false);
               props.handleCancel();
               FormInstance.current.resetFields();
@@ -89,13 +95,24 @@ const ResetPasswordModal = (props) => {
     <Modal
       title="Reset Password"
       visible={props.visible}
-      onCancel={onCancel}
-      onOk={onOk}
+      maskClosable={false}
+      closable={false}
       footer={[
-        <Button key="back" onClick={onCancel}>
+        <Button
+          id={'reset_password_modal_cancel'}
+          key="back"
+          onClick={onCancel}
+          disabled={loading}
+        >
           Close
         </Button>,
-        <Button key="submit" type="primary" loading={loading} onClick={onOk}>
+        <Button
+          id={'reset_password_modal_submit'}
+          key="submit"
+          type="primary"
+          loading={loading}
+          onClick={onOk}
+        >
           Submit
         </Button>,
       ]}
@@ -112,7 +129,12 @@ const ResetPasswordModal = (props) => {
         <Form.Item
           label="Username"
           name="username"
-          rules={[{ required: true, message: 'Please input your username!' }]}
+          rules={[
+            {
+              required: true,
+              message: t('formErrorMessages:common.username.empty'),
+            },
+          ]}
         >
           <Input disabled />
         </Form.Item>
@@ -120,7 +142,12 @@ const ResetPasswordModal = (props) => {
         <Form.Item
           label="Old Password"
           name="password"
-          rules={[{ required: true, message: 'Please input your password!' }]}
+          rules={[
+            {
+              required: true,
+              message: t('formErrorMessages:resetPassword.oldPassword.empty'),
+            },
+          ]}
         >
           <Input.Password
             onCopy={(e) => e.preventDefault()}
@@ -133,7 +160,7 @@ const ResetPasswordModal = (props) => {
           label={
             <span>
               New Password&nbsp;
-              <Tooltip title="The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).">
+              <Tooltip title={t('password')}>
                 <QuestionCircleOutlined />
               </Tooltip>
             </span>
@@ -142,28 +169,27 @@ const ResetPasswordModal = (props) => {
           rules={[
             {
               required: true,
-              message: 'Please input your password',
+              message: t('formErrorMessages:resetPassword.newPassword.empty'),
               whitespace: true,
             },
             {
               pattern: new RegExp(
                 /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_!%&/()=?*+#,.;])[A-Za-z\d-_!%&/()=?*+#,.;]{11,30}$/g,
               ),
-              message:
-                'The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).',
+              message: t('formErrorMessages:common.password.valid'),
             },
             ({ getFieldValue }) => ({
               validator(rule, value) {
                 if (!value || getFieldValue('password') !== value) {
                   return Promise.resolve();
                 }
-
                 return Promise.reject(
-                  'New password can not be the same as the old password',
+                  t('formErrorMessages:resetPassword.newPassword.valid'),
                 );
               },
             }),
           ]}
+          dependencies={['password']}
         >
           <Input.Password
             onCopy={(e) => e.preventDefault()}
@@ -179,7 +205,9 @@ const ResetPasswordModal = (props) => {
           rules={[
             {
               required: true,
-              message: 'Please confirm your password!',
+              message: t(
+                'formErrorMessages:resetPassword.confirmPassword.empty',
+              ),
             },
 
             ({ getFieldValue }) => ({
@@ -189,7 +217,7 @@ const ResetPasswordModal = (props) => {
                 }
 
                 return Promise.reject(
-                  'The two passwords that you entered do not match!',
+                  t('formErrorMessages:common.confirmPassword.valid'),
                 );
               },
             }),

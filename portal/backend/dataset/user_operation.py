@@ -1,7 +1,8 @@
-from flask import request
+from flask import request, render_template
 import requests
 import os
 import json
+import re
 from flask_jwt import jwt_required, current_identity
 from resources.decorator import check_role, check_user
 from resources.utils import *
@@ -9,13 +10,15 @@ from flask_restx import Resource
 from dataset import users_entity_ns, datasets_entity_ns
 from resources.swagger_modules import user_module, new_user_module, user_sample_return, users_sample_return
 from resources.swagger_modules import permission_return, success_return
-from resources.swagger_modules import dataset_sample_return, datasets_sample_return
+from resources.swagger_modules import dataset_sample_return, datasets_sample_return, dataset_user_status
 from config import ConfigClass
 from services.invitation_services.invitation_manager import SrvInvitationManager
 from services.notifier_services.email_service import SrvEmail
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from services.user_services.user_email_template import update_role_email_body_generator, invite_user_email_body_generator
 from services.container_services.container_manager import SrvContainerManager
+from models.user_type import map_neo4j_to_frontend
+from emails.user_status_emails import user_disable_email_generator, user_enable_email_generator, user_project_enable_email_generator
 
 
 # init logger
@@ -126,29 +129,30 @@ class users(Resource):
         _logger.info(
             'Call API for to admin fetching all users in the platform')
         try:
-            # Get token from reuqest's header
-            access_token = request.headers.get("Authorization", None)
 
             # Fetch all user nodes from neo4j
             url = ConfigClass.NEO4J_SERVICE + "nodes/User/query"
-            headers = {
-                'Authorization': access_token
-            }
-            res = requests.post(
-                url=url,
-                headers=headers
-            )
+            response = neo4j_query_with_pagination(url, request.args, partial=True)
+            # result = response.to_dict["result"]
 
-            if(res.status_code != 200):
+            # Convert UTC to timezone in the config for time_created and time_modified
+            # for obj in result:
+            #     if obj.get("time_created"):
+            #         obj["time_created"] = convert_from_utc(obj["time_created"])
+            #     if obj.get("time_modified"):
+            #         obj["time_modified"] = convert_from_utc(obj["time_modified"])
+            # response.set_result(result)
+
+            if(response.code != 200):
                 _logger.error('Failed to fetch info in neo4j: {}'.format(
                     json.loads(res.text)))
-                return {'result': json.loads(res.text)}, res.status_code
+                return response.to_dict
 
         except Exception as e:
             _logger.error('Error in fetching all users: {}'.format(str(e)))
             return {'Error': str(e)}, 403
 
-        return {"result": json.loads(res.text)}
+        return response.to_dict
 
 
 class user_registry(Resource):
@@ -183,16 +187,27 @@ class user_registry(Resource):
             password = post_data.get("password", None)
             first_name = post_data.get("first_name", None)
             last_name = post_data.get("last_name", None)
-            if not username or not password or not first_name or not last_name \
-                    or not email or not container_id or not role:
+            portal_role = post_data.get("portal_role", "member")
+            status = post_data.get("status", "active")
+
+            access_token = request.headers.get('Authorization', None)
+            if check_user_exists(access_token, username):
                 _logger.error(
-                    'Require field email/container_id/role/username/password/first_name/last_name.')
+                    'Error, username already exists in Neo4j')
+                return {'result': 'Username already exists'}, 409
+
+            if not username or not password or not first_name or not last_name \
+                    or not email:
+                _logger.error(
+                    'Require field email/username/password/first_name/last_name.')
                 return {'result': 'Required information is not sufficient.'}, 400
 
-            # since keycloak will change the uppercase into lower so enforce lowercase here
-            if any([x.isupper() for x in username]):
-                _logger.error('Username must be all lowercase.')
-                return {'result': 'username must be all lowercase'}, 403
+            username_pattern = re.compile(ConfigClass.USERNAME_REGEX)
+            match = re.search(username_pattern, username)
+            if not match:
+                _logger.error('Invalid username')
+                return {'result': 'username must be all lowercase and contain only letters and numbers'}, 403
+
 
             # convert email to lowercase
             email = email.lower()
@@ -204,7 +219,7 @@ class user_registry(Resource):
                 "password": password,
                 "email": email,
                 "firstname": first_name,
-                "lastname": last_name
+                "lastname": last_name,
             }
             res = requests.post(
                 url=ConfigClass.AUTH_SERVICE+"admin/users",
@@ -223,7 +238,8 @@ class user_registry(Resource):
                 "first_name": first_name,
                 "last_name": last_name,
                 "path": "users",
-                "role": "member"
+                "role": portal_role,
+                "status": status,
             }
             res = requests.post(
                 url=ConfigClass.NEO4J_SERVICE + "nodes/User",
@@ -237,21 +253,23 @@ class user_registry(Resource):
             uid = user['id']
             _logger.info('Done with adding user node to neo4j')
 
-            # Add relationship in neo4j
-            url = ConfigClass.NEO4J_SERVICE + "relations/"+role
-            res = requests.post(
-                url=url,
-                json={
-                    "start_id": int(uid),
-                    "end_id": int(container_id)
-                }
-            )
-            if(res.status_code != 200):
-                _logger.error(
-                    'Calling neo4j service add relationship between user and container.')
-                return {'result': 'neo add relation'+json.loads(res.text)}, res.status_code
-            _logger.info(
-                'Done with adding relationship between user node and container in neo4j')
+            if container_id and role:
+                # Add relationship in neo4j
+                url = ConfigClass.NEO4J_SERVICE + "relations/"+role
+                res = requests.post(
+                    url=url,
+                    json={
+                        "start_id": int(uid),
+                        "end_id": int(container_id)
+                    }
+                )
+                if(res.status_code != 200):
+                    _logger.error(
+                        'Calling neo4j service add relationship between user and container.')
+                    return {'result': 'neo add relation'+json.loads(res.text)}, res.status_code
+                _logger.info(
+                    'Done with adding relationship between user node and container in neo4j')
+                add_user_to_project_group(container_id, username, _logger)
 
             #Deactivate invitation
             srv_invitation_manager.deactivate_invitation(hashId)
@@ -457,7 +475,7 @@ class dataset_user(Resource):
             )
             datasets = json.loads(res.text)
             if(len(datasets) == 0):
-                _logger.error('User\'s role is required.')
+                _logger.error("Dataset %s is not available." % dataset_id)
                 return {'result': "Dataset %s is not available." % dataset_id}, 404
 
             if('type' in datasets[0] and datasets[0]['type'] == "default"):
@@ -513,6 +531,9 @@ class dataset_user(Resource):
                 _logger.error('neo4j service: {}'.format(json.loads(res.text)))
                 return {'result': json.loads(res.text)}, res.status_code
 
+            # Add user to keycloak group
+            add_user_to_project_group(dataset_id, username, _logger)
+
             # Send email to inform user
             try:
                 email = users[0]['email']
@@ -521,7 +542,7 @@ class dataset_user(Resource):
                 title = "Project %s Notification: New Invitation" % (
                     str(dataset_name))
                 content = invite_user_email_body_generator(
-                    username, admin_name, dataset_name, role, ConfigClass.INVITATION_URL_LOGIN, admin_email)
+                    username, admin_name, dataset_name, map_neo4j_to_frontend(role), ConfigClass.INVITATION_URL_LOGIN, admin_email)
                 SrvEmail().send(title, content, [email], "html")
 
             except Exception as e:
@@ -638,7 +659,7 @@ class dataset_user(Resource):
                 title = "Project %s Notification: Role Modified" % (
                     str(dataset_name))
                 content = update_role_email_body_generator(
-                    username, admin_name, dataset_name, new_role, ConfigClass.INVITATION_URL_LOGIN, admin_email)
+                    username, admin_name, dataset_name, map_neo4j_to_frontend(new_role), ConfigClass.INVITATION_URL_LOGIN, admin_email)
                 SrvEmail().send(title, content, [email], "html")
 
             except Exception as e:
@@ -718,6 +739,8 @@ class dataset_user(Resource):
             if(res.status_code != 200):
                 _logger.error('neo4j service: {}'.format(json.loads(res.text)))
                 return {'result': json.loads(res.text)}, res.status_code
+
+            remove_user_from_project_group(dataset_id, username, _logger)
 
         except Exception as e:
             _logger.error(
@@ -801,13 +824,14 @@ class user_dataset_query(Resource):
             # Format response
             result = []
             for x in json.loads(res.text):
-                temp = {
-                    "container_id": x['end_node']['id'],
-                    "container_name": x['end_node']['name'],
-                    "code": x['end_node']['code'],
-                    "permission": x['r']['type']
-                }
-                result.append(temp)
+                if x['r'].get('status') not in ["disable", "hibernate"]:
+                    temp = {
+                        "container_id": x['end_node']['id'],
+                        "container_name": x['end_node']['name'],
+                        "code": x['end_node']['code'],
+                        "permission": x['r']['type']
+                    }
+                    result.append(temp)
 
         except Exception as e:
             _logger.error(
@@ -922,3 +946,248 @@ class user_default_dataset(Resource):
             return {'Error': str(e)}, 403
 
         return {'result': json.loads(neo_res.text)}, 200
+
+
+class DatasetUsersQuery(Resource):
+    @jwt_required()
+    @check_role("admin")
+    def post(self, dataset_id):
+        _logger.info(
+            'Call API for fetching all users in a dataset')
+        try:
+            access_token = request.headers.get('Authorization', None)
+            headers = {
+                'Authorization': access_token
+            }
+
+            # Check if dataset exist
+            url = ConfigClass.NEO4J_SERVICE + 'nodes/Dataset/node/' + dataset_id
+            res = requests.get(
+                url=url,
+                headers=headers
+            )
+            datasets = json.loads(res.text)
+
+            # Fetch all users under the dataset
+            url = ConfigClass.NEO4J_SERVICE + 'relations/query'
+            payload = {
+                'start_label': 'User',
+                'end_label': 'Dataset',
+                'end_params': {'code': datasets[0]['code']},
+                'start_params': request.get_json().get('start_params'),
+                **request.get_json()
+            }
+            response = neo4j_query_with_pagination(url, payload, partial=True)
+            if(response.code != 200):
+                _logger.error('Failed to fetch info in neo4j: {}'.format(
+                    json.loads(res.text)))
+                return response.to_dict
+
+            result = []
+            for x in response.result:
+                temp = x['start_node']
+                temp["permission"] = x['r']['type']
+                temp["project_status"] = x['r'].get("status")
+                # correct timezone
+                # if temp.get("time_created"):
+                #     temp["time_created"] = convert_from_utc(temp["time_created"])
+                # if temp.get("time_modified"):
+                #     temp["time_modified"] = convert_from_utc(temp["time_modified"])
+                result.append(temp)
+            response.set_result(result)
+            return response.to_dict
+        except Exception as e:
+            return {'Error': str(e)}, 403
+
+
+class DatasetUserManagement(Resource):
+    @jwt_required()
+    @check_role("admin")
+
+    def put(self):
+        _logger.info(
+            'Call API for update user status')
+        
+        try: 
+            access_token = request.headers.get('Authorization', None)
+            headers = {
+                'Authorization': access_token
+            }
+            # payload can't include time_lastmodified
+            req_body = request.get_json()
+            user_id = req_body.get('id') 
+            url = ConfigClass.NEO4J_SERVICE + 'nodes/User/node/' + str(user_id)
+
+            payload = {
+                "realm": "vre",
+                "email": req_body['email'],
+                'status': req_body['status']
+            }
+
+            res = requests.put(
+                url=url,
+                headers=headers,
+                json=payload
+            )
+
+            keycloak_res = requests.put(
+                url=ConfigClass.AUTH_SERVICE+"admin/users/management",
+                headers=headers,
+                json=payload
+            )
+            username = json.loads(keycloak_res.text)["result"]["username"]
+
+            # Fetch all datasets that connected to the user
+            url = ConfigClass.NEO4J_SERVICE + "relations/query"
+            payload = {
+                "start_label": "User",
+                "end_label": "Dataset",
+                "start_params": {"id": user_id}
+            }
+            response = requests.post(
+                url=url,
+                headers=headers,
+                json=payload
+            )
+            if(response.status_code != 200):
+                _logger.error("neo4j service: {}".format(json.loads(response.text)))
+                return {'result': json.loads(response.text)}, res.status_code
+
+            if req_body["status"] == "active":
+                project_status = "hibernate"
+            else:
+                project_status = "disable"
+            # Loop through each relationship and update the status
+            for relation in json.loads(response.text):
+                url = ConfigClass.NEO4J_SERVICE + "relations/" + relation["r"]["type"]
+                payload = {
+                    "start_id": relation["start_node"]["id"],
+                    "end_id": relation["end_node"]["id"],
+                    "new_label": relation["r"]["type"],
+                    "properties": {"status": project_status}
+                }
+                response = requests.put(
+                    url=url,
+                    headers=headers,
+                    json=payload
+                )
+            if req_body["status"] == "active":
+                html_msg = user_enable_email_generator(
+                    username,
+                    current_identity["username"],
+                    ConfigClass.EMAIL_ADMIN_CONNECTION
+                )
+                subject = "VRE User enabled"
+                email_sender = SrvEmail()
+                email_result = email_sender.send(
+                    subject,
+                    html_msg,
+                    [req_body["email"]],
+                    msg_type="html",
+                )
+            else:
+                html_msg = user_disable_email_generator(
+                    username,
+                    current_identity["username"],
+                    ConfigClass.EMAIL_ADMIN_CONNECTION
+                )
+                subject = "VRE User disabled"
+                email_sender = SrvEmail()
+                email_result = email_sender.send(
+                    subject,
+                    html_msg,
+                    [req_body["email"]],
+                    msg_type="html",
+                )
+            return {'result': json.loads(res.text)}, 200
+
+        except Exception as e:
+            return {'Error': str(e)}, 403
+
+
+class DatasetUserProjectStatus(Resource):
+
+    @datasets_entity_ns.expect(dataset_user_status)
+    @jwt_required()
+    @check_role("admin")
+    def put(self, username, dataset_id):
+        _logger.info('Call API for changing user {} role in project {}'.format(
+            username, dataset_id))
+
+        try:
+            data = request.get_json()
+            project_status = data.get("status")
+            # Get token from reuqest's header
+            access_token = request.headers.get("Authorization", None)
+            headers = {
+                'Authorization': access_token
+            }
+
+            # Get user by username
+            url = ConfigClass.NEO4J_SERVICE + "nodes/User/query"
+            res = requests.post(
+                url=url,
+                headers=headers,
+                json={"name": username}
+            )
+            users = json.loads(res.text)
+            if(len(users) == 0):
+                _logger.error("User %s does not exist." % username)
+                return {'result': "User %s does not exist." % username}, 404
+            user_id = users[0]['id']
+            user_email = users[0]['email']
+
+             # Get user relation to project
+            url = ConfigClass.NEO4J_SERVICE + 'relations/query'
+            payload = {
+                'start_label': 'User',
+                'end_label': 'Dataset',
+                'end_params': {'id': int(dataset_id)},
+                'start_params': {'id': int(user_id)}
+            }
+            res = requests.post(
+                url=url,
+                headers=headers,
+                json=payload,
+            )
+            relation = json.loads(res.text)[0]
+            project_name = relation["end_node"]["name"]
+
+            # Update relation properties
+            url = ConfigClass.NEO4J_SERVICE + "relations/" + relation["r"]["type"]
+            payload = {
+                "start_id": relation["start_node"]["id"],
+                "end_id": relation["end_node"]["id"],
+                "new_label": relation["r"]["type"],
+                "properties": {"status": project_status}
+            }
+            response = requests.put(
+                url=url,
+                headers=headers,
+                json=payload
+            )
+
+            # Send email confirmation
+            html_msg = user_project_enable_email_generator(
+                username,
+                current_identity["username"],
+                project_name,
+                ConfigClass.EMAIL_ADMIN_CONNECTION
+            )
+
+            if project_status == "active":
+                subject = f"VRE access restored to {project_name}"
+                email_sender = SrvEmail()
+                email_result = email_sender.send(
+                    subject,
+                    html_msg,
+                    [user_email],
+                    msg_type="html",
+                )
+
+            return {'result': 'success'}, 200
+        except Exception as e:
+            raise e
+            _logger.error(
+                'Error in updating users project status: {}'.format(str(e)))
+            return {'result': str(e)}, 403

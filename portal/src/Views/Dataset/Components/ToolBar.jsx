@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Menu } from 'antd';
+import { Menu, message } from 'antd';
 import {
   PieChartOutlined,
   UploadOutlined,
   TeamOutlined,
+  DesktopOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
@@ -11,6 +12,7 @@ import GreenRoomUploader from './GreenRoomUploader';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import style from './index.module.scss';
+import { useCurrentProject } from '../../../Utility';
 
 const ToolBar = ({
   location: { pathname },
@@ -27,6 +29,8 @@ const ToolBar = ({
         item.permission === 'admin'
       );
     });
+  const currentProject = useCurrentProject();
+  const istvbCloud = currentProject[0]?.code === 'tvbcloud';
 
   return (
     <>
@@ -58,6 +62,27 @@ const ToolBar = ({
               <TeamOutlined />
               <span>Members</span>
             </Link>
+          </Menu.Item>
+        )}
+
+        {istvbCloud ? (
+          <Menu.Item key="jupyter">
+            <a href={`/vre/workbench/j/${currentProject[0]?.code}/`} target="_blank">
+              <DesktopOutlined />
+              <span>Jupyterhub</span>
+            </a>
+          </Menu.Item>
+        ) : (
+          <Menu.Item
+            key="jupyter"
+            onClick={() => {
+              message.info(
+                'This project does not have Jupyterhub configured yet.',
+              );
+            }}
+          >
+            <DesktopOutlined />
+            <span>Jupyterhub</span>
           </Menu.Item>
         )}
       </Menu>

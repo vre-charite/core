@@ -13,6 +13,8 @@ import _ from 'lodash';
 import { UploadQueueContext } from '../../../Context';
 import { listProjectTagsAPI } from '../../../APIs';
 import { validateTag } from '../../../Utility';
+import { useTranslation } from 'react-i18next';
+
 const { Option } = Select;
 
 const GreenRoomUploader = ({
@@ -28,6 +30,7 @@ const GreenRoomUploader = ({
   const [data, setData] = useState([]);
   const [value, setValue] = useState([]);
   const [fetching, setFetching] = useState(false);
+  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
 
   const q = useContext(UploadQueueContext);
   const [currentDataset] = useCurrentProject();
@@ -83,38 +86,41 @@ const GreenRoomUploader = ({
     });
   };
 
-  const handleChange = (value) => {
-    if (value.length !== 0) {
-      value = value.map(i => i.toLowerCase())
-      let newTag = value.pop()
-      let index = value.indexOf(newTag)
-      if (index > -1) {
-        value.splice(index, 1)
-      } else {
-        value.push(newTag)
-      }
-    }
-    setValue(value);
-    setData([]);
-    setFetching(false);
-    form.setFieldsValue({ tags: value });
-  };
+  // const handleChange = (value) => {
+  //   if (value.length !== 0) {
+  //     value = value.map((i) => i.toLowerCase());
+  //     let newTag = value.pop();
+  //     let index = value.indexOf(newTag);
+  //     if (index > -1) {
+  //       value.splice(index, 1);
+  //     } else {
+  //       value.push(newTag);
+  //     }
+  //   }
+  //   setValue(value);
+  //   setData([]);
+  //   setFetching(false);
+  //   form.setFieldsValue({ tags: value });
+  // };
 
-  function tagRender(props) {
-    const { label, closable, onClose } = props;
+  // function tagRender(props) {
+  //   const { label, closable, onClose } = props;
 
-
-    return (
-      <Tag
-        color="blue"
-        closable={closable}
-        onClose={onClose}
-        style={{ marginRight: 3 }}
-      >
-        {label.toLowerCase()}
-      </Tag>
-    );
-  }
+  //   return (
+  //     <Tag
+  //       color="blue"
+  //       closable={closable}
+  //       onClose={onClose}
+  //       style={{ marginRight: 3, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 465 }}
+  //     >
+  //       <span 
+  //         style={{ position: 'relative', display: 'flex', maxWidth: '95%', padding: '0px 4px 0px 8px' }}
+  //       >
+  //         {label.toLowerCase()}
+  //       </span>
+  //     </Tag>
+  //   );
+  // }
 
   return (
     <div>
@@ -122,13 +128,25 @@ const GreenRoomUploader = ({
         visible={visible}
         title="Upload Files"
         onOk={handleOk}
-        onCancel={cancel}
+        maskClosable={false}
+        closable={false}
+
+        onCancel={() => {
+          cancel();
+          form.resetFields();
+        }}
         footer={[
-          <Button key="back" onClick={cancel}>
+          <Button
+            key="back"
+            onClick={() => {
+              cancel();
+              form.resetFields();
+            }}
+          >
             Close
           </Button>,
           <Button
-            id='file_upload_submit_btn'
+            id="file_upload_submit_btn"
             key="submit"
             type="primary"
             loading={isLoading}
@@ -182,11 +200,11 @@ const GreenRoomUploader = ({
                   rules={[
                     {
                       required: true,
-                      message: 'Please input your Generate ID',
+                      message: t('formErrorMessages:project.generate.id.empty'),
                     },
                     {
                       pattern: new RegExp(/^([A-Z]{3})-([0-9]{4})$/g), // Format BXT-1234
-                      message: 'Please input correct Generate ID',
+                      message: t('formErrorMessages:project.generate.id.valid'),
                     },
                   ]}
                   hasFeedback
@@ -203,9 +221,7 @@ const GreenRoomUploader = ({
                     }}
                   />
                 </Form.Item>
-                <small>
-                  * The format of Generate ID should follow: ABC-1234
-                </small>
+                <small>{t('upload.generate_id')}</small>
               </Form.Item>
 
               <Form.Item
@@ -216,7 +232,9 @@ const GreenRoomUploader = ({
                 rules={[
                   {
                     required: true,
-                    message: 'Please confirm your Generate ID!',
+                    message: t(
+                      'formErrorMessages:project.generate.confirmId.empty',
+                    ),
                   },
                   ({ getFieldValue }) => ({
                     validator(rule, value) {
@@ -224,7 +242,7 @@ const GreenRoomUploader = ({
                         return Promise.resolve();
                       }
                       return Promise.reject(
-                        'The two Generate ID that you entered do not match!',
+                        t('formErrorMessages:project.generate.confirmId.valid'),
                       );
                     },
                   }),
@@ -256,17 +274,26 @@ const GreenRoomUploader = ({
                   }
                   if (value.length > 10) {
                     return Promise.reject(
-                      'Up to 10 tags per file！',
+                      t('formErrorMessages:project.upload.tags.limit'),
                     );
                   }
                   let i;
                   for (i of value) {
                     if (!validateTag(i)) {
                       return Promise.reject(
-                        'Tag should be 1-32 lowercase alphanumeric characters.',
+                        t('formErrorMessages:project.upload.tags.valid'),
                       );
                     }
                   }
+                  value = value.map((i) => i.toLowerCase());
+
+                  value = [...new Set(value)];
+
+                  setValue(value);
+                  setData([]);
+                  setFetching(false);
+                  form.setFieldsValue({ tags: value });
+                  
                   return Promise.resolve();
                 },
               }),
@@ -274,11 +301,14 @@ const GreenRoomUploader = ({
           >
             <Select
               mode="tags"
-              tagRender={tagRender}
+              // tagRender={tagRender}
               value={value}
               notFoundContent={fetching ? <Spin size="small" /> : null}
               onSearch={fetchTags}
-              onChange={handleChange}
+              // onChange={handleChange}
+              getPopupContainer={(triggerNode) => triggerNode.parentNode}
+              style={{ width: '100%' }}
+              rendervalue={selected => selected.map(el => el.toLowerCase())}
             >
               {data.map((d) => (
                 <Option key={d.value}>{d.text.toLowerCase()}</Option>
@@ -288,21 +318,25 @@ const GreenRoomUploader = ({
 
           <Form.Item
             rules={[
-              {
-                required: true,
-                message: 'please select files',
-              },
+              // {
+              //   required: true,
+              //   message: t('formErrorMessages:project.upload.file.empty'),
+              // },
               ({ getFieldValue }) => ({
                 validator(rule, value) {
-                  const { fileList } = value;
-                  if (
-                    fileList.length ===
+                  const fileList  = value && value.fileList;
+                  if (!fileList || (fileList && fileList.length === 0)) {
+                    return Promise.reject(
+                      t('formErrorMessages:project.upload.file.empty'),
+                    );
+                  } else if (
+                    fileList && fileList.length ===
                     _.uniqBy(fileList, (item) => item.name).length
                   ) {
                     return Promise.resolve();
                   } else {
                     return Promise.reject(
-                      'File already selected for uploading. Please select a different file.',
+                      t('formErrorMessages:project.upload.file.valid'),
                     );
                   }
                 },
@@ -312,7 +346,7 @@ const GreenRoomUploader = ({
             label="Upload file"
           >
             <Upload multiple {...props}>
-              <Button id='form_in_modal_select_file'>
+              <Button id="form_in_modal_select_file">
                 <UploadOutlined />
                 Select Files
               </Button>

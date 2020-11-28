@@ -5,7 +5,7 @@ import { message } from 'antd';
 import { datasetRoutes as routes } from '../../Routes/index';
 import { withRouter, Switch, Route, Redirect,useParams } from 'react-router-dom';
 import ToolBar from './Components/ToolBar';
-import { getUsersOnDatasetAPI } from '../../APIs';
+import { getUserOnProjectAPI } from '../../APIs';
 import { connect,useSelector } from 'react-redux';
 import {   protectedRoutes } from '../../Utility';
 
@@ -40,7 +40,7 @@ function Dataset(props) {
         if (!isAccess) {
           message.error('No Access to the Container');
           window.setTimeout(() => {
-            props.history.push('/uploader');
+            props.history.push('/landing');
           }, 1000);
           return;
         }
@@ -75,7 +75,7 @@ function Dataset(props) {
                     datasetId={params.datasetId}
                     userListOnDataset={userListOnDataset}
                     containerDetails={containerDetails}
-                    getUsersOnDatasetAPI={getUsersOnDatasetAPI}
+                    getUsersOnDatasetAPI={getUserOnProjectAPI}
                     setUserListOnDataset={setUserListOnDataset}
                   />
                 );

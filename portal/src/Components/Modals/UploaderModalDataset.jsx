@@ -74,6 +74,9 @@ const UploaderModalDataset = ({
         title="Upload Files"
         onOk={handleOk}
         onCancel={cancel}
+        maskClosable={false}
+        closable={false}
+
         footer={[
           <Button key="back" onClick={cancel}>
             Close

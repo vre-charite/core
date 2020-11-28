@@ -1,8 +1,14 @@
-import React from "react";
-import {
-  FolderOpenOutlined,
-  ContainerOutlined,
-} from "@ant-design/icons";
+import React from 'react';
+import { FolderOpenOutlined, ContainerOutlined } from '@ant-design/icons';
+
+/**
+ * create the tree data structure for the tree component
+ *
+ * @param {*} data
+ * @param {number/string} [layer=0] used as key
+ * @param {*} path
+ * @returns
+ */
 const getChildrenTree = (data, layer = 0, path) => {
   if (!data || data.length === 0) {
     // console.log("!data || data.length === 0");
@@ -18,21 +24,21 @@ const getChildrenTree = (data, layer = 0, path) => {
     ]; */
   } else {
     const res = data
-      .filter((item) => typeof item !== "string")
+      .filter((item) => typeof item !== 'string')
       .map((d) => ({
         title: Object.keys(d)[0],
         key: `${layer}-${Object.keys(d)[0]}`,
         id: Object.keys(d)[0],
-        path: path + "/" + Object.keys(d)[0],
+        path: path + '/' + Object.keys(d)[0],
         icon: <ContainerOutlined /> && <FolderOpenOutlined />,
         children: getChildrenTree(
           d[Object.keys(d)[0]],
-          layer + 1,
-          path + "/" + Object.keys(d)[0]
+          layer + `-${Object.keys(d)[0]}`,
+          path + '/' + Object.keys(d)[0],
         ),
-        type: "folder",
+        type: 'folder',
       }));
-   /*  const newItem = {
+    /*  const newItem = {
       title: "New",
       icon: <PlusOutlined />,
       key: `${layer}-${path}-add`,
@@ -41,7 +47,7 @@ const getChildrenTree = (data, layer = 0, path) => {
       type: "add",
     };
     return [...res, newItem]; */
-    return res
+    return res;
   }
 };
 

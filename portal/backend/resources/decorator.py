@@ -46,9 +46,13 @@ def check_role(required_role, parent=None):
                     raise Exception("Unauthorized: " +
                                     json.loads(res.text))
                 relations = json.loads(res.text)
+
                 if(len(relations) == 0):
                     raise Exception(
                         "Unauthorized: Relation does not exist.")
+                if relations[0]["r"].get("status") in ["disable", "hibernate"]:
+                    raise Exception(
+                        "Unauthorized: Relation disabled")
             except Exception as e:
                 return {'result': 'Permission Denied'}, 401
 
@@ -70,9 +74,11 @@ def check_user():
         @wraps(function)
         def wrapper(*args, **kwargs):
             current_user = current_identity["username"]
+            role = current_identity["role"]
+            
             username = kwargs['username']
 
-            if current_user != username:
+            if current_user != username and role != 'admin':
                 return {'result': 'Permission Denied'}, 401
 
             res = function(*args, **kwargs)

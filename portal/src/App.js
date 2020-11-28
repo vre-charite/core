@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import {
   Switch,
   Route,
@@ -19,6 +19,8 @@ import {
   setSuccessNum,
   setDonwloadClearIdCreator,
   setUploadListCreator,
+  updateDownloadItemCreator,
+  setDownloadListCreator,
 } from './Redux/actions';
 import {
   getDatasetsAPI,
@@ -26,6 +28,7 @@ import {
   checkPendingStatusAPI,
   checkDownloadStatusAPI,
   checkUploadStatus,
+  checkDownloadStatus,
 } from './APIs';
 import { protectedRoutes, reduxActionWrapper } from './Utility';
 import { message, Modal } from 'antd';
@@ -57,6 +60,8 @@ const [
   setDonwloadClearIdDispatcher,
   setUploadListDispatcher,
   setSuccessNumDispatcher,
+  setDownloadListDispatcher,
+  updateDownloadItemDispatch,
 ] = reduxActionWrapper([
   AddDatasetCreator,
   setContainersPermissionCreator,
@@ -67,6 +72,8 @@ const [
   setDonwloadClearIdCreator,
   setUploadListCreator,
   setSuccessNum,
+  setDownloadListCreator,
+  updateDownloadItemCreator,
 ]);
 
 function App() {
@@ -101,8 +108,11 @@ function App() {
   }, [uploadList]);
 
   useEffect(() => {
-    updateDownloadStatus(downloadList);
-    setRefreshConfirmation(downloadList);
+    const pendingDownloadList = downloadList.filter(
+      (el) => el.status === 'pending',
+    );
+    updateDownloadStatus(pendingDownloadList);
+    setRefreshConfirmation(pendingDownloadList);
   }, [downloadList]);
 
   const initApis = async () => {
@@ -137,8 +147,13 @@ function App() {
             });
           }
         }
-        console.log(uploadList);
         setUploadListDispatcher(uploadList);
+      }
+
+      const downloadRes = await checkDownloadStatus(sessionId);
+      if (downloadRes.status === 200) {
+        const downloadList = downloadRes.data && downloadRes.data.result;
+        setDownloadListDispatcher(downloadList);
       }
     } catch (err) {
       if (err.response) {
@@ -163,29 +178,6 @@ function App() {
     const time = 4;
     const func = () => {
       Promise.map(pendingArr, (item, index) => {
-        // checkPendingStatusAPI(item.projectId, item.taskId)
-        //   .then((res) => {
-        //     const { status } = res.data.result;
-        //     if (status === 'success' || status === 'error') {
-        //       item.status = status;
-        //       //always remember to put redux creator in the connect function !!!!!
-        //       updateUploadItemDispatcher(item);
-        //       if (status === 'error') {
-        //         const errorMessager = new ErrorMessager(
-        //           namespace.dataset.files.processingFile,
-        //         );
-        //         errorMessager.triggerMsg(null, null, item);
-        //       } else {
-        //         dispatch(setSuccessNum(successNum + 1));
-        //       }
-        //     }
-        //   })
-        //   .catch((err) => {
-        //     if (err.response && parseInt(err.response.status) !== 404) {
-        //       console.log(err.response, 'error response in checking pending');
-        //     }
-        //   });
-
         checkUploadStatus(item.projectId, sessionId)
           .then((res) => {
             const { code, result } = res.data;
@@ -197,7 +189,7 @@ function App() {
               const isSuccess =
                 result &&
                 result.some(
-                  (el) => el.fileName === fileName && el.state === 'SUCCEED',
+                  (el) => el.taskId === item.taskId && el.state === 'SUCCEED',
                 );
 
               if (isSuccess) {
@@ -230,13 +222,15 @@ function App() {
     };
     const func = () => {
       Promise.map(arr, (item, index) => {
-        checkDownloadStatusAPI(
-          item.projectId,
-          item.downloadKey,
-          removeDownloadListDispatcher,
-          setSuccessNumDispatcher,
-          successNum,
-        );
+        if (item.status === 'pending') {
+          checkDownloadStatusAPI(
+            item.projectId,
+            item.downloadKey,
+            updateDownloadItemDispatch,
+            setSuccessNumDispatcher,
+            successNum,
+          );
+        }
       });
     };
     const newDownloadClearId = tokenManager.addListener({
@@ -257,7 +251,7 @@ function App() {
     if (arr.length > 0) {
       window.onbeforeunload = confirmation;
     } else {
-      window.onbeforeunload = () => { };
+      window.onbeforeunload = () => {};
     }
   };
 
@@ -269,58 +263,60 @@ function App() {
 
   return (
     <>
-      <Switch>
-        {authedRoutes.map((item) => (
-          <Route
-            path={item.path}
-            key={item.path}
-            exact={item.exact || false}
-            render={(props) => {
-              let res = protectedRoutes(
-                item.protectedType,
-                isLogin,
-                props.match.params.datasetId,
-                null,
-                datasetList,
-              );
-              if (res === '403') {
-                return <Redirect to="/error/403" />;
-              } else if (res === '404') {
-                return <Redirect to="/error/404" />;
-              } else if (res) {
-                return <item.component />;
-              } else {
-                return <Redirect to="/" />;
-              }
-            }}
-          ></Route>
-        ))}
-        {unAuthedRoutes.map((item) => (
-          <Route
-            path={item.path}
-            key={item.path}
-            exact={item.exact || false}
-            //component={item.component}
-            render={(props) => {
-              return protectedRoutes(
-                item.protectedType,
-                isLogin,
-                props.match.params.datasetId,
-                null,
-                datasetList,
-              ) ? (
+      <Suspense fallback={null}>
+        <Switch>
+          {authedRoutes.map((item) => (
+            <Route
+              path={item.path}
+              key={item.path}
+              exact={item.exact || false}
+              render={(props) => {
+                let res = protectedRoutes(
+                  item.protectedType,
+                  isLogin,
+                  props.match.params.datasetId,
+                  null,
+                  datasetList,
+                );
+                if (res === '403') {
+                  return <Redirect to="/error/403" />;
+                } else if (res === '404') {
+                  return <Redirect to="/error/404" />;
+                } else if (res) {
+                  return <item.component />;
+                } else {
+                  return <Redirect to="/" />;
+                }
+              }}
+            ></Route>
+          ))}
+          {unAuthedRoutes.map((item) => (
+            <Route
+              path={item.path}
+              key={item.path}
+              exact={item.exact || false}
+              //component={item.component}
+              render={(props) => {
+                return protectedRoutes(
+                  item.protectedType,
+                  isLogin,
+                  props.match.params.datasetId,
+                  null,
+                  datasetList,
+                ) ? (
                   <item.component />
                 ) : (
-                  <Redirect to="/uploader" />
+                  <Redirect to="/landing" />
                 );
-            }}
-          ></Route>
-        ))}
-      </Switch>
-      {<RefreshModal />}
+              }}
+            ></Route>
+          ))}
+        </Switch>
+        {<RefreshModal />}
+      </Suspense>
     </>
   );
 }
 
 export default withRouter(App);
-//cicd
+//CICD

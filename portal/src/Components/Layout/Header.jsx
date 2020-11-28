@@ -4,6 +4,8 @@ import {
   ContainerOutlined,
   UserOutlined,
   ExclamationCircleOutlined,
+  ControlOutlined,
+  FieldTimeOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withCookies } from 'react-cookie';
@@ -22,6 +24,9 @@ import { UploadQueueContext } from '../../Context';
 import { userAuthManager } from '../../Service/userAuthManager';
 import { broadcastManager } from '../../Service/broadcastManager';
 import { namespace as ServiceNamespace } from '../../Service/namespace';
+import { guacomoleAPI } from '../../APIs';
+import { timezone } from '../../Utility';
+
 const { confirm } = Modal;
 const { Header } = Layout;
 const { TabPane } = Tabs;
@@ -38,7 +43,20 @@ class AppHeader extends Component {
       loading: false,
       showNotifications: [],
       drawer: false,
+      selectedKeys: [],
     };
+  }
+
+  componentDidMount() {
+    //Update header
+    const { params, path } = this.props.match;
+    if (path === '/landing' || params?.datasetId) {
+      this.updatedSelectedKeys('clear');
+      this.updatedSelectedKeys('add', 'uploader');
+    } else if (path === '/users') {
+      this.updatedSelectedKeys('clear');
+      this.updatedSelectedKeys('add', 'users');
+    }
   }
   logout = async () => {
     const { uploadList } = this.props;
@@ -125,13 +143,32 @@ class AppHeader extends Component {
     }
   }
   showDrawer = () => {
+    this.updatedSelectedKeys('add', 'support');
     this.setState({
       drawer: true,
     });
   };
   onClose = () => {
+    this.updatedSelectedKeys('remove', 'support');
     this.setState({
       drawer: false,
+    });
+  };
+
+  updatedSelectedKeys = (action, key) => {
+    const selectedKeys = this.state.selectedKeys;
+    let newKeys = [];
+    if (action === 'remove') {
+      newKeys = selectedKeys.filter((item) => item !== key);
+    } else if (action === 'clear') {
+      newKeys = [];
+    } else if (action === 'add') {
+      selectedKeys.push(key);
+      newKeys = selectedKeys;
+    }
+
+    this.setState({
+      selectedKeys: newKeys,
     });
   };
 
@@ -163,9 +200,7 @@ class AppHeader extends Component {
         }}
       >
         <Alert
-          message="This release of the VRE is exclusively for testing purposes by Charité staff. 
-            The upload of files containing clinical and/or research data of any type is strictly forbidden. 
-            By proceeding, you are agreeing to these terms."
+          message="This release of the VRE is exclusively for testing purposes. The upload of files containing clinical and/or research data of any type is strictly forbidden. By proceeding, you are agreeing to these terms."
           type="warning"
           showIcon
           style={{ margin: '0px -50px' }}
@@ -183,26 +218,39 @@ class AppHeader extends Component {
           onOpenChange={(key) => {
             this.setState({ showNotifications: key });
           }}
+          selectedKeys={this.state.selectedKeys}
         >
           <Menu.Item key="logo" style={{ marginRight: '27px' }}>
             <Link to="/">
               <img
                 src={require('../../Images/vre-logo.png')}
-                style={{ height: '40px' }}
+                style={{ height: '40px', marginLeft: -30 }}
                 alt="indoc-icon"
               />
             </Link>
           </Menu.Item>
           <Menu.Item key="uploader">
-            <Link to="/uploader">
+            <Link to="/landing">
               <ContainerOutlined /> Projects
             </Link>
           </Menu.Item>
+          {this.props.role === 'admin' ? (
+            <Menu.Item key="users">
+              <Link to="/users">
+                <ControlOutlined /> Administrators Console
+              </Link>
+            </Menu.Item>
+          ) : null}
+          {/* <Menu.Item key="guacomole">
+            <Button type="link" onClick={() => guacomoleAPI()}>
+              <ControlOutlined /> Guacomole
+            </Button>
+          </Menu.Item> */}
           <SubMenu
             key="user"
             style={{ float: 'right', paddingRight: '25px' }}
             title={
-              <span id='header_username'>
+              <span id="header_username">
                 <UserOutlined />
                 {username || 'Error'}
               </span>
@@ -210,6 +258,7 @@ class AppHeader extends Component {
           >
             <Menu.Item key="resetPassword">
               <Button
+                id="header_reset_password"
                 type="link"
                 onClick={() => {
                   this.setState({ modalVisible: true });
@@ -219,7 +268,7 @@ class AppHeader extends Component {
               </Button>
             </Menu.Item>
             <Menu.Item key="logout">
-              <Button id='header_logout' type="link" onClick={this.logout}>
+              <Button id="header_logout" type="link" onClick={this.logout}>
                 <span style={{ color: 'red' }}>Logout</span>
               </Button>
             </Menu.Item>
@@ -241,14 +290,21 @@ class AppHeader extends Component {
           > */}
           {/* {uploadListContent} */}
           {/* </SubMenu> */}
+
           <Menu.Item
             key="support"
             style={{ float: 'right' }}
             onClick={this.showDrawer}
           >
             Support
-            {/* <a href="/files/test.pdf" download target="_self"></a> */}
           </Menu.Item>
+          {/* <Menu.Item
+            key="timezone"
+            style={{ float: 'right' }}
+          >
+            <FieldTimeOutlined />
+            {timezone}
+          </Menu.Item> */}
         </Menu>
         <ResetPasswordModal
           visible={this.state.modalVisible}

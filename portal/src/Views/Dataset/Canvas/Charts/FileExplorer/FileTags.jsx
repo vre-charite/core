@@ -2,12 +2,14 @@ import React, { Component } from 'react';
 import { Tag, Input, Typography, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { validateTag } from '../../../../../Utility';
-import { addProjectTagsAPI, deleteProjectTagsAPI } from '../../../../../APIs'
+import { addProjectTagsAPI, deleteProjectTagsAPI } from '../../../../../APIs';
 import { EditOutlined, CheckOutlined, UpOutlined } from '@ant-design/icons';
-const { Paragraph } = Typography;
-const _ = require('lodash')
+import { withTranslation } from 'react-i18next';
 
-export default class FileTags extends Component {
+const { Paragraph } = Typography;
+const _ = require('lodash');
+
+class FileTags extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -17,15 +19,25 @@ export default class FileTags extends Component {
       errorMessage: false,
       edit: false,
       expand: false,
-      counter: 0
+      counter: 0,
     };
+  }
+
+  componentDidUpdate(prevProps) {
+    //Sometimes the props and state wouldn't align. this is a fix
+    if (this.state.tags !== this.props.tags) {
+      this.setState({
+        tags: this.props.tags,
+      });
+    }
   }
 
   handleClose = (removedTag) => {
     const tags = this.state.tags.filter((tag) => tag !== removedTag);
-    const { guid, pid } = this.props
-    deleteProjectTagsAPI(pid, { "tag": removedTag, "taglist": tags, "guid": guid })
+    const { guid, pid } = this.props;
+    deleteProjectTagsAPI(pid, { tag: removedTag, taglist: tags, guid: guid });
     this.setState({ tags });
+    this.props.refresh();
   };
 
   showInput = () => {
@@ -41,29 +53,41 @@ export default class FileTags extends Component {
     inputValue = inputValue.toLowerCase();
 
     if (!validateTag(inputValue)) {
-      this.setState({ errorMessage: "Tag should be 1-32 lowercase alphanumeric characters." });
+      this.setState({
+        errorMessage: this.props.t(
+          'formErrorMessages:project.filePanel.tags.valid',
+        ),
+      });
       return;
     }
     let { tags } = this.state;
     if (inputValue && _.includes(tags, inputValue)) {
-      this.setState({ errorMessage: "Tag is already existed." });
+      this.setState({
+        errorMessage: this.props.t(
+          'formErrorMessages:project.filePanel.tags.exists',
+        ),
+      });
       return;
     }
 
     tags = [...tags, inputValue];
     if (tags.length > 10) {
-      this.setState({ errorMessage: "Up to 10 tags per file！" });
+      this.setState({
+        errorMessage: this.props.t(
+          'formErrorMessages:project.filePanel.tags.limit',
+        ),
+      });
       return;
     }
-    const { guid, pid } = this.props
-    addProjectTagsAPI(pid, { tag: inputValue, taglist: tags, guid: guid })
+    const { guid, pid } = this.props;
+    addProjectTagsAPI(pid, { tag: inputValue, taglist: tags, guid: guid });
+    this.props.refresh();
     this.setState({
       tags,
       errorMessage: false,
       inputVisible: false,
       inputValue: '',
-    })
-
+    });
   };
 
   handleOnBlur = () => {
@@ -73,7 +97,7 @@ export default class FileTags extends Component {
     });
   };
 
-  saveInputRef = input => {
+  saveInputRef = (input) => {
     this.inputRef = input;
   };
 
@@ -82,7 +106,7 @@ export default class FileTags extends Component {
       expand: true,
       counter: !this.state.expand
         ? this.state.counter + 0
-        : this.state.counter + 1
+        : this.state.counter + 1,
     });
   };
 
@@ -91,100 +115,120 @@ export default class FileTags extends Component {
       expand: false,
       counter: !this.state.expand
         ? this.state.counter + 0
-        : this.state.counter + 1
+        : this.state.counter + 1,
     });
   };
 
-
   render() {
-    const { tags, inputVisible, inputValue, errorMessage, edit, expandable } = this.state;
+    const {
+      // tags,
+      inputVisible,
+      inputValue,
+      errorMessage,
+      edit,
+      expandable,
+    } = this.state;
+    const tags = this.props.tags;
+
     return (
       <>
-        {edit || tags.length === 0 ? <>
-          {inputVisible && (
-            <Input
-              type="text"
-              size="small"
-              ref={this.saveInputRef}
-              style={{ width: 78, textTransform: 'lowercase', marginRight: '8px' }}
-              value={inputValue}
-              onChange={this.handleInputChange}
-              onBlur={this.handleOnBlur}
-              onPressEnter={this.handleInputConfirm}
-            />
-          )}
-          {!inputVisible && (
-            <Tag onClick={this.showInput} className="site-tag-plus">
-              <PlusOutlined /> New Tag
-            </Tag>
-          )}
-          {tags.map((tag) => (
-            <Tag
-              color="blue"
-              closable
-              onClose={(e) => {
-                e.preventDefault();
-                this.handleClose(tag);
-              }}
-            >
-              {tag}
-            </Tag>
-          ))}
-          {tags.length !== 0 && <Button
-            type='link'
-            style={{ padding: '0px' }}
-            onClick={() => {
-              this.setState({ edit: false });
-              this.typoClose()
+        {edit || tags.length === 0 ? (
+          <>
+            {inputVisible && (
+              <Input
+                type="text"
+                size="small"
+                ref={this.saveInputRef}
+                style={{
+                  width: 78,
+                  textTransform: 'lowercase',
+                  marginRight: '8px',
+                }}
+                value={inputValue}
+                onChange={this.handleInputChange}
+                onBlur={this.handleOnBlur}
+                onPressEnter={this.handleInputConfirm}
+              />
+            )}
+            {!inputVisible && (
+              <Tag onClick={this.showInput} className="site-tag-plus">
+                <PlusOutlined /> New Tag
+              </Tag>
+            )}
+            {tags.map((tag) => (
+              <Tag
+                color="blue"
+                closable
+                key={`${this.props.guid}-${tag}`}
+                onClose={(e) => {
+                  e.preventDefault();
+                  this.handleClose(tag);
+                }}
+              >
+                {tag}
+              </Tag>
+            ))}
+            {tags.length !== 0 && (
+              <Button
+                type="link"
+                style={{ padding: '0px' }}
+                onClick={() => {
+                  this.setState({ edit: false });
+                  this.typoClose();
+                }}
+                icon={<CheckOutlined />}
+              >
+                Finish Edit
+              </Button>
+            )}
+
+            {errorMessage ? (
+              <div style={{ color: 'red' }}>{errorMessage}</div>
+            ) : null}
+          </>
+        ) : (
+          // <div>
+          <Paragraph
+            key={this.state.counter}
+            ellipsis={{
+              rows: 1,
+              expandable: true,
+              symbol: 'more',
+              onExpand: this.typoExpand,
             }}
-            icon={<CheckOutlined />}>
-            Save
-          </Button>}
-
-          {errorMessage ? (
-            <div style={{ color: 'red' }}>
-              {errorMessage}
-            </div>
-          ) : null}
-        </> :
-          <div key={this.state.counter}>
-            <Paragraph
-              ellipsis={{
-                rows: 1,
-                expandable: true,
-                symbol: 'more',
-                onExpand: this.typoExpand
-              }}
-              style={{ marginBottom: '0px' }}
-            >
-              {tags.map((tag) => (
-                <Tag
-                  color="blue"
-                >
-                  {tag}
-                </Tag>
-              ))}
-              {tags.length !== 0 && (
-                <Button
-                  type='link'
-                  style={{ padding: '0px' }}
-                  onClick={() => this.setState({ edit: true })}
-                  icon={<EditOutlined />}>
-                  Edit Tag {' '}
-                </Button>)}
-              {this.state.expand &&
-                <Button
-                  type='link'
-                  style={{ padding: '0px' }}
-                  onClick={this.typoClose}
-                  icon={<UpOutlined />}>
-                  Hide {' '}
-                </Button>
-              }
-            </Paragraph>
-
-          </div>}
+            style={{ display: 'inline' }}
+          >
+            {tags.map((tag) => (
+              <Tag color="blue" key={`${this.props.guid}-${tag}`}>
+                {tag}
+              </Tag>
+            ))}
+            {tags.length !== 0 && (
+              <Button
+                type="link"
+                style={{ padding: '0px' }}
+                onClick={() => this.setState({ edit: true })}
+                icon={<EditOutlined />}
+              >
+                Edit Tags{' '}
+              </Button>
+            )}
+            {this.state.expand && (
+              <Button
+                type="link"
+                style={{ padding: '0px', marginLeft: '10px' }}
+                onClick={this.typoClose}
+                icon={<UpOutlined />}
+              >
+                Hide{' '}
+              </Button>
+            )}
+          </Paragraph>
+          // </div>
+        )}
       </>
     );
   }
 }
+
+export default withTranslation('formErrorMessages')(FileTags);

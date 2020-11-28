@@ -14,7 +14,7 @@ function ActivateUser(props) {
         <Card>
           <Result
             status="success"
-            title="Your request is sent!"
+            title="Your request has been sent!"
             subTitle={
               <>
                 An email has been sent to the mailbox {email}. <br />
@@ -24,7 +24,7 @@ function ActivateUser(props) {
             }
             extra={[
               <Button type="primary" key="home">
-                <Link to="/">Back to home page</Link>
+                <Link to="/">Back to Home Page</Link>
               </Button>,
             ]}
           />
