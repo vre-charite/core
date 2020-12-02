@@ -237,7 +237,7 @@ class AppHeader extends Component {
           {this.props.role === 'admin' ? (
             <Menu.Item key="users">
               <Link to="/users">
-                <ControlOutlined /> Administrators Console
+                <ControlOutlined /> Administrator Console
               </Link>
             </Menu.Item>
           ) : null}

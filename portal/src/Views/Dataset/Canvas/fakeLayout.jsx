@@ -21,7 +21,7 @@ const fileStats = {
   exportable: false,
 };
 
-const files =  {
+const files = {
   type: 'files',
   key: '1',
   title: 'File Explorer',
@@ -36,33 +36,32 @@ const userStats = {
   title: 'File Statistics',
   content: 'hello',
   defaultSize: 'm',
-  expandable: true,
+  expandable: false,
   exportable: false,
-  expandComponent: <FileStatModal />,
 };
 
 const cardsAttr = {
-  'initial': [],
+  initial: [],
   //  vre cards
-  'admin': [info, fileStats, files, userStats],
+  admin: [info, fileStats, files, userStats],
 
-  'uploader': [
+  uploader: [
     info,
     {
       ...userStats,
       title: 'Contributor Statistics',
     },
-    files
+    files,
   ],
-  'contributor': [
+  contributor: [
     info,
     {
       ...userStats,
       title: 'Contributor Statistics',
     },
-    files
+    files,
   ],
-  'member': [
+  member: [
     info,
     {
       ...userStats,

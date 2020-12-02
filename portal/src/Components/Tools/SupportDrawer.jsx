@@ -205,7 +205,7 @@ function SupportDrawer(props) {
 
       <Button type="primary" ghost>
         <a
-          href="/vre/files/VRE User Manual Release 0.1.1 2020-10-28.pdf"
+          href="/vre/files/VRE User Manual Release 0.2.0 2020-11-30.pdf"
           download
           target="_self"
         >

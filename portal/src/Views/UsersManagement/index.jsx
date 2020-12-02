@@ -251,7 +251,7 @@ class UserManagement extends Component {
       icon: <ExclamationCircleOutlined />,
       content: (
         <>
-          Are you sure you want to disable this account {record.name}(
+          Are you sure you want to disable this account {record.name} (
           {record.email})?
           <br />
           This user will no longer have access to the platform.{' '}
@@ -534,7 +534,7 @@ class UserManagement extends Component {
                             textOverflow: 'ellipsis',
                           }}
                         >
-                          Platform Users Management
+                          User Management
                         </span>
                       }
                       breadcrumb={{ routes }}

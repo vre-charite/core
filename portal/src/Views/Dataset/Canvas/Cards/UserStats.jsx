@@ -30,20 +30,26 @@ function UserStats(props) {
 
       if (res.data.result['recentUpload']) {
         uploadLog = res.data.result['recentUpload'].filter((i) => {
-          let { createTime} = i['attributes'];
+          let { createTime } = i['attributes'];
           const localTime = timeConvert(createTime, 'datetime');
-          
-          return (moment().startOf('day') < moment(localTime) && moment().endOf('day') > moment(localTime)) ;
-        })
+
+          return (
+            moment().startOf('day') < moment(localTime) &&
+            moment().endOf('day') > moment(localTime)
+          );
+        });
       }
 
       if (res.data.result['recentDownload']) {
         downloadLog = res.data.result['recentDownload'].filter((i) => {
-          let { createTime} = i['attributes'];
+          let { createTime } = i['attributes'];
           const localTime = timeConvert(createTime, 'datetime');
-          
-          return (moment().startOf('day') < moment(localTime) && moment().endOf('day') > moment(localTime)) ;
-        })
+
+          return (
+            moment().startOf('day') < moment(localTime) &&
+            moment().endOf('day') > moment(localTime)
+          );
+        });
       }
 
       setUploadCount(uploadLog.length);
@@ -92,7 +98,8 @@ function UserStats(props) {
               let { owner, createTime, fileName } = i['attributes'];
               return (
                 <Timeline.Item color="green" key={createTime}>
-                  {owner} uploaded {fileName} at {timeConvert(createTime, 'datetime')}
+                  {owner} uploaded {fileName} at{' '}
+                  {timeConvert(createTime, 'datetime')}
                 </Timeline.Item>
               );
             })}
@@ -104,7 +111,8 @@ function UserStats(props) {
               let { downloader, createTime, fileName } = i['attributes'];
               return (
                 <Timeline.Item color="green">
-                  {downloader} downloaded {fileName} at {timeConvert(createTime, 'datetime')}
+                  {downloader} downloaded {fileName} at{' '}
+                  {timeConvert(createTime, 'datetime')}
                 </Timeline.Item>
               );
             })}

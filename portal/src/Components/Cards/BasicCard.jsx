@@ -1,11 +1,11 @@
-import React, { Component } from "react";
-import { Card, Button } from "antd";
-import styles from "./index.module.scss";
+import React, { Component } from 'react';
+import { Card, Button } from 'antd';
+import styles from './index.module.scss';
 import {
   FullscreenOutlined,
   DownloadOutlined,
   DragOutlined,
-} from "@ant-design/icons";
+} from '@ant-design/icons';
 
 export default class BasicCard extends Component {
   state = {
@@ -17,19 +17,11 @@ export default class BasicCard extends Component {
   };
 
   onExpandClick = () => {
-    const { handleExpand, content, title, expandComponent, datasetId, currentUser, isAdmin } = this.props;
+    const { handleExpand, content, title } = this.props;
 
-    let modalContent = content("l", this.state.export, this.onExportClick);
+    let modalContent = content('l', this.state.export, this.onExportClick);
 
-    if (expandComponent) {
-      modalContent = expandComponent;
-      handleExpand(React.cloneElement(
-        modalContent,
-        {datasetId: datasetId, currentUser, isAdmin}
-      ), title, '55vw');
-    } else {
-      handleExpand(modalContent, title, '95vw');
-    }
+    handleExpand(modalContent, title, '95vw');
   };
 
   render() {
@@ -45,20 +37,20 @@ export default class BasicCard extends Component {
           <div>
             {expandable && (
               <Button type="link" onClick={this.onExpandClick}>
-                <FullscreenOutlined style={{ position: "static" }} />
+                <FullscreenOutlined style={{ position: 'static' }} />
               </Button>
             )}
             {exportable && (
               <Button type="link" onClick={this.onExportClick}>
-                <DownloadOutlined style={{ position: "static" }} />
+                <DownloadOutlined style={{ position: 'static' }} />
               </Button>
             )}
             <Button
               type="link"
               className="dragarea"
-              style={{ paddingRight: "0", paddingLeft: "0" }}
+              style={{ paddingRight: '0', paddingLeft: '0' }}
             >
-              <DragOutlined style={{ position: "static", fontSize: "15px" }} />
+              <DragOutlined style={{ position: 'static', fontSize: '15px' }} />
             </Button>
           </div>
         }
@@ -66,7 +58,7 @@ export default class BasicCard extends Component {
         {exportable
           ? content(defaultSize, this.state.export, this.onExportClick)
           : expandable
-          ? (typeof content === 'function') && content(defaultSize)
+          ? typeof content === 'function' && content(defaultSize)
           : content}
       </Card>
     );

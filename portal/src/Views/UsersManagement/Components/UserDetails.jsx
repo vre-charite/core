@@ -9,9 +9,16 @@ function UserDetails(props) {
     <div style={{ paddingBottom: '16px' }}>
       <Descriptions size="small" column={1}>
         <Descriptions.Item label="User Name">{record.name}</Descriptions.Item>
-        <Descriptions.Item label="Role">
+        {/* <Descriptions.Item label="Role">
           {record.role === 'admin' ? 'Platform Administrator' : 'Platform User'}
-        </Descriptions.Item>
+        </Descriptions.Item> */}
+        {
+          record.role === 'admin' ? (
+            <Descriptions.Item label="Role">
+              Platform Administrator
+            </Descriptions.Item>
+          ) : null
+        }
         <Descriptions.Item label="Email">{record.email}</Descriptions.Item>
         <Descriptions.Item label="First Name">
           {record.firstName && record.firstName.length > 40 ? partialString(record.firstName, 40, true) : record.firstName}
