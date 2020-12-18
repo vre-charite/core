@@ -23,7 +23,7 @@ const VFolderFilesDeleteModal = ({
     setVisible(false);
   }
   async function handleOk() {
-    const vfolderName = panelKey.split('-')[1];
+    const vfolderName = panelKey.split('-').slice(1).join('-');
     const vfolder = vfolders.find((v) => v.name === vfolderName);
     if (vfolder) {
       try {
