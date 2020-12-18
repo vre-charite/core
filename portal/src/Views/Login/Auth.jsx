@@ -329,7 +329,7 @@ class Auth extends Component {
             />
           </div>
           <small className={styles.copyright}>
-            Version 0.2.0. Copyright © {new Date().getFullYear()},{' '}
+            Version 0.3.0. Copyright © {new Date().getFullYear()},{' '}
             <a
               href="https://www.indocresearch.org/"
               target="_blank"
