@@ -57,12 +57,6 @@ function SupportCollapse(props) {
         <Panel header={t('drawers.1.panel.4.question')} key="8">
           <p>{t('drawers.1.panel.4.answer')}</p>
         </Panel>
-        <Panel header={t('drawers.1.panel.5.question')} key="16">
-          <p>{t('drawers.1.panel.5.answer')}</p>
-        </Panel>
-        <Panel header={t('drawers.1.panel.6.question')} key="17">
-          <p>{t('drawers.1.panel.6.answer')}</p>
-        </Panel>
       </Collapse>
       <br />
       <p id="security">
@@ -89,12 +83,6 @@ function SupportCollapse(props) {
         </Panel>
         <Panel header={t('drawers.3.panel.3.question')} key="13">
           <p>{t('drawers.3.panel.3.answer')}</p>
-        </Panel>
-        <Panel header={t('drawers.3.panel.4.question')} key="14">
-          <p>{t('drawers.3.panel.4.answer')}</p>
-        </Panel>
-        <Panel header={t('drawers.3.panel.5.question')} key="15">
-          <p>{t('drawers.3.panel.5.answer')}</p>
         </Panel>
       </Collapse>
     </>

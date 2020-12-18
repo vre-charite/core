@@ -1,10 +1,10 @@
 import { SET_IS_LOGIN } from "../actionTypes";
-import {tokenManager} from '../../Service/tokenManager'
+import {keycloakManager} from '../../Service/keycloak'
 
 /**
  * the user logout creator may dispatch a action with an empty {}
  */
-const init = Boolean(tokenManager.checkTokenUnExpiration());
+const init = false;
 function isLogin(state = init, action) {
   let { type, payload } = action;
   if(typeof payload!=='boolean'){

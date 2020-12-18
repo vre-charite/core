@@ -90,33 +90,6 @@ class FilesTable extends React.Component {
         }, 100);
       }
     },
-    render: (text, record) => {
-      if (dataIndex === 'name') {
-        let filename = text;
-        if (text && text.length > 45) {
-          filename = filename.slice(0, 45);
-          filename = `${filename}...`;
-
-          const content = <span>{text}</span>;
-
-          return (
-            <>
-              <Popover content={content}>{filename}</Popover>
-              {/* {record.tags && <FileTags tags={record.tags} pid={this.props.projectId} guid={record.guid} />} */}
-            </>
-          );
-        }
-
-        return (
-          <>
-            <div>{filename}</div>
-            {/* {record.tags && <FileTags tags={record.tags} pid={this.props.projectId} guid={record.guid} />}           */}
-          </>
-        );
-      } else {
-        return text;
-      }
-    },
   });
 
   handleSearch = (selectedKeys, confirm, dataIndex) => {
@@ -181,7 +154,7 @@ class FilesTable extends React.Component {
       this.props.projectId,
       pagination.pageSize,
       pagination.current - 1,
-      this.props.parsePath,
+      this.props.panelKey,
       param3 ? param3.columnKey : 'createTime',
       searchText,
       order,

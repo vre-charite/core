@@ -11,7 +11,7 @@ import { store } from '../../Redux/store';
 import { sleep } from '../common';
 import reduxActionWrapper from '../reduxActionWrapper';
 import i18n from '../../i18n';
-
+import {uploadAction} from '../'
 const USER_LOGOUT = 'user logged out';
 const [
   updateUploadItemDispatcher,
@@ -156,6 +156,7 @@ async function fileUpload(data, resolve, reject) {
                 projectCode,
                 taskId: preRes.data && preRes.data.result && preRes.data.result.taskId
               });
+              uploadAction();
             })
             .catch(async (err) => {
               const { isLogin } = store.getState();

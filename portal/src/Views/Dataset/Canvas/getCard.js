@@ -14,8 +14,6 @@ import Description from './Charts/Description/Description';
 import Info from './Cards/Info';
 import FileStats from './Cards/FileStats';
 import UserStats from './Cards/UserStats';
-import UploaderStats from './Cards/UploaderStats';
-import UploaderHistory from './Cards/UploaderHistory';
 
 import FileStatModal from '../Canvas/Modals/FileStatModal';
 
@@ -44,13 +42,12 @@ const getcard = (card, data, actions, state, handleExpand) => {
           card.title,
           '55vw',
         );
-      res = <UserStats onExpand={onExpand} />;
-      break;
-    case 'uploaderStats':
-      res = <UploaderStats />;
-      break;
-    case 'uploaderHistory':
-      res = <UploaderHistory />;
+      res = (
+        <UserStats
+          onExpand={onExpand}
+          isAdmin={state.currentRole === 'admin'}
+        />
+      );
       break;
     case 'more':
       res = (

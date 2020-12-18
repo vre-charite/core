@@ -1,17 +1,12 @@
 import React, { Component } from 'react';
 import { Card, Col, Row } from 'antd';
-import { Form, Input, Button, message, Modal, notification, Alert } from 'antd';
-import {
-  UserOutlined,
-  LockOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
+import { Button, Modal, notification, Alert } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { instanceOf } from 'prop-types';
 import { withCookies, Cookies } from 'react-cookie';
 import { axios } from '../../APIs/config';
 import styles from './index.module.scss';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
-import { login } from '../../APIs/auth';
 import { withRouter, Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
@@ -34,6 +29,7 @@ import { getDatasetsAPI, listAllContainersPermission } from '../../APIs';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import CoookiesDrawer from './CookiesDrawer';
 import { withTranslation } from 'react-i18next';
+import { keycloak } from '../../Service/keycloak';
 
 const { confirm } = Modal;
 
@@ -138,31 +134,9 @@ class Auth extends Component {
 
     this.setState({ btnLoading: true });
 
-    login(values)
+    keycloak
+      .login()
       .then((res) => {
-        const { accessToken, refreshToken } = res.data.result;
-        const sourceId = uuidv4();
-        localStorage.setItem('sessionId', `${values.username}-${sourceId}`);
-
-        tokenManager.setCookies({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          sessionId: `${values.username}-${sourceId}`,
-        });
-        tokenManager.setTimeSkew(accessToken);
-
-        tokenManager.refreshToken(accessToken);
-
-        this.initApis(values.username);
-        this.props.setIsLoginCreator(true);
-        this.props.setUsernameCreator(values.username);
-        this.setState({ btnLoading: false });
-        this.props.history.push('/landing');
-        broadcastManager.postMessage(
-          'login',
-          serviceNamespace.broadCast.USER_CLICK_LOGIN,
-          values.username,
-        );
       })
       .catch((err) => {
         if (err.response) {
@@ -319,67 +293,19 @@ class Auth extends Component {
                     alt="icon"
                     draggable={false}
                   />
-                  <Form
-                    name="normal_login"
-                    className={styles['login-form']}
-                    initialValues={{
-                      remember: true,
-                    }}
-                    onFinish={this.onFinish}
-                    style={{ textAlign: 'left' }}
+                  <Button
+                    id="auth_login_btn"
+                    type="primary"
+                    htmlType="submit"
+                    className={styles['login-form-button']}
+                    onClick={this.onFinish}
+                    loading={this.state.btnLoading}
                   >
-                    <Form.Item
-                      name="username"
-                      rules={[
-                        {
-                          required: true,
-                          message: this.props.t('common.username.empty'),
-                        },
-                      ]}
-                    >
-                      <Input
-                        prefix={
-                          <UserOutlined className="site-form-item-icon" />
-                        }
-                        placeholder="Username"
-                      />
-                    </Form.Item>
-                    <Form.Item
-                      name="password"
-                      rules={[
-                        {
-                          required: true,
-                          message: this.props.t('common.password.empty'),
-                        },
-                      ]}
-                      className="mb-1"
-                    >
-                      <Input
-                        prefix={
-                          <LockOutlined className="site-form-item-icon" />
-                        }
-                        type="password"
-                        placeholder="Password"
-                        onCopy={(e) => e.preventDefault()}
-                        onPaste={(e) => e.preventDefault()}
-                      />
-                    </Form.Item>
-                    <Link to="/account-assistant">
-                      Forgot password or username?{' '}
-                    </Link>
-
-                    <Form.Item style={{ paddingTop: '20px' }}>
-                      <Button
-                        id="auth_login_btn"
-                        type="primary"
-                        htmlType="submit"
-                        className={styles['login-form-button']}
-                        loading={this.state.btnLoading}
-                      >
-                        Login
-                      </Button>
-                    </Form.Item>
-                  </Form>
+                    Login
+                  </Button>
+                  {/* <Link to="/account-assistant">
+                    Forgot password or username?{' '}
+                  </Link> */}
                 </Card>
               </Col>
             </Row>

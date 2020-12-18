@@ -16,6 +16,7 @@ function Collapse(props) {
         <span>{collapsed ? <PlusOutlined /> : <MinusOutlined />}</span>
       </p>
       <div
+        style={{ maxHeight: props.maxHeight ? props.maxHeight : 300 }}
         className={styles.collpasePanel + ' ' + (collapsed && styles.collapsed)}
       >
         <div

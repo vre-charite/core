@@ -1,4 +1,4 @@
-import { serverAxios, axios } from './config';
+import { serverAxios, axios, devOpServer, dataOpsServer } from './config';
 
 /**
  * Get all the datasets
@@ -91,6 +91,12 @@ function listFilesApi(datasetId) {
 function getTagsAPI() {
   return serverAxios({
     url: `/v1/datasets/?type=tag`,
+  });
+}
+
+function getSystemTagsAPI(projectCode) {
+  return serverAxios({
+    url: `/v1/system-tags?project_code=${projectCode}`,
   });
 }
 
@@ -211,6 +217,51 @@ function updateDatasetInfoAPI(containerId, data) {
     data,
   });
 }
+function listAllVirtualFolder(containerId) {
+  return devOpServer({
+    url: `/v1/vfolders?container_id=${containerId}`,
+    method: 'GET',
+  });
+}
+
+function createVirtualFolder(containerId, name) {
+  return devOpServer({
+    url: `/v1/vfolders`,
+    method: 'POST',
+    data: {
+      name: name,
+      container_id: containerId,
+    },
+  });
+}
+function listAllfilesVfolder(folderId, page, pageSize, order, column) {
+  order = order ? order : 'desc';
+  column = column ? column : 'createTime';
+  return devOpServer({
+    url: `/v1/vfolders/${folderId}?order=${order}&column=${column}`,
+    method: 'GET',
+    data: {
+      page: page,
+      page_size: pageSize,
+      column: column,
+      order: order,
+    },
+  });
+}
+
+function deleteVirtualFolder(folderId) {
+  return devOpServer({
+    url: `/v1/vfolders/${folderId}`,
+    method: 'DELETE',
+  });
+}
+
+function listAllCopy2CoreFiles(projectCode, sessionId) {
+  return devOpServer({
+    url: `/v1/file/actions/status?action=data_transfer&project_code=${projectCode}&session_id=${sessionId}`,
+    method: 'GET',
+  });
+}
 
 export {
   getDatasetsAPI,
@@ -230,4 +281,10 @@ export {
   removeUserFromDatasetApi,
   setUserStatusFromDatasetApi,
   updateDatasetInfoAPI,
+  getSystemTagsAPI,
+  createVirtualFolder,
+  listAllVirtualFolder,
+  listAllfilesVfolder,
+  deleteVirtualFolder,
+  listAllCopy2CoreFiles,
 };

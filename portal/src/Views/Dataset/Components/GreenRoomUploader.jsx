@@ -31,10 +31,10 @@ const GreenRoomUploader = ({
   const [value, setValue] = useState([]);
   const [fetching, setFetching] = useState(false);
   const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
-
   const q = useContext(UploadQueueContext);
   const [currentDataset] = useCurrentProject();
   const { username } = useSelector((state) => state);
+  const project = useSelector((state) => state.project);
   const handleOk = () => {
     form
       .validateFields()
@@ -113,7 +113,7 @@ const GreenRoomUploader = ({
   //       onClose={onClose}
   //       style={{ marginRight: 3, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 465 }}
   //     >
-  //       <span 
+  //       <span
   //         style={{ position: 'relative', display: 'flex', maxWidth: '95%', padding: '0px 4px 0px 8px' }}
   //       >
   //         {label.toLowerCase()}
@@ -130,7 +130,6 @@ const GreenRoomUploader = ({
         onOk={handleOk}
         maskClosable={false}
         closable={false}
-
         onCancel={() => {
           cancel();
           form.resetFields();
@@ -277,8 +276,14 @@ const GreenRoomUploader = ({
                       t('formErrorMessages:project.upload.tags.limit'),
                     );
                   }
+                  const systemTags = project.manifest.tags;
                   let i;
                   for (i of value) {
+                    if (systemTags.indexOf(i) !== -1) {
+                      return Promise.reject(
+                        t('formErrorMessages:project.upload.tags.systemtags'),
+                      );
+                    }
                     if (!validateTag(i)) {
                       return Promise.reject(
                         t('formErrorMessages:project.upload.tags.valid'),
@@ -293,7 +298,7 @@ const GreenRoomUploader = ({
                   setData([]);
                   setFetching(false);
                   form.setFieldsValue({ tags: value });
-                  
+
                   return Promise.resolve();
                 },
               }),
@@ -308,7 +313,8 @@ const GreenRoomUploader = ({
               // onChange={handleChange}
               getPopupContainer={(triggerNode) => triggerNode.parentNode}
               style={{ width: '100%' }}
-              rendervalue={selected => selected.map(el => el.toLowerCase())}
+              rendervalue={(selected) => selected.map((el) => el.toLowerCase())}
+              placeholder="Add tags"
             >
               {data.map((d) => (
                 <Option key={d.value}>{d.text.toLowerCase()}</Option>
@@ -324,14 +330,15 @@ const GreenRoomUploader = ({
               // },
               ({ getFieldValue }) => ({
                 validator(rule, value) {
-                  const fileList  = value && value.fileList;
+                  const fileList = value && value.fileList;
                   if (!fileList || (fileList && fileList.length === 0)) {
                     return Promise.reject(
                       t('formErrorMessages:project.upload.file.empty'),
                     );
                   } else if (
-                    fileList && fileList.length ===
-                    _.uniqBy(fileList, (item) => item.name).length
+                    fileList &&
+                    fileList.length ===
+                      _.uniqBy(fileList, (item) => item.name).length
                   ) {
                     return Promise.resolve();
                   } else {

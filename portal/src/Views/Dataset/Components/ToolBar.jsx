@@ -30,7 +30,9 @@ const ToolBar = ({
       );
     });
   const currentProject = useCurrentProject();
-  const istvbCloud = currentProject[0]?.code === 'tvbcloud';
+  const showJupyter =
+    currentProject[0]?.code === 'tvbcloud' ||
+    currentProject[0]?.code === 'indoctestproject';
 
   return (
     <>
@@ -65,9 +67,12 @@ const ToolBar = ({
           </Menu.Item>
         )}
 
-        {istvbCloud ? (
+        {showJupyter ? (
           <Menu.Item key="jupyter">
-            <a href={`/vre/workbench/j/${currentProject[0]?.code}/`} target="_blank">
+            <a
+              href={`/vre/workbench/j/${currentProject[0]?.code}/`}
+              target="_blank"
+            >
               <DesktopOutlined />
               <span>Jupyterhub</span>
             </a>

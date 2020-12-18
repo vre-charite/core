@@ -1,10 +1,13 @@
 import {BroadcastChannel} from 'broadcast-channel';
 import {namespace as ServiceNamespace} from '../namespace';
+const { detect } = require('detect-browser');
+const browser = detect();
+const isSafari = browser?.name === 'safari';
 class BroadCastManager {
     constructor() {
-        this._loginChannel = new BroadcastChannel('login');
-        this._logoutChannel = new BroadcastChannel('logout');
-        this._refreshChannel = new BroadcastChannel('refresh');
+        this._loginChannel = new BroadcastChannel('login',isSafari?{type:'localstorage'}:{});
+        this._logoutChannel = new BroadcastChannel('logout',isSafari?{type:'localstorage'}:{});
+        this._refreshChannel = new BroadcastChannel('refresh',isSafari?{type:'localstorage'}:{});
         this._loginListeners = [];
         this._logoutListeners = [];
         this._refreshListeners = [];

@@ -61,6 +61,14 @@ const cardsAttr = {
     },
     files,
   ],
+  collaborator: [
+    info,
+    {
+      ...userStats,
+      title: 'Collaborator Statistics',
+    },
+    files,
+  ],
   member: [
     info,
     {

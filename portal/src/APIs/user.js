@@ -30,6 +30,14 @@ function getUserOnProjectAPI(datasetId, data) {
   });
 }
 
+function getPortalUsers(params) {
+  return axios({
+    url: `/v1/users/platform`,
+    method: 'GET',
+    params: objectKeysToSnakeCase(params),
+  });
+}
+
 /**
  * check if user exist in key cloak
  * @param {string} username
@@ -108,6 +116,7 @@ function contactUsApi(data) {
     url: '/v1/contact',
     method: 'post',
     data,
+    timeout: 100 * 1000,
   });
 }
 
@@ -117,13 +126,6 @@ function contactUsApi(data) {
 function getAdminsOnDatasetAPI(datasetId) {
   return axios({
     url: `/v1/datasets/${datasetId}/admins`,
-  });
-}
-
-function getPortalUsers(params) {
-  return axios({
-    url: `/v1/users/platform`,
-    params: objectKeysToSnakeCase(params),
   });
 }
 

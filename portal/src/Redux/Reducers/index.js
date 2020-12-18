@@ -1,23 +1,27 @@
-import { combineReducers } from "redux";
-import datasetList from "./datasetList";
-import userList from "./userList";
-import { tags } from "./tags";
-import { metadatas } from "./metadatas";
-import { personalDatasetId } from "./personalDatasetId";
-import containersPermission from "./containersPermission";
-import role from "./role";
-import uploadList from "./uploadList";
-import newUploadIndicator from "./newUploadIndicator";
-import { USER_LOGOUT } from "../actionTypes";
-import refreshTokenModal from "./refreshToken";
+import { combineReducers } from 'redux';
+import datasetList from './datasetList';
+import userList from './userList';
+import { tags } from './tags';
+import { metadatas } from './metadatas';
+import { personalDatasetId } from './personalDatasetId';
+import containersPermission from './containersPermission';
+import role from './role';
+import uploadList from './uploadList';
+import newUploadIndicator from './newUploadIndicator';
+import { USER_LOGOUT } from '../actionTypes';
+import refreshTokenModal from './refreshToken';
 import downloadList from './downloadList';
 import clearId from './clearId';
 import username from './username';
-import isLogin from './isLogin'
+import isLogin from './isLogin';
 import successNum from './successNum';
 import downloadClearId from './downloadClearId';
 import panelActiveKey from './panelActiveKey';
-
+import project from './currentProject';
+import email from './userEmail';
+import copy2CoreList from './copy2CoreList';
+import events from './events';
+import isKeycloakReady from './isKeycloakReady'
 // export default combineReducers({
 //   datasetList,
 //   userList,
@@ -40,7 +44,17 @@ const appReducer = combineReducers({
   uploadList,
   newUploadIndicator,
   refreshTokenModal,
-  downloadList, clearId, isLogin, username,successNum,downloadClearId,panelActiveKey
+  project,
+  copy2CoreList,
+  downloadList,
+  clearId,
+  isLogin,
+  username,
+  successNum,
+  downloadClearId,
+  panelActiveKey,
+  email,
+  events, isKeycloakReady
 });
 
 const rootReducer = (state, action) => {

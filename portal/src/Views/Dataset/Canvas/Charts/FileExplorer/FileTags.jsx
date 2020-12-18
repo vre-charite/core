@@ -5,6 +5,7 @@ import { validateTag } from '../../../../../Utility';
 import { addProjectTagsAPI, deleteProjectTagsAPI } from '../../../../../APIs';
 import { EditOutlined, CheckOutlined, UpOutlined } from '@ant-design/icons';
 import { withTranslation } from 'react-i18next';
+import { connect } from 'react-redux';
 
 const { Paragraph } = Typography;
 const _ = require('lodash');
@@ -20,6 +21,7 @@ class FileTags extends Component {
       edit: false,
       expand: false,
       counter: 0,
+      manifest: this.props.project.manifest,
     };
   }
 
@@ -35,9 +37,14 @@ class FileTags extends Component {
   handleClose = (removedTag) => {
     const tags = this.state.tags.filter((tag) => tag !== removedTag);
     const { guid, pid } = this.props;
-    deleteProjectTagsAPI(pid, { tag: removedTag, taglist: tags, guid: guid });
-    this.setState({ tags });
-    this.props.refresh();
+    deleteProjectTagsAPI(pid, { tag: removedTag, taglist: tags, guid: guid })
+      .then((res) => {
+        this.setState({ tags });
+        this.props.refresh();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   showInput = () => {
@@ -56,6 +63,15 @@ class FileTags extends Component {
       this.setState({
         errorMessage: this.props.t(
           'formErrorMessages:project.filePanel.tags.valid',
+        ),
+      });
+      return;
+    }
+    const projectSystemTags = this.state.manifest.tags;
+    if (projectSystemTags && projectSystemTags.indexOf(inputValue) !== -1) {
+      this.setState({
+        errorMessage: this.props.t(
+          'formErrorMessages:project.filePanel.tags.systemtags',
         ),
       });
       return;
@@ -79,15 +95,22 @@ class FileTags extends Component {
       });
       return;
     }
+
     const { guid, pid } = this.props;
-    addProjectTagsAPI(pid, { tag: inputValue, taglist: tags, guid: guid });
-    this.props.refresh();
-    this.setState({
-      tags,
-      errorMessage: false,
-      inputVisible: false,
-      inputValue: '',
-    });
+    addProjectTagsAPI(pid, { tag: inputValue, taglist: tags, guid: guid })
+      .then((res) => {
+        this.props.refresh();
+        this.setState({
+          tags,
+          errorMessage: false,
+          inputVisible: false,
+          inputValue: '',
+          edit: true,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   handleOnBlur = () => {
@@ -127,11 +150,39 @@ class FileTags extends Component {
       errorMessage,
       edit,
       expandable,
+      manifest,
     } = this.state;
-    const tags = this.props.tags;
-
+    const projectSystemTags = manifest.tags;
+    const systemTags = this.props.tags.filter(
+      (v) => projectSystemTags && projectSystemTags.indexOf(v) !== -1,
+    );
+    const tags = this.props.tags.filter(
+      (v) => projectSystemTags && projectSystemTags.indexOf(v) === -1,
+    );
     return (
       <>
+        {systemTags && systemTags.length ? (
+          <div style={{ marginBottom: 10 }}>
+            <p
+              style={{
+                fontSize: 14,
+                marginBottom: 5,
+                color: 'rgba(0,0,0,0.85)',
+              }}
+            >
+              System Tags
+            </p>
+            {systemTags.map((v) => (
+              <Tag color="default" key={`${this.props.guid}-${v}`}>
+                {v}
+              </Tag>
+            ))}
+          </div>
+        ) : null}
+
+        <p style={{ fontSize: 14, marginBottom: 5, color: 'rgba(0,0,0,0.85)' }}>
+          Customized Tags
+        </p>
         {edit || tags.length === 0 ? (
           <>
             {inputVisible && (
@@ -187,7 +238,6 @@ class FileTags extends Component {
             ) : null}
           </>
         ) : (
-          // <div>
           <Paragraph
             key={this.state.counter}
             ellipsis={{
@@ -224,11 +274,15 @@ class FileTags extends Component {
               </Button>
             )}
           </Paragraph>
-          // </div>
         )}
       </>
     );
   }
 }
 
-export default withTranslation('formErrorMessages')(FileTags);
+export default connect(
+  (state) => ({
+    project: state.project,
+  }),
+  {},
+)(withTranslation('formErrorMessages')(FileTags));

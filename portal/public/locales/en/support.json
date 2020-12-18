@@ -10,11 +10,11 @@
       "panel": [
         {
           "question": "I forgot my username or password. What should I do?",
-          "answer": "On the login page, click \"Forgot password or username?\" and enter your VRE username to have a password reset link sent to the email address associated with your account.  If you have forgotten your username click the “Do not remember username?” option and enter your institutional email associated with your VRE user account to have your username sent to you by email."
+          "answer": "Please contact the VRE Support Team at vre-support@charite.de for assistance with changing your username or password"
         },
         {
           "question": "How can I change my password?",
-          "answer": "After logging in, click on your username in the top right corner of any page and select \"Reset Password\"."
+          "answer": "After logging in, click on your username in the top right corner of any page and select &   \"Reset Password\""
         },
         {
           "question": "How can I change my email address?",
@@ -42,19 +42,11 @@
         {
           "question": "What is Project Visibility and how can I change it?",
           "answer": "Visibility is a Project attribute that controls whether a Project's basic information (Project Title, Project Code and description) are visible to all VRE users in the Landing Page. Visibility does not affect which users can be added to a Project.",
-          "visibility": "The Visibility of a Project is controlled by the Administrator and can be edited on the Project Information page by selecting or deselecting the checkbox \"Make this project discoverable by all platform users\". If the checkbox is selected, any user logged into the VRE can see the Project’s Title, Code, and description in the VRE landing page, but only invited Team Members can enter the Project. If the option is deselected, no users outside of the invited Project Team Members will be able to see the Project in the Landing Page."
+          "visibility": "The Visibility of a Project is controlled by the Administrator and can be edited on the Project Information page by selecting or deselecting the checkbox “Make this project discoverable by all platform users”. If the checkbox is selected, any user logged into the VRE can see the Project’s Title, Code, and description in the VRE landing page, but only invited Team Members can enter the Project. If the option is deselected, no users outside of the invited Project Team Members will be able to see the Project in the Landing Page."
         },
         {
           "question": "What is the Members Panel and who can access it?",
-          "answer": "The Members Panel is used to add users to a Project. Project Administrators and Portal Administrators can access the Members Panel in the right Sidebar."
-        },
-        {
-          "question": "What is the Administrators Console and who can access it?",
-          "answer": "The Administrators Console is used to add users and Platform Administrators to the VRE.  Portal administrators can access the Administrators Console in the Main Menu to see a list of all Platform Users, view pending invitations, disable and re-enable existing users and send out emails to all Platform Users."
-        },
-        {
-          "question": "Where can I go for more help about my Project?",
-          "answer": "If you have a question specific to your research project, contact the Project Administrator.  The Project Administrator name(s) found in the Project Information area of the Project Canvas contain a clickable link to send an email."
+          "answer": "The Members Panel is used to add users to a Project. Project and Platform Administrators can access the Members Panel in the right Sidebar."
         }
       ]
     },
@@ -63,7 +55,7 @@
       "panel": [
         {
           "question": "Why do I receive warnings that my session will expire?",
-          "answer": "The platform detects users that have been inactive for five or more minutes. This is done for security reasons and to help increase overall speed of the platform. A pop-up warning will be displayed after a period of inactivity prompting you to either refresh your session or to logout.  To confirm that your session is active, click \"Refresh\". If you do not respond, you will automatically be logged out and you will be required to log back in with your username and password."
+          "answer": "The platform detects users that have been inactive for five or more minutes. This is done for security reasons and to help increase overall speed of the platform. Before expiring inactive sessions,the VRE will warn you. To confirm that your session is active, click 'Refresh'. If your session has expired, you will be required to log back in with your username and password."
         }
       ]
     },
@@ -72,7 +64,7 @@
       "panel": [
         {
           "question": "Who can upload a data file to the VRE?",
-          "answer": "A file can only be uploaded into an approved Project by an invited Project Member (Project Administrator or Contributor). As a member of the Project, you have been authorized to contribute data to the project. All VRE members are responsible for abiding by the Platform Terms of Use and all Project Members must ensure that they only upload authorized data that is appropriate to the Project. Please contact your Project Administrator if you believe you should have a different user role."
+          "answer": "A file can only be uploaded into an approved Project by an invited Project Member (Administrator or Contributor). As an invited Project Member of the Project, you have been authorized to contribute data to the project. All VRE members are responsible for abiding by the Platform Terms of Use and all Project Members must ensure that they only upload authorized data that is appropriate to the Project. Please contact your Project Administrator if you believe you should have a different user role."
         },
         {
           "question": "How do I upload a file?",
@@ -85,14 +77,6 @@
         {
           "question": "Are files encrypted upon upload?",
           "answer": "SSR encryption is applied to all data uploaded to the VRE Portal both at rest and in transit."
-        },
-        {
-          "question": "How can I see more information about my files? ",
-          "answer": "Navigate to your project, click the action menu icon in the File Explorer and click Profile.  Details about your file and its data lineage will be displayed in the side panel."
-        },
-        {
-          "question": "Why won’t my file download?",
-          "answer": "Check that popups are enabled and no popup blockers are active in your browser before attempting to download files from the VRE."
         }
       ]
     }

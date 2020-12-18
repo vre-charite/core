@@ -30,61 +30,63 @@ function FileStats(props) {
     getUsersOnDatasetAPI(datasetId).then((res) => {
       let users = res.data.result;
       setAdminCount(users.filter((i) => i.permission === 'admin').length);
-      setUploaderCount(users.filter((i) => i.permission === 'contributor').length);
+      setUploaderCount(
+        users.filter((i) => i.permission === 'contributor').length,
+      );
     });
   }, [datasetId]);
 
   return (
-    <>
+    <div style={{ marginTop: 0 }}>
       <div className={styles.stats}>
         <Statistic
           title="Raw Files"
           value={rawCount}
+          className={styles.antStatistic}
           prefix={<FileOutlined />}
           valueStyle={{
             color: '#13c2c2',
-            fontWeight: 'bold',
-            fontSize: '28px',
+            fontSize: '20px',
           }}
         />
       </div>
       <div className={styles.stats}>
         <Statistic
           title="Processed Files"
+          className={styles.antStatistic}
           value={processedCount}
           prefix={<FolderOpenOutlined />}
           valueStyle={{
-            color: '#08979c',
-            fontWeight: 'bold',
-            fontSize: '28px',
+            color: '#13c2c2',
+            fontSize: '20px',
           }}
         />
       </div>
       <div className={styles.stats}>
         <Statistic
-          title="Project Administrators"
+          className={styles.antStatistic}
+          title="Administrators"
           value={adminCount}
           prefix={<UserOutlined />}
           valueStyle={{
             color: '#13c2c2',
-            fontWeight: 'bold',
-            fontSize: '28px',
+            fontSize: '20px',
           }}
         />
       </div>
       <div className={styles.stats}>
         <Statistic
           title="Contributors"
+          className={styles.antStatistic}
           value={uploaderCount}
           prefix={<UserOutlined />}
           valueStyle={{
-            color: '#08979c',
-            fontWeight: 'bold',
-            fontSize: '28px',
+            color: '#13c2c2',
+            fontSize: '20px',
           }}
         />
       </div>
-    </>
+    </div>
   );
 }
 

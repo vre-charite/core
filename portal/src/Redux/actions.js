@@ -13,16 +13,30 @@ import {
   UPDATE_UPLOAD_LIST_ITEM,
   SET_UPLOAD_INDICATOR,
   USER_LOGOUT,
-  SET_REFRESH_MODAL, APPEND_DOWNLOAD_LIST,
+  SET_REFRESH_MODAL,
+  APPEND_DOWNLOAD_LIST,
   REMOVE_DOWNLOAD_LIST,
   UPDATE_DATASET_LIST,
-  UPDATE_CLEAR_ID,SET_IS_LOGIN,
-  SET_USER_NAME,CLEAR_DOWNLOAD_LIST,
+  UPDATE_CLEAR_ID,
+  SET_IS_LOGIN,
+  SET_USER_NAME,
+  CLEAR_DOWNLOAD_LIST,
   SET_SUCCESS_NUM,
-  SET_DOWNLOAD_CLEAR_ID,SET_PANEL_ACTIVE_KEY,
+  SET_DOWNLOAD_CLEAR_ID,
+  SET_PANEL_ACTIVE_KEY,
   UPDATE_DOWNLOAD_ITEM,
   SET_DOWNLOAD_LIST,
-} from "./actionTypes";
+  SET_CURRENT_PROJECT_PROFILE,
+  SET_CURRENT_PROJECT_MANIFEST,
+  SET_CURRENT_PROJECT_TREE,
+  SET_CURRENT_PROJECT_TREE_VFOLDER,
+  SET_CURRENT_PROJECT_TREE_GREEN_ROOM,
+  SET_CURRENT_PROJECT_TREE_CORE,
+  SET_CURRENT_PROJECT_ACTIVE_PANE,
+  SET_EMAIL,
+  UPDATE_COPY2CORE_LIST,
+  TRIGGER_EVENT,SET_IS_KEYCLOAK_READY
+} from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
   type: ADD_DATASET_LIST,
@@ -133,55 +147,106 @@ export const setRefreshModal = (status) => ({
   payload: status,
 });
 
-export const appendDownloadListCreator = (downloadItem)=>({
-  type:APPEND_DOWNLOAD_LIST,
-  payload:downloadItem
+export const appendDownloadListCreator = (downloadItem) => ({
+  type: APPEND_DOWNLOAD_LIST,
+  payload: downloadItem,
 });
 
-export const removeDownloadListCreator = (downloadKey)=>({
-  type:REMOVE_DOWNLOAD_LIST,
-  payload:downloadKey
-})
+export const removeDownloadListCreator = (downloadKey) => ({
+  type: REMOVE_DOWNLOAD_LIST,
+  payload: downloadKey,
+});
 
-export const clearDownloadListCreator = ()=>({
-  type:CLEAR_DOWNLOAD_LIST,
-})
+export const clearDownloadListCreator = () => ({
+  type: CLEAR_DOWNLOAD_LIST,
+});
 
 export const updateDownloadItemCreator = (payload) => ({
   type: UPDATE_DOWNLOAD_ITEM,
   payload,
-})
+});
 
 export const setDownloadListCreator = (list) => ({
   type: SET_DOWNLOAD_LIST,
   payload: list,
-})
+});
 
-export const updateClearIdCreator = (clearId)=>({
-  type:UPDATE_CLEAR_ID,
-  payload:clearId,
-})
+export const updateCopy2CoreList = (list) => ({
+  type: UPDATE_COPY2CORE_LIST,
+  payload: list,
+});
 
-export const setIsLoginCreator = (isLogin)=>({
-  type:SET_IS_LOGIN,
-  payload:isLogin
-})
+export const updateClearIdCreator = (clearId) => ({
+  type: UPDATE_CLEAR_ID,
+  payload: clearId,
+});
 
-export const setUsernameCreator = (username)=>({
-  type:SET_USER_NAME,
-  payload:username
-})
+export const setIsLoginCreator = (isLogin) => ({
+  type: SET_IS_LOGIN,
+  payload: isLogin,
+});
+
+export const setUsernameCreator = (username) => ({
+  type: SET_USER_NAME,
+  payload: username,
+});
 export const setSuccessNum = (num) => ({
-  type:SET_SUCCESS_NUM,
-  payload:num
-})
+  type: SET_SUCCESS_NUM,
+  payload: num,
+});
 
-export const setDonwloadClearIdCreator = (downloadClearId) =>({
-  type:SET_DOWNLOAD_CLEAR_ID,
-  payload:downloadClearId,
-})
+export const setDonwloadClearIdCreator = (downloadClearId) => ({
+  type: SET_DOWNLOAD_CLEAR_ID,
+  payload: downloadClearId,
+});
 
-export const setPanelActiveKey = (key)=>({
-  type:SET_PANEL_ACTIVE_KEY,
-  payload:key
+export const setPanelActiveKey = (key) => ({
+  type: SET_PANEL_ACTIVE_KEY,
+  payload: key,
+});
+
+export const setCurrentProjectProfile = (profile) => ({
+  type: SET_CURRENT_PROJECT_PROFILE,
+  payload: profile,
+});
+
+export const setCurrentProjectManifest = (manifest) => ({
+  type: SET_CURRENT_PROJECT_MANIFEST,
+  payload: manifest,
+});
+
+export const setCurrentProjectTree = (tree) => ({
+  type: SET_CURRENT_PROJECT_TREE,
+  payload: tree,
+});
+
+export const setCurrentProjectTreeVFolder = (vfolders) => ({
+  type: SET_CURRENT_PROJECT_TREE_VFOLDER,
+  payload: vfolders,
+});
+export const setCurrentProjectTreeGreenRoom = (folders) => ({
+  type: SET_CURRENT_PROJECT_TREE_GREEN_ROOM,
+  payload: folders,
+});
+export const setCurrentProjectTreeCore = (folders) => ({
+  type: SET_CURRENT_PROJECT_TREE_CORE,
+  payload: folders,
+});
+export const setCurrentProjectActivePane = (folders) => ({
+  type: SET_CURRENT_PROJECT_ACTIVE_PANE,
+  payload: folders,
+});
+export const setEmailCreator = (email) => ({
+  type: SET_EMAIL,
+  payload: email,
+});
+
+export const triggerEvent = (eventType) => ({
+  type: TRIGGER_EVENT,
+  payload: eventType,
+});
+
+export const setIsKeycloakReady = (isKeycloakReady)=>({
+  type:SET_IS_KEYCLOAK_READY,
+  payload:isKeycloakReady
 })

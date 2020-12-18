@@ -70,6 +70,16 @@ function checkTokenAPI(token) {
   });
 }
 
+function lastLoginAPI(username) {
+  return axios({
+    url: 'users/lastlogin',
+    method: 'POST',
+    data: {
+      username
+    }
+  })
+};
+
 export {
   login,
   refreshTokenAPI,
@@ -78,4 +88,5 @@ export {
   sendUsernameEmailAPI,
   resetForgottenPasswordAPI,
   checkTokenAPI,
+  lastLoginAPI,
 };

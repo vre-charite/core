@@ -13,6 +13,7 @@ import {
   Tabs,
   Modal,
   Space,
+  Checkbox,
 } from 'antd';
 import _ from 'lodash';
 import { connect } from 'react-redux';
@@ -31,6 +32,8 @@ import ScalableDetails from './Components/ScalableDetails';
 import InvitationsTable from '../../Components/Table/InvitationTable';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import UserManagementToolBar from './Components/UserManagementToolBar';
+import { keycloak } from '../../Service/keycloak';
+import { serverAxios } from '../../APIs/config';
 
 const { Content } = Layout;
 const { TabPane } = Tabs;
@@ -64,12 +67,12 @@ class UserManagement extends Component {
       },
       statusFilter: 'All',
       roleFilter: 'All',
+      isAdminOnly: false,
     };
     this.myRef = React.createRef();
   }
 
-  async componentDidMount() {
-    const { filters } = this.state;
+  componentDidMount() {
     this.fetchUsers();
   }
 
@@ -323,6 +326,7 @@ class UserManagement extends Component {
     filters.pageSize = 10;
 
     filters = _.omit(filters, ['status', 'role']);
+    this.setState({ isAdminOnly: false });
     this.setState({ filters, roleFilter: 'All', statusFilter: 'All' }, () => {
       this.fetchUsers();
     });
@@ -484,17 +488,20 @@ class UserManagement extends Component {
             </Dropdown>
           </div>
           <div>
-            <strong>Role:</strong>
-            <Dropdown overlay={roleMenus}>
-              <a
-                className="ant-dropdown-link"
-                onClick={(e) => e.preventDefault()}
-                style={{ marginLeft: 10, color: 'rgba(0, 0, 0, 0.5)' }}
-              >
-                {this.state.roleFilter}{' '}
-                <DownOutlined style={{ marginLeft: 5 }} />
-              </a>
-            </Dropdown>
+            <Checkbox
+              checked={this.state.isAdminOnly}
+              onChange={(e) => {
+                this.setState({ isAdminOnly: e.target.checked }, () => {
+                  if (e.target.checked) {
+                    this.handleMenuClick({ key: 'admin' }, 'role');
+                  } else {
+                    this.handleMenuClick({ key: 'all-users' }, 'role');
+                  }
+                });
+              }}
+            >
+              Platform Administrator Only
+            </Checkbox>
           </div>
           <Button onClick={this.resetFilter} size="small">
             Reset
@@ -584,7 +591,7 @@ class UserManagement extends Component {
                                       : '')
                                   );
                                 }}
-                                style={{ marginTop: 20 }}
+                                style={{ marginTop: 35 }}
                               />
                             </div>
                             {sidePanel && (
@@ -601,27 +608,6 @@ class UserManagement extends Component {
                           </div>
                         </TabPane>
                         <TabPane tab="Invitations" key="invitations">
-                          {/* <SearchTable
-                            columns={invitationColumns}
-                            onChange={this.onChange}
-                            handleReset={this.handleReset}
-                            handleSearch={this.handleSearch}
-                            dataSource={this.state.users}
-                            totalItem={this.state.total}
-                            pageSize={this.state.pageSize}
-                            page={this.state.page}
-                            key="invitationsTable"
-                            setClassName={(record) => {
-                              return (
-                                (record.status === 'disabled'
-                                  ? 'disabled '
-                                  : ' ') +
-                                (currentRecord?.id === record.id
-                                  ? 'selected'
-                                  : '')
-                              );
-                            }}
-                          /> */}
                           <InvitationsTable tableKey="platformInvitations" />
                         </TabPane>
                       </Tabs>

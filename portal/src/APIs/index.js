@@ -23,6 +23,10 @@ import {
   fileLineageAPI,
   checkDownloadStatus,
   deleteDownloadStatus,
+  copyFiles,
+  addToVirtualFolder,
+  removeFromVirtualFolder,
+  fileAuditLogsAPI,
 } from './file';
 import {
   getDatasetsAPI,
@@ -42,6 +46,12 @@ import {
   removeUserFromDatasetApi,
   setUserStatusFromDatasetApi,
   updateDatasetInfoAPI,
+  getSystemTagsAPI,
+  createVirtualFolder,
+  listAllVirtualFolder,
+  listAllfilesVfolder,
+  deleteVirtualFolder,
+  listAllCopy2CoreFiles,
 } from './datasetsAPI';
 import {
   getAllUsersAPI,
@@ -69,10 +79,9 @@ import {
   sendUsernameEmailAPI,
   resetForgottenPasswordAPI,
   checkTokenAPI,
+  lastLoginAPI,
 } from './auth';
-import {
-  sendEmailToAll
-} from './tools';
+import { sendEmailToAll } from './tools';
 export {
   refreshTokenAPI,
   uploadFileApi,
@@ -138,5 +147,16 @@ export {
   getUserOnProjectAPI,
   guacomoleAPI,
   checkUserPlatformRole,
-  sendEmailToAll
+  sendEmailToAll,
+  copyFiles,
+  getSystemTagsAPI,
+  createVirtualFolder,
+  listAllVirtualFolder,
+  addToVirtualFolder,
+  listAllfilesVfolder,
+  removeFromVirtualFolder,
+  deleteVirtualFolder,
+  listAllCopy2CoreFiles,
+  fileAuditLogsAPI,
+  lastLoginAPI,
 };

@@ -1,11 +1,10 @@
 {
   "create_project": {
     "project_code": "Project Code must have less than 32 characters and contain only lowercase letters and numbers.",
-    "project_name": "Project Name must have less than 100 characters.",
+    "project_name": "Project Name must no more than 100 characters.",
     "tags": "Tags must have less than 32 characters and cannot contain spaces.",
-    "roles": "Roles are the available roles in a project.",
     "role_admin": "Project Administrators are able to add users to their Project as well as to upload, view, and download any data in their Project's Green Room.",
-    "role_contributor": "Project Contributors are able to upload data to their Project's Green Room but can only view or download data they have uploaded themselves."
+    "role_contributor": "Project Contributors are able to upload data to their Project's Green Room storage but can only view or download data files they have uploaded themselves."
   },
   "upload": {
     "generate_id": "Please enter the GENERATE IDs in the format 'ABC-1234'."

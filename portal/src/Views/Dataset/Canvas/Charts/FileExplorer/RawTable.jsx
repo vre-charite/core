@@ -11,6 +11,7 @@ import {
   Menu,
   Dropdown,
   Tooltip,
+  Popover,
 } from 'antd';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
@@ -31,6 +32,7 @@ import {
   getFilesByTypeAPI,
   listProjectTagsAPI,
   fileLineageAPI,
+  listAllfilesVfolder,
 } from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
 import FilesTable from './FilesTable';
@@ -44,18 +46,24 @@ import LineageGraph from './LineageGraph';
 import FileBasics from './FileBasics';
 import FileBasicsModal from './FileBasicsModal';
 import LineageGraphModal from './LineageGraphModal';
-
+import { DataSourceType, TABLE_STATE, SYSTEM_TAGS } from './RawTableValues';
+import Copy2CorePlugin from './Plugins/Copy2Core/Copy2CorePlugin';
+import VirtualFolderPlugin from './Plugins/VirtualFolders/VirtualFolderPlugin';
+import VirtualFolderFilesDeletePlugin from './Plugins/VirtualFolderDeleteFiles/VirtualFolderFilesDeletePlugin';
+import VirtualFolderDeletePlugin from './Plugins/VirtualFolderDelete/VirtualFolderDeletePlugin';
+import Copy2ProcessedPlugin from './Plugins/Copy2Processed/Copy2ProcessedPlugin';
+import { pipelines } from '../../../../../Utility/pipelines';
 const { Panel } = Collapse;
 const { Option } = Select;
 const { Paragraph, Title } = Typography;
 const _ = require('lodash');
 
 function RawTable(props) {
-  const { path } = props;
+  const { path, panelKey, folderId, removePanel } = props;
   const dispatch = useDispatch();
   const ref = React.useRef(null);
-
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedRows, setSelectedRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageSize] = useState(10);
   const [page] = useState(0);
@@ -76,29 +84,91 @@ function RawTable(props) {
   const [data, setData] = useState([]);
   const [value, setValue] = useState([]);
   const [fetching, setFetching] = useState(false);
-  const mounted = useRef(false);
   const [sidepanel, setSidepanel] = useState(false);
   const [currentRecord, setCurrentRecord] = useState({});
   const [fileModalVisible, setFileModalVisible] = useState(false);
   const [lineageModalVisible, setLineageModalVisible] = useState(false);
+
   const [tableWidth, setTableWidth] = useState('90%');
   const [detailsPanelWidth, setDetailsPanelWidth] = useState(300);
-
-  const parsePath =
-    typeof path === 'string' && path[0] === '/' ? path.substring(1) : path;
+  const [tableState, setTableState] = useState(TABLE_STATE.NORMAL);
+  // const [keyCopied, setKeyCopied] = useState([]);
+  const [lineageLoading, setLineageLoading] = useState(false);
+  const [direction, setDirection] = useState('INPUT');
 
   const sessionId = localStorage.getItem('sessionId');
+  const currentDataset = getCurrentProject(props.projectId);
+  const projectActivePanel = useSelector((state) => state.project && state.project.tree && state.project.tree.active);
+  let permission = false;
+  if (currentDataset) permission = currentDataset.permission;
 
   function getRawFilesAndUpdateUI(
     containerId,
     pageSize,
     page,
-    path,
+    panelKey,
     column,
     text,
     order,
     tags,
   ) {
+    if (panelKey && panelKey.startsWith('vfolder')) {
+      return listAllfilesVfolder(folderId, page, pageSize, order, column)
+        .then((res) => {
+          const { result, total } = res.data;
+          const files = result.map((item) => {
+            return {
+              ...item.attributes,
+              tags: item.labels,
+              guid: item.guid,
+              key: item.attributes.name,
+              typeName: item.typeName,
+            };
+          });
+          if (Object.keys(currentRecord)?.length > 0) {
+            const lineage = currentRecord?.lineage; //Need to keep lineage information
+            const record = files.filter(
+              (file) => file.key === currentRecord.key,
+            );
+            if (record?.length > 0) {
+              record[0].lineage = lineage;
+              setCurrentRecord(record[0]);
+            }
+          }
+          setRawFiles(files);
+          setTotalItem(total);
+          setRefreshing(false);
+        })
+        .catch((err) => {
+          console.error(
+            'RawTable -> err, API funtion exception',
+            err,
+            err.status,
+          ); //sometimes throw error
+          setRefreshing(false);
+          if (err.response) {
+            const errorMessager = new ErrorMessager(
+              namespace.dataset.files.getFilesByTypeAPI,
+            );
+            errorMessager.triggerMsg(err.response.status, null, {
+              datasetId: containerId,
+            });
+          }
+        });
+    }
+    let pipeline = null;
+    if (panelKey && panelKey.startsWith('greenroom')) {
+      if (panelKey === 'greenroom-processed-dicomEdit') {
+        pipeline = pipelines['GENERATE_PROCESS'];
+      } else if (panelKey === 'greenroom-processed-straightCopy') {
+        pipeline = pipelines['DATA_COPY'];
+      } else {
+        pipeline = pipelines['GREEN_RAW'];
+      }
+    } else if (panelKey && panelKey.startsWith('core')) {
+      pipeline = pipelines['DATA_COPY'];
+    }
+
     const filters = {};
 
     if (text.length > 0) {
@@ -113,16 +183,16 @@ function RawTable(props) {
     let role = false;
 
     if (currentDataset) role = currentDataset.permission;
-
     return getFilesByTypeAPI(
       containerId,
       pageSize,
       page,
-      path,
+      pipeline,
       column,
       order,
       role === 'admin',
       null,
+      projectActivePanel,
       filters,
     )
       .then((res) => {
@@ -137,7 +207,6 @@ function RawTable(props) {
             typeName: item.typeName,
           };
         });
-
         //Set the new current record for highlighting and side panel
         if (Object.keys(currentRecord)?.length > 0) {
           const lineage = currentRecord?.lineage; //Need to keep lineage information
@@ -147,7 +216,6 @@ function RawTable(props) {
             setCurrentRecord(record[0]);
           }
         }
-
         setRawFiles(files);
         setTotalItem(approximateCount);
         setRefreshing(false);
@@ -178,10 +246,37 @@ function RawTable(props) {
       sorter: true,
       width: '25%',
       searchKey: 'name',
+      render: (text, record) => {
+        let filename = text;
+        if (text.length > 45) {
+          filename = filename.slice(0, 45);
+          filename = `${filename}...`;
+          const content = <span>{text}</span>;
+          return (
+            <div>
+              {record.tags.indexOf(SYSTEM_TAGS['COPIED_TAG']) !== -1 &&
+              tableState === TABLE_STATE.COPY_TO_CORE ? (
+                <Tag color="default">{SYSTEM_TAGS['COPIED_TAG']}</Tag>
+              ) : null}
+              <Popover content={content}>{filename}</Popover>
+            </div>
+          );
+        }
+
+        return (
+          <div>
+            {record.tags.indexOf(SYSTEM_TAGS['COPIED_TAG']) !== -1 &&
+            tableState === TABLE_STATE.COPY_TO_CORE ? (
+              <Tag color="default">{SYSTEM_TAGS['COPIED_TAG']}</Tag>
+            ) : null}
+            <span>{filename}</span>
+          </div>
+        );
+      },
     },
-    !props.type
+    props.type === DataSourceType.GREENROOM_RAW
       ? {
-          title: 'Added By',
+          title: 'Added',
           dataIndex: 'owner',
           key: 'owner',
           sorter: true,
@@ -199,6 +294,13 @@ function RawTable(props) {
           width: '18%',
           searchKey: 'generateID',
           ellipsis: true,
+          render: (text, record) => {
+            if (text === 'undefined') {
+              return 'N/A';
+            } else {
+              return text;
+            }
+          },
         }
       : {},
     {
@@ -206,14 +308,14 @@ function RawTable(props) {
       dataIndex: 'createTime',
       key: 'createTime',
       sorter: true,
-      width: '10%',
+      width: '14%',
       ellipsis: true,
       render: (text, record) => {
         return text && timeConvert(text, 'date');
       },
     },
     {
-      title: 'File Size',
+      title: 'Size',
       dataIndex: 'fileSize',
       key: 'fileSize',
       render: (text, record) => {
@@ -230,7 +332,7 @@ function RawTable(props) {
     {
       title: 'Action',
       key: 'action',
-      width: 80,
+      width: 75,
       render: (text, record) => {
         let file = record.name;
         var folder = file && file.substring(0, file.lastIndexOf('/') + 1);
@@ -281,9 +383,14 @@ function RawTable(props) {
       },
     },
   ];
+
   columns = columns.filter((v) => Object.keys(v).length !== 0);
+  if (sidepanel) {
+    columns = columns.filter((v) => v.key == 'fileName' || v.key == 'action');
+  }
   useEffect(() => {
-    setRawFiles(props.rawData);
+    const data = props.rawData;
+    setRawFiles(data);
     setTotalItem(props.totalItem);
     setPageLoading(false);
   }, [
@@ -297,10 +404,11 @@ function RawTable(props) {
   ]);
 
   useEffect(() => {
-    if (mounted.current) {
+    console.log(panelKey, projectActivePanel);
+    if (panelKey == projectActivePanel) {
       fetchData();
-    } else mounted.current = true;
-  }, [props.successNum, value]);
+    }
+  }, [props.successNum]);
 
   useEffect(() => {
     listProjectTagsAPI(props.projectId, null, null, 10).then((res) => {
@@ -308,20 +416,36 @@ function RawTable(props) {
     });
   }, [props.projectId]);
 
-  const onSelectChange = (selectedRowKeys) => {
+  const onSelectChange = (selectedRowKeys, selectedRowsNew) => {
     setSelectedRowKeys(selectedRowKeys);
+    let tmpSelectedRows = selectedRows
+      .concat(selectedRowsNew)
+      .filter((item) => item !== undefined);
+    let totalSelectedRows = selectedRowKeys.map(
+      (key) => tmpSelectedRows.filter((item) => item.key == key)[0],
+    );
+    setSelectedRows(totalSelectedRows);
   };
 
   async function openFileSider(record) {
     const { key, typeName } = record;
     //pass lineage information to the sidepanel
     let recordWithLineage = {};
-    const res = await fileLineageAPI(key, typeName);
+    const res = await fileLineageAPI(key, typeName, 'INPUT');
 
     recordWithLineage = { ...record, lineage: res.data && res.data.result };
-
     setSidepanel(true);
     setCurrentRecord(recordWithLineage);
+  }
+
+  async function updateLineage(record, direction) {
+    const { key, typeName } = record;
+    let recordWithLineage = {};
+    const res = await fileLineageAPI(key, typeName, direction);
+
+    recordWithLineage = { ...record, lineage: res.data && res.data.result };
+    setCurrentRecord(recordWithLineage);
+    setLineageLoading(false);
   }
 
   function closeFileSider() {
@@ -345,13 +469,18 @@ function RawTable(props) {
         path: folder,
       });
     });
+  
     downloadFilesAPI(
       props.projectId,
       files,
       setLoading,
       props.appendDownloadListCreator,
       sessionId,
-    ).catch((err) => {
+    )
+    .then((res) => {
+      if (files && files.length === 1) dispatch(setSuccessNum(props.successNum + 1));
+    })
+    .catch((err) => {
       setLoading(false);
       if (err.response) {
         const errorMessager = new ErrorMessager(
@@ -370,7 +499,7 @@ function RawTable(props) {
       props.projectId,
       pageSize,
       page,
-      parsePath,
+      panelKey,
       sortColumn,
       searchText,
       order,
@@ -448,7 +577,6 @@ function RawTable(props) {
 
       data.push(el);
     }
-
     setRawFiles(data);
   };
 
@@ -488,6 +616,123 @@ function RawTable(props) {
     document.removeEventListener('mousemove', mouseMove, true);
     document.removeEventListener('mouseup', stopMove, true);
   }
+  
+  const ToolTipsAndTable = (
+    <>
+      <div style={{ marginBottom: 36, marginTop: 20, position: 'relative' }}>
+        <Tooltip placement="top" title="Group Download">
+          <Button
+            type="primary"
+            shape="circle"
+            onClick={downloadFiles}
+            disabled={!hasSelected}
+            loading={loading}
+            icon={<CloudDownloadOutlined />}
+            style={{ marginRight: 8 }}
+          />
+        </Tooltip>
+        {props.type === DataSourceType.GREENROOM_RAW && (
+          <Tooltip placement="top" title="Upload">
+            <Button
+              id="raw_table_upload"
+              type="primary"
+              shape="circle"
+              onClick={() => toggleModal(true)}
+              icon={<UploadOutlined />}
+              style={{ marginRight: 8 }}
+            />
+          </Tooltip>
+        )}
+        <Tooltip placement="top" title="Refresh">
+          <Button
+            shape="circle"
+            onClick={() => {
+              !reFreshing && fetchData();
+            }}
+            type="primary"
+            icon={<SyncOutlined spin={reFreshing} />}
+            style={{ marginRight: 8 }}
+          />
+        </Tooltip>
+        {props.type === DataSourceType.GREENROOM_PROCESSED &&
+        permission === 'admin' ? (
+          <Copy2CorePlugin
+            tableState={tableState}
+            setTableState={setTableState}
+            selectedRowKeys={selectedRowKeys}
+            setSelectedRowKeys={setSelectedRowKeys}
+            selectedRows={selectedRows}
+            panelKey={panelKey}
+          />
+        ) : null}
+        {props.type === DataSourceType.GREENROOM_RAW &&
+        permission === 'admin' ? (
+          <Copy2ProcessedPlugin
+            tableState={tableState}
+            setTableState={setTableState}
+            selectedRowKeys={selectedRowKeys}
+            setSelectedRowKeys={setSelectedRowKeys}
+            selectedRows={selectedRows}
+            panelKey={panelKey}
+          />
+        ) : null}
+        {props.type === DataSourceType.CORE_PROCESSED ||
+        props.type === DataSourceType.CORE_RAW ? (
+          <VirtualFolderPlugin
+            tableState={tableState}
+            setTableState={setTableState}
+            selectedRowKeys={selectedRowKeys}
+            setSelectedRowKeys={setSelectedRowKeys}
+            selectedRows={selectedRows}
+            panelKey={panelKey}
+          />
+        ) : null}
+        {props.type === DataSourceType.CORE_VIRTUAL_FOLDER ? (
+          <VirtualFolderFilesDeletePlugin
+            tableState={tableState}
+            setTableState={setTableState}
+            selectedRowKeys={selectedRowKeys}
+            setSelectedRowKeys={setSelectedRowKeys}
+            selectedRows={selectedRows}
+            panelKey={panelKey}
+          />
+        ) : null}
+        <span style={{ marginLeft: 5 }}>
+          {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
+        </span>
+        <div style={{ float: 'right', marginRight: 40 }}>
+          {props.type === DataSourceType.CORE_VIRTUAL_FOLDER ? (
+            <VirtualFolderDeletePlugin
+              tableState={tableState}
+              setTableState={setTableState}
+              selectedRowKeys={selectedRowKeys}
+              setSelectedRowKeys={setSelectedRowKeys}
+              selectedRows={selectedRows}
+              panelKey={panelKey}
+              removePanel={removePanel}
+            />
+          ) : null}
+        </div>
+      </div>
+
+      <FilesTable
+        columns={columns}
+        dataSource={rawFiles}
+        totalItem={totalItem}
+        updateTable={getRawFilesAndUpdateUI}
+        projectId={props.projectId}
+        rowSelection={rowSelection}
+        tableKey={tableKey}
+        panelKey={panelKey}
+        successNum={props.successNum}
+        // onExpand={onExpand}
+        onFold={onFold}
+        tags={value}
+        selectedRecord={currentRecord}
+        tableState={tableState}
+      />
+    </>
+  );
 
   return (
     <Spin spinning={pageLoading}>
@@ -562,70 +807,7 @@ function RawTable(props) {
               // overflow: 'scroll',
             }}
           >
-            <Space style={{ marginBottom: 16 }}>
-              <Tooltip placement="top" title="Group Download">
-                <Button
-                  type="primary"
-                  shape="circle"
-                  onClick={downloadFiles}
-                  disabled={!hasSelected}
-                  loading={loading}
-                  icon={<CloudDownloadOutlined />}
-                />
-              </Tooltip>
-              {props.hideUpload !== true && (
-                <Tooltip placement="top" title="Upload">
-                  <Button
-                    id="raw_table_upload"
-                    type="primary"
-                    shape="circle"
-                    onClick={() => toggleModal(true)}
-                    icon={<UploadOutlined />}
-                  />
-                </Tooltip>
-              )}
-              <Tooltip placement="top" title="Refresh">
-                <Button
-                  shape="circle"
-                  onClick={() => {
-                    !reFreshing && fetchData();
-                  }}
-                  icon={<SyncOutlined spin={reFreshing} />}
-                />
-              </Tooltip>
-
-              <span style={{ marginLeft: 8 }}>
-                {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
-              </span>
-
-              {/* <Button
-          shape="round"
-          icon={<SearchOutlined />}
-          onClick={() => {
-            return toggleQueryPanel(!isQuery);
-          }}
-          style={{ float: 'right' }}
-        >
-          {isQuery ? 'Close Search Panel' : 'Search Tags'}
-        </Button> */}
-            </Space>
-
-            <FilesTable
-              columns={columns}
-              dataSource={rawFiles}
-              totalItem={totalItem}
-              updateTable={getRawFilesAndUpdateUI}
-              projectId={props.projectId}
-              type={props.type}
-              rowSelection={rowSelection}
-              tableKey={tableKey}
-              parsePath={parsePath}
-              successNum={props.successNum}
-              // onExpand={onExpand}
-              onFold={onFold}
-              tags={value}
-              selectedRecord={currentRecord}
-            />
+            {ToolTipsAndTable}
           </div>
           <div
             style={{
@@ -651,7 +833,11 @@ function RawTable(props) {
             </Button>
             <div style={{ position: 'relative' }}>
               <CloseOutlined
-                onClick={closeFileSider}
+                onClick={() => {
+                  setDirection('INPUT');
+                  closeFileSider();
+                  setCurrentRecord({});
+                }}
                 style={{
                   zIndex: '99',
                   float: 'right',
@@ -734,69 +920,7 @@ function RawTable(props) {
         <div
         // style={{ overflow: 'scroll' }}
         >
-          <Space style={{ marginBottom: 16 }}>
-            <Tooltip placement="top" title="Group Download">
-              <Button
-                type="primary"
-                shape="circle"
-                onClick={downloadFiles}
-                disabled={!hasSelected}
-                loading={loading}
-                icon={<CloudDownloadOutlined />}
-              />
-            </Tooltip>
-            {props.hideUpload !== true && (
-              <Tooltip placement="top" title="Upload">
-                <Button
-                  id="raw_table_upload"
-                  type="primary"
-                  shape="circle"
-                  onClick={() => toggleModal(true)}
-                  icon={<UploadOutlined />}
-                />
-              </Tooltip>
-            )}
-            <Tooltip placement="top" title="Refresh">
-              <Button
-                shape="circle"
-                onClick={() => {
-                  !reFreshing && fetchData();
-                }}
-                icon={<SyncOutlined spin={reFreshing} />}
-              />
-            </Tooltip>
-
-            <span style={{ marginLeft: 8 }}>
-              {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
-            </span>
-
-            {/* <Button
-          shape="round"
-          icon={<SearchOutlined />}
-          onClick={() => {
-            return toggleQueryPanel(!isQuery);
-          }}
-          style={{ float: 'right' }}
-        >
-          {isQuery ? 'Close Search Panel' : 'Search Tags'}
-        </Button> */}
-          </Space>
-          <FilesTable
-            columns={columns}
-            dataSource={rawFiles}
-            totalItem={totalItem}
-            updateTable={getRawFilesAndUpdateUI}
-            projectId={props.projectId}
-            type={props.type}
-            rowSelection={rowSelection}
-            tableKey={tableKey}
-            parsePath={parsePath}
-            successNum={props.successNum}
-            // onExpand={onExpand}
-            onFold={onFold}
-            tags={value}
-            selectedRecord={currentRecord}
-          />
+          {ToolTipsAndTable}
         </div>
       )}
       <GreenRoomUploader
@@ -820,6 +944,11 @@ function RawTable(props) {
         type={props.type}
         record={currentRecord}
         handleLineageCancel={handleLineageCancel}
+        updateLineage={updateLineage}
+        loading={lineageLoading}
+        setLoading={setLineageLoading}
+        direction={direction}
+        setDirection={setDirection}
       />
     </Spin>
   );

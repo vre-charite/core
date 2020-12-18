@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StandardLayout } from '../../Components/Layout';
 import FilePanel from '../../Components/Layout/FilePanel';
 import { message } from 'antd';
@@ -7,7 +8,8 @@ import { withRouter, Switch, Route, Redirect,useParams } from 'react-router-dom'
 import ToolBar from './Components/ToolBar';
 import { getUserOnProjectAPI } from '../../APIs';
 import { connect,useSelector } from 'react-redux';
-import {   protectedRoutes } from '../../Utility';
+import { protectedRoutes } from '../../Utility';
+import roleMap from '../../Utility/project-roles.json';
 
 import _ from 'lodash';
 function Dataset(props) {
@@ -18,6 +20,19 @@ function Dataset(props) {
     datasetList,
   } = props;
   const [userListOnDataset, setUserListOnDataset] = useState(null);
+  const [userAccess, setUserAccess] = useState(null);
+
+  const rolesDetail = [];
+  
+  for (const key in roleMap) {
+    rolesDetail.push({
+      value: roleMap[key] && roleMap[key].value,
+      label: roleMap[key] && roleMap[key].label,
+      description: roleMap[key] && roleMap[key].description
+    })
+  }
+
+
   const {datasetId} = useParams();
   const containerDetails =
     datasetList[0] &&
@@ -77,6 +92,7 @@ function Dataset(props) {
                     containerDetails={containerDetails}
                     getUsersOnDatasetAPI={getUserOnProjectAPI}
                     setUserListOnDataset={setUserListOnDataset}
+                    rolesDetail={rolesDetail}
                   />
                 );
               }

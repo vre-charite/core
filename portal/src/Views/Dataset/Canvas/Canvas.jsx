@@ -12,6 +12,7 @@ import { AddDatasetCreator } from '../../../Redux/actions';
 import { getChildrenDataset } from '../../../APIs';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
 import { withCurrentProject } from '../../../Utility';
+import userRoles from '../../../Utility/project-roles.json';
 
 const { Content } = Layout;
 
@@ -41,6 +42,13 @@ const defaultLayout = {
     ],
   },
   contributor: {
+    lg: [
+      { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '3', x: 15, y: 0, w: 12, h: 4 },
+      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+    ],
+  },
+  collaborator: {
     lg: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
       { i: '3', x: 15, y: 0, w: 12, h: 4 },
@@ -134,31 +142,11 @@ class Canvas extends Component {
     const currentProject = this.props.currentProject;
     if (currentProject?.permission) {
       const role = currentProject.permission;
-      if (role === 'admin') {
-        this.setState({
-          roleIndex: 3,
-          currentRole: 'admin',
-          updateCount: this.state.updateCount + 1,
-        });
-      } else if (role === 'uploader') {
-        this.setState({
-          roleIndex: 4,
-          currentRole: 'uploader',
-          updateCount: this.state.updateCount + 1,
-        });
-      } else if (role === 'contributor') {
-        this.setState({
-          roleIndex: 6,
-          currentRole: 'contributor',
-          updateCount: this.state.updateCount + 1,
-        });
-      } else {
-        this.setState({
-          roleIndex: 5,
-          currentRole: 'member',
-          updateCount: this.state.updateCount + 1,
-        });
-      }
+
+      this.setState({
+        currentRole: role,
+        updateCount: this.state.updateCount + 1,
+      });
     }
   };
 
@@ -383,15 +371,15 @@ class Canvas extends Component {
 
     let currentRole = this.state.currentRole;
 
-    if (['uploader', 'contributor'].includes(currentRole))
-      currentRole = 'Project Contributor';
-
     if (currentRole === 'admin') {
       if (this.props.role === 'admin') {
         currentRole = 'Platform Administrator';
       } else {
         currentRole = 'Project Administrator';
       }
+    } else {
+      currentRole =
+        userRoles && userRoles[currentRole] && userRoles[currentRole]['label'];
     }
 
     return (

@@ -2,9 +2,10 @@ var roleMap = {
     site_admin: "Platform Administrator",
     admin: "Project Administrator",
     member: "Member",
-    contributor: "Contributor",
-    uploader: "Contributor",
-    visitor: "Visitor"
+    contributor: "Project Contributor",
+    uploader: "Project Contributor",
+    visitor: "Visitor",
+    collaborator: "Project Collaborator"
 }
 
 /**

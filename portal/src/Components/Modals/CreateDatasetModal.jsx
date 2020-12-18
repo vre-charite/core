@@ -20,6 +20,7 @@ import { QuestionCircleOutlined } from '@ant-design/icons';
 import AsyncFormModal from './AsyncFormModal';
 import { useTranslation } from 'react-i18next';
 import { trimString } from '../../Utility';
+import _ from 'lodash';
 
 function CreateDatasetModal({
   visible,
@@ -75,15 +76,16 @@ function CreateDatasetModal({
             metadatas[key] = value;
           });
 
-        if(values.description) values.description = trimString(values.description);
+        if (values.description)
+          values.description = trimString(values.description);
 
         createProjectAPI(
           {
-            dataset_name: values.name,
+            dataset_name: _.trimStart(values.name),
             code: values.code,
             tags: values.tags,
             discoverable: values.discoverable,
-            roles: values.roles,
+            // roles: values.roles,
             // admin: [username],
             type: 'Usecase',
             metadatas,
@@ -113,7 +115,6 @@ function CreateDatasetModal({
           .catch((err) => {
             console.log(err);
             toggleSubmitting(false);
-            //message.error(err);
             const errorMessage = new ErrorMessager(
               namespace.landing.createProject,
             );
@@ -134,6 +135,8 @@ function CreateDatasetModal({
     if (rule && rule.field === 'tags') {
       const invalidTag = value && value.some((el) => el.length > 32);
       if (invalidTag) callback(t('formErrorMessages:project.tags.valid'));
+
+      if (value && value.includes('copied-to-core')) callback('Tag should be different with system reserved tag.');
     }
 
     callback();
@@ -202,9 +205,17 @@ function CreateDatasetModal({
               message: t('formErrorMessages:project.name.empty'),
             },
             {
-              validator:(rule,value)=>{
-                const isLengthValid= (value.length >= 1 && value.length <= 100) && (trimString(value) && trimString(value).length > 0);
-                return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:project.name.valid'));
+              validator: (rule, value) => {
+                if (!value) return Promise.reject();
+
+                const isLengthValid =
+                value && value.length >= 1 &&
+                  value.length <= 100 &&
+                  trimString(value) &&
+                  trimString(value).length > 0;
+                return isLengthValid
+                  ? Promise.resolve()
+                  : Promise.reject(t('formErrorMessages:project.name.valid'));
               },
             },
           ]}
@@ -216,9 +227,13 @@ function CreateDatasetModal({
           name="description"
           rules={[
             {
-              validator:(rule,value)=>{
-                const isLengthValid= !value || (value.length <= 250);
-                return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:project.description.valid'));
+              validator: (rule, value) => {
+                const isLengthValid = !value || value.length <= 250;
+                return isLengthValid
+                  ? Promise.resolve()
+                  : Promise.reject(
+                      t('formErrorMessages:project.description.valid'),
+                    );
               },
             },
           ]}
@@ -256,7 +271,7 @@ function CreateDatasetModal({
           <Select
             mode="tags"
             style={{ width: '100%' }}
-            placeholder="tags"
+            placeholder="Add tags"
             onChange={handleChange}
           >
             {tags &&
@@ -265,7 +280,7 @@ function CreateDatasetModal({
               ))}
           </Select>
         </Form.Item>
-        <Form.Item
+        {/* <Form.Item
           // label="Roles"
           name="roles"
           label={
@@ -284,23 +299,12 @@ function CreateDatasetModal({
             <Row>
               <Col span={10}>
                 <Checkbox value="admin" checked disabled>
-                Project Administrator&nbsp;
+                  Project Administrator&nbsp;
                   <Tooltip title={t('create_project.role_admin')}>
                     <QuestionCircleOutlined />
                   </Tooltip>
                 </Checkbox>
               </Col>
-              {/* <Col span={8}>
-                <Checkbox value="member">
-                  Member&nbsp;
-                  <Tooltip
-                    title="Project member is able to upload data into Green Room,
-                  view/download data only being uploaded by self in Green Room."
-                  >
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </Checkbox>
-              </Col> */}
               <Col span={10}>
                 <Checkbox value="contributor">
                   Contributor&nbsp;
@@ -311,7 +315,7 @@ function CreateDatasetModal({
               </Col>
             </Row>
           </Checkbox.Group>
-        </Form.Item>
+        </Form.Item> */}
         <Form.Item
           label="Visibility"
           name="discoverable"

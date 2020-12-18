@@ -86,3 +86,7 @@
 .ant-tree {
   background: none;
 }
+/* cursor fix for select in dataset modal */
+.ant-select-multiple .ant-select-selection-search-input {
+  min-width: 5px;
+}

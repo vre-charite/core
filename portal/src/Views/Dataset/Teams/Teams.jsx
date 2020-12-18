@@ -28,7 +28,7 @@ import {
   removeUserFromDatasetApi,
   setUserStatusFromDatasetApi,
 } from '../../../APIs';
-import { objectKeysToSnakeCase, objectKeysToCamelCase } from '../../../Utility';
+import { objectKeysToSnakeCase, objectKeysToCamelCase, partialString } from '../../../Utility';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
 import {
   withCurrentProject,
@@ -309,7 +309,7 @@ class Teams extends Component {
 
     const menu = (record, role) => (
       <Menu id="teams_role_dropdown">
-        {this.props.containerDetails &&
+        {/* {this.props.containerDetails &&
           this.props.containerDetails['roles'].map((i) => {
             if (i !== 'member') {
               return (
@@ -330,16 +330,24 @@ class Teams extends Component {
             } else {
               return null;
             }
-          })}
-        {/* <Menu.Divider /> */}
-        {/* <Menu.Item
-          onClick={() => {
-            this.confirmModal(record.name, record.permission, 'delete');
-          }}
-          key="2"
-        >
-          remove
-        </Menu.Item> */}
+          })} */}
+        {
+          this.props.rolesDetail && this.props.rolesDetail.map((el) => (
+            <Menu.Item
+              onClick={() => {
+                this.confirmModal(
+                  record.name,
+                  record.permission,
+                  el.value,
+                );
+              }}
+              disabled={role === el.value}
+              key={el.value}
+            >
+              {el.label}
+            </Menu.Item>
+          ))
+        }
       </Menu>
     );
 
@@ -363,20 +371,32 @@ class Teams extends Component {
         dataIndex: 'firstName',
         sorter: true,
         key: 'first_name',
+        render: (text) => {
+          if (text && text.length > 20) {
+            return <span>{partialString(text, 20, false)}</span>;
+          }
+          return <span>{text}</span>;
+        },
       },
       {
         title: 'Last Name',
         dataIndex: 'lastName',
         sorter: true,
         key: 'last_name',
+        render: (text) => {
+          if (text && text.length > 20) {
+            return <span>{partialString(text, 20, false)}</span>;
+          }
+          return <span>{text}</span>;
+        },
       },
-      {
-        title: 'Join Date',
-        dataIndex: 'timeCreated',
-        sorter: true,
-        key: 'time_created',
-        render: (text) => text && timeConvert(text, 'datetime'),
-      },
+      // {
+      //   title: 'Join Date',
+      //   dataIndex: 'timeCreated',
+      //   sorter: true,
+      //   key: 'time_created',
+      //   render: (text) => text && timeConvert(text, 'datetime'),
+      // },
       {
         title: 'Role',
         dataIndex: 'permission',
@@ -474,23 +494,6 @@ class Teams extends Component {
       } else {
         return <>{route.breadcrumbName}</>;
       }
-      // const second = routes.indexOf(route) === 1;
-      // return second ? (
-      //   <Link to={route.path}>{route.breadcrumbName}</Link>
-      // ) : (
-      //     <span
-      //       style={{
-      //         maxWidth: 'calc(100% - 74px)',
-      //         display: 'inline-block',
-      //         verticalAlign: 'bottom',
-      //         whiteSpace: 'nowrap',
-      //         overflow: 'hidden',
-      //         textOverflow: 'ellipsis',
-      //       }}
-      //     >
-      //       <Link to={route.path}>{route.breadcrumbName}</Link>
-      //     </span>
-      //   );
     }
 
     if (this.props.role === 'admin') {
@@ -579,6 +582,7 @@ class Teams extends Component {
           isAddUserModalShown={this.state.isAddUserModalShown}
           getUsers={this.getUsers}
           containerDetails={this.props.containerDetails}
+          rolesDetail={this.props.rolesDetail}
         ></AddUserModal>
       </>
     );

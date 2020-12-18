@@ -23,9 +23,9 @@ import SupportDrawer from '../Tools/SupportDrawer';
 import { UploadQueueContext } from '../../Context';
 import { userAuthManager } from '../../Service/userAuthManager';
 import { broadcastManager } from '../../Service/broadcastManager';
-import { namespace as ServiceNamespace } from '../../Service/namespace';
+import { namespace as serviceNamespace } from '../../Service/namespace';
 import { guacomoleAPI } from '../../APIs';
-import { timezone } from '../../Utility';
+import { timezone,logout } from '../../Utility';
 
 const { confirm } = Modal;
 const { Header } = Layout;
@@ -83,12 +83,8 @@ class AppHeader extends Component {
     });
 
     const doLogout = () => {
-      broadcastManager.postMessage(
-        'logout',
-        ServiceNamespace.broadCast.CLICK_HEADER_LOGOUT,
-      );
-      userAuthManager.logout(ServiceNamespace.userAuthLogout.LOGOUT_HEADER);
-      localStorage.removeItem('sessionId');
+      
+      logout();
     };
   };
 

@@ -2,10 +2,12 @@ import {
   serverAxios as axios,
   devOpServer as devOpAxios,
   devOpServerUrl,
+  devOpServer,
 } from './config';
 import { objectKeysToSnakeCase } from '../Utility';
 import { message } from 'antd';
 import _ from 'lodash';
+import { pipelines } from '../Utility/pipelines';
 
 function uploadFileApi(containerId, data, cancelToken) {
   return devOpAxios({
@@ -189,20 +191,14 @@ function getFilesByTypeAPI(
   containerId,
   pageSize,
   page,
-  path,
+  pipeline,
   column,
   order,
   admin_view,
   entityType,
+  activePane,
   filters,
 ) {
-  // let pipelineArr = null;
-  // if (path) pipelineArr = path.split('/');
-
-  let pipeline = path;
-  // if (pipelineArr && pipelineArr.length > 1)
-  //   pipeline = pipelineArr[pipelineArr.length - 1];
-
   let params = {
     page,
     pageSize,
@@ -210,9 +206,20 @@ function getFilesByTypeAPI(
     order,
     container_id: containerId,
   };
+  if (activePane) {
+    const paths = activePane.split('-');
+    const relevant_path = paths
+      .slice(1)
+      .map((v) => _.snakeCase(v))
+      .join('/');
+    params.namespace = paths[0] === 'core' ? 'vrecore' : paths[0];
+    params.relevant_path = relevant_path;
+  }
 
-  if (pipeline) {
-    params.stage = 'processed';
+  if (
+    pipeline === pipelines['DATA_COPY'] ||
+    pipeline === pipelines['GENERATE_PROCESS']
+  ) {
     params.process_pipeline = _.snakeCase(pipeline);
     params['entityType'] = entityType ? entityType : 'nfs_file_processed';
   }
@@ -469,11 +476,53 @@ function deleteProjectTagsAPI(containerId, params) {
   });
 }
 
-function fileLineageAPI(key, typeName) {
+function fileLineageAPI(key, typeName, direction) {
   return axios({
     url: `/v1/lineage`,
     method: 'GET',
-    params: { full_path: key, direction: 'INPUT', type_name: typeName },
+    params: { full_path: key, direction, type_name: typeName },
+  });
+}
+
+function fileAuditLogsAPI(params) {
+  return devOpAxios({
+    url: `/v1/file/actions/logs`,
+    method: 'GET',
+    params,
+  });
+}
+
+function copyFiles(inputFiles, projectCode, operator, sessionId, opType) {
+  return devOpAxios({
+    url: `/v1/file/actions/transfer-to-core`,
+    method: 'POST',
+    data: {
+      input_files: inputFiles,
+      project_code: projectCode,
+      operator: operator,
+      session_id: sessionId,
+      operation_type: opType,
+    },
+  });
+}
+
+function addToVirtualFolder(folderId, guids) {
+  return devOpServer({
+    url: `/v1/vfolders/${folderId}/files`,
+    method: 'POST',
+    data: {
+      guids: guids,
+    },
+  });
+}
+
+function removeFromVirtualFolder(folderId, guids) {
+  return devOpServer({
+    url: `/v1/vfolders/${folderId}/files`,
+    method: 'DELETE',
+    data: {
+      guids: guids,
+    },
   });
 }
 
@@ -502,4 +551,8 @@ export {
   fileLineageAPI,
   checkDownloadStatus,
   deleteDownloadStatus,
+  copyFiles,
+  addToVirtualFolder,
+  removeFromVirtualFolder,
+  fileAuditLogsAPI,
 };

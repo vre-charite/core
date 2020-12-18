@@ -7,6 +7,7 @@
     "@antv/g6": "^3.8.1",
     "@antv/graphin": "^1.4.1",
     "@antv/graphin-components": "^1.4.1",
+    "@react-keycloak/web": "^3.4.0",
     "@react-pdf/renderer": "^1.6.11",
     "@sentry/react": "^5.20.1",
     "@testing-library/jest-dom": "^4.2.4",
@@ -28,6 +29,7 @@
     "install": "^0.13.0",
     "js-file-download": "^0.4.12",
     "jwt-decode": "^2.2.0",
+    "keycloak-js": "^10.0.2",
     "moment-timezone": "^0.5.31",
     "node-sass": "^4.14.1",
     "npm": "^6.14.8",
@@ -42,6 +44,7 @@
     "react-highlight-words": "^0.16.0",
     "react-hotkeys-hook": "^2.3.1",
     "react-i18next": "^11.7.3",
+    "react-idle-timer": "^4.5.0",
     "react-jvectormap": "0.0.16",
     "react-redux": "^7.2.0",
     "react-router-dom": "^5.1.2",
@@ -91,4 +94,3 @@
     }
   }
 }
-

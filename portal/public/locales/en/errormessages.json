@@ -1,127 +1,143 @@
 {
   "createProject": {
-    "403": ["The project code has been taken"],
-    "default": ["something went wrong when creating new project"]
+    "403": ["This project code has been taken"],
+    "409": ["This project code has been taken"],
+    "default": [
+      "Something went wrong while trying to create a new project, please try again later."
+    ]
   },
   "login": {
-    "400": ["Your account has been disabled."],
-    "401": ["Your username and/or password do not match"],
+    "400": [
+      "Your account has been disabled, please contact an administrator for assistance."
+    ],
+    "401": ["Your username and/or password do not match."],
     "500": [
-      "An issue was encountered while trying to login, please try again later."
+      "Something went wrong while trying to login, please try again later. Error Code: 500"
     ],
     "default": [
-      "An issue was encountered while trying to login, please try again later."
+      "Something went wrong while trying to login, please try again later."
     ]
   },
   "resetPassword": {
-    "400": ["Your old password is not correct"],
+    "400": ["Your old password is incorrect."],
     "403": ["This reset password is not permitted."],
     "406": [
-      "The password format is not valid. The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;)."
+      "The password format is not valid. The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character (-_!%&/()=?*+#,.;)."
     ],
     "500": [
-      "Internal Error occurs when trying to reset password, please try again later"
+      "Something went wrong while trying to reset your password, please try again later. Error code: 500"
     ],
-    "default": ["Something wrong when resetting your password"]
+    "default": [
+      "Something went wrong while trying to reset your password, please try again later."
+    ]
   },
   "forgotPassword": {
-    "403": ["This reset password link is invalid or expired."],
+    "403": [
+      "This reset password link is invalid or expired. Please contact an administrator to receive a new link."
+    ],
     "406": [
       "The password format is not valid. The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;)."
     ],
     "404": ["This username does not exist."],
     "500": [
-      "Internal Error occurs when trying to reset password, please try again later"
+      "Something went wrong while trying to reset your password, please try again later.  Error code: 500"
     ],
-    "default": ["Something wrong when sending reset password email."]
+    "default": [
+      "Something went wrong while trying to send a password reset email, please try again later."
+    ]
   },
   "forgotUserName": {
-    "404": ["This email address does not exist."],
+    "404": ["This email address could not be found."],
     "500": [
-      "Internal Error occurs when trying to get username, please try again later"
+      "Something went wrong while trying to send your username, please try again later. Error Code: 500"
     ],
-    "default": ["something wrong when send your username through email"]
+    "default": [
+      "Something went wrong while trying to send your username, please try again later."
+    ]
   },
   "checkToken": {
-    "400": ["This reset password link is not valid."],
-    "500": [
-      "Internal Error occurs when trying to reset password, please try again later"
+    "400": [
+      "This reset password link is not valid. Please request a new link or contact an administrator for assistance."
     ],
-    "default": ["something wrong when verifiying your identity with the link."]
+    "500": [
+      "Something went wrong while trying to reset your password, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while attempting to verify your identity with the link."
+    ]
   },
   "resetForgottenPassword": {
     "403": ["This reset password link is invalid or expired."],
     "400": [
-      "The password format is not valid, please check the password requirement."
+      "The password format is not valid, please check the password requirements."
     ],
     "500": [
-      "Internal Error occurs when trying to reset password, please try again later"
+      "Something went wrong while trying to reset your password, please try again later.  Error code: 500"
     ],
-    "default": ["something wrong when resetting your password"]
+    "default": ["something wrong while resetting your password."]
   },
   "refresh": {
     "403": [
-      "Something went wrong while trying to refresh, please try again later"
+      "Something went wrong while trying to refresh, please try again later."
     ],
     "500": [
-      "Something went wrong while trying to refresh, please try again later"
+      "Something went wrong while trying to refresh, please try again later. Error code: 500"
     ],
     "default": [
-      "Something went wrong while trying to refresh, please try again later"
+      "Something went wrong while trying to refresh, please try again later."
     ]
   },
   "parseInviteHashAPI": {
-    "401": ["Sorry, your invitation is expired."],
-    "404": ["Sorry, your invitation is not found."],
+    "401": ["Sorry, your invitation link has expired."],
+    "404": ["Sorry, your invitation could not be found."],
     "500": [
-      "Internal Error occurs when trying to fetch invitation details please try again later"
+      "Something went wrong while trying to fetch invitation details, please try again later.  Error Code: 500"
     ],
     "default": [
-      "Internal Error occurs when trying to fetch invitation details please try again later"
+      "Something went wrong while trying to fetch invitation details, please try again later."
     ]
   },
   "uploadFileApi": {
-    "403": ["file already exists within the project."],
+    "403": ["A file with this name already exists within the project."],
     "500": [
-      "An Internal Error has occurred while attempting to upload file",
-      "Please try again later."
+      "Something went wrong while attempting to upload your file",
+      "Please try again later.  Error Code: 500"
     ],
     "502": [
-      "An Internal Error has occurred while attempting to upload file",
-      "Please try again later."
+      "Something went wrong while attempting to upload your file",
+      "Please try again later.  Error Code: 502"
     ],
-    "default": ["Something went wrong when uploading"]
+    "default": [
+      "Something went wrong while attempting to upload your file, please try again later."
+    ]
   },
   "uploadRequestFail": {
-    "default": ["Failed to upload", "please try again"]
+    "default": ["Failed to upload", "please try again."]
   },
-
   "getRawFilesAPI": {
-    "403": ["Sorry, you don't have access to get raw files from this project"],
+    "403": ["You do not have permission to access raw files in this project"],
+    "404": ["The raw files for this project could not be found."],
     "500": [
-      "Internal Error occurs when trying to get raw files, please try again later"
+      "Something went wrong while trying to fetch raw files, please try again later.  Error code: 500"
     ],
-    "404": ["Sorry, Cannot find raw files in project"],
-    "default": ["Something went wrong when getting raw files"]
+    "default": ["Something went wrong while trying to fetch raw files"]
   },
   "getChildrenDataset": {
     "403": [
-      "Sorry, you don't have access to get children dataset from this project"
+      "You do not have permission to access child datasets in this project."
     ],
     "500": [
-      "Internal Error occurs when trying to get children dataset, please try again later"
+      "Something went wrong while trying to fetch child datasets, please try again later. Error code: 500"
     ],
-    "default": ["Something went wrong when getting children dataset"]
+    "default": ["Something went wrong while getting children dataset."]
   },
   "traverseFoldersContainersAPI": {
-    "403": [
-      "You do not have the correct permissions to access this folder, please check your account settings or contact an administrator"
-    ],
+    "403": ["You do not have permission to access this folder."],
     "500": [
       "Something went wrong while trying to access this folder, please try again later."
     ],
     "404": [
-      "We were unable to locate the folder you requested, please try again later."
+      "The folder you requested could not be found, please try again later."
     ],
     "default": [
       "Something went wrong while trying to access this folder, please try again later."
@@ -129,26 +145,29 @@
   },
   "getFilesByTypeAPI": {
     "403": [
-      "Sorry, you are not authorized to access processed files at this time."
+      "You do not have permission to access processed files at this time."
     ],
     "500": [
-      "Something went wrong while trying to process files, please try again later."
+      "Something went wrong while trying to process files, please try again later. Error code: 500"
     ],
     "default": [
       "Something went wrong while trying to process files, please try again later."
     ]
   },
   "downloadFilesAPI": {
-    "403": ["Sorry, you are not authorized to download files."],
+    "403": ["You do not have permission to download files from this project."],
     "500": [
-      "Something went wrong while trying to download files, please try again later."
+      "Something went wrong while trying to download files, please try again later. Error code: 500"
     ],
     "default": [
       "Something went wrong while trying to download files, please try again later."
     ]
   },
   "processingFile": {
-    "default": ["failed to process file", "please upload again later"]
+    "default": [
+      "Something went wrong while trying to upload your file",
+      "please try again later."
+    ]
   },
   "preUpload": {
     "403": ["Sorry,", "cannot be uploaded."],
@@ -158,71 +177,76 @@
     ],
     "500": [
       "Something went wrong while trying to upload the file",
-      "please try again later"
+      "please try again later. Error Code: 500"
     ],
-    "default": ["Failed to upload"]
+    "default": [
+      "Something went wrong while trying to upload your file, please try again later."
+    ]
   },
   "selfRegistration": {
     "400": [
-      "Something went wrong while trying to create your account, please try again later"
+      "Invalid request, please try again or contact an administrator for assistance."
     ],
-    "401": ["Invite link is expired"],
+    "401": ["Invitation link has expired."],
     "500": [
-      "Something went wrong while trying to create your account, please try again later"
+      "Something went wrong while trying to create your account, please try again later.  Error code: 500"
     ],
     "default": [
-      "Something went wrong while trying to create your account, please try again later"
+      "Something went wrong while trying to create your account, please try again later."
     ]
   },
   "inviteUser": {
-    "403": ["Unable to invite user", "please try again later"],
+    "403": [
+      "You do not have permission to invite this user",
+      "please try again later."
+    ],
     "404": [
-      "Something went wrong when trying to invite user",
-      "to the project, please try again later"
+      "Something went wrong while trying to invite user",
+      "to the project, please try again later."
     ],
     "500": [
-      "Something went wrong when trying to invite user",
-      "to the project, please try again later"
+      "Something went wrong while trying to invite user",
+      "to the project, please try again later. Error code: 500"
     ],
     "default": [
-      "Something went wrong when trying to invite user",
-      "to the project, please try again later"
+      "Something went wrong while trying to invite user",
+      "to the project, please try again later."
     ]
   },
   "checkEmailExistAPI": {
-    "403": ["User by email", "already exists in the project"],
+    "403": ["A user with the email address", "already exists in the project."],
     "500": [
-      "An Internal Error occurred while validating user list. Please try again later."
+      "Something went wrong while attempting to validate the user list, please try again later.  Error Code: 500"
     ],
     "default": [
-      "An Internal Error occurred while validating user list. Please try again later."
+      "Something went wrong while attempting to validate the user list, please try again later."
     ]
   },
   "checkUserPlatformRole": {
     "403": [
-      "Something went wrong when checking user's role on platform.  Please try again later."
+      "You do not have permission to view this user's role on the platform."
     ],
     "500": [
-      "Something went wrong when checking user's role on platform. Please try again later."
+      "Something went wrong while checking the user's role, please try again later.  Error code: 500"
     ],
     "default": [
-      "Something went wrong when checking user's role on platform.  Please try again later."
+      "Something went wrong while checking user's role, please try again later."
     ]
   },
   "addUsertoDataSet": {
     "403": [
-      "is already a member of this project, to modify permissions for",
-      "you can update their role in the user management module"
+      "is already a member of this project.  To modify permissions for",
+      "you can update their role in the project Member module."
     ],
     "500": [
-      "Something went wrong when trying to invite user",
-      "to the project, please try again later"
+      "Something went wrong while trying to invite user",
+      "to the project, please try again later."
     ]
   },
   "changeRoleInDataset": {
     "403": [
-      "Something went wrong while trying to change the role for",
-      "please try again later."
+      "You do not have permission to change the role for",
+      "please check your account settings or contact an administrator."
     ],
     "404": [
       "Something went wrong while trying to change the role for",
@@ -234,87 +258,82 @@
     ]
   },
   "getUsersOnDataset": {
-    "403": [
-      "You do not have the correct permissions to view users in this project, please check your account settings or contact an administrator"
-    ],
+    "403": ["You do not have permission to view users in this project."],
     "404": [
-      "Something went wrong while trying to fetch the user list for this project, please try again later"
+      "The user list for this project could not be found, please try again later."
     ],
     "500": [
-      "Something went wrong while trying to fetch the user list for this project, please try again later"
+      "Something went wrong while trying to fetch the user list for this project, please try again later."
     ]
   },
   "removeUserFromDataset": {
-    "403": [
-      "You do not have the correct permissions to remove user",
-      "from this project, please check your account settings or contact an administrator"
-    ],
+    "403": ["You do not have permission to remove user", "from this project."],
     "404": [
-      "Something went wrong while trying to remove a user from this project, please try again later"
+      "Something went wrong while trying to remove a user from this project, please try again later."
     ],
     "500": [
-      "Something went wrong while trying to remove a user from this project, please try again later"
+      "Something went wrong while trying to remove a user from this project, please try again later."
     ]
   },
   "restoreUserFromDataset": {
-    "403": [
-      "You do not have the correct permissions to resotre user",
-      "from this project, please check your account settings or contact an administrator"
-    ],
+    "403": ["You do not have permission to restore user", "from this project."],
     "404": [
-      "Something went wrong while trying to restore a user from this project, please try again later"
+      "The user or project could not be found, please try again later or contact an administrator for assistance."
     ],
     "500": [
-      "Something went wrong while trying to restore a user from this project, please try again later"
+      "Something went wrong while trying to restore a user from this project, please try again later.  Error code: 500"
     ]
   },
   "getDataset": {
-    "default": ["Internal Error: Unable to load projects list"]
+    "default": [
+      "Something went wrong while trying to load projects list, please try again later."
+    ]
   },
   "listAllContainersPermission": {
-    "401": [
-      "You do not have the correct permissions to edit user roles on this project, please check your account settings or contact an administrator"
-    ],
+    "401": ["You are not authorized to edit user roles on this project."],
     "404": [
-      "We were unable to locate the project while trying to set containers permissions, please try again later."
+      "The project could not be found while trying to set container permissions, please try again later."
     ],
     "default": [
-      "An Internal Error occurred when trying to set containers permission"
+      "Something went wrong while trying to set container permissions, please try again later."
     ]
   },
   "contactUsAPI": {
     "401": [
-      "You do not have the correct permissions submit a request, please contact an administrator or email us directly at vre-support@charite.de"
+      "You do not have the correct permissions to submit a request, please contact an administrator or email the team directly at vre-support@charite.de"
     ],
     "404": [
-      "Something went wrong while trying to submit your support request, please try again later or email us directly at vre-support@charite.de"
+      "Something went wrong while trying to submit your support request, please try again later or email the team directly at vre-support@charite.de"
+    ],
+    "413": [
+      "Total file size is over the limit, please reduce the file size or email the team directly at vre-support@charite.de"
     ],
     "default": [
-      "Something went wrong while trying to submit your support request, please try again later or email us directly at vre-support@charite.de"
+      "Something went wrong while trying to submit your support request, please try again later or email the team directly at vre-support@charite.de"
     ]
   },
   "inviteUserApi": {
-    "400": ["User by email", "already exists in the platform."],
+    "400": ["A user with email address", "already exists in the platform."],
     "default": [
-      "Something went wrong when trying to invite user to platform. Please try again later"
+      "Something went wrong while trying to invite user to platform. Please try again later."
     ]
   },
   "getPortalUsers": {
-    "400": ["Cannot get the users list."],
+    "400": ["The users list could not be retrieved due to an invalid request"],
     "default": [
-      "Something went wrong when trying to get users list. Please try again later."
+      "Something went wrong while trying to get users list, please try again later."
     ]
   },
   "updateUserStatusAPI": {
-    "400": ["Cannot update the users status."],
+    "400": ["Invalid request - the user status could not be updated."],
     "default": [
-      "Something went wrong when trying to update users status. Please try again later."
+      "Something went wrong while trying to update the users status, please try again later."
     ]
   },
   "getInvitationsAPI": {
-    "400": ["Cannot get the invitations."],
+    "400": ["Invalid request - the invitations could not be retrieved."],
     "default": [
-      "Something went wrong when trying to get invitations. Please try again later."
+      "Something went wrong while trying to featch invitations, please try again later."
     ]
   }
 }

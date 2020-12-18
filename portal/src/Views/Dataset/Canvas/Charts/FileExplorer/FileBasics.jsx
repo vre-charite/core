@@ -10,7 +10,10 @@ function FileBasics(props) {
     <div style={{ paddingBottom: '16px' }}>
       {/* <Title level={5}>Basic information</Title> */}
       <Descriptions size="small" column={1}>
-        <Descriptions.Item label="File Name">
+        <Descriptions.Item
+          label="File Name"
+          style={{ wordBreak: 'break-word' }}
+        >
           {record.fileName}
         </Descriptions.Item>
         <Descriptions.Item label="Added by">{record.owner}</Descriptions.Item>
@@ -23,15 +26,17 @@ function FileBasics(props) {
           </Descriptions.Item>
         )}
         <Descriptions.Item label="File Size">
-          {![undefined, null].includes(record.fileSize) ? getFileSize(record.fileSize) : 'N/A'}
+          {![undefined, null].includes(record.fileSize)
+            ? getFileSize(record.fileSize)
+            : 'N/A'}
         </Descriptions.Item>
-        <Descriptions.Item label="Tags">
+        <Descriptions.Item>
           <FileTags
-              key={record.guid}
-              tags={record.tags || []}
-              pid={props.pid}
-              guid={record.guid}
-              refresh={props.refresh}
+            key={record.guid}
+            tags={record.tags || []}
+            pid={props.pid}
+            guid={record.guid}
+            refresh={props.refresh}
           />
         </Descriptions.Item>
       </Descriptions>

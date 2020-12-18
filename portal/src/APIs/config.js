@@ -8,6 +8,7 @@ import { message } from 'antd';
 import _ from 'lodash';
 import camelcaseKeys from 'camelcase-keys';
 import { activeManager } from '../Service/activeManager';
+import { keycloak } from '../Service/keycloak';
 
 /**
  * For axios to handle the success response
@@ -19,6 +20,13 @@ function successHandler(response) {
     activeManager.activate();
   }
   return camelcaseKeys(response, { deep: true });
+}
+
+const useHeader = (item) => {
+  item.interceptors.request.use((request) => {
+    request.headers['Authorization'] = 'Bearer ' + keycloak.token;
+    return request;
+  })
 }
 
 /**
@@ -102,6 +110,7 @@ const CancelToken = axios.CancelToken;
 
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 serverAxios.interceptors.response.use(successHandler, errorHandler);
+useHeader(serverAxios);
 
 /**
  * executes the api calling function
@@ -127,6 +136,7 @@ tempAxios.defaults.headers.post['Content-Type'] = 'application/json';
 tempAxios.defaults.timeout = 5000;
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 tempAxios.interceptors.response.use(successHandler, errorHandler);
+useHeader(tempAxios)
 
 const devOpServer = axios.create({ baseURL: devOpServerUrl });
 // devOpServer.defaults.withCredentials = true;
@@ -135,6 +145,7 @@ devOpServer.defaults.timeout = 100000000000;
 
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 devOpServer.interceptors.response.use(successHandler, errorHandler);
+useHeader(devOpServer)
 
 // devOpServer.defaults.withCredentials = true;
 
@@ -142,6 +153,7 @@ const authServerAxios = axios.create({ baseURL: authService });
 // authServerAxios.defaults.withCredentials = true;
 authServerAxios.defaults.headers.post['Content-Type'] = 'application/json';
 authServerAxios.defaults.timeout = 10000;
+useHeader(authServerAxios)
 
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 //authServerAxios.interceptors.response.use(successHandler, errorHandler);
@@ -150,16 +162,27 @@ const invitationAxios = axios.create({ baseURL: 'http://bff.utility:5060' });
 // authServerAxios.defaults.withCredentials = true;
 invitationAxios.defaults.headers.post['Content-Type'] = 'application/json';
 invitationAxios.defaults.timeout = 10000;
+useHeader(invitationAxios)
 
-[serverAxios, tempAxios, devOpServer, authServerAxios, invitationAxios].forEach(
-  (item) => [
-    item.interceptors.request.use((request) => {
-      request.headers['Authorization'] =
-        axios.defaults.headers.common['Authorization'];
-      return request;
-    }),
-  ],
-);
+const dataOpsServer = axios.create({ baseURL: 'http://10.3.7.239:5063' });
+dataOpsServer.defaults.headers.post['Content-Type'] = 'application/json';
+dataOpsServer.defaults.timeout = 100000000000;
+useHeader(dataOpsServer)
+
+
+// [
+//   serverAxios,
+//   tempAxios,
+//   devOpServer,
+//   authServerAxios,
+//   invitationAxios,
+//   dataOpsServer
+// ].forEach((item) => [
+//   item.interceptors.request.use((request) => {
+//     request.headers['Authorization'] = 'Bearer ' + keycloak.token;
+//     return request;
+//   }),
+// ]);
 
 export {
   axios,
@@ -168,5 +191,6 @@ export {
   devOpServer,
   authServerAxios,
   invitationAxios,
+  dataOpsServer,
   devOpServerUrl,
 };

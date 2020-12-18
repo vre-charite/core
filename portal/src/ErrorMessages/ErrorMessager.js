@@ -14,6 +14,9 @@ export default function ErrorMessager(name) {
       403: (err, params) => {
         message.error(i18n.t('errormessages:createProject.403.0'));
       },
+      409: (err, params) => {
+        message.error(i18n.t('errormessages:createProject.409.0'));
+      },
       default: (err, params) => {
         message.error(i18n.t('errormessages:createProject.default.0'));
       },
@@ -452,6 +455,9 @@ export default function ErrorMessager(name) {
       },
       404: (err, params) => {
         message.error(`${i18n.t('errormessages:contactUsAPI.404.0')}`);
+      },
+      413: (err, params) => {
+        message.error(`${i18n.t('errormessages:contactUsAPI.413.0')}`);
       },
       default: (err, parames) => {
         message.error(`${i18n.t('errormessages:contactUsAPI.default.0')}`);

@@ -181,11 +181,11 @@ function SelfRegistration(props) {
                       required: true,
                       message: t('formErrorMessages:common.username.empty'),
                     },
-                    {
-                      pattern: '^[a-z0-9]{1,32}$',
-                      // pattern: "^[^A-Z/\\<>]{1,32}$",
-                      message: t('formErrorMessages:common.username.valid'),
-                    },
+                    // {
+                    //   pattern: '^[a-z0-9]{6,20}$',
+                    //   // pattern: "^[^A-Z/\\<>]{1,32}$",
+                    //   message: t('formErrorMessages:common.username.valid'),
+                    // },
                     ({ getFieldValue }) => ({
                       validator: async (rule, value) => {
                         // const hasBackslash = value.indexOf('\\');
@@ -201,12 +201,19 @@ function SelfRegistration(props) {
 
                         setValidatingStatus('validating');
                         try {
-                          const result = await checkIsUserExistAPI(
-                            value,
-                            props.match.params.invitationHash,
-                          );
+                          const re = /^[a-z0-9]{6,20}$/i;
+
+                          if (re.test(value)) {
+                            await checkIsUserExistAPI(
+                              value,
+                              props.match.params.invitationHash,
+                            );
+                            setValidatingStatus('error');
+                            return Promise.reject('The username has been taken');
+                          }
+
                           setValidatingStatus('error');
-                          return Promise.reject('The username has been taken');
+                          return Promise.reject(t('formErrorMessages:common.username.valid'));
                         } catch {
                           setValidatingStatus('success');
                           return Promise.resolve();

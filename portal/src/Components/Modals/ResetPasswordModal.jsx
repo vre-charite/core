@@ -59,8 +59,8 @@ const ResetPasswordModal = (props) => {
             if (res && res.status === 200) {
               message.success(t('success:resetPassword'));
               setLoading(false);
+              form.resetFields();
               props.handleCancel();
-              FormInstance.current.resetFields();
             }
           })
           .catch((err) => {
@@ -97,6 +97,7 @@ const ResetPasswordModal = (props) => {
       visible={props.visible}
       maskClosable={false}
       closable={false}
+      destroyOnClose={true}
       footer={[
         <Button
           id={'reset_password_modal_cancel'}

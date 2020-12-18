@@ -54,16 +54,16 @@ build-bff:
   only:
     changes:
       - kubernetes/bff-deployment.yaml
-      - portal/backend/*
-      - portal/backend/*/*
-      - portal/backend/*/*/*
-      - portal/backend/*/*/*/*
-      - portal/backend/*/*/*/*/*
-      - portal/backend/*/*/*/*/*/*
-      - portal/backend/*/*/*/*/*/*/*
+      - backend/*
+      - backend/*/*
+      - backend/*/*/*
+      - backend/*/*/*/*
+      - backend/*/*/*/*/*
+      - backend/*/*/*/*/*/*
+      - backend/*/*/*/*/*/*/*
   script:
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-    - docker build -t ${BFF_CONTAINER_IMAGE} portal/backend/.
+    - docker build -t ${BFF_CONTAINER_IMAGE} backend/.
     - docker push ${BFF_CONTAINER_IMAGE}
 
 deploy-bff:
@@ -73,13 +73,13 @@ deploy-bff:
   only:
     changes:
       - kubernetes/bff-deployment.yaml
-      - portal/backend/*
-      - portal/backend/*/*
-      - portal/backend/*/*/*
-      - portal/backend/*/*/*/*
-      - portal/backend/*/*/*/*/*
-      - portal/backend/*/*/*/*/*/*
-      - portal/backend/*/*/*/*/*/*/*
+      - backend/*
+      - backend/*/*
+      - backend/*/*/*
+      - backend/*/*/*/*
+      - backend/*/*/*/*/*
+      - backend/*/*/*/*/*/*
+      - backend/*/*/*/*/*/*/*
   script:
     - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/bff-deployment.yaml
     - kubectl apply -f kubernetes/bff-deployment.yaml

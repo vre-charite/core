@@ -3,10 +3,39 @@ import { Typography } from 'antd';
 import ReactDOM from 'react-dom';
 import G6 from '@antv/g6';
 import moment from 'moment';
-import { timeConvert } from '../../../../../Utility';
+import { timeConvert, pathsMap } from '../../../../../Utility';
+import { DataSourceType } from './RawTableValues';
 
 const { Title } = Typography;
 
+/**
+ * format the string
+ * @param {string} str The origin string
+ * @param {number} maxWidth max width
+ * @param {number} fontSize font size
+ * @return {string} the processed result
+ */
+const fittingString = (str, maxWidth, fontSize) => {
+  const ellipsis = '...';
+  const ellipsisLength = G6.Util.getTextSize(ellipsis, fontSize)[0];
+  let currentWidth = 0;
+  let res = str;
+  const pattern = new RegExp('[\u4E00-\u9FA5]+'); // distinguish the Chinese charactors and letters
+  str.split('').forEach((letter, i) => {
+    if (currentWidth > maxWidth - ellipsisLength) return;
+    if (pattern.test(letter)) {
+      // Chinese charactors
+      currentWidth += fontSize;
+    } else {
+      // get the width of single letter according to the fontSize
+      currentWidth += G6.Util.getLetterWidth(letter, fontSize);
+    }
+    if (currentWidth > maxWidth - ellipsisLength) {
+      res = `${str.substr(0, i)}${ellipsis}`;
+    }
+  });
+  return res;
+};
 export default function (props) {
   const ref = React.useRef(null);
   let graph = null;
@@ -29,10 +58,10 @@ export default function (props) {
         style: {
           lineWidth: '2',
           endArrow: {
-            path: G6.Arrow.triangle(13, 13, 0),
-            fill: '#32C5FF',
+            path: G6.Arrow.triangle(8, 8, 0),
+            fill: '#D9D9D9',
           },
-          stroke: '#32C5FF',
+          stroke: '#D9D9D9',
         },
       });
     }
@@ -46,32 +75,39 @@ export default function (props) {
     let displayText = nodeInfo.displayText;
     const attributes = nodeInfo.attributes;
 
-
     let label = null;
+
     let createdTime =
       attributes &&
       attributes.createTime &&
       moment(attributes.createTime * 1000).format('YYYY-MM-DD HH:mm:ss');
-    
 
     let textArr = displayText.split('/');
     label = textArr && textArr.length > 1 && textArr[textArr.length - 1];
+
+    let location = textArr && pathsMap(textArr);
+
+    let isCurrentNode = attributes.name === record.name;
+    let pipelineImg = null;
 
     if (nodeInfo.typeName === 'Process') {
       textArr = displayText.split(':');
       label = textArr && textArr.length > 1 && textArr[1];
 
+      if (label === 'dicom_edit') pipelineImg = '/vre/path.svg';
+      if (label === 'data_transfer') pipelineImg = '/vre/copy2.svg'
+
       let time = null;
 
-      if ( textArr && textArr.length > 6) {
+      if (textArr && textArr.length > 6) {
         time = `${textArr[2]}:${textArr[3]}:${textArr[4]}`;
         createdTime = timeConvert(time, 'datetime');
       } else if (textArr && textArr.length <= 6) {
-        time = textArr[2]
-        let date = new Date(time * 1000);
-        console.log(date)
+        time = textArr[2];
         createdTime = moment(time * 1000).format('YYYY-MM-DD HH:mm:ss');
       }
+
+      location = null;
     }
 
     const isPipeline = nodeInfo.typeName === 'Process';
@@ -86,29 +122,38 @@ export default function (props) {
         width: 12,
       },
       style: {
-        fill: '#E2F6FF',
-        stroke: '#E2F6FF',
+        fill: '#E6F7FF',
+        stroke: '#E6F7FF',
       },
       y: 40,
       isPipeline,
       createdTime,
       typeName: nodeInfo.typeName,
+      location,
+      isCurrentNode,
+      pipelineImg,
     });
   }
 
   let flowList = ['nfs_file', 'Process', 'nfs_file_processed'];
 
-  if (!props.type) flowList = ['nfs_file'];
+  if (props.type === DataSourceType.GREENROOM_RAW) flowList = ['nfs_file'];
 
-  for (const flow of flowList) {
-    const flowNode = nodeList.find((el) => el.typeName === flow);
+  // for (const flow of flowList) {
+  //   const flowNode = nodeList.find((el) => el.typeName === flow);
 
-    if (flowNode) {
-      nodes.push({
-        ...flowNode,
-        x: 50 + nodes.length * 200,
-      });
-    }
+  //   if (flowNode) {
+  //     nodes.push({
+  //       ...flowNode,
+  //       x: 50 + nodes.length * 200,
+  //     });
+  //   }
+  // }
+  for (const node of nodeList) {
+    nodes.push({
+      ...node,
+      x: 50 + nodes.length * 200,
+    });
   }
 
   const data = {
@@ -128,7 +173,8 @@ export default function (props) {
 				<h4>${e.item.getModel().isPipeline ? 'Pipeline Info' : 'Node Info'}</h4>
 				<ul style="padding-left:20px">
           <li>Type: ${e.item.getModel().typeName}</li>
-          <li>Name: ${e.item.getModel().label}</li>
+          <li>Name: ${fittingString(e.item.getModel().label, 200, 12)}</li>
+          ${e.item.getModel().location ? `<li>Location: ${e.item.getModel().location} </li>`: `<div></div>`}
           <li>Process Time: ${e.item.getModel().createdTime}</li>
 				</ul>
 				`;
@@ -189,12 +235,12 @@ export default function (props) {
   useEffect(() => {
     data.nodes.forEach((node, i) => {
       if (node.isPipeline) {
-        node.icon.img = '/vre/path.svg';
-        node.style.fill = '#FCE698';
-        node.style.stroke = '#FCE698';
+        node.icon.img = node.pipelineImg;
+        node.style.fill = '#D9D9D9';
+        node.style.stroke = '#D9D9D9';
         node.size = 30;
       }
-      if (node.typeName === 'nfs_file_processed') {
+      if (node.isCurrentNode) {
         node.style.fill = '#43B7EA';
         node.style.stroke = '#43B7EA';
         node.icon.img = '/vre/file-white.svg';

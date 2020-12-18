@@ -26,6 +26,7 @@ function AddUserModal(props) {
   const [submitting, toggleSubmitting] = useState(false);
   const { t, i18n } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [role, setRole] = useState('admin');
   const handleCancel = () => {
     form.resetFields();
     cancelAddUser();
@@ -109,8 +110,7 @@ function AddUserModal(props) {
                   props.datasetId,
                 ).then((res) => {
                   const username = res.data.result['username'];
-                  const role = values.role;
-                  const projectId = parseInt(props.datasetId);
+                  const role = values.role;                  const projectId = parseInt(props.datasetId);
                   const {
                     containerName: projectName,
                   } = props.containersPermission.find(
@@ -178,6 +178,10 @@ function AddUserModal(props) {
     }
   };
 
+  const onRoleChange = (e) => {
+    setRole(e.target.value);
+  }
+
   return (
     <Modal
       title="Add a member to project"
@@ -204,7 +208,7 @@ function AddUserModal(props) {
       ]}
       cancelButtonProps={{ disabled: submitting }}
     >
-      <Form form={form}>
+      <Form form={form} initialValues={{ role }}>
         <Form.Item
           label="Email"
           name="email"
@@ -222,7 +226,7 @@ function AddUserModal(props) {
           <Input type="email" />
         </Form.Item>
         <Form.Item
-          initialValue={containerDetails && containerDetails['roles'][0]}
+          initialValue={props.rolesDetail && props.rolesDetail['admin'] && props.rolesDetail['admin']['value']}
           label={'Role'}
           name="role"
           rules={[
@@ -232,30 +236,17 @@ function AddUserModal(props) {
             },
           ]}
         >
-          <Radio.Group>
-            {containerDetails &&
-              containerDetails['roles'] &&
-              containerDetails['roles'].map((i) => {
-                if (i === 'admin') {
-                  return (
-                    <Radio value={convertRole(i)}>
-                      {formatRole(i)}&nbsp;
-                      <Tooltip title="Project Administrators are able to add users to their Project as well as to upload, view, and download any data in their Project's Green Room.">
-                        <QuestionCircleOutlined />
-                      </Tooltip>
-                    </Radio>
-                  );
-                }
-
-                return (
-                  <Radio value={convertRole(i)}>
-                    {formatRole(i)}&nbsp;
-                    <Tooltip title="Project Contributors are able to upload data to their Project's Green Room but can only view or download data they have uploaded themselves.">
+          <Radio.Group style={{ marginTop: 5 }} onChange={onRoleChange}>
+              {
+                props.rolesDetail && props.rolesDetail.map((el) => (
+                  <Radio value={el.value}>
+                    {el.label}&nbsp;
+                    <Tooltip title={el.description}>
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </Radio>
-                );
-              })}
+                ))
+              }
           </Radio.Group>
         </Form.Item>
       </Form>

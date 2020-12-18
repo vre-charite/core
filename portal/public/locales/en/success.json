@@ -1,6 +1,6 @@
 {
   "createProject": "Project created successfully.",
-  "resetPassword": "Reset password successfully",
+  "resetPassword": "Password has been reset successfully.",
   "fileUpload": ["file", "uploaded successfully!"],
   "teams": {
     "roleUpdated": "Role successfully updated.",
@@ -15,7 +15,7 @@
     "addUserToDataset": ["User", "has been added to"]
   },
 
-  "selfRegistration": "Signup successful!",
+  "selfRegistration": "Signup completed successfully.",
   "userManagement": {
     "inviteUser": ["Invitation has been sent to"]
   }

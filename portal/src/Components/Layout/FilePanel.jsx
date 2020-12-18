@@ -1,11 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Button, Tooltip, Collapse, Tag, List, Progress, Badge } from 'antd';
+import {
+  Button,
+  Tooltip,
+  Collapse,
+  Tag,
+  List,
+  Progress,
+  Badge,
+  Spin,
+} from 'antd';
 import { FileTextOutlined } from '@ant-design/icons';
 import styles from './index.module.scss';
-import { setUploadListCreator, setPanelActiveKey, setDownloadListCreator } from '../../Redux/actions';
-import { useIsMount } from '../../Utility';
-import { deleteUploadStatus, deleteDownloadStatus } from '../../APIs';
+import {
+  setUploadListCreator,
+  setPanelActiveKey,
+  setDownloadListCreator,
+  updateCopy2CoreList,
+  setSuccessNum,
+  setCurrentProjectTreeGreenRoom,
+  setCurrentProjectTreeCore,
+} from '../../Redux/actions';
+import {
+  useIsMount,
+  getGreenRoomTreeNodes,
+  getCoreTreeNodes,
+} from '../../Utility';
+import {
+  deleteUploadStatus,
+  deleteDownloadStatus,
+  listAllCopy2CoreFiles,
+  traverseFoldersContainersAPI,
+} from '../../APIs';
+import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 
 const { Panel } = Collapse;
 
@@ -15,15 +42,59 @@ function FilePanel() {
 
   const uploadList = useSelector((state) => state.uploadList);
   const downloadList = useSelector((state) => state.downloadList);
+  const copy2CoreList = useSelector((state) => state.copy2CoreList);
   const panelActiveKey = useSelector((state) => state.panelActiveKey);
+  const successNum = useSelector((state) => state.successNum);
+  const project = useSelector((state) => state.project);
+  const loadCopyEvent = useSelector((state) => state.events.LOAD_COPY_LIST);
   const dispatch = useDispatch();
   const isMount = useIsMount();
+  let refreshJobStart = false;
+  async function loadCopy2CoreList() {
+    if (project && project.profile) {
+      const projectCode = project.profile.code;
+      const sessionId = localStorage.getItem('sessionId');
+      let res = await listAllCopy2CoreFiles(projectCode, sessionId);
+      dispatch(updateCopy2CoreList(res.data.result));
+      if (res.data.result.length) {
+        if (
+          res.data.result.filter((v) => v.status === 'running').length !== 0
+        ) {
+          refreshJobStart = true;
+          setTimeout(() => {
+            loadCopy2CoreList();
+          }, 3 * 1000);
+        } else {
+          // last call
+          if (refreshJobStart) {
+            dispatch(setSuccessNum(successNum + 1));
+            updateFolders();
+            refreshJobStart = false;
+          }
+        }
+      }
+    }
+  }
+  async function updateFolders() {
+    const allFolders = await traverseFoldersContainersAPI(project.profile.id);
+    const greenRoomTree = getGreenRoomTreeNodes(allFolders);
+    const coreTreeData = getCoreTreeNodes(allFolders);
+    dispatch(setCurrentProjectTreeGreenRoom(greenRoomTree));
+    dispatch(setCurrentProjectTreeCore(coreTreeData));
+  }
+  useEffect(() => {
+    if (loadCopyEvent !== 0) {
+      refreshJobStart = false;
+      loadCopy2CoreList();
+    }
+  }, [loadCopyEvent]);
+
   useEffect(() => {
     if (isMount) {
       setVisibility(true);
       setIsActive(true);
     }
-  }, [uploadList.length, downloadList.length]);
+  }, [uploadList.length, downloadList.length, copy2CoreList.length]);
 
   useEffect(() => {
     if (isMount) {
@@ -49,6 +120,18 @@ function FilePanel() {
     }
   }, [downloadList.length]);
 
+  useEffect(() => {
+    if (isMount) {
+      if (!visibility) {
+        dispatch(setPanelActiveKey(['copy2core']));
+      } else {
+        dispatch(
+          setPanelActiveKey([...new Set([...panelActiveKey, 'copy2core'])]),
+        );
+      }
+    }
+  }, [copy2CoreList.length]);
+
   function callback(key) {
     console.log(key);
     dispatch(setPanelActiveKey(key));
@@ -58,6 +141,25 @@ function FilePanel() {
     setVisibility(!visibility);
   }
   const statusTags = (status, type) => {
+    if (type == 'copy2core') {
+      switch (status) {
+        case 'running': {
+          return (
+            <LoadingOutlined style={{ color: '#1b90fe', marginRight: 10 }} />
+          );
+        }
+        case 'succeed': {
+          return (
+            <CheckCircleOutlined
+              style={{ color: '#52c41a', marginRight: 10 }}
+            />
+          );
+        }
+        default: {
+          return null;
+        }
+      }
+    }
     switch (status) {
       case 'waiting': {
         return <Tag color="default">Waiting</Tag>;
@@ -99,7 +201,7 @@ function FilePanel() {
     if (res.status === 200) {
       dispatch(setDownloadListCreator([]));
     }
-  }
+  };
 
   const isCleanButtonDisabled = () => {
     if (uploadList.length === 0) {
@@ -119,7 +221,7 @@ function FilePanel() {
       return true;
     }
     return false;
-  }; 
+  };
 
   let uploadHeader = 'No file is uploading';
 
@@ -209,7 +311,11 @@ function FilePanel() {
     downloadHeader = `${successDownloadList.length} files downloaded successfully`;
 
   if (processDownloadList.length && successDownloadList.length) {
-    downloadHeader = `${processDownloadList.length} ${processDownloadList.length === 1 ? 'file is' : 'files are'} being downloaded. ${successDownloadList.length}  ${successDownloadList.length === 1 ? 'file is' : 'files are'} downloaded successfully`
+    downloadHeader = `${processDownloadList.length} ${
+      processDownloadList.length === 1 ? 'file is' : 'files are'
+    } being downloaded. ${successDownloadList.length}  ${
+      successDownloadList.length === 1 ? 'file is' : 'files are'
+    } downloaded successfully`;
   }
 
   let defaultKey = ['upload'];
@@ -249,7 +355,10 @@ function FilePanel() {
             className={styles.download_list}
             renderItem={(item) => (
               <>
-                <List.Item id={`upload_item_${item.fileName}`} style={{ overflowWrap: 'anywhere' }}>
+                <List.Item
+                  id={`upload_item_${item.fileName}`}
+                  style={{ overflowWrap: 'anywhere' }}
+                >
                   <List.Item.Meta
                     title={
                       <>
@@ -287,28 +396,35 @@ function FilePanel() {
             Clear Upload history
           </Button>
         </Panel>
-        <Panel id={`file_panel_download`} header={downloadHeader} key="download">
+        <Panel
+          id={`file_panel_download`}
+          header={downloadHeader}
+          key="download"
+        >
           <List
             size="small"
             dataSource={downloadList}
             className={styles.download_list}
             renderItem={(item) => (
-              <List.Item id={`upload_item_${item.filename}`} style={{ overflowWrap: 'anywhere' }}>
-                  <List.Item.Meta
-                    title={
-                      <>
-                        {statusTags(item.status, 'download')}
-                        {item.filename}
-                      </>
-                    }
-                    description={
-                      <>
-                        <small style={{ float: 'right' }}>
-                          Project: {item.container}
-                        </small>
-                      </>
-                    }
-                  />
+              <List.Item
+                id={`upload_item_${item.filename}`}
+                style={{ overflowWrap: 'anywhere' }}
+              >
+                <List.Item.Meta
+                  title={
+                    <>
+                      {statusTags(item.status, 'download')}
+                      {item.filename}
+                    </>
+                  }
+                  description={
+                    <>
+                      <small style={{ float: 'right' }}>
+                        Project: {item.container}
+                      </small>
+                    </>
+                  }
+                />
               </List.Item>
             )}
           />
@@ -321,6 +437,52 @@ function FilePanel() {
           >
             Clear Download history
           </Button>
+        </Panel>
+        <Panel
+          id={`file_panel_copy2core`}
+          header={'Data copying'}
+          key="copy2core"
+        >
+          <p style={{ paddingLeft: 16 }}>
+            {copy2CoreList.length}{' '}
+            {copy2CoreList.length > 1 ? 'files ' : 'file '}
+            in list,{' '}
+            {copy2CoreList.filter((v) => v.status === 'succeed').length}{' '}
+            {copy2CoreList.filter((v) => v.status === 'succeed').length > 1
+              ? 'files '
+              : 'file '}
+            succeed.
+          </p>
+          {copy2CoreList && copy2CoreList.length ? (
+            <List
+              size="small"
+              dataSource={copy2CoreList}
+              className={styles.copy_list}
+              renderItem={(item) => {
+                const filePaths = item.source.split('/');
+                const fileName = filePaths[filePaths.length - 1];
+                return (
+                  <>
+                    <List.Item
+                      id={`copy2core_item_${fileName}`}
+                      style={{ overflowWrap: 'anywhere' }}
+                    >
+                      <List.Item.Meta
+                        title={
+                          <>
+                            <Tooltip placement="bottom" title={item.status}>
+                              {statusTags(item.status, 'copy2core')}
+                            </Tooltip>
+                            {fileName}
+                          </>
+                        }
+                      />
+                    </List.Item>
+                  </>
+                );
+              }}
+            />
+          ) : null}
         </Panel>
       </Collapse>
     </>

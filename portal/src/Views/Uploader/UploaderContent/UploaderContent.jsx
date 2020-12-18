@@ -527,7 +527,9 @@ class Uploader extends Component {
     };
 
     const SearchPanel = (
-      <Card title="Search">
+      <Card
+      // title="Search"
+      >
         <Form ref={formRef} onFinish={this.onFinish} initialValues={filters}>
           <Row>
             <Col span={5}>Project Name</Col>
@@ -582,41 +584,44 @@ class Uploader extends Component {
 
           <Row gutter={24} style={{ marginTop: 10 }}>
             <Col span={12}>
-              <Form.Item name="description">
+              <Form.Item name="description" style={{ marginBottom: 0 }}>
                 <Input style={{ maxWidth: 380 }} placeholder="Description" />
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row>
             <Col
-              span={24}
+              span={12}
               style={{
                 textAlign: 'right',
               }}
             >
-              <Button type="primary" htmlType="submit">
-                Search
-              </Button>
-              <Button
-                style={{
-                  margin: '0 8px',
-                }}
-                onClick={() => {
-                  this.setState({ filters: {} });
-                  formRef.current.resetFields();
-                  formRef.current.setFieldsValue({
-                    name: undefined,
-                    code: undefined,
-                    date: undefined,
-                    tags: undefined,
-                    description: undefined,
-                  });
-                }}
-              >
-                Clear
-              </Button>
+              <Space>
+                <Button type="primary" htmlType="submit">
+                  Search
+                </Button>
+                <Button
+                  style={{
+                    margin: '0 8px',
+                  }}
+                  onClick={() => {
+                    this.setState({ filters: {} });
+                    formRef.current.resetFields();
+                    formRef.current.setFieldsValue({
+                      name: undefined,
+                      code: undefined,
+                      date: undefined,
+                      tags: undefined,
+                      description: undefined,
+                    });
+                  }}
+                >
+                  Clear
+                </Button>
+              </Space>
             </Col>
+          </Row>
+
+          <Row>
+            <Col span={24}></Col>
           </Row>
         </Form>
       </Card>

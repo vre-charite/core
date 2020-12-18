@@ -2,15 +2,15 @@
   "common": {
     "username": {
       "empty": "Please enter your username",
-      "valid": "The username should be 1 ~ 32 characters, lowercase letters and numbers."
+      "valid": "Your username must be between 6 and 20 characters long and may only contain lowercase letters and numbers."
     },
     "password": {
       "empty": "Please enter your password",
-      "valid": "The password should be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;)."
+      "valid": "The password must be between 11-30 characters long and must contain at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;)."
     },
     "confirmPassword": {
       "empty": "Please confirm your password",
-      "valid": "The two passwords that you entered do not match!"
+      "valid": "The two passwords that you entered do not match."
     },
     "email": {
       "empty": "Please enter a valid email address",
@@ -20,49 +20,49 @@
   "project": {
     "code": {
       "empty": "Please enter the project code",
-      "valid": "Project code should only contains lowercase letters and numbers and within 32 digits."
+      "valid": "Project code may only contain lowercase letters and numbers and must be between 1 and 32 characters."
     },
     "name": {
       "empty": "Please enter a project name",
-      "valid": "Project name should be within 1 ~ 100 characters."
+      "valid": "The project name must be between 1 and 100 characters."
     },
     "tags": {
       "empty": "",
-      "valid": "Tag should be within 1 ~ 32 characters.",
-      "space": "Tag should not contain space."
+      "valid": "Tags must be between 1 and 32 characters and may only contain lowercase letters, numbers and/or hyphens.",
+      "space": "Tags may not contain spaces."
     },
     "description": {
-      "valid": "Description should be within 1 ~ 250 characters."
+      "valid": "Description must be between 1 and 250 characters."
     },
     "generate": {
       "id": {
-        "empty": "Please enter a valid Generate ID",
-        "valid": "Please enter a valid Generate ID"
+        "empty": "Please enter a valid GENERATE ID",
+        "valid": "Please enter a valid GENERATE ID"
       },
       "confirmId": {
-        "empty": "Please confirm your Generate ID",
-        "valid": "The two Generate IDs that you entered do not match!"
+        "empty": "Please confirm the GENERATE ID",
+        "valid": "The two GENERATE IDs that you entered do not match!"
       }
     },
     "card": {
       "update": {
         "name": {
-          "empty": "Project Name is required.",
-          "valid": "Project name should be within 1 ~ 250 characters."
+          "empty": "Project name is required.",
+          "valid": "Project name must be between 1 and 250 characters."
         },
         "tags": {
-          "valid": "Tag should be within 1 ~ 32 characters.",
-          "space": "Project tag should not contain space."
+          "valid": "Tag must be between 1 and 32 characters and may only contain lowercase letters, numbers and/or hyphens.",
+          "space": "Project tags may not contain spaces."
         }
       },
       "save": {
         "name": {
-          "valid": "Project name should be within 1 ~ 250 characters.",
-          "empty": "Project Name is required."
+          "valid": "Project name should be between 1 and 250 characters.",
+          "empty": "Project name is required."
         },
         "tags": {
-          "space": "Project tag should not contain space. Please correct",
-          "valid": "Tag should be within 1 ~ 32 characters."
+          "space": "Project tags may not contain spaces.",
+          "valid": "Tags must be between 1 and 32 characters and may only contain lowercase letters, numbers and/or hyphens."
         }
       }
     },
@@ -72,15 +72,17 @@
         "valid": "File already selected for uploading. Please select a different file."
       },
       "tags": {
-        "limit": "Up to 10 tags per file！",
-        "valid": "Tag should only contain 1 ~ 32 lowercase letters and/or numbers."
+        "limit": "A maximum of 10 tags are allowed per file.",
+        "valid": "Tags must be between 1 and 32 characters and may only contain lowercase letters, numbers and/or hyphens.",
+        "systemtags": "This tag cannot be used because it is a reserved system tag."
       }
     },
     "filePanel": {
       "tags": {
-        "limit": "Up to 10 tags per file！",
-        "valid": "Tag should only contain 1 ~ 32 lowercase letters and/or numbers.",
-        "exists": "Tag is already exists."
+        "limit": "A maximum of 10 tags are allowed per file.",
+        "valid": "Tags must be between 1 and 32 characters and may only contain lowercase letters, numbers and/or hyphens.",
+        "exists": "This tag already exists.",
+        "systemtags": "This tag cannot be used because it is a reserved system tag."
       }
     },
     "fileStatSearch": {
@@ -108,7 +110,7 @@
       "empty": "Please enter your last name"
     },
     "tou": {
-      "valid": "Please read and accept the terms of use to proceed"
+      "valid": "Please read and accept the Terms of Use to proceed"
     }
   },
   "contactUs": {
@@ -117,12 +119,12 @@
     },
     "title": {
       "empty": "Please provide a title",
-      "valid": "Title should be 2-200 characters"
+      "valid": "Titles must be between 2 and 200 characters"
     },
 
     "description": {
       "empty": "Please provide a description",
-      "valid": "Description should be 10-1000 characters"
+      "valid": "The description must be between 10 and 1000 characters"
     }
   },
   "resetPassword": {
@@ -131,7 +133,7 @@
     },
     "newPassword": {
       "empty": "Please enter your new password",
-      "valid": "New password can not be the same as the old password"
+      "valid": "Your new password cannot be the same as your old password"
     },
     "confirmPassword": {
       "empty": "Please confirm your new password"

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Statistic, Timeline, Tabs, Button } from 'antd';
-import { CloudUploadOutlined, CloudDownloadOutlined } from '@ant-design/icons';
-import { projectFileCountToday } from '../../../../APIs';
+import {
+  CloudUploadOutlined,
+  CloudDownloadOutlined,
+  CopyOutlined,
+} from '@ant-design/icons';
+import _ from 'lodash';
+
+import { projectFileCountToday, fileAuditLogsAPI } from '../../../../APIs';
 
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -16,12 +22,23 @@ function UserStats(props) {
   const [downloadCount, setDownloadCount] = useState(0);
   const [uploadLog, setUploadLog] = useState([]);
   const [downloadLog, setDownloadLog] = useState([]);
+  const [copyCount, setCopyCount] = useState(0);
+  const [copyLogs, setCopyLogs] = useState([]);
 
   const {
     match: {
       params: { datasetId },
     },
   } = props;
+
+  const currentDataset = _.find(
+    props.datasetList && props.datasetList[0].datasetList,
+    (d) => d.id === parseInt(datasetId),
+  );
+
+  const currentPermission = props.containersPermission.find(
+    (el) => el.containerId === parseInt(datasetId),
+  );
 
   useEffect(() => {
     projectFileCountToday(datasetId).then((res) => {
@@ -57,6 +74,25 @@ function UserStats(props) {
       setUploadLog(uploadLog);
       setDownloadLog(downloadLog);
     });
+
+    currentPermission.permission === 'admin' &&
+      fileAuditLogsAPI({
+        page_size: 50,
+        page: 0,
+        operation_type: 'data_transfer',
+        project_code: currentDataset && currentDataset.code,
+        operator: props.isAdmin ? null : props.username,
+        container_id: datasetId,
+        start_date: moment().startOf('day').unix(),
+        end_date: moment().endOf('day').unix(),
+      }).then((res) => {
+        if (res.status === 200) {
+          const { result, total } = res.data;
+
+          setCopyCount(total);
+          setCopyLogs(result);
+        }
+      });
   }, [datasetId, props.successNum]);
 
   const operations = (
@@ -74,30 +110,41 @@ function UserStats(props) {
           prefix={<CloudUploadOutlined />}
           valueStyle={{
             color: '#13c2c2',
-            fontWeight: 'bold',
-            fontSize: '32px',
+            fontSize: '22px',
           }}
-          style={{ paddingRight: '36px' }}
+          style={{ paddingRight: '36px', textAlign: 'center' }}
         />
         <Statistic
           title="Downloads (today)"
           value={downloadCount}
           prefix={<CloudDownloadOutlined />}
+          style={{ textAlign: 'center', paddingRight: '36px' }}
           valueStyle={{
-            color: '#a0d911',
-            fontWeight: 'bold',
-            fontSize: '32px',
+            color: '#13c2c2',
+            fontSize: '22px',
           }}
         />
+        {currentPermission.permission === 'admin' ? (
+          <Statistic
+            title="Copies (today)"
+            value={copyCount}
+            prefix={<CopyOutlined />}
+            style={{ textAlign: 'center' }}
+            valueStyle={{
+              color: '#13c2c2',
+              fontSize: '22px',
+            }}
+          />
+        ) : null}
       </div>
       <br />
       <Tabs defaultActiveKey="1" tabBarExtraContent={operations}>
         <TabPane tab="Upload Logs" key="1">
           <Timeline>
-            {uploadLog.map((i) => {
+            {uploadLog.map((i, ind) => {
               let { owner, createTime, fileName } = i['attributes'];
               return (
-                <Timeline.Item color="green" key={createTime}>
+                <Timeline.Item color="green" key={createTime + ind}>
                   {owner} uploaded {fileName} at{' '}
                   {timeConvert(createTime, 'datetime')}
                 </Timeline.Item>
@@ -118,6 +165,21 @@ function UserStats(props) {
             })}
           </Timeline>
         </TabPane>
+        {currentPermission.permission === 'admin' ? (
+          <TabPane tab="Copy Logs" key="3">
+            <Timeline>
+              {copyLogs.map((i, ind) => {
+                let { operator, createTime, fileName } = i['attributes'];
+                return (
+                  <Timeline.Item color="green" key={ind}>
+                    {operator} copied {fileName} at{' '}
+                    {moment(createTime * 1000).format('YYYY-MM-DD HH:mm:ss')}
+                  </Timeline.Item>
+                );
+              })}
+            </Timeline>
+          </TabPane>
+        ) : null}
       </Tabs>
     </>
   );
@@ -127,4 +189,5 @@ export default connect((state) => ({
   containersPermission: state.containersPermission,
   datasetList: state.datasetList,
   successNum: state.successNum,
+  username: state.username,
 }))(withRouter(UserStats));

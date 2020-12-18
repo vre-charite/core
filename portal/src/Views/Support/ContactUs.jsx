@@ -128,12 +128,9 @@ function ContactUs() {
               label="Title (between 2-200 characters)"
               rules={[
                 {
-                  required: true,
-                  message: 'Please provide a title',
-                },
-                {
                   validator:(rule,value)=>{
-                    const isLengthValid= (trimString(value) && trimString(value).length >= 2 && trimString(value).length <= 200);
+                    if (!value) return Promise.reject('Please provide a title')
+                    const isLengthValid= value && (trimString(value) && trimString(value).length >= 2 && trimString(value).length <= 200);
                     return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:contactUs.title.valid'));
                   }, // 2-100 letters
                 },
@@ -145,13 +142,11 @@ function ContactUs() {
               name="description"
               label="Description of your request (between 10-1000 characters)"
               rules={[
-                {
-                  required: true,
-                  message: 'Please provide a description',
-                },
+
                 {
                   validator:(rule,value)=>{
-                    const isLengthValid= (trimString(value) && trimString(value).length >= 10 && trimString(value).length <= 1000);
+                    if (!value) return Promise.reject('Please provide a description');
+                    const isLengthValid= value && (trimString(value) && trimString(value).length >= 10 && trimString(value).length <= 1000);
                     return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:contactUs.description.valid'));
                   }, // 10-1000 letters
                 },

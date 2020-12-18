@@ -11,12 +11,16 @@ import {
   Pagination,
   Empty,
   Spin,
+  Space,
 } from 'antd';
 import moment from 'moment';
+import _ from 'lodash';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import styles from './index.module.scss';
 
-import { getUsersOnDatasetAPI, projectFileSummary } from '../../../../APIs';
-import { objectKeysToCamelCase, timeConvert } from '../../../../Utility';
+import { getUsersOnDatasetAPI, projectFileSummary, fileAuditLogsAPI } from '../../../../APIs';
+import { objectKeysToCamelCase, timeConvert, pathsMap } from '../../../../Utility';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -39,8 +43,17 @@ const FileStatModal = (props) => {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [isSearching,setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const { datasetId, currentUser, isAdmin } = props;
+  const datasetList = useSelector((state) => state.datasetList);
+  const containersPermission = useSelector((state) => state.containersPermission);
+
+  const currentDataset = _.find(
+    datasetList && datasetList[0].datasetList,
+    (d) => d.id === parseInt(datasetId),
+  );
+
+  const currentPermission = containersPermission.find(el => el.containerId === parseInt(datasetId));
 
   useEffect(() => {
     const now = moment();
@@ -108,18 +121,6 @@ const FileStatModal = (props) => {
 
     const date = values.date;
 
-    // if (
-    //   moment(today).format('YYYY-MM-DD') !==
-    //     moment(date[0]).format('YYYY-MM-DD') ||
-    //   moment(date[0]).format('YYYY-MM-DD') !==
-    //     moment(today).format('YYYY-MM-DD')
-    // ) {
-    //   // params['startDate'] = moment(date[0]).subtract(1, 'days').format('YYYY-MM-DD');
-    //   // params['endDate'] = moment(date[1]).add(1, 'days').format('YYYY-MM-DD');
-    //   params['startDate'] = moment(date[0]).startOf('day').unix();
-    //   params['endDate'] = moment(date[1]).endOf('day').unix();
-    // }
-
     params['startDate'] = moment(date[0]).startOf('day').unix();
     params['endDate'] = moment(date[1]).endOf('day').unix();
 
@@ -137,19 +138,45 @@ const FileStatModal = (props) => {
     setAction(values.action);
     setSelectedUser(values.user);
 
-    projectFileSummary(datasetId, isAdmin, params).then((res) => {
-      if (values.action === 'upload') {
-        setTreeData(res.data.result.recentUpload);
-        setTotal(res.data.result.uploadCount);
-      } else {
-        setTreeData(res.data.result.recentDownload);
-        setTotal(res.data.result.downloadCount);
-      }
-      setPage(1);
-      setLoading(false);
-    }).finally(()=>{
-      setIsSearching(false);
-    });
+    if (values.action === 'copy') {
+      const params4Copy = {
+        'page_size': 10,
+        'page': 0,
+        'operation_type': 'data_transfer',
+        'project_code': currentDataset && currentDataset.code,
+        'start_date': moment(date[0]).startOf('day').unix(),
+        'end_date': moment(date[1]).endOf('day').unix(),
+        'container_id': datasetId
+      };
+      if (values.user !== 'all') params4Copy['operator'] = values.user;
+      fileAuditLogsAPI(params4Copy)
+        .then((res) => {
+          if (res.status === 200) {
+            const { result, total } = res.data;
+
+            setTreeData(result);
+            setTotal(total);
+            setPage(1);
+            setLoading(false);
+          }
+        }).finally(()=>{
+          setIsSearching(false);
+        });
+    } else {
+      projectFileSummary(datasetId, isAdmin, params).then((res) => {
+        if (values.action === 'upload') {
+          setTreeData(res.data.result.recentUpload);
+          setTotal(res.data.result.uploadCount);
+        } else {
+          setTreeData(res.data.result.recentDownload);
+          setTotal(res.data.result.downloadCount);
+        }
+        setPage(1);
+        setLoading(false);
+      }).finally(()=>{
+        setIsSearching(false);
+      });
+    }
   };
 
   const onReset = () => {
@@ -165,32 +192,48 @@ const FileStatModal = (props) => {
     params.action = action;
     if (selectedUser !== 'all') params.user = selectedUser;
 
-    // if (
-    //   moment(today).format('YYYY-MM-DD') !== dateRange[0] ||
-    //   dateRange[1] !== moment(today).format('YYYY-MM-DD')
-    // ) {
-    //   // params.startDate = moment(dateRange[0]).subtract(1, 'days').format('YYYY-MM-DD');
-    //   // params.endDate = moment(dateRange[1]).add(1, 'days').format('YYYY-MM-DD');
-    //   params.startDate = moment(dateRange[0]).startOf('day').unix();
-    //   params.endDate = moment(dateRange[1]).endOf('day').unix();
-    // }
-
     params.startDate = moment(dateRange[0]).startOf('day').unix();
     params.endDate = moment(dateRange[1]).endOf('day').unix();
 
     params.page = page - 1;
     params.size = 10;
 
-    projectFileSummary(datasetId, isAdmin, params).then((res) => {
-      if (action === 'upload') {
-        setTreeData(res.data.result.recentUpload);
-        setTotal(res.data.result.uploadCount);
-      } else {
-        setTreeData(res.data.result.recentDownload);
-        setTotal(res.data.result.downloadCount);
-      }
-      setLoading(false);
-    });
+    if (action === 'copy') {
+      const params4Copy = {
+        'page_size': 10,
+        'page': page - 1,
+        'operation_type': 'data_transfer',
+        'project_code': currentDataset && currentDataset.code,
+        'start_date': params.startDate,
+        'end_date': params.endDate,
+        'container_id': datasetId
+      };
+      if (selectedUser !== 'all') params4Copy['operator'] = selectedUser;
+      fileAuditLogsAPI(params4Copy)
+        .then((res) => {
+          if (res.status === 200) {
+            const { result, total } = res.data;
+
+            setTreeData(result);
+            setTotal(total);
+            setLoading(false);
+          }
+        }).finally(()=>{
+          setIsSearching(false);
+        });
+
+    } else {
+      projectFileSummary(datasetId, isAdmin, params).then((res) => {
+        if (action === 'upload') {
+          setTreeData(res.data.result.recentUpload);
+          setTotal(res.data.result.uploadCount);
+        } else {
+          setTreeData(res.data.result.recentDownload);
+          setTotal(res.data.result.downloadCount);
+        }
+        setLoading(false);
+      });
+    }
   };
 
   let resultContent = (
@@ -198,11 +241,6 @@ const FileStatModal = (props) => {
   );
 
   const filterData = treeData;
-  // const filterData = treeData && treeData.filter((i) => {
-  //   let { createTime } = i['attributes'];
-  //   const localTime = timeConvert(createTime, 'datetime');
-  //   return moment(dateRange[0]).startOf('day') < moment(localTime) && moment(dateRange[1]).endOf('day') > moment(localTime)
-  // });
 
   if (filterData && filterData.length > 0) {
     resultContent = (
@@ -210,11 +248,43 @@ const FileStatModal = (props) => {
         <Timeline style={{ marginTop: 40 }}>
           {filterData &&
             filterData.map((i) => {
-              let { owner, createTime, fileName, downloader } = i['attributes'];
-              const localTime = timeConvert(createTime, 'datetime');
+              let { owner, createTime, fileName, downloader, operator, originPath, path } = i['attributes'];
+              let localTime = null;
+              if (typeof createTime === 'number') {
+                localTime = moment(createTime*1000).format('YYYY-MM-DD HH:mm:ss');
+              } else {
+                localTime = timeConvert(createTime, 'datetime');
+              }
+
+              if (action === 'copy') {
+                const originPathArray = originPath && originPath.split('/');
+                const pathArray = path && path.split('/');
+
+                const originPathName = originPathArray && pathsMap(originPathArray);
+                const pathName = pathArray && pathsMap(pathArray);
+
+                if (originPathName && pathName) {
+                  return (
+                    <Timeline.Item color="green">
+                      <span>
+                      {operator} copied {fileName} from {originPathName} to {pathName} at{' '}
+                      {localTime}
+                      </span>
+                    </Timeline.Item>
+                  );
+                }
+
+                return (
+                  <Timeline.Item color="green">
+                    {operator} copied {fileName} at{' '}
+                    {localTime}
+                  </Timeline.Item>
+                );
+              } 
+
               return (
                 <Timeline.Item color="green">
-                  {owner || downloader} {`${action}ed`} {fileName} at{' '}
+                  {owner || downloader} {action}ed {fileName} at{' '}
                   {localTime}
                 </Timeline.Item>
               );
@@ -247,9 +317,10 @@ const FileStatModal = (props) => {
               borderRadius: 2,
             }}
             onFinish={onFinish}
+            layout="vertical"
           >
-            <Row gutter={24}>
-              <Col span={9}>
+            <div className={styles.filterWrapper}>
+              <div className={styles.fieldGroup}>
                 <Form.Item
                   name="date"
                   rules={[
@@ -260,13 +331,16 @@ const FileStatModal = (props) => {
                       ),
                     },
                   ]}
-                  label="Date:"
+                  label="Date"
+                  className={styles.formItem}
                 >
-                  <RangePicker disabledDate={disabledDate} />
+                  <RangePicker
+                    disabledDate={disabledDate}
+                    style={{ minWidth: 100 }}
+                  />
                 </Form.Item>
-              </Col>
-
-              <Col span={7}>
+              </div>
+              <div className={styles.fieldGroup}>
                 <Form.Item
                   name="user"
                   rules={[
@@ -277,13 +351,13 @@ const FileStatModal = (props) => {
                       ),
                     },
                   ]}
-                  label="User:"
+                  label="User"
+                  className={styles.formItem}
                 >
-                  <Select style={{ width: 150 }}>{userOptions}</Select>
+                  <Select style={{ minWidth: 100 }}>{userOptions}</Select>
                 </Form.Item>
-              </Col>
-
-              <Col span={6}>
+              </div>
+              <div className={styles.fieldGroup}>
                 <Form.Item
                   name="action"
                   rules={[
@@ -294,29 +368,32 @@ const FileStatModal = (props) => {
                       ),
                     },
                   ]}
-                  label="Type:"
+                  label="Type"
+                  className={styles.formItem}
                 >
-                  <Select style={{ width: 110 }}>
+                  <Select style={{ minWidth: 100 }}>
                     <Option value="upload">Upload</Option>
                     <Option value="download">Download</Option>
+                    {currentPermission.permission === 'admin' ? (
+                      <Option value="copy">Copy</Option>
+                    ) : null }
+                   
                   </Select>
                 </Form.Item>
-              </Col>
-
-              <Col span={2}></Col>
-            </Row>
-
-            <Row>
-              <Col span={20.5} style={{ textAlign: 'right' }}>
-                <Button loading={isSearching}  type="primary" htmlType="submit">
-                  Search
-                </Button>
-                <Button style={{ marginLeft: 30 }} onClick={onReset}>
-                  Clear
-                </Button>
-              </Col>
-              <Col span={1.5}></Col>
-            </Row>
+              </div>
+              <div className={styles.fieldGroup}>
+                <Space className={styles.buttons}>
+                  <Button
+                    loading={isSearching}
+                    type="primary"
+                    htmlType="submit"
+                  >
+                    Search
+                  </Button>
+                  <Button onClick={onReset}>Clear</Button>
+                </Space>
+              </div>
+            </div>
           </Form>
         </TabPane>
       </Tabs>

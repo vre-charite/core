@@ -5,8 +5,15 @@ import { Row, Col, Tree, Tabs } from 'antd';
 import {
   traverseFoldersContainersAPI,
   getFilesByTypeAPI,
+  listAllVirtualFolder,
+  listAllfilesVfolder,
 } from '../../../../../APIs';
-import { getChildrenTree, withCurrentProject } from '../../../../../Utility';
+import {
+  getChildrenTree,
+  withCurrentProject,
+  getGreenRoomTreeNodes,
+  getCoreTreeNodes,
+} from '../../../../../Utility';
 import RawTable from './RawTable';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
@@ -21,7 +28,13 @@ import {
 } from '@ant-design/icons';
 import { pipelines } from '../../../../../Utility/pipelines';
 import Collapse from '../../../../../Components/Collapse/Collapse';
-
+import { DataSourceType } from './RawTableValues';
+import CollectionIcon from '../../../../../Components/Icons/Collection';
+import {
+  setCurrentProjectActivePane,
+  setCurrentProjectTree,
+} from '../../../../../Redux/actions';
+import { all } from 'async';
 const { TabPane } = Tabs;
 
 function getTitle(title) {
@@ -29,6 +42,13 @@ function getTitle(title) {
     return (
       <>
         <CloudServerOutlined /> {title}
+      </>
+    );
+  } else if (title.startsWith('Collection')) {
+    return (
+      <>
+        <CollectionIcon width={14} />
+        {title}
       </>
     );
   } else {
@@ -49,18 +69,10 @@ function getTitle(title) {
 class FilesContent extends Component {
   constructor(props) {
     super(props);
-
+    this.clickLock = false;
     this.state = {
       activeKey: 'greenroom-raw',
       panes: [], //folder panes
-      treeData: [
-        {
-          title: 'Raw',
-          key: 'greenroom-raw',
-          icon: <FolderOpenOutlined />,
-        },
-      ], //folder view data
-      coreTreeData: [],
       treeKey: 0, //to mark refresh
       rawData: [],
       totalItem: 0,
@@ -68,22 +80,20 @@ class FilesContent extends Component {
       totalProcessedItem: 0,
       currentDataset: null,
       currentRole: null,
+      vfolders: [],
     };
   }
-
-  componentDidMount() {
+  async componentDidMount() {
     this.fetch();
+  }
+  async updateVfolders() {
     const { datasetId } = this.props;
-    const treeData = this.state.treeData;
-    treeData[0].id = datasetId; //Why updating id here?
-
-    const currentDataset = this.props.currentProject;
-
-    this.setState((prev) => ({
-      treeData: treeData,
-      // treeKey: this.state.treeKey + 1, //This is causing a warning ? Why do we need this?
-      currentDataset,
-    }));
+    const res = await listAllVirtualFolder(datasetId);
+    const virualFolders = res.data.result;
+    this.setState({
+      vfolders: virualFolders,
+    });
+    return virualFolders;
   }
 
   fetchRawData = async (entity_type = null, path = null) => {
@@ -97,16 +107,16 @@ class FilesContent extends Component {
       let role = false;
 
       if (currentDataset) role = currentDataset.permission;
-
       const result = await getFilesByTypeAPI(
         this.props.match.params.datasetId,
         10,
         0,
-        null,
+        pipelines['GREEN_RAW'],
         'createTime',
         'desc',
         role === 'admin',
         entity_type,
+        this.state.activeKey,
         filters,
       );
       let { entities, approximateCount } = result.data.result;
@@ -132,7 +142,7 @@ class FilesContent extends Component {
     }
   };
 
-  fetchProcesseData = async (path, entity_type) => {
+  fetchProcesseData = async (pipeline, entity_type, activeKey) => {
     try {
       const currentDataset = this.props.currentProject;
 
@@ -144,11 +154,12 @@ class FilesContent extends Component {
         this.props.match.params.datasetId,
         10,
         0,
-        path,
+        pipeline,
         'createTime',
         'desc',
         role === 'admin',
         entity_type,
+        activeKey,
         {},
       );
       let { entities, approximateCount } = result.data.result;
@@ -192,9 +203,7 @@ class FilesContent extends Component {
     });
 
     let allFolders;
-
     await this.fetchRawData();
-
     if (!['uploader', 'contributor'].includes(currentRole)) {
       try {
         allFolders = await traverseFoldersContainersAPI(datasetId);
@@ -207,78 +216,26 @@ class FilesContent extends Component {
         }
         return;
       }
+      const newTree = getGreenRoomTreeNodes(allFolders);
+      const coreTreeData = getCoreTreeNodes(allFolders);
+      console.log(newTree);
+      // add core virtual folders
+      await this.updateVfolders();
 
-      // Compute tree data
-      let pureFolders = this.computePureFolders(
-        allFolders.data.result.gr,
-        // subContainers.data.result.children,
-        undefined,
-      );
-
-      const treeData = getChildrenTree(pureFolders, 'greenroom', '');
-
-      const processedFolder = _.find(treeData, (ele) => {
-        return ele.title === 'processed';
+      const vfoldersNodes = this.state.vfolders.map((folder) => {
+        return {
+          title: folder.name,
+          key: 'vfolder-' + folder.name,
+          icon: <CollectionIcon width={14} style={{ color: '#1b90fe' }} />,
+          disabled: false,
+          children: null,
+        };
       });
-
-      const newTree = this.state.treeData;
-
-      if (processedFolder) {
-        newTree.push({
-          title: 'Processed',
-          key: 'greenroom-processed',
-          icon: <FolderOutlined />,
-          disabled: true,
-          children: processedFolder.children,
-        });
-      }
-
-      //Calculate the core folders
-      let coreFolders = allFolders.data.result.vre;
-
-      //core folders only care about items "raw" or "processed"
-      coreFolders = coreFolders
-        .filter(
-          (el) =>
-            Object.keys(el) &&
-            (Object.keys(el)[0] === 'raw' ||
-              Object.keys(el)[0] === 'processed') &&
-            el[Object.keys(el)[0]]?.length,
-        )
-        .map((el) => {
-          //Uppercasing the first letter of folder name
-          const title =
-            Object.keys(el)[0].charAt(0).toUpperCase() +
-            Object.keys(el)[0].slice(1);
-          const content = el[Object.keys(el)[0]];
-          delete el[Object.keys(el)[0]];
-          el[title] = content;
-
-          return el;
-        });
-
-      let coreTreeData = getChildrenTree(coreFolders, 'core', '');
-
-      //If there are processed data folder, add it to the tree
-      if (coreTreeData) {
-        const processedCoreFolder = _.find(coreTreeData, (ele) => {
-          return ele.title === 'processed';
-        });
-
-        coreTreeData.push({
-          title: 'Processed',
-          key: 'core-processed',
-          icon: <FolderOutlined />,
-          disabled: true,
-          children: processedCoreFolder?.children,
-        });
-      }
-
-      this.setState({
-        coreTreeData: coreTreeData?.map((el) => {
-          return { ...el, children: undefined };
-        }),
-      });
+      // if (coreTreeData) {
+      //   coreTreeData = coreTreeData.concat(vfoldersNodes);
+      // } else {
+      //   coreTreeData = vfoldersNodes;
+      // }
 
       //Calculate default pane
       const newPanes = this.state.panes;
@@ -288,36 +245,37 @@ class FilesContent extends Component {
       pane.path = firstPane.path;
       pane.title = getTitle(`Green Room - ${firstPane.title}  `);
       pane.key = firstPane.key;
+      this.props.setCurrentProjectActivePane(firstPane.key);
       pane.content = (
         <RawTable
           projectId={this.props.match.params.datasetId}
           currentDataset={this.state.currentDataset}
           rawData={this.state.rawData}
           totalItem={this.state.totalItem}
+          type={DataSourceType.GREENROOM_RAW}
+          panelKey={firstPane.key}
         />
       );
       newPanes.push(pane);
 
       this.setState((prev) => ({
-        treeData: newTree,
         treeKey: prev.treeKey + 1,
         activeKey: pane.key,
         panes: newPanes,
       }));
+      this.props.setCurrentProjectTree({
+        greenroom: newTree,
+        core: coreTreeData,
+        vfolders: vfoldersNodes,
+      });
+    } else {
+      this.props.setCurrentProjectActivePane('greenroom-raw');
     }
-  };
-
-  computePureFolders = (allFolders, subContainers) => {
-    return _.differenceWith(allFolders, subContainers, (af, sc) => {
-      if (typeof af !== 'object') {
-        return false;
-      }
-      return sc['dataset_name'] === Object.keys(af)[0];
-    });
   };
 
   //Tab
   onChange = (activeKey) => {
+    this.props.setCurrentProjectActivePane(activeKey);
     this.setState((prev) => {
       return { activeKey, treeKey: prev.treeKey + 1 };
     });
@@ -346,37 +304,41 @@ class FilesContent extends Component {
         activeKey = panes[0].key;
       }
     }
-
     this.setState({ panes, activeKey });
   };
 
   render() {
-    const {
-      treeData,
-      coreTreeData,
-      treeKey,
-      currentDataset,
-      activeKey,
-    } = this.state;
+    const { treeKey, currentDataset, activeKey } = this.state;
 
     const onSelect = async (selectedKeys, info) => {
       if (selectedKeys.length === 0) {
         return;
       }
 
+      if (this.clickLock) {
+        return;
+      }
+      this.clickLock = true;
       const { panes } = this.state;
-
+      this.props.setCurrentProjectActivePane(selectedKeys[0].toString());
       const isOpen = _.chain(panes)
         .map('key')
         .find((item) => item === selectedKeys[0])
         .value();
-
       if (isOpen) {
         //set active pane
         this.setState((prev) => {
-          return { activeKey: selectedKeys[0], treeKey: prev.treeKey + 1 };
+          return {
+            activeKey: selectedKeys[0].toString(),
+            treeKey: prev.treeKey + 1,
+          };
         });
       } else {
+        this.setState((prev) => {
+          return {
+            activeKey: selectedKeys[0].toString(),
+          };
+        });
         //Render raw table if 0
         if (selectedKeys[0] === 'greenroom-raw') {
           const title = getTitle(`Green Room - ${info.node.title}  `);
@@ -389,7 +351,8 @@ class FilesContent extends Component {
                 currentDataset={currentDataset}
                 rawData={this.state.rawData}
                 totalItem={this.state.totalItem}
-                type="raw table"
+                type={DataSourceType.GREENROOM_RAW}
+                panelKey={info.node.key.toString()}
               />
             ),
             key: info.node.key.toString(),
@@ -416,6 +379,7 @@ class FilesContent extends Component {
           const result = await this.fetchProcesseData(
             pipelines['GENERATE_PROCESS'],
             null,
+            selectedKeys[0],
           );
 
           const processedData = result && result.processedData;
@@ -432,8 +396,48 @@ class FilesContent extends Component {
                 currentDataset={currentDatasetProccessed}
                 rawData={processedData}
                 totalItem={totalProcessedItem}
-                type="processed table"
-                hideUpload={true}
+                type={DataSourceType.GREENROOM_PROCESSED}
+                panelKey={info.node.key.toString()}
+              />
+            ),
+            key: info.node.key.toString(),
+            id: info.node.id,
+          };
+          panes.push(pane);
+          this.setState((prev) => {
+            return {
+              activeKey: selectedKeys[0].toString(),
+              panes,
+              treeKey: prev.treeKey + 1,
+            };
+          });
+        } else if (selectedKeys[0] === 'greenroom-processed-straightCopy') {
+          // Render container details table if pipleline
+          const currentDatasetProccessed = this.props.currentProject;
+          info.node.path = pipelines['DATA_COPY'];
+
+          const result = await this.fetchProcesseData(
+            pipelines['DATA_COPY'],
+            null,
+            selectedKeys[0],
+          );
+
+          const processedData = result && result.processedData;
+          const totalProcessedItem = result && result.totalProcessedItem;
+
+          const title = getTitle(`Green Room - ${info.node.title}  `);
+
+          const pane = {
+            title: title,
+            content: (
+              <RawTable
+                {...info.node}
+                projectId={this.props.match.params.datasetId}
+                currentDataset={currentDatasetProccessed}
+                rawData={processedData}
+                totalItem={totalProcessedItem}
+                type={DataSourceType.GREENROOM_PROCESSED}
+                panelKey={info.node.key.toString()}
               />
             ),
             key: info.node.key.toString(),
@@ -454,11 +458,21 @@ class FilesContent extends Component {
           const {
             processedData,
             totalProcessedItem,
-          } = await this.fetchProcesseData(pipelines['DATA_COPY'], null);
+          } = await this.fetchProcesseData(
+            pipelines['DATA_COPY'],
+            null,
+            selectedKeys[0],
+          );
           info.node.path = pipelines['DATA_COPY'];
 
           const title = getTitle(`Core - ${info.node.title}  `);
-
+          let type = 'unknown';
+          if (selectedKeys[0].toLowerCase() == 'core-raw') {
+            type = DataSourceType.CORE_RAW;
+          }
+          if (selectedKeys[0].toLowerCase() == 'core-processed') {
+            type = DataSourceType.CORE_PROCESSED;
+          }
           const pane = {
             title: title,
             content: (
@@ -468,8 +482,8 @@ class FilesContent extends Component {
                 currentDataset={currentDatasetProccessed}
                 rawData={processedData}
                 totalItem={totalProcessedItem}
-                type="processed table"
-                hideUpload={true}
+                panelKey={info.node.key.toString()}
+                type={type}
               />
             ),
             key: info.node.key.toString(),
@@ -483,16 +497,79 @@ class FilesContent extends Component {
               treeKey: prev.treeKey + 1,
             };
           });
-        } else {
-          console.log('no matching keys');
+        } else if (selectedKeys[0].startsWith('vfolder')) {
+          let vfolder = this.state.vfolders.find(
+            (v) => v.name === info.node.title,
+          );
+          if (!vfolder) {
+            await this.updateVfolders();
+            vfolder = this.state.vfolders.find(
+              (v) => v.name === info.node.title,
+            );
+          }
+          if (vfolder) {
+            const filesRes = await listAllfilesVfolder(
+              vfolder.id,
+              1,
+              10,
+              'desc',
+              'createTime',
+            );
+            if (filesRes.data.result) {
+              const vfilesData = filesRes.data.result.map((item) => ({
+                ...item.attributes,
+                key: item.attributes.name,
+                typeName: item.typeName,
+                guid: item.guid,
+                tags: item.labels,
+              }));
+              const title = getTitle(`Collection - ${info.node.title}  `);
+              const pane = {
+                title: title,
+                content: (
+                  <RawTable
+                    projectId={this.props.match.params.datasetId}
+                    currentDataset={currentDataset}
+                    rawData={vfilesData}
+                    totalItem={filesRes.data.total}
+                    type={DataSourceType.CORE_VIRTUAL_FOLDER}
+                    panelKey={info.node.key.toString()}
+                    folderId={vfolder.id}
+                    removePanel={this.remove}
+                  />
+                ),
+                key: info.node.key.toString(),
+                id: info.node.id,
+              };
+              panes.push(pane);
+              this.setState((prev) => {
+                return {
+                  activeKey: selectedKeys[0].toString(),
+                  panes,
+                  treeKey: prev.treeKey + 1,
+                };
+              });
+            }
+          }
         }
       }
+      this.clickLock = false;
     };
     return (
       <>
-        {!['uploader', 'contributor'].includes(this.state.currentRole) ? (
-          <Row>
-            <Col xs={24} sm={24} md={24} lg={24} xl={4}>
+        {!['uploader', 'contributor'].includes(this.state.currentRole) &&
+        this.props.project &&
+        this.props.project.tree &&
+        this.props.project.tree['greenroom'] ? (
+          <Row style={{ minWidth: 750 }}>
+            <Col
+              xs={24}
+              sm={24}
+              md={24}
+              lg={24}
+              xl={4}
+              className="vre-file-dir"
+            >
               <Collapse
                 title={'Green Room'}
                 icon={<HomeOutlined />}
@@ -504,27 +581,31 @@ class FilesContent extends Component {
                   defaultSelectedKeys={[activeKey]}
                   switcherIcon={<DownOutlined />}
                   onSelect={onSelect}
-                  treeData={treeData}
+                  treeData={this.props.project.tree['greenroom']}
                   key={treeKey}
                 />
               </Collapse>
-              {coreTreeData?.length > 0 && this.state.currentRole === 'admin' && (
+              {['admin', 'collaborator'].includes(this.state.currentRole) &&
+              this.props.project.tree['core']?.length > 0 ? (
                 <Collapse
                   title={'Core'}
                   icon={<CloudServerOutlined />}
                   active={activeKey.startsWith('core')}
+                  maxHeight={600}
                 >
                   <Tree
                     showIcon
                     defaultExpandedKeys={['core-raw']}
-                    defaultSelectedKeys={[activeKey]}
+                    selectedKeys={[activeKey]}
                     switcherIcon={<DownOutlined />}
                     onSelect={onSelect}
-                    treeData={coreTreeData}
+                    treeData={this.props.project.tree['core'].concat(
+                      this.props.project.tree['vfolders'],
+                    )}
                     key={treeKey}
                   />
                 </Collapse>
-              )}
+              ) : null}
             </Col>
             <Col xs={24} sm={24} md={24} lg={24} xl={20}>
               <div>
@@ -560,6 +641,8 @@ class FilesContent extends Component {
             currentDataset={currentDataset}
             rawData={this.state.rawData}
             totalItem={this.state.totalItem}
+            type={DataSourceType.GREENROOM_RAW}
+            panelKey={'greenroom-raw'}
           />
         )}
       </>
@@ -567,8 +650,12 @@ class FilesContent extends Component {
   }
 }
 
-export default connect((state) => ({
-  datasetList: state.datasetList,
-  containersPermission: state.containersPermission,
-  uploadList: state.uploadList,
-}))(withCurrentProject(withRouter(FilesContent)));
+export default connect(
+  (state) => ({
+    datasetList: state.datasetList,
+    containersPermission: state.containersPermission,
+    uploadList: state.uploadList,
+    project: state.project,
+  }),
+  { setCurrentProjectTree, setCurrentProjectActivePane },
+)(withCurrentProject(withRouter(FilesContent)));

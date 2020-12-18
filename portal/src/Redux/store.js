@@ -16,7 +16,7 @@ const setTransform = createTransform(null, (outboundState, key) => {
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['username'],
+  whitelist: ['username','isLogin'],
   transforms: [setTransform]
 }
 

@@ -9,6 +9,7 @@ import {
   message,
   Typography,
   Row,
+  Space,
 } from 'antd';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -16,7 +17,7 @@ import _ from 'lodash';
 import {
   updateDatasetInfoAPI,
   getAdminsOnDatasetAPI,
-  listAllContainersPermission,
+  getSystemTagsAPI,
 } from '../../../../APIs';
 import { UpdateDatasetCreator } from '../../../../Redux/actions';
 import {
@@ -31,8 +32,11 @@ import { useTranslation } from 'react-i18next';
 import {
   setContainersPermissionCreator,
   setUserRoleCreator,
+  setCurrentProjectProfile,
+  setCurrentProjectManifest,
+  triggerEvent,
 } from '../../../../Redux/actions';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 const { TextArea } = Input;
 const { Paragraph, Title } = Typography;
 
@@ -45,6 +49,7 @@ function Description(props) {
   const [nameErrorMsg, setNameErrorMsg] = useState(null);
   const { t, i18n } = useTranslation(['formErrorMessages']);
   const [isSaving, setIsSaving] = useState(false);
+  const dispatch = useDispatch();
   const {
     containersPermission,
     match: {
@@ -68,6 +73,13 @@ function Description(props) {
       );
 
       setDatasetInfo(currentDataset);
+      dispatch(setCurrentProjectProfile(currentDataset));
+      dispatch(
+        setCurrentProjectManifest({
+          tags: currentDataset.systemTags,
+        }),
+      );
+      dispatch(triggerEvent('LOAD_COPY_LIST'));
       setDatasetUpdate(currentDataset);
     }
   }, [containersPermission, datasetList, datasetId]);
@@ -151,8 +163,20 @@ function Description(props) {
           newDatasetList[0].datasetList,
           'All Projects',
         );
-        updateContainerPremission();
+
+        const newContainerPermission = containersPermission.map((el) => {
+          if (el.containerId === parseInt(datasetId)) {
+            return {
+              ...el,
+              containerName: newDataInfo.name,
+            };
+          }
+          return el;
+        });
+
+        updateContainerPremission(newContainerPermission);
         setDatasetInfo(newDataInfo);
+        dispatch(setCurrentProjectProfile(newDataInfo));
         setDatasetUpdate(newDataInfo);
         setEditView(false);
       })
@@ -161,12 +185,8 @@ function Description(props) {
       });
   };
 
-  const updateContainerPremission = async () => {
-    const {
-      data: { result: containersPermission },
-    } = await listAllContainersPermission(username);
-    setContainersPermissionDispatcher(containersPermission.permission);
-    setUserRoleDispatcher(containersPermission.role);
+  const updateContainerPremission = async (containersPermission) => {
+    setContainersPermissionDispatcher(containersPermission);
   };
 
   const updateDatasetInfo = (field, value) => {
@@ -200,7 +220,6 @@ function Description(props) {
     }
 
     setDatasetUpdate({ ...datasetUpdate, [field]: value });
-    // setDatasetInfo({ ...datasetInfo, [field]: value })
   };
 
   function tagRender(props) {
@@ -239,10 +258,23 @@ function Description(props) {
     if (datasetInfo) {
       return (
         <>
-          <>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginBottom: '2px',
+              alignItems: 'baseline',
+            }}
+          >
+            <p>
+              <small>
+                Created on {timeConvert(datasetInfo.timeCreated, 'date')} |
+                Project code: {datasetInfo.code}
+              </small>
+            </p>
             {!currentContainer ||
             currentContainer['permission'] !== 'admin' ? null : editView ? (
-              <div style={{ marginTop: '12px', float: 'right' }}>
+              <Space>
                 <Button
                   disabled={isSaving}
                   type="link"
@@ -262,36 +294,20 @@ function Description(props) {
                 >
                   Save
                 </Button>
-              </div>
+              </Space>
             ) : (
-              <Button
-                style={{ marginTop: '14px', float: 'right' }}
-                onClick={(e) => setEditView(true)}
-              >
-                Edit
-              </Button>
+              <Button onClick={(e) => setEditView(true)}>Edit</Button>
             )}
-            <small>
-              Created on {timeConvert(datasetInfo.timeCreated, 'date')} |
-              Project code: {datasetInfo.code}
-            </small>
-            {/*             <Title
-              level={4}
-              ellipsis={{
-                rows: 1,
-              }}
-              style={{ paddingRight: '10px' }}
-            >
-              {datasetInfo.name}
-            </Title> */}
-          </>
+          </div>
 
           <Descriptions bordered size="small" column={1}>
             <Descriptions.Item label="Project Name">
               {editView ? (
                 <Input
                   defaultValue={datasetInfo.name}
-                  onChange={(e) => updateDatasetInfo('name', e.target.value)}
+                  onChange={(e) =>
+                    updateDatasetInfo('name', _.trimStart(e.target.value))
+                  }
                 />
               ) : (
                 <>{datasetInfo.name}</>
@@ -336,8 +352,10 @@ function Description(props) {
               ) : (
                 <>
                   {datasetInfo.tags &&
-                    datasetInfo.tags.map((tag) => (
-                      <Tag color="cyan">{tag}</Tag>
+                    datasetInfo.tags.map((tag, ind) => (
+                      <Tag color="cyan" key={ind}>
+                        {tag}
+                      </Tag>
                     ))}
                 </>
               )}
@@ -367,6 +385,7 @@ function Description(props) {
                         target="_blank"
                         // ref="noreferrer noopener"
                         style={{ paddingRight: '5px' }}
+                        key={index}
                       >
                         {i.firstName + ' ' + i.lastName + separator}
                       </a>

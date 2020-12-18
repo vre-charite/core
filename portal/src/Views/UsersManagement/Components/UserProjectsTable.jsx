@@ -2,6 +2,8 @@ import React from 'react';
 
 import { Table, Typography } from 'antd';
 
+import userRoles from '../../../Utility/project-roles.json';
+
 const { Paragraph } = Typography;
 
 function UserProjectsTable(props) {
@@ -41,12 +43,19 @@ function UserProjectsTable(props) {
       sorter: (a, b) => a.permission.localeCompare(b.permission),
       width: '35%',
       searchKey: 'permission',
-      render: (text) =>
-        platformRole === 'admin'
-          ? 'Platform Administrator'
-          : text === 'admin'
-          ? 'Project Administrator'
-          : 'Project Contributor',
+      render: (text) => {
+        if (text === 'admin') {
+          if (platformRole === 'admin') {
+            text = 'Platform Administrator';
+          } else {
+            text = 'Project Administrator';
+          }
+        } else {
+          text = userRoles && userRoles[text] && userRoles[text]['label'];
+        }
+
+        return text;
+      }
     },
     // {
     //   title: 'Join Date',

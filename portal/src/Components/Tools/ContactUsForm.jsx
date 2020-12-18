@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useHistory, Link } from 'react-router-dom';
 import {
-  Card,
+  Upload,
   Button,
   Form,
   Input,
@@ -10,10 +10,10 @@ import {
   Row,
   Select,
   Typography,
-  Breadcrumb,
-  message,
   Result,
+  message,
 } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 import jwtDecode from 'jwt-decode';
 import { tokenManager } from '../../Service/tokenManager';
 import { contactUsApi } from '../../APIs';
@@ -31,10 +31,29 @@ function ContactUsForm(props) {
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [attachments, setAttachments] = useState([]);
   const username = useSelector((state) => state.username);
+  const email = useSelector((state) => state.email);
   let history = useHistory();
   function onFinish(values) {
     setLoading(true);
+    if (attachments.length > 4) {
+      message.error('Please do not attach more than 4 files');
+      setLoading(false);
+      return;
+    }
+    for (let file of attachments) {
+      const isOversize = file.size / 1024 / 1024 > 2;
+      if (isOversize) {
+        message.error('File size must be smaller than 2MB');
+        setLoading(false);
+        return;
+      }
+    }
+    values.attachments = attachments.map((v) => {
+      return { name: v.name, data: v.base64 };
+    });
+    console.log(values);
     contactUsApi(values)
       .then((res) => {
         // history.push('/support/contact-confirmation');
@@ -67,6 +86,7 @@ function ContactUsForm(props) {
   }
   function resetSubmission() {
     setSuccess(false);
+    setAttachments([]);
     form.resetFields();
   }
   return (
@@ -108,7 +128,7 @@ function ContactUsForm(props) {
             onFinish={onFinish}
             initialValues={{
               category: 'General inquiry',
-              email: getEmail(),
+              email,
               name: username,
             }}
           >
@@ -153,12 +173,20 @@ function ContactUsForm(props) {
                   message: t('formErrorMessages:contactUs.title.empty'),
                 },
                 {
-                  // pattern: new RegExp(/^(?=.{2,200}$).*/g), // 2-100 letters
-                  // message: t('formErrorMessages:contactUs.title.valid'),
-                  validator:(rule,value)=>{
-                    const isLengthValid= (trimString(value) && trimString(value).length >= 2 && trimString(value).length <= 200);
-                    return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:contactUs.title.valid'));
-                  }
+                  validator: (rule, value) => {
+                    if (!value)
+                      return Promise.reject();
+                    const isLengthValid =
+                      value &&
+                      trimString(value) &&
+                      trimString(value).length >= 2 &&
+                      trimString(value).length <= 200;
+                    return isLengthValid
+                      ? Promise.resolve()
+                      : Promise.reject(
+                          t('formErrorMessages:contactUs.title.valid'),
+                        );
+                  },
                 },
               ]}
             >
@@ -173,26 +201,66 @@ function ContactUsForm(props) {
                   message: t('formErrorMessages:contactUs.description.empty'),
                 },
                 {
-                  //pattern: new RegExp(/^(?=.{10,1000}$).*/g), // 10-1000 letters
-                  message: t('formErrorMessages:contactUs.description.valid'),
-                  validator:(rule,value)=>{
-                    console.log(trimString(value) && trimString(value).length)
-                    const isLengthValid= (trimString(value) && trimString(value).length >= 10 && trimString(value).length <= 1000);
-                    return isLengthValid ? Promise.resolve() : Promise.reject(t('formErrorMessages:contactUs.description.valid'));
-                  }
+                  validator: (rule, value) => {
+                    if (!value)
+                      return Promise.reject();
+                    const isLengthValid =
+                      value &&
+                      trimString(value) &&
+                      trimString(value).length >= 10 &&
+                      trimString(value).length <= 1000;
+                    return isLengthValid
+                      ? Promise.resolve()
+                      : Promise.reject(
+                          t('formErrorMessages:contactUs.description.valid'),
+                        );
+                  },
                 },
               ]}
             >
               <TextArea placeholder="Description" />
             </Form.Item>
-
+            <Form.Item name="attachments">
+              <Upload
+                fileList={attachments}
+                accept=".pdf,.jpg,.jpeg,.png,.gif"
+                onRemove={(file) => {
+                  const index = attachments
+                    .map((a) => a.name)
+                    .indexOf(file.name);
+                  const newFileList = attachments.slice();
+                  newFileList.splice(index, 1);
+                  setAttachments(newFileList);
+                }}
+                beforeUpload={(file) => {
+                  if (
+                    file.type !== 'image/png' &&
+                    file.type !== 'image/jpg' &&
+                    file.type !== 'image/jpeg' &&
+                    file.type !== 'image/gif' &&
+                    file.type !== 'application/pdf'
+                  ) {
+                    message.error(`File format is not accepted`);
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.readAsDataURL(file);
+                  reader.onload = (e) => {
+                    if (e && e.target && e.target.result) {
+                      file.base64 = e.target.result;
+                      setAttachments([...attachments, file]);
+                    }
+                  };
+                  return false;
+                }}
+              >
+                <Button icon={<UploadOutlined />}>Upload Attachment</Button>
+              </Upload>
+            </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" loading={loading}>
                 Submit
               </Button>
-              {/* <Button style={{ float: 'right' }}>
-                <Link to="/support">Cancel</Link>
-              </Button> */}
             </Form.Item>
           </Form>
         </>
