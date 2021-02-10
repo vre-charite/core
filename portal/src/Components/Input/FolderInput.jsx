@@ -19,14 +19,6 @@ function FolderInput(props) {
     const basePathArr = pathArr.slice(0, pathArr.length - 1);
     const newBasePath = "/" + basePathArr.join("/");
     const lastFolder = pathArr[pathArr.length - 1];
-    /*     console.log(
-      "basePathArr:",
-      basePathArr,
-      "newBasePath",
-      newBasePath,
-      "lastFolder",
-      lastFolder
-    ); */
     if (newBasePath !== basePath) {
       setBasePath(newBasePath);
       const folders = getFoldersApi(newBasePath);

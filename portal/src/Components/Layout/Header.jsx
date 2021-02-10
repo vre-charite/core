@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { Layout, Menu, Button, Badge, Tabs, Empty, Modal, Alert } from 'antd';
+import { Layout, Menu, Button, Modal, Alert } from 'antd';
 import {
   ContainerOutlined,
   UserOutlined,
   ExclamationCircleOutlined,
   ControlOutlined,
-  FieldTimeOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withCookies } from 'react-cookie';
@@ -16,21 +15,15 @@ import {
   setUploadListCreator,
 } from '../../Redux/actions';
 import { connect } from 'react-redux';
-import _ from 'lodash';
-import styles from './index.module.scss';
 import ResetPasswordModal from '../Modals/ResetPasswordModal';
 import SupportDrawer from '../Tools/SupportDrawer';
 import { UploadQueueContext } from '../../Context';
-import { userAuthManager } from '../../Service/userAuthManager';
-import { broadcastManager } from '../../Service/broadcastManager';
-import { namespace as serviceNamespace } from '../../Service/namespace';
-import { guacomoleAPI } from '../../APIs';
-import { timezone,logout } from '../../Utility';
+import { logout } from '../../Utility';
 
 const { confirm } = Modal;
 const { Header } = Layout;
-const { TabPane } = Tabs;
 const SubMenu = Menu.SubMenu;
+// eslint-disable-next-line
 let modal;
 class AppHeader extends Component {
   static contextType = UploadQueueContext;
@@ -59,11 +52,6 @@ class AppHeader extends Component {
     }
   }
   logout = async () => {
-    const { uploadList } = this.props;
-    const uploadingList = uploadList.filter(
-      (item) => item.status === 'uploading',
-    );
-
     modal = confirm({
       title: 'Are you sure you want to log out?',
       icon: <ExclamationCircleOutlined />,
@@ -71,7 +59,7 @@ class AppHeader extends Component {
         <>
           By clicking on "OK", you will be logged out on all the opened VRE
           tabs. <br />
-          If you're uploading/downloading, all the progress will be lost.
+          Any ongoing file activities progress will be lost.
         </>
       ),
       onOk() {
@@ -83,7 +71,6 @@ class AppHeader extends Component {
     });
 
     const doLogout = () => {
-      
       logout();
     };
   };
@@ -169,17 +156,6 @@ class AppHeader extends Component {
   };
 
   render() {
-    const uploadListContent = (
-      <Tabs className={styles.tab}>
-        <TabPane tab="Messages" key="message">
-          <Empty
-            description="No Messages"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
-        </TabPane>
-      </Tabs>
-    );
-
     const username = this.props.username;
 
     return (
@@ -237,11 +213,6 @@ class AppHeader extends Component {
               </Link>
             </Menu.Item>
           ) : null}
-          {/* <Menu.Item key="guacomole">
-            <Button type="link" onClick={() => guacomoleAPI()}>
-              <ControlOutlined /> Guacomole
-            </Button>
-          </Menu.Item> */}
           <SubMenu
             key="user"
             style={{ float: 'right', paddingRight: '25px' }}
@@ -270,23 +241,6 @@ class AppHeader extends Component {
             </Menu.Item>
           </SubMenu>
 
-          {/* <SubMenu
-            key="notifications"
-            style={{ float: 'right' }}
-            // className={this.state.shakeClass}
-            title={
-              <Badge
-                offset={[5, 0]}
-                // dot={this.state.show}
-              >
-                {this.state.loading && <LoadingOutlined color={'#1890ff'} />}{' '}
-                Notifications
-              </Badge>
-            }
-          > */}
-          {/* {uploadListContent} */}
-          {/* </SubMenu> */}
-
           <Menu.Item
             key="support"
             style={{ float: 'right' }}
@@ -294,13 +248,6 @@ class AppHeader extends Component {
           >
             Support
           </Menu.Item>
-          {/* <Menu.Item
-            key="timezone"
-            style={{ float: 'right' }}
-          >
-            <FieldTimeOutlined />
-            {timezone}
-          </Menu.Item> */}
         </Menu>
         <ResetPasswordModal
           visible={this.state.modalVisible}

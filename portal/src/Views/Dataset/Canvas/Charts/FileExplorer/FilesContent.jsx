@@ -9,7 +9,6 @@ import {
   listAllfilesVfolder,
 } from '../../../../../APIs';
 import {
-  getChildrenTree,
   withCurrentProject,
   getGreenRoomTreeNodes,
   getCoreTreeNodes,
@@ -20,11 +19,10 @@ import { connect } from 'react-redux';
 import _ from 'lodash';
 import { namespace, ErrorMessager } from '../../../../../ErrorMessages';
 import {
-  FolderOpenOutlined,
   DownOutlined,
-  FolderOutlined,
   HomeOutlined,
   CloudServerOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import { pipelines } from '../../../../../Utility/pipelines';
 import Collapse from '../../../../../Components/Collapse/Collapse';
@@ -34,10 +32,16 @@ import {
   setCurrentProjectActivePane,
   setCurrentProjectTree,
 } from '../../../../../Redux/actions';
-import { all } from 'async';
 const { TabPane } = Tabs;
 
 function getTitle(title) {
+  if (title.includes('Trash')) {
+    return (
+      <>
+        <DeleteOutlined /> {title}
+      </>
+    );
+  }
   if (title.startsWith('Core')) {
     return (
       <>
@@ -85,6 +89,7 @@ class FilesContent extends Component {
   }
   async componentDidMount() {
     this.fetch();
+    this.fetchRawData();
   }
   async updateVfolders() {
     const { datasetId } = this.props;
@@ -98,13 +103,12 @@ class FilesContent extends Component {
 
   fetchRawData = async (entity_type = null, path = null) => {
     try {
-      const filters = {};
-
-      if (path) filters.path = path;
-
       const currentDataset = this.props.currentProject;
 
       let role = false;
+      const filters = {};
+
+      if (path) filters.path = path;
 
       if (currentDataset) role = currentDataset.permission;
       const result = await getFilesByTypeAPI(
@@ -114,8 +118,8 @@ class FilesContent extends Component {
         pipelines['GREEN_RAW'],
         'createTime',
         'desc',
-        role === 'admin',
-        entity_type,
+        role,
+        this.props.username,
         this.state.activeKey,
         filters,
       );
@@ -124,14 +128,15 @@ class FilesContent extends Component {
         ...item.attributes,
         tags: item.labels,
         guid: item.guid,
+        geid: item.geid,
         key: item.attributes.name,
         typeName: item.typeName,
+        manifest: item.manifest,
       }));
       this.setState({ rawData: entities, totalItem: approximateCount });
 
       return { entities, approximateCount };
     } catch (err) {
-      console.log(err);
       if (err.response) {
         const errorMessager = new ErrorMessager(
           namespace.dataset.files.getFilesByTypeAPI,
@@ -149,7 +154,6 @@ class FilesContent extends Component {
       let role = false;
 
       if (currentDataset) role = currentDataset.permission;
-
       const result = await getFilesByTypeAPI(
         this.props.match.params.datasetId,
         10,
@@ -157,8 +161,8 @@ class FilesContent extends Component {
         pipeline,
         'createTime',
         'desc',
-        role === 'admin',
-        entity_type,
+        role,
+        this.props.username,
         activeKey,
         {},
       );
@@ -168,6 +172,7 @@ class FilesContent extends Component {
         key: item.attributes.name,
         typeName: item.typeName,
         guid: item.guid,
+        geid: item.geid,
         tags: item.labels,
       }));
       this.setState({
@@ -193,7 +198,7 @@ class FilesContent extends Component {
     let currentRole =
       this.props.containersPermission &&
       this.props.containersPermission.filter(
-        (el) => el.containerId === Number(datasetId),
+        (el) => el.id === Number(datasetId),
       );
     if (currentRole && currentRole.length > 0)
       currentRole = currentRole[0].permission;
@@ -203,8 +208,7 @@ class FilesContent extends Component {
     });
 
     let allFolders;
-    await this.fetchRawData();
-    if (!['uploader', 'contributor'].includes(currentRole)) {
+    if (!['uploader'].includes(currentRole)) {
       try {
         allFolders = await traverseFoldersContainersAPI(datasetId);
       } catch (err) {
@@ -218,7 +222,6 @@ class FilesContent extends Component {
       }
       const newTree = getGreenRoomTreeNodes(allFolders);
       const coreTreeData = getCoreTreeNodes(allFolders);
-      console.log(newTree);
       // add core virtual folders
       await this.updateVfolders();
 
@@ -231,13 +234,6 @@ class FilesContent extends Component {
           children: null,
         };
       });
-      // if (coreTreeData) {
-      //   coreTreeData = coreTreeData.concat(vfoldersNodes);
-      // } else {
-      //   coreTreeData = vfoldersNodes;
-      // }
-
-      //Calculate default pane
       const newPanes = this.state.panes;
       const pane = {};
       const firstPane = newTree[0];
@@ -265,7 +261,7 @@ class FilesContent extends Component {
       }));
       this.props.setCurrentProjectTree({
         greenroom: newTree,
-        core: coreTreeData,
+        core: coreTreeData || [],
         vfolders: vfoldersNodes,
       });
     } else {
@@ -371,11 +367,6 @@ class FilesContent extends Component {
           const currentDatasetProccessed = this.props.currentProject;
           info.node.path = pipelines['GENERATE_PROCESS'];
 
-          // const {
-          //   processedData,
-          //   totalProcessedItem,
-          // } = await this.fetchProcesseData(pipelines['GENERATE_PROCESS'], null);
-
           const result = await this.fetchProcesseData(
             pipelines['GENERATE_PROCESS'],
             null,
@@ -451,6 +442,49 @@ class FilesContent extends Component {
               treeKey: prev.treeKey + 1,
             };
           });
+        } else if (selectedKeys[0].includes('trash')) {
+          const currentDatasetProccessed = this.props.currentProject;
+
+          const {
+            processedData,
+            totalProcessedItem,
+          } = await this.fetchProcesseData(
+            pipelines['DATA_DELETE'],
+            'file_data',
+            selectedKeys[0],
+          );
+
+          let title = getTitle(`Green Room - ${info.node.title}  `);
+          let type = DataSourceType.GREENROOM_TRASH;
+          if (selectedKeys[0].startsWith('core')) {
+            title = getTitle(`Core - ${info.node.title}  `);
+            type = DataSourceType.CORE_TRASH;
+          }
+
+          const pane = {
+            title: title,
+            content: (
+              <RawTable
+                {...info.node}
+                projectId={this.props.match.params.datasetId}
+                currentDataset={currentDatasetProccessed}
+                rawData={processedData}
+                totalItem={totalProcessedItem}
+                type={type}
+                panelKey={info.node.key.toString()}
+              />
+            ),
+            key: info.node.key.toString(),
+            id: info.node.id,
+          };
+          panes.push(pane);
+          this.setState((prev) => {
+            return {
+              activeKey: selectedKeys[0].toString(),
+              panes,
+              treeKey: prev.treeKey + 1,
+            };
+          });
         } else if (selectedKeys[0].startsWith('core')) {
           const currentDatasetProccessed = this.props.currentProject;
           // for data copy
@@ -467,10 +501,10 @@ class FilesContent extends Component {
 
           const title = getTitle(`Core - ${info.node.title}  `);
           let type = 'unknown';
-          if (selectedKeys[0].toLowerCase() == 'core-raw') {
+          if (selectedKeys[0].toLowerCase() === 'core-raw') {
             type = DataSourceType.CORE_RAW;
           }
-          if (selectedKeys[0].toLowerCase() == 'core-processed') {
+          if (selectedKeys[0].toLowerCase() === 'core-processed') {
             type = DataSourceType.CORE_PROCESSED;
           }
           const pane = {
@@ -516,11 +550,12 @@ class FilesContent extends Component {
               'createTime',
             );
             if (filesRes.data.result) {
-              const vfilesData = filesRes.data.result.map((item) => ({
+              const vfilesData = filesRes.data.result.entities.map((item) => ({
                 ...item.attributes,
                 key: item.attributes.name,
                 typeName: item.typeName,
                 guid: item.guid,
+                geid: item.geid,
                 tags: item.labels,
               }));
               const title = getTitle(`Collection - ${info.node.title}  `);
@@ -555,9 +590,10 @@ class FilesContent extends Component {
       }
       this.clickLock = false;
     };
+
     return (
       <>
-        {!['uploader', 'contributor'].includes(this.state.currentRole) &&
+        {!['uploader'].includes(this.state.currentRole) &&
         this.props.project &&
         this.props.project.tree &&
         this.props.project.tree['greenroom'] ? (
@@ -576,6 +612,7 @@ class FilesContent extends Component {
                 active={activeKey.startsWith('greenroom')}
               >
                 <Tree
+                  className="green_room"
                   showIcon
                   defaultExpandedKeys={['greenroom-raw', 'greenroom-processed']}
                   defaultSelectedKeys={[activeKey]}
@@ -585,8 +622,9 @@ class FilesContent extends Component {
                   key={treeKey}
                 />
               </Collapse>
-              {['admin', 'collaborator'].includes(this.state.currentRole) &&
-              this.props.project.tree['core']?.length > 0 ? (
+              {['admin', 'collaborator', 'contributor'].includes(
+                this.state.currentRole,
+              ) && this.props.project.tree['core']?.length > 0 ? (
                 <Collapse
                   title={'Core'}
                   icon={<CloudServerOutlined />}
@@ -656,6 +694,7 @@ export default connect(
     containersPermission: state.containersPermission,
     uploadList: state.uploadList,
     project: state.project,
+    username: state.username,
   }),
   { setCurrentProjectTree, setCurrentProjectActivePane },
 )(withCurrentProject(withRouter(FilesContent)));

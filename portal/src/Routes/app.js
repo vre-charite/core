@@ -28,13 +28,6 @@ const authedRoutes = [
     component: UserManagement,
     protectedType: 'isLogin',
   },
-
-
-  /*   {
-    path: "/admin",
-    component: AdminManagement,
-    protectedType: "isLogin",
-  }, */
   { path: '/error', component: ErrorPage, protectedType: 'isLogin' },
 ];
 

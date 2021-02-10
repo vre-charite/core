@@ -15,3 +15,14 @@ exports.getFileSize = (text) => {
 exports.trimString = (str) => {
   return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 };
+
+exports.currentBrowser = () => {
+  let userAgentString = window.navigator.userAgent
+
+  let safariAgent = userAgentString.indexOf("Safari") > -1; 
+  let chromeAgent = userAgentString.indexOf("Chrome") > -1; 
+  // Discard Safari since it also matches Chrome 
+  if ((chromeAgent) && (safariAgent)) safariAgent = false; 
+
+  return safariAgent;
+}

@@ -11,7 +11,6 @@ function AsyncFormModal(props) {
     children,
     form,
     confirmLoading,
-    title,
     id,
   } = props;
   if (!_.isObject(cancelAxios) && _.isFunction(cancelAxios.cancelFunction)) {
@@ -34,7 +33,6 @@ function AsyncFormModal(props) {
     onOk(e);
   };
   const cancel = (e) => {
-    console.log(cancelAxios, 'cancelAxios');
     cancelAxios && cancelAxios.cancelFunction && cancelAxios.cancelFunction();
     if (form && _.isFunction(form.resetFields)) {
       form.resetFields();

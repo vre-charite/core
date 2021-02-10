@@ -62,7 +62,6 @@ const UploaderModal = ({ uploader: visible, cancel, datasetList }) => {
         // });
       })
       .catch(info => {
-        console.log("Validate Failed:", info);
         setIsloading(false);
       });
   };

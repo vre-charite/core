@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useHistory, Link } from 'react-router-dom';
 import {
   Upload,
   Button,
@@ -14,38 +13,39 @@ import {
   message,
 } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
-import jwtDecode from 'jwt-decode';
-import { tokenManager } from '../../Service/tokenManager';
 import { contactUsApi } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { useTranslation } from 'react-i18next';
 import { trimString } from '../../Utility';
-
+import i18n from '../../i18n';
 const { Option } = Select;
 const { TextArea } = Input;
 const { Title, Paragraph } = Typography;
 
 function ContactUsForm(props) {
   const [form] = Form.useForm();
-  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
+  const { t } = useTranslation(['tooltips', 'formErrorMessages']);
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const username = useSelector((state) => state.username);
   const email = useSelector((state) => state.email);
-  let history = useHistory();
   function onFinish(values) {
     setLoading(true);
     if (attachments.length > 4) {
-      message.error('Please do not attach more than 4 files');
+      message.error(
+        `${i18n.t('formErrorMessages:contactUs.attachment.number')}`,
+      );
       setLoading(false);
       return;
     }
     for (let file of attachments) {
       const isOversize = file.size / 1024 / 1024 > 2;
       if (isOversize) {
-        message.error('File size must be smaller than 2MB');
+        message.error(
+          `${i18n.t('formErrorMessages:contactUs.attachment.size')}`,
+        );
         setLoading(false);
         return;
       }
@@ -53,16 +53,11 @@ function ContactUsForm(props) {
     values.attachments = attachments.map((v) => {
       return { name: v.name, data: v.base64 };
     });
-    console.log(values);
     contactUsApi(values)
       .then((res) => {
         // history.push('/support/contact-confirmation');
         setLoading(false);
         setSuccess(true);
-        // message.success(
-        //   'Your request is sent! It will be reviewed by a member of the VRE support team and you will receive a reply shortly through the email address associated with your VRE user account.​',
-        //   15,
-        // );
       })
       .catch((err) => {
         const errorMessager = new ErrorMessager(
@@ -75,14 +70,6 @@ function ContactUsForm(props) {
 
   function handleChange(value) {
     console.log(`selected ${value}`);
-  }
-  function getEmail() {
-    const accessToken = tokenManager.getCookie('access_token');
-
-    if (accessToken) {
-      const email = jwtDecode(accessToken).email;
-      return email;
-    } else return;
   }
   function resetSubmission() {
     setSuccess(false);
@@ -174,8 +161,7 @@ function ContactUsForm(props) {
                 },
                 {
                   validator: (rule, value) => {
-                    if (!value)
-                      return Promise.reject();
+                    if (!value) return Promise.reject();
                     const isLengthValid =
                       value &&
                       trimString(value) &&
@@ -202,8 +188,7 @@ function ContactUsForm(props) {
                 },
                 {
                   validator: (rule, value) => {
-                    if (!value)
-                      return Promise.reject();
+                    if (!value) return Promise.reject();
                     const isLengthValid =
                       value &&
                       trimString(value) &&
@@ -240,7 +225,11 @@ function ContactUsForm(props) {
                     file.type !== 'image/gif' &&
                     file.type !== 'application/pdf'
                   ) {
-                    message.error(`File format is not accepted`);
+                    message.error(
+                      `${i18n.t(
+                        'formErrorMessages:contactUs.attachment.format',
+                      )}`,
+                    );
                     return;
                   }
                   const reader = new FileReader();

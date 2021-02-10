@@ -1,5 +1,5 @@
-import { serverAxios, axios, devOpServer, dataOpsServer } from './config';
-
+import { serverAxios, axios, devOpServer } from './config';
+import { objectKeysToSnakeCase } from '../Utility';
 /**
  * Get all the datasets
  *
@@ -7,28 +7,21 @@ import { serverAxios, axios, devOpServer, dataOpsServer } from './config';
  * @IRDP-432
  */
 function getDatasetsAPI(params = {}) {
+  // return serverAxios({
+  //   url: '/v1/datasets/',
+  //   method: 'GET',
+  //   params: objectKeysToSnakeCase(params),
+  // });
+  delete params['end_params'];
+  if (params['tags']) {
+    params['tags'] = JSON.stringify(params['tags']);
+  }
   return serverAxios({
     url: '/v1/datasets/',
     method: 'GET',
-    params,
+    params: objectKeysToSnakeCase(params),
   });
 }
-
-// /**
-//  * Create a dataset
-//  *
-//  * @param {object} data
-//  * @returns success/fail
-//  * @IRDP-432
-//  */
-// function createDatasetAPI(data) {
-//   console.log('createDatasetAPI -> data', data);
-//   return serverAxios({
-//     url: `/v1/datasets`,
-//     method: 'POST',
-//     data,
-//   });
-// }
 
 /**
  * Create a project
@@ -41,7 +34,6 @@ function getDatasetsAPI(params = {}) {
 function createProjectAPI(data, cancelAxios) {
   const CancelToken = axios.CancelToken;
   const url = `/v1/datasets/`;
-  console.log('createProjectAPI -> url', url);
   return serverAxios({
     url: url,
     method: 'POST',
@@ -83,7 +75,7 @@ function queryDatasetAPI(data) {
 
 function listFilesApi(datasetId) {
   return serverAxios({
-    url: `/datasets/${datasetId}`,
+    url: `v1/datasets/${datasetId}`,
     method: 'GET',
   });
 }
@@ -200,13 +192,26 @@ function createPersonalDatasetAPI(username) {
 function traverseFoldersContainersAPI(containerId) {
   return serverAxios({
     url: `/v1/files/folders`,
-    params: { container_id: containerId },
+    params: { container_id: containerId, trash_can: true },
   });
 }
 
 function listAllContainersPermission(username) {
   return serverAxios({
     url: `/v1/users/${username}/datasets`,
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
+  });
+}
+
+async function listUsersContainersPermission(username, data) {
+  return serverAxios({
+    // url: `http://localhost:5000/v1/users/${username}/datasets`,
+    url: `/v1/users/${username}/datasets`,
+    method: 'POST',
+    data,
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
   });
 }
 
@@ -217,16 +222,25 @@ function updateDatasetInfoAPI(containerId, data) {
     data,
   });
 }
+function updateDatasetIcon(containerId, base64Img) {
+  return serverAxios({
+    url: `/v1/datasets/${containerId}`,
+    method: 'PUT',
+    data: {
+      icon: base64Img,
+    },
+  });
+}
 function listAllVirtualFolder(containerId) {
-  return devOpServer({
-    url: `/v1/vfolders?container_id=${containerId}`,
+  return serverAxios({
+    url: `/v1/vfolder/?container_id=${containerId}`,
     method: 'GET',
   });
 }
 
 function createVirtualFolder(containerId, name) {
-  return devOpServer({
-    url: `/v1/vfolders`,
+  return serverAxios({
+    url: `/v1/vfolder/`,
     method: 'POST',
     data: {
       name: name,
@@ -234,24 +248,62 @@ function createVirtualFolder(containerId, name) {
     },
   });
 }
-function listAllfilesVfolder(folderId, page, pageSize, order, column) {
+async function listAllfilesVfolder(folderId, page, pageSize, order, column) {
+  const columnMap = {
+    createTime: 'time_created',
+    fileName: 'name',
+    owner: 'uploader',
+    fileSize: 'file_size',
+    generateID: 'generate_id',
+  };
   order = order ? order : 'desc';
-  column = column ? column : 'createTime';
-  return devOpServer({
-    url: `/v1/vfolders/${folderId}?order=${order}&column=${column}`,
+  column = column && columnMap[column] ? columnMap[column] : 'time_created';
+
+  const res = await serverAxios({
+    url: `/v1/vfolder/${folderId}`,
     method: 'GET',
-    data: {
+    params: {
       page: page,
       page_size: pageSize,
-      column: column,
-      order: order,
+      order_by: column,
+      order_type: order,
     },
   });
+  const entities = res.data.result.map((item) => {
+    let typeName =
+      item.labels.indexOf('Raw') !== -1 ? 'nfs_file' : 'nfs_file_processed';
+    let formatRes = {
+      displayText: item.fullPath,
+      guid: item.guid,
+      geid: item.globalEntityId,
+      typeName: typeName,
+      attributes: {
+        createTime: item.timeCreated,
+        fileName: item.name,
+        fileSize: item.fileSize,
+        name: item.fullPath,
+        owner: item.uploader,
+        path: item.path,
+        qualifiedName: item.fullPath,
+        generateId:
+          item.generateId && typeof item.generateId !== 'undefined'
+            ? item.generateId
+            : 'undefined',
+      },
+      labels: item.tags,
+    };
+    return formatRes;
+  });
+  res.data.result = {
+    approximateCount: res.data.total,
+    entities,
+  };
+  return res;
 }
 
 function deleteVirtualFolder(folderId) {
-  return devOpServer({
-    url: `/v1/vfolders/${folderId}`,
+  return serverAxios({
+    url: `/v1/vfolder/${folderId}`,
     method: 'DELETE',
   });
 }
@@ -260,6 +312,186 @@ function listAllCopy2CoreFiles(projectCode, sessionId) {
   return devOpServer({
     url: `/v1/file/actions/status?action=data_transfer&project_code=${projectCode}&session_id=${sessionId}`,
     method: 'GET',
+  });
+}
+
+function loadDeletedFiles(projectCode, sessionId) {
+  return devOpServer({
+    url: `/v1/file/actions/status?action=data_delete&project_code=${projectCode}&session_id=${sessionId}`,
+    method: 'GET',
+  });
+}
+
+function getProjectManifestList(projectCode) {
+  return serverAxios({
+    url: `/v1/data/manifests?project_code=${projectCode}`,
+    method: 'GET',
+  });
+}
+
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-921
+ * @param {number} manifestId
+ */
+function getManifestById(manifestId) {
+  return serverAxios({
+    url: `/v1/data/manifest/${manifestId}`,
+  });
+}
+
+/**
+ * update the manifest attribute for a specified file
+ * https://indocconsortium.atlassian.net/browse/VRE-947
+ * @param {string} filePath
+ * @param {object} attributes all the attributes {name:value}
+ */
+function updateFileManifestAPI(filePath, attributes) {
+  return serverAxios({
+    url: `/v1/file/manifest`,
+    method: 'PUT',
+    data: {
+      file_path: filePath,
+      ...attributes,
+    },
+  });
+}
+
+function addNewManifest(name, projectCode) {
+  return serverAxios({
+    url: `/v1/data/manifests`,
+    method: 'POST',
+    data: {
+      name: name,
+      project_code: projectCode,
+    },
+  });
+}
+function updateManifest(manifestId, name, projectCode) {
+  return serverAxios({
+    url: `/v1/data/manifest/${manifestId}`,
+    method: 'PUT',
+    data: {
+      name: name,
+      project_code: projectCode,
+    },
+  });
+}
+function deleteManifest(manifestId) {
+  return serverAxios({
+    url: `/v1/data/manifest/${manifestId}`,
+    method: 'DELETE',
+  });
+}
+function deleteAttrFromManifest(attrId) {
+  return serverAxios({
+    url: `/v1/data/attribute/${attrId}`,
+    method: 'DELETE',
+  });
+}
+function updateAttrFromManifest(
+  manifestId,
+  attrId,
+  name,
+  projectCode,
+  type,
+  value,
+  optional,
+) {
+  return serverAxios({
+    url: `/v1/data/attribute/${attrId}`,
+    method: 'PUT',
+    data: {
+      manifest_id: manifestId,
+      name: name,
+      project_code: projectCode,
+      type: type,
+      value: value,
+      optional: optional,
+    },
+  });
+}
+function addNewAttrToManifest(
+  manifestId,
+  name,
+  projectCode,
+  type,
+  value,
+  optional,
+) {
+  return serverAxios({
+    url: `/v1/data/attributes`,
+    method: 'POST',
+    data: [
+      {
+        name: name,
+        project_code: projectCode,
+        type: type,
+        value: value,
+        manifest_id: manifestId,
+        optional: optional,
+      },
+    ],
+  });
+}
+function addNewAttrsToManifest(attrsParams) {
+  const refinedAttrs = attrsParams.map((attr) => {
+    return {
+      name: attr.name,
+      project_code: attr.projectCode,
+      type: attr.type,
+      value: attr.value,
+      manifest_id: attr.manifestId,
+      optional: attr.optional,
+    };
+  });
+  return serverAxios({
+    url: `/v1/data/attributes`,
+    method: 'POST',
+    data: refinedAttrs,
+  });
+}
+function attachManifest(manifestId, files, attributes) {
+  const refinedArr = files.map((file_path) => {
+    return {
+      manifest_id: manifestId,
+      file_path: file_path,
+      attributes: attributes,
+    };
+  });
+  return serverAxios({
+    url: `/v1/file/manifest/attach`,
+    method: 'POST',
+    data: refinedArr,
+  });
+}
+
+function getProjectInfoAPI(projectId) {
+  return serverAxios({
+    // url: `http://localhost:5000/v1/project/${projectId}`,
+    url: `/v1/project/${projectId}`,
+    method: 'GET',
+  });
+}
+
+/**
+ * get project by project code. It's used to check the uniqueness of project code
+ * @param {string} projectCode the project code
+ */
+function getDatasetByCode(projectCode) {
+  return serverAxios({
+    url: '/v1/project/code/' + projectCode,
+  });
+}
+
+/**
+ * import a manifest from json file
+ * @param {*} manifest the manifest object, https://indocconsortium.atlassian.net/browse/VRE-922
+ */
+function importManifestAPI(manifest) {
+  return serverAxios({
+    url: '/v1/import/manifest',
+    data: manifest,
+    method: 'POST',
   });
 }
 
@@ -281,10 +513,27 @@ export {
   removeUserFromDatasetApi,
   setUserStatusFromDatasetApi,
   updateDatasetInfoAPI,
+  updateDatasetIcon,
   getSystemTagsAPI,
   createVirtualFolder,
   listAllVirtualFolder,
   listAllfilesVfolder,
   deleteVirtualFolder,
+  listUsersContainersPermission,
   listAllCopy2CoreFiles,
+  getProjectInfoAPI,
+  getDatasetByCode,
+  getProjectManifestList,
+  addNewManifest,
+  addNewAttrToManifest,
+  deleteManifest,
+  deleteAttrFromManifest,
+  updateAttrFromManifest,
+  loadDeletedFiles,
+  updateManifest,
+  addNewAttrsToManifest,
+  attachManifest,
+  importManifestAPI,
+  getManifestById,
+  updateFileManifestAPI,
 };

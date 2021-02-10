@@ -151,7 +151,12 @@ function checkUserPlatformRole(email) {
 function getUserProjectListAPI(username) {
   return axios({
     url: `/v1/users/${username}/datasets`,
-    method: 'GET',
+    method: 'POST',
+    data: {
+      is_all: true,
+      order_by: "time_created",
+      order_type: "desc",
+    }
   });
 }
 
@@ -168,7 +173,6 @@ function updateUserStatusAPI(data) {
     data,
   });
 }
-
 /**
  * get all the invitations on the platform
  *

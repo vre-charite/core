@@ -1,6 +1,6 @@
 {
   "name": "portal",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "homepage": "/vre",
   "dependencies": {
@@ -15,6 +15,7 @@
     "@testing-library/user-event": "^7.1.2",
     "animate.css": "^4.1.0",
     "antd": "^4.2.0",
+    "antd-img-crop": "^3.13.2",
     "async": "^3.2.0",
     "axios": "^0.19.2",
     "bizcharts": "^3.5.8",
@@ -24,6 +25,8 @@
     "detect-browser": "^5.1.1",
     "guacamole-common-js": "^1.1.0-b",
     "history": "^4.9.0",
+    "html-react-parser": "^1.1.1",
+    "i": "^0.3.6",
     "i18next": "^19.8.3",
     "i18next-http-backend": "^1.0.21",
     "install": "^0.13.0",
@@ -32,7 +35,7 @@
     "keycloak-js": "^10.0.2",
     "moment-timezone": "^0.5.31",
     "node-sass": "^4.14.1",
-    "npm": "^6.14.8",
+    "npm": "^6.14.10",
     "password-validator": "^5.1.0",
     "pino": "^6.7.0",
     "pm2": "^4.4.0",
@@ -53,6 +56,7 @@
     "redux-persist": "^6.0.0",
     "redux-persist-transform-filter": "0.0.20",
     "redux-state-sync": "^3.1.2",
+    "semver": "^7.3.4",
     "uuid": "^8.3.0"
   },
   "scripts": {
@@ -94,4 +98,5 @@
     }
   }
 }
+
 

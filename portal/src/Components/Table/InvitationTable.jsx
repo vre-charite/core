@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-
-import { Button, Menu, Dropdown, Badge } from 'antd';
-import { MoreOutlined } from '@ant-design/icons';
 import SearchTable from './SearchTable';
 import { getInvitationsAPI } from '../../APIs';
 import { timeConvert, partialString } from '../../Utility';
@@ -37,10 +34,12 @@ function InvitationTable(props) {
       filtersWithProject.filters.projectId = props.projectId;
       setFilters(filtersWithProject);
     }
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     fetchInvitations();
+    // eslint-disable-next-line
   }, [filters]);
 
   const fetchInvitations = () => {
@@ -210,7 +209,7 @@ function InvitationTable(props) {
   }
   const getExpired = (record) => {
     const current = moment();
-    const isExpired = moment(record.expiryTimestamp).isBefore(current);
+    const isExpired = moment(timeConvert(record.expiryTimestamp, 'datetime')).isBefore(current);
     return isExpired ? 'disabled' : ' ';
   };
   return (

@@ -1,6 +1,9 @@
-import React, { useState, Fragment } from 'react';
-import { Modal, Form, Select, Radio, message, Input, Button, Tooltip } from 'antd';
-import { ExclamationCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Modal, Form, Radio, message, Input, Button, Tooltip } from 'antd';
+import {
+  ExclamationCircleOutlined,
+  QuestionCircleOutlined,
+} from '@ant-design/icons';
 import { connect } from 'react-redux';
 import {
   addUserToDatasetAPI,
@@ -9,24 +12,22 @@ import {
   checkUserPlatformRole,
 } from '../../../../APIs';
 import {
-  apiErrorHandling,
   validateEmail,
   formatRole,
-  convertRole,
+  useCurrentProject,
 } from '../../../../Utility';
 import { namespace, ErrorMessager } from '../../../../ErrorMessages';
 import { useTranslation } from 'react-i18next';
-
-const { Option, OptGroup } = Select;
 const { confirm } = Modal;
 
 function AddUserModal(props) {
-  const { isAddUserModalShown, cancelAddUser, containerDetails } = props;
+  const { isAddUserModalShown, cancelAddUser } = props;
   const [form] = Form.useForm();
   const [submitting, toggleSubmitting] = useState(false);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [role, setRole] = useState('admin');
+  const [currentDataset = {}] = useCurrentProject();
   const handleCancel = () => {
     form.resetFields();
     cancelAddUser();
@@ -39,15 +40,11 @@ function AddUserModal(props) {
    * @param {string} email
    */
   const confirmForOutPlatform = (projectId, role, email) => {
-    const { containerName: projectName } = props.containersPermission.find(
-      (item) => projectId === item.containerId,
-    );
-
     const config = {
       title: 'Confirm',
-      content: `User ${email} doesn't exist. Invite the user to the ${projectName} Project with the role of ${formatRole(
-        role,
-      )}?`,
+      content: `User ${email} doesn't exist. Invite the user to the ${
+        currentDataset.name
+      } Project with the role of ${formatRole(role)}?`,
       icon: <ExclamationCircleOutlined />,
       onOk: () => {
         inviteUserApi(email, role, parseInt(projectId))
@@ -80,7 +77,7 @@ function AddUserModal(props) {
       const isValidEmail = validateEmail(values.email);
 
       if (!isValidEmail) {
-        message.error('Wrong email format');
+        message.error(t('errormessages:addUser2Project.email'));
         setIsSubmitting(false);
         return;
       }
@@ -93,15 +90,11 @@ function AddUserModal(props) {
             if (res.data.result && res.data.result.length > 0) {
               const { role, status } = res.data.result[0];
               if (status === 'disabled') {
-                message.error(
-                  'This user is disabled on the platform and cannot be added to a project.',
-                );
+                message.error(t('errormessages:addUser2Project.disabledUser'));
                 toggleSubmitting(false);
                 setIsSubmitting(false);
               } else if (role === 'admin') {
-                message.error(
-                  'Platform Administrator can not be invited to the project',
-                );
+                message.error(t('errormessages:addUser2Project.platformAdmin'));
                 toggleSubmitting(false);
                 setIsSubmitting(false);
               } else if (role === 'member') {
@@ -110,12 +103,8 @@ function AddUserModal(props) {
                   props.datasetId,
                 ).then((res) => {
                   const username = res.data.result['username'];
-                  const role = values.role;                  const projectId = parseInt(props.datasetId);
-                  const {
-                    containerName: projectName,
-                  } = props.containersPermission.find(
-                    (item) => projectId === item.containerId,
-                  );
+                  const role = values.role;
+                  const projectId = parseInt(props.datasetId);
                   addUserToDatasetAPI(username, projectId, role)
                     .then(async (res) => {
                       await props.getUsers();
@@ -125,7 +114,7 @@ function AddUserModal(props) {
                           'success:addUser.addUserToDataset.0',
                         )} ${username} ${t(
                           'success:addUser.addUserToDataset.1',
-                        )} ${projectName}`,
+                        )} ${currentDataset.name}`,
                       );
                     })
                     .catch((err) => {
@@ -180,7 +169,7 @@ function AddUserModal(props) {
 
   const onRoleChange = (e) => {
     setRole(e.target.value);
-  }
+  };
 
   return (
     <Modal
@@ -226,7 +215,11 @@ function AddUserModal(props) {
           <Input type="email" />
         </Form.Item>
         <Form.Item
-          initialValue={props.rolesDetail && props.rolesDetail['admin'] && props.rolesDetail['admin']['value']}
+          initialValue={
+            props.rolesDetail &&
+            props.rolesDetail['admin'] &&
+            props.rolesDetail['admin']['value']
+          }
           label={'Role'}
           name="role"
           rules={[
@@ -237,16 +230,15 @@ function AddUserModal(props) {
           ]}
         >
           <Radio.Group style={{ marginTop: 5 }} onChange={onRoleChange}>
-              {
-                props.rolesDetail && props.rolesDetail.map((el) => (
-                  <Radio value={el.value}>
-                    {el.label}&nbsp;
-                    <Tooltip title={el.description}>
-                      <QuestionCircleOutlined />
-                    </Tooltip>
-                  </Radio>
-                ))
-              }
+            {props.rolesDetail &&
+              props.rolesDetail.map((el) => (
+                <Radio value={el.value}>
+                  {el.label}&nbsp;
+                  <Tooltip title={el.description}>
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </Radio>
+              ))}
           </Radio.Group>
         </Form.Item>
       </Form>

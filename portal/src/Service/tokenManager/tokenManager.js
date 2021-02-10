@@ -14,7 +14,6 @@ class TokenManager {
     this.cookies = new Cookies();
     this.listeners = [];
     setInterval(() => {
-      // console.log('token time remained ' + this.getTokenTimeRemain() + 's')
       this._traverseListeners();
     }, 1000);
   }

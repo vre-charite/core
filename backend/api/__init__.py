@@ -8,7 +8,7 @@ from .api_cataloguing import APICataloguing
 from .api_time import APITimestamp
 from .api_notification import APINotification
 from .api_dataset.route_registry import APIDateSet
-from .api_data_manifest import APIDataManifest
+from .api_data_manifest.data_manifest import APIDataManifest
 from .api_project import APIProject
 from .api_system_tags import APISystemTags
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Tooltip, Radio, message, Input ,Button} from 'antd';
+import { Modal, Form, Tooltip, Radio, message, Input, Button } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { validateEmail } from '../../../Utility';
 import { useTranslation } from 'react-i18next';
@@ -8,18 +8,14 @@ import { namespace, ErrorMessager } from '../../../ErrorMessages';
 const InviteUserModal = (props) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const { t, i18n } = useTranslation([
-    'tooltips',
-    'formErrorMessages',
-    'success',
-  ]);
+  const { t } = useTranslation(['tooltips', 'formErrorMessages', 'success', 'errormessages']);
 
   const onSubmit = async () => {
     const values = form.getFieldsValue();
     setLoading(true);
 
     if (!values.email) {
-      message.error('Email is required.');
+      message.error(t('errormessages:addUser2Project.emailRequired'));
       setLoading(false);
       return;
     }
@@ -27,7 +23,7 @@ const InviteUserModal = (props) => {
     const isValidEmail = validateEmail(values.email);
 
     if (!isValidEmail) {
-      message.error('Wrong email format.');
+      message.error(t('errormessages:addUser2Project.email'));
       setLoading(false);
       return;
     }
@@ -63,9 +59,9 @@ const InviteUserModal = (props) => {
       okButtonProps={{ loading }}
       cancelButtonProps={{ disabled: loading }}
       footer={[
-        <Button 
-          disabled={loading} 
-          key="back" 
+        <Button
+          disabled={loading}
+          key="back"
           onClick={() => {
             props.onCancel();
             form.resetFields();

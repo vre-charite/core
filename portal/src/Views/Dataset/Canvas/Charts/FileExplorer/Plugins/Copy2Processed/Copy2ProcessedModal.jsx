@@ -3,6 +3,8 @@ import { Modal, message } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { copyFiles } from '../../../../../../../APIs';
 import { triggerEvent } from '../../../../../../../Redux/actions';
+import { tokenManager } from '../../../../../../../Service/tokenManager';
+import i18n from '../../../../../../../i18n';
 const Copy2ProcessedModal = ({ visible, setVisible, files, eraseSelect }) => {
   const [confirmLoading, setConfirmLoading] = React.useState(false);
   const project = useSelector((state) => state.project);
@@ -11,7 +13,7 @@ const Copy2ProcessedModal = ({ visible, setVisible, files, eraseSelect }) => {
   const [skipped, setSkipped] = React.useState([]);
   const dispatch = useDispatch();
 
-  const sessionId = localStorage.getItem('sessionId');
+  const sessionId = tokenManager.getCookie('sessionId');
 
   async function closeModal() {
     setVisible(false);
@@ -42,7 +44,7 @@ const Copy2ProcessedModal = ({ visible, setVisible, files, eraseSelect }) => {
       setConfirmLoading(false);
       dispatch(triggerEvent('LOAD_COPY_LIST'));
     } catch (e) {
-      message.error('Network error, please try again later', 3);
+      message.error(`${i18n.t('errormessages:copyFiles.default.0')}`, 3);
       setConfirmLoading(false);
     }
     if (

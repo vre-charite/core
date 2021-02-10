@@ -56,7 +56,9 @@ def check_role(required_role, parent=None):
                 return {'result': 'Permission Denied'}, 401
 
             for item in relations:
-                role_neo4j_mapped = map_role_neo4j_to_sys(item["r"]["type"])
+                project_role = item["r"]["type"]
+                role_neo4j_mapped = map_role_neo4j_to_sys(project_role)
+                current_identity['project_role'] = project_role
                 if(user_accessible(required_role_mapped, role_neo4j_mapped)):
                     # if user accessible pass authorization and continue function
                     res = function(*args, **kwargs)

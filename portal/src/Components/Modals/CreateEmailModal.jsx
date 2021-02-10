@@ -1,14 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Input, Result } from 'antd';
+import React, { useState } from 'react';
+import {
+  Modal,
+  Button,
+  Form,
+  Input,
+  Result,
+  Select,
+  Spin,
+} from 'antd';
 import { CheckCircleFilled, CloseOutlined } from '@ant-design/icons';
-import { sendEmailToAll } from '../../APIs';
+import { sendEmailToAll, getPortalUsers, sendEmails } from '../../APIs';
 import { trimString } from '../../Utility';
-
+import _ from 'lodash';
+const { Option } = Select;
+let lastFetchId = 0;
 function CreateEmailModal({ visible, setVisble }) {
   const { TextArea } = Input;
   const [sentEmail, setSentEmail] = useState(false);
   const [sentBtnLoading, setSentBtnLoading] = useState(false);
   const [form] = Form.useForm();
+  const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [isFetching, setIsFetching] = useState(false);
   const SUBJECT_LIMIT_MIN = 2;
   const SUBJECT_LIMIT_MAX = 200;
   const CONTENT_LIMIT_MIN = 10;
@@ -25,20 +38,48 @@ function CreateEmailModal({ visible, setVisble }) {
         cancel();
       }, 2000);
     }, 1000);
-    sendEmailToAll(values.Subject, values.Content);
-    // const res = await ;
-    // if (res.status === 200 && res.data.code === 200) {
-
-    // }
+    const receivers = values['to'];
+    if (!!_.find(receivers, (receiver) => receiver.value === 'All Users')) {
+      sendEmailToAll(values.Subject, values.Content);
+    } else {
+      sendEmails(
+        values.Subject,
+        values.Content,
+        values.to.map((item) => item.value),
+      );
+    }
   }
   function cancel() {
     setSentBtnLoading(false);
     setVisble(false);
+    setSelectedUsers([]);
     setTimeout(() => {
       setSentEmail(false);
       form.resetFields();
     }, 500);
   }
+  const fetchUser = (value) => {
+    lastFetchId += 1;
+    const fetchId = lastFetchId;
+    setUsers([]);
+    setIsFetching(true);
+    getPortalUsers({ name: value, orderBy: 'name', orderType: 'asc' }).then(
+      (res) => {
+        if (fetchId !== lastFetchId) {
+          return;
+        }
+        const users = res.data.result.map((item) => ({
+          name: item.name,
+          email: item.email,
+        }));
+        setUsers(users);
+        setIsFetching(false);
+      },
+    );
+  };
+  const handleChange = (value) => {
+    setSelectedUsers(value);
+  };
   return (
     <Modal
       visible={visible}
@@ -78,14 +119,14 @@ function CreateEmailModal({ visible, setVisble }) {
         >
           EMAIL
         </h2>
-        <div
+        {/*         <div
           style={{
             width: 100,
             height: 1,
             border: 0,
             background: 'linear-gradient(to right, #1890ff , white)',
           }}
-        ></div>
+        ></div> */}
         <h4
           style={{
             fontSize: 12,
@@ -110,16 +151,61 @@ function CreateEmailModal({ visible, setVisble }) {
             onFinish={send}
             onFinishFailed={() => setSentBtnLoading(false)}
           >
-            <Form.Item name="to" label="To">
-              <Input placeholder="all users" disabled />
+            <Form.Item
+              rules={[{ required: true, message: 'Receivers is required' }]}
+              name="to"
+              label="To"
+            >
+              {/*  <Input placeholder="all users" disabled /> */}
+              <Select
+                allowClear
+                mode="multiple"
+                labelInValue
+                placeholder="Search Usernames"
+                notFoundContent={isFetching ? <Spin size="small" /> : null}
+                filterOption={false}
+                onSearch={fetchUser}
+                onChange={handleChange}
+                style={{ width: '100%' }}
+                showSearch
+                value={selectedUsers}
+                defaultActiveFirstOption={false}
+                showArrow={false}
+                optionLabelProp="label"
+              >
+                <Option
+                  disabled={
+                    selectedUsers.length > 0 &&
+                    !selectedUsers.find((item) => item.value === 'All Users')
+                  }
+                  label={<b>All Users</b>}
+                  value={'All Users'}
+                >
+                  <b>All Users</b>
+                </Option>
+                {selectedUsers.map((item) => item.value).includes('All Users')
+                  ? []
+                  : users.map((item) => (
+                      <Option
+                        label={item.name}
+                        key={item.name}
+                        value={item.email}
+                      >
+                        {item.name}
+                      </Option>
+                    ))}
+              </Select>
             </Form.Item>
             <Form.Item
               name="Subject"
               label={`Subject (between ${SUBJECT_LIMIT_MIN}-${SUBJECT_LIMIT_MAX} letters)`}
               rules={[
-                { required: true, message: '"Subject" is required' },
                 {
+                  required: true,
                   validator: (rule, value) => {
+                    if (value === undefined) {
+                      return Promise.reject(`"Subject" is required`);
+                    }
                     const isLengthValid =
                       value.length >= SUBJECT_LIMIT_MIN &&
                       value.length <= SUBJECT_LIMIT_MAX &&
@@ -140,9 +226,12 @@ function CreateEmailModal({ visible, setVisble }) {
               name="Content"
               label={`Content (between ${CONTENT_LIMIT_MIN}-${CONTENT_LIMIT_MAX} letters)`}
               rules={[
-                { required: true, message: '"Content" is required' },
                 {
+                  required: true,
                   validator: (rule, value) => {
+                    if (value === undefined) {
+                      return Promise.reject(`"Content" is required`);
+                    }
                     const isLengthValid =
                       value.length >= CONTENT_LIMIT_MIN &&
                       value.length <= CONTENT_LIMIT_MAX &&

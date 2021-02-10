@@ -6,18 +6,25 @@ import { ErrorMessager, namespace } from '../../ErrorMessages';
 import {
   setNewUploadIndicator,
   updateUploadItemCreator,
+  setUploadFileManifest,
 } from '../../Redux/actions';
 import { store } from '../../Redux/store';
 import { sleep } from '../common';
 import reduxActionWrapper from '../reduxActionWrapper';
 import i18n from '../../i18n';
-import {uploadAction} from '../'
+import { keepAlive } from '../';
+import { tokenManager } from '../../Service/tokenManager';
+
 const USER_LOGOUT = 'user logged out';
 const [
   updateUploadItemDispatcher,
   setNewUploadIndicatorDispatcher,
-] = reduxActionWrapper([updateUploadItemCreator, setNewUploadIndicator]);
-const _ = require('lodash');
+  setUploadFileManifestDispatcher,
+] = reduxActionWrapper([
+  updateUploadItemCreator,
+  setNewUploadIndicator,
+  setUploadFileManifest,
+]);
 
 const Promise = require('bluebird');
 
@@ -57,6 +64,7 @@ function slice(file, piece = 1024 * 1024 * 5) {
 async function fileUpload(data, resolve, reject) {
   const MAX_LENGTH = 1024 * 1024 * 2;
   const uuid = uuidv4();
+
   const {
     uploadKey,
     generateID,
@@ -65,8 +73,8 @@ async function fileUpload(data, resolve, reject) {
     file,
     projectCode,
     tags,
+    manifest,
   } = data;
-
   setNewUploadIndicatorDispatcher();
 
   let chunks = slice(file, MAX_LENGTH);
@@ -140,7 +148,7 @@ async function fileUpload(data, resolve, reject) {
   bodyFormData.append('resumableIdentifier', file.uid + uuid);
   bodyFormData.append('resumableFilename', file.name);
   if (generateID) bodyFormData.append('generateID', generateID);
-  const sessionId = localStorage.getItem('sessionId');
+  const sessionId = tokenManager.getCookie('sessionId');
   preUpload(datasetId, bodyFormData, sessionId)
     .then((preRes) => {
       Promise.map(
@@ -154,9 +162,12 @@ async function fileUpload(data, resolve, reject) {
                 progress: uploadedSize / totalSize,
                 status: 'uploading',
                 projectCode,
-                taskId: preRes.data && preRes.data.result && preRes.data.result.taskId
+                taskId:
+                  preRes.data &&
+                  preRes.data.result &&
+                  preRes.data.result.taskId,
               });
-              uploadAction();
+              keepAlive();
             })
             .catch(async (err) => {
               const { isLogin } = store.getState();
@@ -190,7 +201,6 @@ async function fileUpload(data, resolve, reject) {
           }
           if (!taskId) {
             await sleep(1000);
-
             const checkedResult = await combineChunks(
               datasetId,
               formData,
@@ -207,11 +217,17 @@ async function fileUpload(data, resolve, reject) {
               throw new Error(`the task Id doesn't exist`);
             }
           }
+          manifest&&setUploadFileManifestDispatcher({
+            manifestId: manifest.id,
+            files: [result.data.result.uploadPath],
+            attributes: manifest && manifest.attributes,
+          });
           updateUploadItemDispatcher({
             uploadKey,
             progress: 1,
             status: 'pending',
-            taskId: preRes.data && preRes.data.result && preRes.data.result.taskId,
+            taskId:
+              preRes.data && preRes.data.result && preRes.data.result.taskId,
             projectCode,
             uploadedTime: Date.now(),
           });

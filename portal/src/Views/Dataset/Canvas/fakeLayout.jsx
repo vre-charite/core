@@ -1,6 +1,3 @@
-import React from 'react';
-
-import FileStatModal from './Modals/FileStatModal';
 
 const info = {
   type: 'info',
@@ -40,11 +37,20 @@ const userStats = {
   exportable: false,
 };
 
+const superset = {
+  type:'superset',
+  key:'4',
+  title:"Superset",
+  defaultSize: 'm',
+  expandable: false,
+  exportable: false,
+}
+
 const cardsAttr = {
   initial: [],
   //  vre cards
+  //admin: [info, fileStats, files, userStats,superset],
   admin: [info, fileStats, files, userStats],
-
   uploader: [
     info,
     {

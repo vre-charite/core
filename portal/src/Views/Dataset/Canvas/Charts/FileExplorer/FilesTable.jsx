@@ -1,8 +1,7 @@
-import { Table, Input, Button, Space, Popover, Typography } from 'antd';
+import { Table, Input, Button, Space } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import React from 'react';
 
-const { Paragraph } = Typography;
 
 class FilesTable extends React.Component {
   constructor(props) {
@@ -120,6 +119,7 @@ class FilesTable extends React.Component {
     if (pagination.pageSize) this.setState({ pageSize: pagination.pageSize });
 
     let searchText = [];
+    // eslint-disable-next-line
     let isSearchingFile = false;
 
     if (param2.fileName && param2.fileName.length > 0) {
@@ -155,7 +155,7 @@ class FilesTable extends React.Component {
       pagination.pageSize,
       pagination.current - 1,
       this.props.panelKey,
-      param3 ? param3.columnKey : 'createTime',
+      param3.columnKey || 'createTime',
       searchText,
       order,
       this.props.tags,
@@ -165,7 +165,6 @@ class FilesTable extends React.Component {
   render() {
     const { page, pageSize } = this.state;
     const { totalItem } = this.props;
-    const { selectedRecord } = this.props;
 
     const columns =
       this.props.columns &&

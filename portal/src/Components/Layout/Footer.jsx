@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Layout, Button, Space } from 'antd';
 import styles from './index.module.scss';
 import TermsOfUseModal from '../Modals/TermsOfUseModal';
-const { Header, Footer, Sider, Content } = Layout;
+import { setIsReleaseNoteShownCreator } from '../../Redux/actions';
+import { useDispatch } from 'react-redux';
+import { version } from '../../../package.json';
+const { Footer } = Layout;
 
 function AppFooter(props) {
+  const dispatch = useDispatch();
   const [modal, setModal] = useState(false);
   const showModal = () => {
     setModal(true);
@@ -23,7 +27,16 @@ function AppFooter(props) {
         </Button> */}
       </Space>
       <small className={styles.copyright}>
-        Version 0.3.0. Copyright © {new Date().getFullYear()},{' '}
+        <Button
+          onClick={() => {
+            dispatch(setIsReleaseNoteShownCreator(true));
+          }}
+          type="link"
+        >
+          {' '}
+          <small className={styles.copyright}> Version {version}</small>
+        </Button>{' '}
+        Copyright © {new Date().getFullYear()},{' '}
         <a
           href="https://www.indocresearch.org/"
           target="_blank"

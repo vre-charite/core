@@ -8,6 +8,7 @@ import jwt as pyjwt
 import importlib
 import json
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from app.db import db
 
 # from hdfs import InsecureClient
 # from hdfs.ext.kerberos import KerberosClient
@@ -39,6 +40,7 @@ def create_app(extra_config_settings={}):
 
     # initialize flask executor
     executor.init_app(app)
+    db.init_app(app)
 
     # dynamic add the dataset module by the config we set
     for apis in ConfigClass.api_modules:
@@ -124,7 +126,6 @@ def create_app(extra_config_settings={}):
         except Exception as e:
             _logger.error(str(e))
             raise JWTError(description='Error', error=e)
-
         return {"user_id": user_id, "username": username, "role": role, "email": email, "first_name": first_name, "last_name": last_name}
 
     return app

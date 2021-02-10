@@ -19,11 +19,12 @@ class APIProject(metaclass=MetaAPI):
     '''
     [POST]/projects
     [GET]/projects
-    [GET]/project/<project_code>
+    [GET]/project/<project_id>
     '''
     def api_registry(self):
         api_ns_projects.add_resource(self.RestfulProjects, '/projects')
-        api_ns_project.add_resource(self.RestfulProject, '/project/<project_code>')
+        api_ns_project.add_resource(self.RestfulProject, '/project/<project_id>')
+        api_ns_project.add_resource(self.RestfulProjectByCode, '/project/code/<project_code>')
 
     class RestfulProjects(Resource):
         def get(self):
@@ -37,6 +38,27 @@ class APIProject(metaclass=MetaAPI):
             return my_res.to_dict, my_res.code
 
     class RestfulProject(Resource):
+        def get(self, project_id):
+            # init resp
+            my_res = APIResponse()
+            # init container_mgr
+            container_mgr = SrvContainerManager()
+            if not project_id:
+                my_res.set_code(EAPIResponseCode.bad_request)
+                my_res.set_error_msg('Invalid request, need project_id')
+            project_info = container_mgr.get_by_project_id(project_id)
+            if project_info[0]:
+                if len(project_info[1]) > 0:
+                    my_res.set_code(EAPIResponseCode.success)
+                    my_res.set_result(project_info[1][0])
+                else:
+                    my_res.set_code(EAPIResponseCode.not_found)
+                    my_res.set_error_msg('Project Not Found: ' + project_id)
+            else:
+                my_res.set_code(EAPIResponseCode.internal_error)
+            return my_res.to_dict, my_res.code
+
+    class RestfulProjectByCode(Resource):
         def get(self, project_code):
             # init resp
             my_res = APIResponse()

@@ -4,7 +4,7 @@ import { objectKeysToCamelCase, objectKeysToSnakeCase } from './caseConvert';
 import getChildrenTree from './getChildrenTree';
 import protectedRoutes from './protectedRoutes';
 import { validateEmail } from './tokenRefresh';
-import { sleep, getFileSize, trimString } from './common';
+import { sleep, getFileSize, trimString, currentBrowser, } from './common';
 import {
   useCurrentProject,
   withCurrentProject,
@@ -16,8 +16,8 @@ import { validateTag } from './validateTag';
 import { formatRole, convertRole } from './roleConvert';
 import { convertUTCDateToLocalDate, timeConvert, timezone } from './timeCovert';
 import { partialString } from './column';
-import { getGreenRoomTreeNodes, getCoreTreeNodes } from './fileTree';
-import { pathsMap } from './pathsMap';
+import { getGreenRoomTreeNodes, getCoreTreeNodes, nestedLoop } from './fileTree';
+import { pathsMap, pathNameMap } from './pathsMap';
 
 export {
   fileUpload,
@@ -46,7 +46,10 @@ export {
   getGreenRoomTreeNodes,
   pathsMap,
   getCoreTreeNodes,
+  nestedLoop,
+  pathNameMap,
+  currentBrowser,
 };
 
 export { preLogout, logout } from './logout';
-export {actionType,broadcastAction,uploadAction,debouncedBroadcastAction} from './triggerAction'
+export {actionType,broadcastAction,keepAlive,debouncedBroadcastAction} from './triggerAction'

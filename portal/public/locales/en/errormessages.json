@@ -114,14 +114,6 @@
   "uploadRequestFail": {
     "default": ["Failed to upload", "please try again."]
   },
-  "getRawFilesAPI": {
-    "403": ["You do not have permission to access raw files in this project"],
-    "404": ["The raw files for this project could not be found."],
-    "500": [
-      "Something went wrong while trying to fetch raw files, please try again later.  Error code: 500"
-    ],
-    "default": ["Something went wrong while trying to fetch raw files"]
-  },
   "getChildrenDataset": {
     "403": [
       "You do not have permission to access child datasets in this project."
@@ -335,5 +327,67 @@
     "default": [
       "Something went wrong while trying to featch invitations, please try again later."
     ]
+  },
+  "editManifestOnFile":{
+    "emptyNonOptional":["Input cannot be empty for non-optional attributes"],
+    "lengthExceed":["Text cannot be longer than 100 characters"]
+  },
+  "updateFileManifestAPI":{
+    "default":["Failed to update the manifest"]
+  },
+  "importExportManifest":{
+    "manifestNumberOver":["The number of manifests is over limit"],
+    "parseJsonFailed":["Failed to parse the json file"],
+    "fileTypeError":["Incorrect File format"],
+    "attributesMissing":["The json should have a \"attributes\" property"],
+    "attributesNotArray":["The \"attributes\" property should be an array"],
+    "propertyMissing":["property is missing on the","th attribute"],
+    "nameNotString":["the \"name\" property should be a string on the","th attribute"],
+    "nameLength":["the \"name\" property length should between 1-32 on the","th attribute"],
+    "nameFormat":["the \"name\" property should only contains letters, and/or digits on the","th attribute"],
+    "optionalNotBoolean":["the \"optional\" property should be a boolean on the","th attribute"],
+    "typeFormat":["the \"type\" property should be 'multiple_choice'|'text' on the","th attribute"],
+    "valueNullText":["the \"value\" should be null when the \"type\" is 'text' on the","th attribute"],
+    "valueString":["the \"value\" should be string when the \"multiple_choice\" is 'text' on the","th attribute"],
+    "choiceLength":["the choice's length should be between 1-32 on the","th attribute"],
+    "choiceFormat":["the choice should only contain numbers, digits, and -_!%&/()=?*+#.; on the","th attribute"],
+    "uniqueName":["The \"name\" property should be unique"]
+  },
+  "importManifestAPI":{
+    "default":["Failed to upload the manifest"]
+  },
+  "fileOperations": {
+    "delete": "Error occured when delete files",
+    "noFileToDelete": "Please select files to delete."
+  },
+  "copyFiles": {
+    "default": ["Network error, please try again later"]
+  },
+  "attachManifest": {
+    "default": ["Failed to attach manifest, please try again later"]
+  },
+  "deleteManifest": {
+    "500": ["Manifest has already been attached to files. Please do not delete it"]
+  },
+  "deleteVirtualFolder":{
+    "default": ["Failed to delete collection. Please try again later"]
+  }, 
+  "removeFromVirtualFolder": {
+    "default": ["Failed to remove files from collection. Please try again later"]
+  },
+  "addFilesToVirtualFolder": {
+    "default": ["Failed to add files to collection. Please try again later"]
+  },
+  "createVirtualFolder":{
+    "default": ["Failed to create collection. Please try again later"]
+  },
+  "addFilesToNewFolder":{
+    "default": ["Failed to add files to new collection. Please try again later"]
+  },
+  "addUser2Project": {
+    "email": "Wrong email format",
+    "emailRequired": "Email is required.",
+    "disabledUser": "This user is disabled on the platform and cannot be added to a project.",
+    "platformAdmin": "Platform Administrator can not be invited to the project"
   }
 }

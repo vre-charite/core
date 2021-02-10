@@ -1,20 +1,20 @@
-import React,{useState} from 'react';
-import {useSelector} from 'react-redux';
-import {useParams} from 'react-router-dom';
-import {store} from '../Redux/store'
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
+import { store } from '../Redux/store'
 import _ from 'lodash';
 
 /**
  * 
  */
-function useCurrentProject(){
-    const {containersPermission} = useSelector(state=>state);
-    const {datasetId} = useParams();
-    if(!datasetId){
+function useCurrentProject() {
+    const { containersPermission } = useSelector(state => state);
+    const { datasetId } = useParams();
+    if (!datasetId) {
         return [undefined];
     }
-    const currentProject = _.find(containersPermission,(item)=>{
-        return parseInt(item.containerId)  ===  parseInt(datasetId) ;
+    const currentProject = _.find(containersPermission, (item) => {
+        return parseInt(item.id) === parseInt(datasetId);
     });
     return [currentProject]
 }
@@ -24,8 +24,8 @@ function useCurrentProject(){
  * @param {React.ClassicComponent} WrappedComponent 
  * @returns {JSX.Element}
  */
-function withCurrentProject(WrappedComponent){
-    return function (props){
+function withCurrentProject(WrappedComponent) {
+    return function (props) {
         const [currentProject] = useCurrentProject();
         return <WrappedComponent {...props} currentProject={currentProject} />
     }
@@ -36,18 +36,18 @@ function withCurrentProject(WrappedComponent){
  * @param {number|string} datasetId 
  * @returns {object|undefined} return current project if exist
  */
-function getCurrentProject(datasetId){
-    if((typeof datasetId!== 'number')&&(typeof datasetId!=='string')){
+function getCurrentProject(datasetId) {
+    if ((typeof datasetId !== 'number') && (typeof datasetId !== 'string')) {
         throw new Error('parameter datasetId is required')
     }
-    const {containersPermission} = store.getState();
-    if(!containersPermission||!datasetId){
+    const { containersPermission } = store.getState();
+    if (!containersPermission || !datasetId) {
         return undefined;
     }
-    const currentProject = _.find(containersPermission,(item)=>{
-        return parseInt(item.containerId)  ===  parseInt(datasetId) ;
+    const currentProject = _.find(containersPermission, (item) => {
+        return parseInt(item.id) === parseInt(datasetId);
     });
     return currentProject;
 }
 
-export {useCurrentProject,withCurrentProject,getCurrentProject}
+export { useCurrentProject, withCurrentProject, getCurrentProject }

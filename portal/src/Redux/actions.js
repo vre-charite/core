@@ -35,7 +35,11 @@ import {
   SET_CURRENT_PROJECT_ACTIVE_PANE,
   SET_EMAIL,
   UPDATE_COPY2CORE_LIST,
-  TRIGGER_EVENT,SET_IS_KEYCLOAK_READY
+  TRIGGER_EVENT,
+  SET_IS_KEYCLOAK_READY,
+  SET_IS_RELEASE_NOTE_SHOWN,
+  SET_DELETE_LIST,
+  SET_UPLOAD_FILE_MANIFEST,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -246,7 +250,22 @@ export const triggerEvent = (eventType) => ({
   payload: eventType,
 });
 
-export const setIsKeycloakReady = (isKeycloakReady)=>({
-  type:SET_IS_KEYCLOAK_READY,
-  payload:isKeycloakReady
-})
+export const setIsKeycloakReady = (isKeycloakReady) => ({
+  type: SET_IS_KEYCLOAK_READY,
+  payload: isKeycloakReady,
+});
+
+export const setIsReleaseNoteShownCreator = (isReleaseNoteShown) => ({
+  type: SET_IS_RELEASE_NOTE_SHOWN,
+  payload: isReleaseNoteShown,
+});
+
+export const setDeletedFileList = (payload) => ({
+  type: SET_DELETE_LIST,
+  payload,
+});
+
+export const setUploadFileManifest = (payload) => ({
+  type: SET_UPLOAD_FILE_MANIFEST,
+  payload,
+});

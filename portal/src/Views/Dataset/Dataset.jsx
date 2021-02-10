@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState } from 'react';
 import { StandardLayout } from '../../Components/Layout';
 import FilePanel from '../../Components/Layout/FilePanel';
 import { message } from 'antd';
 import { datasetRoutes as routes } from '../../Routes/index';
-import { withRouter, Switch, Route, Redirect,useParams } from 'react-router-dom';
+import {
+  withRouter,
+  Switch,
+  Route,
+  Redirect,
+  useParams,
+} from 'react-router-dom';
 import ToolBar from './Components/ToolBar';
 import { getUserOnProjectAPI } from '../../APIs';
-import { connect,useSelector } from 'react-redux';
+import { connect } from 'react-redux';
 import { protectedRoutes } from '../../Utility';
 import roleMap from '../../Utility/project-roles.json';
 
@@ -17,26 +22,23 @@ function Dataset(props) {
     match: { path, params },
     containersPermission,
     role,
-    datasetList,
   } = props;
   const [userListOnDataset, setUserListOnDataset] = useState(null);
-  const [userAccess, setUserAccess] = useState(null);
 
   const rolesDetail = [];
-  
+
   for (const key in roleMap) {
     rolesDetail.push({
       value: roleMap[key] && roleMap[key].value,
       label: roleMap[key] && roleMap[key].label,
-      description: roleMap[key] && roleMap[key].description
-    })
+      description: roleMap[key] && roleMap[key].description,
+    });
   }
 
-
-  const {datasetId} = useParams();
+  const { datasetId } = useParams();
   const containerDetails =
-    datasetList[0] &&
-    _.find(datasetList[0]['datasetList'], (item) => {
+    containersPermission &&
+    _.find(containersPermission, (item) => {
       return parseInt(item.id) === parseInt(params.datasetId);
     });
 
@@ -47,9 +49,7 @@ function Dataset(props) {
         const isAccess =
           role === 'admin' ||
           _.some(containersPermission, (item) => {
-            const itemId = parseInt(item.containerId);
-            const paramId = parseInt(params.datasetId);
-            return parseInt(item.containerId) === parseInt(params.datasetId);
+            return parseInt(item.id) === parseInt(params.datasetId);
           });
 
         if (!isAccess) {
@@ -71,14 +71,15 @@ function Dataset(props) {
             path={path + item.path}
             key={item.path}
             render={(props) => {
-              if(!datasetId){
-                throw new Error(`datasetId undefined`)
+              if (!datasetId) {
+                throw new Error(`datasetId undefined`);
               }
               let res = protectedRoutes(
                 item.protectedType,
                 true,
                 datasetId,
                 containersPermission,
+                role,
               );
               if (res === '403') {
                 return <Redirect to="/error/403" />;
@@ -99,6 +100,7 @@ function Dataset(props) {
             }}
           ></Route>
         ))}
+        <Redirect to="/error/404" />
       </Switch>
       <FilePanel />
     </StandardLayout>

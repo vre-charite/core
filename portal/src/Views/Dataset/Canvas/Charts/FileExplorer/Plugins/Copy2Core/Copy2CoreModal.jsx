@@ -4,6 +4,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { copyFiles } from '../../../../../../../APIs';
 import { triggerEvent } from '../../../../../../../Redux/actions';
 import { useEffect } from 'react';
+import { tokenManager } from '../../../../../../../Service/tokenManager';
+import i18n from '../../../../../../../i18n';
 const Copy2CoreModal = ({ visible, setVisible, files, eraseSelect }) => {
   const [confirmLoading, setConfirmLoading] = React.useState(false);
   const [warning, setWarning] = React.useState(false);
@@ -13,10 +15,9 @@ const Copy2CoreModal = ({ visible, setVisible, files, eraseSelect }) => {
   const username = useSelector((state) => state.username);
   const [step, setStep] = React.useState(1);
   const [skipped, setSkipped] = React.useState([]);
-  const successNum = useSelector((state) => state.successNum);
   const dispatch = useDispatch();
 
-  const sessionId = localStorage.getItem('sessionId');
+  const sessionId = tokenManager.getCookie('sessionId');
 
   async function closeModal() {
     setVisible(false);
@@ -61,7 +62,7 @@ const Copy2CoreModal = ({ visible, setVisible, files, eraseSelect }) => {
         setConfirmLoading(false);
         dispatch(triggerEvent('LOAD_COPY_LIST'));
       } catch (e) {
-        message.error('Network error, please try again later', 3);
+        message.error(`${i18n.t('errormessages:copyFiles.default.0')}`, 3);
         setConfirmLoading(false);
       }
       if (

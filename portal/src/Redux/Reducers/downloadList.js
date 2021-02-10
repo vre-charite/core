@@ -17,7 +17,6 @@ function downloadList(state = init, action) {
       return [];
     }
     case UPDATE_DOWNLOAD_ITEM: {
-      console.log(payload)
       const newDownloadList = state.map((el) => {
         if (el.downloadKey === payload.key) el.status = payload.status;
         
@@ -27,7 +26,6 @@ function downloadList(state = init, action) {
       return newDownloadList;
     }
     case SET_DOWNLOAD_LIST: {
-      console.log(payload)
       return payload;
     }
     default: {

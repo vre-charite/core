@@ -1,35 +1,37 @@
 import React, { useState } from 'react';
 import { FolderAddOutlined } from '@ant-design/icons';
-import { Button, Tooltip, message } from 'antd';
+import { Button, message } from 'antd';
 import VirtualFolderModal from './VirtualFolderModal';
+import i18n from '../../../../../../../i18n';
 function VirtualFolderPlugin({ selectedRowKeys, selectedRows }) {
   const [modalVisible, setModalVisible] = useState(false);
   let files = [];
   if (selectedRows) {
-    files = selectedRows.map((v) => (v ? v.guid : v));
+    files = selectedRows.map((v) => (v ? v.geid : v));
   }
   files = files.filter((v) => !!v);
   function popCollectionModal() {
-    if (selectedRowKeys.length == 0) {
-      message.error('Please select files', 3);
+    if (selectedRowKeys.length === 0) {
+      message.error(
+        `${i18n.t('formErrorMessages:addToVfolderModal.files.empty')}`,
+        3,
+      );
       return;
     }
     setModalVisible(true);
   }
   return (
     <>
-      <Tooltip placement="top" title="Add To My Collection">
-        <Button
-          type="primary"
-          shape="circle"
-          onClick={() => {
-            popCollectionModal();
-          }}
-          icon={<FolderAddOutlined />}
-          style={{ marginRight: 8 }}
-          disabled={selectedRowKeys.length == 0}
-        />
-      </Tooltip>
+      <Button
+        type="link"
+        onClick={() => {
+          popCollectionModal();
+        }}
+        icon={<FolderAddOutlined />}
+        style={{ marginRight: 8 }}
+      >
+        Add To Collection
+      </Button>
       <VirtualFolderModal
         files={files}
         visible={modalVisible}

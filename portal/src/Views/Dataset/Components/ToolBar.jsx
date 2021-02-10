@@ -5,6 +5,9 @@ import {
   UploadOutlined,
   TeamOutlined,
   DesktopOutlined,
+  SettingOutlined,
+  FileTextOutlined,
+  ClusterOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
@@ -25,7 +28,7 @@ const ToolBar = ({
     role === 'admin' ||
     _.some(containersPermission, (item) => {
       return (
-        parseInt(item.containerId) === parseInt(params.datasetId) &&
+        parseInt(item.id) === parseInt(params.datasetId) &&
         item.permission === 'admin'
       );
     });
@@ -33,7 +36,9 @@ const ToolBar = ({
   const showJupyter =
     currentProject[0]?.code === 'tvbcloud' ||
     currentProject[0]?.code === 'indoctestproject';
-
+  const showGuacamole =
+    currentProject[0]?.code === 'tvbcloud' ||
+    currentProject[0]?.code === 'indoctestproject';
   return (
     <>
       <Menu
@@ -67,10 +72,37 @@ const ToolBar = ({
           </Menu.Item>
         )}
 
+        {showGuacamole ? (
+          <Menu.Item key="guacamole">
+            <a
+              href={`/workbench/${currentProject[0]?.code}/guacamole/`}
+              //rel="noopener noreferrer"
+              // eslint-disable-next-line
+              target="_blank"
+            >
+              <ClusterOutlined />
+              <span>Guacamole</span>
+            </a>
+          </Menu.Item>
+        ) : (
+          <Menu.Item
+            key="guacamole"
+            onClick={() => {
+              message.info(
+                'This project does not have Guacamole configured yet.',
+              );
+            }}
+          >
+            <ClusterOutlined />
+            <span>Guacamole</span>
+          </Menu.Item>
+        )}
         {showJupyter ? (
           <Menu.Item key="jupyter">
             <a
-              href={`/vre/workbench/j/${currentProject[0]?.code}/`}
+              href={`/workbench/${currentProject[0]?.code}/j/`}
+              //rel="noopener noreferrer"
+              // eslint-disable-next-line
               target="_blank"
             >
               <DesktopOutlined />
@@ -90,7 +122,33 @@ const ToolBar = ({
             <span>Jupyterhub</span>
           </Menu.Item>
         )}
+        <Menu.Item key="xwiki">
+          <a
+            href={`/xwiki/bin/view/Main/${currentProject[0]?.code}/`}
+            //rel="noopener noreferrer"
+            // eslint-disable-next-line
+            target="_blank"
+          >
+            <FileTextOutlined />
+            <span>XWiki</span>
+          </a>
+        </Menu.Item>
+        {adminPermission && (
+          <Menu.Item key="settings">
+            <Link to="settings">
+              <SettingOutlined />
+              <span>Settings</span>
+            </Link>
+          </Menu.Item>
+        )}
       </Menu>
+      {showGuacamole ? (
+        <iframe
+          title="guacamole"
+          style={{ display: 'none', position: 'absolute', zIndex: -1 }}
+          src={`/workbench/${currentProject[0]?.code}/guacamole/`}
+        ></iframe>
+      ) : null}
       <GreenRoomUploader
         isShown={isShown}
         cancel={() => {

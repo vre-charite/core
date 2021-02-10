@@ -21,7 +21,10 @@ import project from './currentProject';
 import email from './userEmail';
 import copy2CoreList from './copy2CoreList';
 import events from './events';
-import isKeycloakReady from './isKeycloakReady'
+import isKeycloakReady from './isKeycloakReady';
+import isReleaseNoteShown from './isReleaseNoteShown';
+import deletedFileList from './deletedFileList';
+import uploadFileManifest from './uploadFileManifest';
 // export default combineReducers({
 //   datasetList,
 //   userList,
@@ -54,7 +57,11 @@ const appReducer = combineReducers({
   downloadClearId,
   panelActiveKey,
   email,
-  events, isKeycloakReady
+  events,
+  isKeycloakReady,
+  isReleaseNoteShown,
+  deletedFileList,
+  uploadFileManifest,
 });
 
 const rootReducer = (state, action) => {

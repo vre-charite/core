@@ -31,6 +31,12 @@ class BaseProxyResource(Resource):
     def post(self, *args, **kwargs):
         return self.call_api(**kwargs)
 
+    def put(self, *args, **kwargs):
+        return self.call_api(**kwargs)
+
+    def delete(self, *args, **kwargs):
+        return self.call_api(**kwargs)
+
     def call_api(self, **kwargs): 
         try:
             method = request.method.lower()

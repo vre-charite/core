@@ -1,5 +1,14 @@
-import React, { useState, useContext } from 'react';
-import { Modal, Button, Form, Input, Select, Upload, Tag, Spin } from 'antd';
+import React, { useState, useContext, useEffect } from 'react';
+import {
+  Modal,
+  Button,
+  Form,
+  Input,
+  Select,
+  Upload,
+  Spin,
+  message,
+} from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { uploadStarter, useCurrentProject } from '../../../Utility';
 import { withRouter } from 'react-router-dom';
@@ -11,50 +20,79 @@ import {
 } from '../../../Redux/actions';
 import _ from 'lodash';
 import { UploadQueueContext } from '../../../Context';
-import { listProjectTagsAPI } from '../../../APIs';
+import { listProjectTagsAPI, getProjectManifestList } from '../../../APIs';
 import { validateTag } from '../../../Utility';
 import { useTranslation } from 'react-i18next';
-
+import UploaderManifest from './UploaderManifest';
+import { validateForm } from '../../../Components/Form/Manifest/FormValidate';
 const { Option } = Select;
 
 const GreenRoomUploader = ({
   isShown: visible,
   cancel,
-  datasetList,
   datasetId,
   fetch: fetchTree,
 }) => {
   const [form] = Form.useForm();
   const [isLoading, setIsloading] = useState(false);
-  const [tags, setTags] = useState([]);
   const [data, setData] = useState([]);
   const [value, setValue] = useState([]);
   const [fetching, setFetching] = useState(false);
-  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
+  const { t } = useTranslation(['tooltips', 'formErrorMessages']);
   const q = useContext(UploadQueueContext);
-  const [currentDataset] = useCurrentProject();
+  const [currentDataset = {}] = useCurrentProject();
   const { username } = useSelector((state) => state);
   const project = useSelector((state) => state.project);
+  const [manifestList, setManifestList] = useState([]);
+  const [attrForm, setAttrForm] = useState({});
+  const [selManifest, setSelManifest] = useState(null);
+  useEffect(() => {
+    async function loadManifest() {
+      const manifests = await getProjectManifestList(currentDataset.code);
+      const rawManifests = manifests.data.result;
+      setManifestList(rawManifests);
+    }
+    if (visible && currentDataset.code) {
+      loadManifest();
+    }
+  }, [currentDataset.code, visible]);
+  const containersPermission = useSelector(
+    (state) => state.containersPermission,
+  );
+
   const handleOk = () => {
+    if (selManifest) {
+      const { valid, err } = validateForm(attrForm, selManifest);
+      if (!valid) {
+        message.error(err);
+        return;
+      }
+    }
+
     form
       .validateFields()
       .then((values) => {
-        console.log('handleOk -> values', values);
         setIsloading(true);
         const data = Object.assign({}, values, {
           name: values.file.file.name,
           file_type: values.file.file.type,
           uploader: username,
-          projectName: currentDataset.containerName,
+          projectName: currentDataset.name,
           projectCode: currentDataset.code,
+          manifest: selManifest
+            ? {
+                id: selManifest.id,
+                attributes: attrForm,
+              }
+            : null,
         });
         uploadStarter(data, q);
+        setSelManifest(null);
         form.resetFields();
         cancel();
         setIsloading(false);
       })
       .catch((info) => {
-        console.log('Validate Failed:', info);
         setIsloading(false);
       });
   };
@@ -65,26 +103,26 @@ const GreenRoomUploader = ({
     },
   };
 
-  let lastFetchId = 0;
-  const fetchTags = (value) => {
-    value = value.toLowerCase();
-    lastFetchId += 1;
-    const fetchId = lastFetchId;
-    setData([]);
-    setFetching(true);
-    listProjectTagsAPI(datasetId, true, value, 3).then((res) => {
-      if (fetchId !== lastFetchId) {
-        // for fetch callback order
-        return;
-      }
-      const data = res.data.result.map((i) => ({
-        text: i.name,
-        value: i.name,
-      }));
-      setData(data);
-      setFetching(false);
-    });
-  };
+  // let lastFetchId = 0;
+  // const fetchTags = (value) => {
+  //   value = value.toLowerCase();
+  //   lastFetchId += 1;
+  //   const fetchId = lastFetchId;
+  //   setData([]);
+  //   setFetching(true);
+  //   listProjectTagsAPI(datasetId, true, value, 3).then((res) => {
+  //     if (fetchId !== lastFetchId) {
+  //       // for fetch callback order
+  //       return;
+  //     }
+  //     const data = res.data.result.map((i) => ({
+  //       text: i.name,
+  //       value: i.name,
+  //     }));
+  //     setData(data);
+  //     setFetching(false);
+  //   });
+  // };
 
   // const handleChange = (value) => {
   //   if (value.length !== 0) {
@@ -132,6 +170,7 @@ const GreenRoomUploader = ({
         closable={false}
         onCancel={() => {
           cancel();
+          setSelManifest(null);
           form.resetFields();
         }}
         footer={[
@@ -139,6 +178,7 @@ const GreenRoomUploader = ({
             key="back"
             onClick={() => {
               cancel();
+              setSelManifest(null);
               form.resetFields();
             }}
           >
@@ -182,8 +222,8 @@ const GreenRoomUploader = ({
               //disabled={datasetId !== undefined}
               style={{ width: '100%' }}
             >
-              {datasetList[0] &&
-                datasetList[0].datasetList.map((item) => (
+              {containersPermission &&
+                containersPermission.map((item) => (
                   <Option key={item.id} value={parseInt(item.id)}>
                     {item.name}
                   </Option>
@@ -309,7 +349,7 @@ const GreenRoomUploader = ({
               // tagRender={tagRender}
               value={value}
               notFoundContent={fetching ? <Spin size="small" /> : null}
-              onSearch={fetchTags}
+              // onSearch={fetchTags}
               // onChange={handleChange}
               getPopupContainer={(triggerNode) => triggerNode.parentNode}
               style={{ width: '100%' }}
@@ -360,6 +400,15 @@ const GreenRoomUploader = ({
             </Upload>
           </Form.Item>
         </Form>
+        {manifestList && manifestList.length ? (
+          <UploaderManifest
+            selManifest={selManifest}
+            setSelManifest={setSelManifest}
+            attrForm={attrForm}
+            setAttrForm={setAttrForm}
+            manifestList={manifestList}
+          />
+        ) : null}
       </Modal>
     </div>
   );
@@ -368,8 +417,8 @@ const GreenRoomUploader = ({
 export default withRouter(
   connect(
     (state) => {
-      const { datasetList, tags, containersPermission, uploadList } = state;
-      return { datasetList, tags, containersPermission, uploadList };
+      const { tags, containersPermission, uploadList } = state;
+      return { tags, containersPermission, uploadList };
     },
     { appendUploadListCreator, updateUploadItemCreator, setNewUploadIndicator },
   )(GreenRoomUploader),

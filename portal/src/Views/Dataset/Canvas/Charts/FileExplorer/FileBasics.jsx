@@ -5,7 +5,6 @@ import { getFileSize, timeConvert } from '../../../../../Utility';
 
 function FileBasics(props) {
   const { record } = props;
-
   return (
     <div style={{ paddingBottom: '16px' }}>
       {/* <Title level={5}>Basic information</Title> */}
@@ -20,7 +19,7 @@ function FileBasics(props) {
         <Descriptions.Item label="Created">
           {timeConvert(record.createTime, 'datetime')}
         </Descriptions.Item>
-        {record.generateId != 'undefined' && (
+        {record.generateId !== 'undefined' && (
           <Descriptions.Item label="Generate ID">
             {record.generateId}
           </Descriptions.Item>
@@ -36,6 +35,7 @@ function FileBasics(props) {
             tags={record.tags || []}
             pid={props.pid}
             guid={record.guid}
+            geid={record.geid}
             refresh={props.refresh}
           />
         </Descriptions.Item>

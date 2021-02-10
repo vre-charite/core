@@ -1,41 +1,40 @@
-import { updateClearIdCreator, setContainersPermissionCreator, cleanDatasetCreator, clearDownloadListCreator, setIsLoginCreator, setMetadatasCreator, setNewUploadIndicator, setPersonalDatasetIdCreator, setRefreshModal, setUserRoleCreator, setTagsCreator, setUploadListCreator, setUserListCreator, setUsernameCreator } from '../Redux/actions';
+import { updateClearIdCreator, setContainersPermissionCreator, cleanDatasetCreator, clearDownloadListCreator, setMetadatasCreator, setNewUploadIndicator, setPersonalDatasetIdCreator, setRefreshModal, setUserRoleCreator, setTagsCreator, setUploadListCreator, setUserListCreator } from '../Redux/actions';
 import reduxActionWrapper from './reduxActionWrapper';
 
-const [updateClearIdDispatcher, 
-    setContainersPermissionDispatcher, 
-    cleanDatasetDispatcher, 
-    clearDownloadListDispatcher, 
-    setIsLoginDispatcher, 
-    setMetadatasDispatcher, 
-    setNewUploadIndicatorDispatcher, 
-    setPersonalDatasetIdDispatcher, 
-    setRefreshModalDispatcher, 
-    setUserRoleDispatcher, 
-    setTagsDispatcher, 
-    setUploadListDispatcher, 
-    setUserListDispatcher, 
-    setUsernameDispatcher] 
+const [updateClearIdDispatcher,
+    setContainersPermissionDispatcher,
+    cleanDatasetDispatcher,
+    clearDownloadListDispatcher,
+
+    setMetadatasDispatcher,
+    setNewUploadIndicatorDispatcher,
+    setPersonalDatasetIdDispatcher,
+    setRefreshModalDispatcher,
+    setUserRoleDispatcher,
+    setTagsDispatcher,
+    setUploadListDispatcher,
+    setUserListDispatcher,
+]
     = reduxActionWrapper([
-        updateClearIdCreator, 
-        setContainersPermissionCreator, 
-        cleanDatasetCreator, 
-        clearDownloadListCreator, 
-        setIsLoginCreator, 
-        setMetadatasCreator, 
-        setNewUploadIndicator, 
-        setPersonalDatasetIdCreator, 
-        setRefreshModal, 
-        setUserRoleCreator, 
-        setTagsCreator, 
-        setUploadListCreator, 
-        setUserListCreator, 
-        setUsernameCreator])
+        updateClearIdCreator,
+        setContainersPermissionCreator,
+        cleanDatasetCreator,
+        clearDownloadListCreator,
+        setMetadatasCreator,
+        setNewUploadIndicator,
+        setPersonalDatasetIdCreator,
+        setRefreshModal,
+        setUserRoleCreator,
+        setTagsCreator,
+        setUploadListCreator,
+        setUserListCreator,
+    ])
 /**
  * reset all redux states to the init
  * @param {boolean} shouldClearUsername if true, clean the username. by default true. only if login different account in another tab will set this false;
  */
-function resetReduxState(shouldClearUsername=true) {
-    setIsLoginDispatcher(false);
+function resetReduxState(shouldClearUsername = true) {
+    //setIsLoginDispatcher(false);
     updateClearIdDispatcher('');
     setContainersPermissionDispatcher(null);
     cleanDatasetDispatcher();
@@ -48,7 +47,7 @@ function resetReduxState(shouldClearUsername=true) {
     setTagsDispatcher(null);
     setUploadListDispatcher([]);
     setUserListDispatcher(null);
-    shouldClearUsername&&setUsernameDispatcher(null);
+    //shouldClearUsername&&setUsernameDispatcher(null);
 }
 
 export { resetReduxState }

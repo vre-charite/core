@@ -1,5 +1,59 @@
 from enum import Enum
 import datetime
+from flask_sqlalchemy import SQLAlchemy
+from config import ConfigClass
+from app.db import db
+
+
+class TypeEnum(Enum):
+    text = 'text'
+    multiple_choice = 'multiple_choice'
+
+
+class DataManifestModel(db.Model):
+    __tablename__ = 'data_manifest'
+    __table_args__ = {"schema":ConfigClass.RDS_SCHEMA_DEFAULT}
+    id = db.Column(db.Integer, unique=True, primary_key=True)
+    name = db.Column(db.String())
+    project_code = db.Column(db.String())
+
+    def __init__(self, name, project_code):
+        self.name = name
+        self.project_code = project_code 
+
+    def to_dict(self):
+        result = {}
+        for field in ["id", "name", "project_code"]:
+            result[field] = getattr(self, field)
+        return result 
+
+
+class DataAttributeModel(db.Model):
+    __tablename__ = 'data_attribute'
+    __table_args__ = {"schema":ConfigClass.RDS_SCHEMA_DEFAULT}
+    id = db.Column(db.Integer, unique=True, primary_key=True)
+    manifest_id = db.Column(db.Integer, db.ForeignKey(DataManifestModel.id))
+    name = db.Column(db.String())
+    type = db.Column(db.Enum(TypeEnum), default="text", nullable=False)
+    value = db.Column(db.String())
+    project_code = db.Column(db.String())
+    optional = db.Column(db.Boolean(), default=False)
+
+    def __init__(self, manifest_id, name, type, value, project_code, optional):
+        self.name = name
+        self.type = type 
+        self.value = value 
+        self.project_code = project_code 
+        self.optional = optional 
+        self.manifest_id = manifest_id
+
+    def to_dict(self):
+        result = {}
+        for field in ["id", "name", "type", "value", "project_code", "optional", "manifest_id"]:
+            result[field] = getattr(self, field)
+        result["type"] = result["type"].value
+        return result 
+
 
 class DataManifest:
     def __init__(self):

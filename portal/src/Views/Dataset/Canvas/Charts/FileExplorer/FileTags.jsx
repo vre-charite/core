@@ -2,7 +2,10 @@ import React, { Component } from 'react';
 import { Tag, Input, Typography, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { validateTag } from '../../../../../Utility';
-import { addProjectTagsAPI, deleteProjectTagsAPI } from '../../../../../APIs';
+import {
+  updateProjectTagsAPI,
+  deleteProjectTagsAPI,
+} from '../../../../../APIs';
 import { EditOutlined, CheckOutlined, UpOutlined } from '@ant-design/icons';
 import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
@@ -36,8 +39,8 @@ class FileTags extends Component {
 
   handleClose = (removedTag) => {
     const tags = this.state.tags.filter((tag) => tag !== removedTag);
-    const { guid, pid } = this.props;
-    deleteProjectTagsAPI(pid, { tag: removedTag, taglist: tags, guid: guid })
+    const { geid, pid } = this.props;
+    deleteProjectTagsAPI(pid, { taglist: tags, geid: geid })
       .then((res) => {
         this.setState({ tags });
         this.props.refresh();
@@ -96,8 +99,8 @@ class FileTags extends Component {
       return;
     }
 
-    const { guid, pid } = this.props;
-    addProjectTagsAPI(pid, { tag: inputValue, taglist: tags, guid: guid })
+    const { geid, pid } = this.props;
+    updateProjectTagsAPI(pid, { taglist: tags, geid: geid })
       .then((res) => {
         this.props.refresh();
         this.setState({
@@ -149,7 +152,6 @@ class FileTags extends Component {
       inputValue,
       errorMessage,
       edit,
-      expandable,
       manifest,
     } = this.state;
     const projectSystemTags = manifest.tags;

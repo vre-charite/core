@@ -17,6 +17,7 @@ import {
   Input,
   Select,
   DatePicker,
+  Avatar,
 } from 'antd';
 import {
   BarChartOutlined,
@@ -27,13 +28,18 @@ import {
 } from '@ant-design/icons';
 
 import { connect } from 'react-redux';
-import { AddDatasetCreator, setDatasetCreator } from '../../../Redux/actions';
+import {
+  AddDatasetCreator,
+  setDatasetCreator,
+  setCurrentProjectProfile,
+} from '../../../Redux/actions';
+import { listUsersContainersPermission, getDatasetsAPI } from '../../../APIs';
 import styles from './index.module.scss';
 import _ from 'lodash';
 import moment from 'moment';
-import { convertUTCDateToLocalDate } from '../../../Utility';
+import { convertUTCDateToLocalDate, currentBrowser } from '../../../Utility';
 
-const { Paragraph, Text } = Typography;
+const { Paragraph } = Typography;
 const { TabPane } = Tabs;
 const { Content } = Layout;
 const { RangePicker } = DatePicker;
@@ -59,23 +65,91 @@ class Uploader extends Component {
       activeTab: initPane,
       uploader: false,
       datasetId: null,
-      sortby: 'timeCreated',
+      sortby: 'time_created',
       order: 'desc',
       sortReset: false,
       pageSize: 10,
+      page: 0,
       selectedTab: 'My Projects',
       isSearch: false,
       filters: {},
+      allProjects: [],
+      myProjects: [],
+      allNums: 0,
+      myNums: 0,
+      params: {
+        order_by: 'time_created',
+        order_type: 'desc',
+        page: 0,
+        page_size: 10,
+      },
     };
   }
 
+  getProjectList = (params, filters, selectedTab = null) => {
+    if (Object.keys(filters) && Object.keys(filters).length)
+      params['end_params'] = filters;
+
+    if (selectedTab === 'My Projects') {
+      listUsersContainersPermission(this.props.username, params).then((res) => {
+        let { code, result, total } = res.data;
+        if (code === 200) {
+          this.setState({ myProjects: result, myNums: total });
+        }
+      });
+    } else if (selectedTab === 'All Projects') {
+      params = { ...params, ...filters, type: 'usecase' };
+
+      getDatasetsAPI(params).then((res) => {
+        const { code, result, total } = res.data;
+
+        if (code === 200) {
+          this.setState({ allProjects: result, allNums: total });
+        }
+      });
+    } else {
+      listUsersContainersPermission(this.props.username, params).then((res) => {
+        let { code, result, total } = res.data;
+        if (code === 200) {
+          this.setState({ myProjects: result, myNums: total });
+        }
+      });
+
+      params = { ...params, ...filters, type: 'usecase' };
+      getDatasetsAPI(params).then((res) => {
+        const { code, result, total } = res.data;
+
+        if (code === 200) {
+          this.setState({ allProjects: result, allNums: total });
+        }
+      });
+    }
+  };
+
   componentDidMount() {
     this.refresh();
+
+    const params = {
+      order_by: 'time_created',
+      order_type: 'desc',
+      page: 0,
+      page_size: 10,
+    };
+
+    this.getProjectList(params, {});
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (prevProps.datasetList !== this.props.datasetList) {
       this.refresh();
+      const params = {
+        order_by: 'time_created',
+        order_type: 'desc',
+        page: 0,
+        page_size: 10,
+      };
+
+      this.getProjectList(params, {});
     }
   }
 
@@ -120,7 +194,6 @@ class Uploader extends Component {
   };
 
   showUploaderModal = (id) => {
-    console.log('showUploaderModal -> id', id);
     this.setState({
       uploader: true,
       datasetId: id,
@@ -194,7 +267,6 @@ class Uploader extends Component {
   };
 
   changeTab = (activeKey) => {
-    console.log(activeKey, 'activeKey');
     this.setState({ activeTab: activeKey });
   };
 
@@ -202,32 +274,69 @@ class Uploader extends Component {
     const sortRule = e.item.props.value;
     this.setState({ sortReset: true });
 
+    let params = this.state.params;
+
     switch (sortRule) {
       case 'time-desc':
-        this.setState({ sortby: 'timeCreated', order: 'desc' });
-        return;
+        this.setState({ sortby: 'time_created', order: 'desc' });
+
+        params['order_by'] = 'time_created';
+        params['order_type'] = 'desc';
+
+        break;
       case 'time-asc':
-        this.setState({ sortby: 'timeCreated', order: 'asc' });
-        return;
+        this.setState({ sortby: 'time_created', order: 'asc' });
+
+        params['order_by'] = 'time_created';
+        params['order_type'] = 'asc';
+
+        break;
       case 'name-desc':
         this.setState({ sortby: 'name', order: 'desc' });
-        return;
+
+        params['order_by'] = 'name';
+        params['order_type'] = 'desc';
+
+        break;
       case 'name-asc':
         this.setState({ sortby: 'name', order: 'asc' });
-        return;
+
+        params['order_by'] = 'name';
+        params['order_type'] = 'asc';
+
+        break;
       case 'code-desc':
         this.setState({ sortby: 'code', order: 'desc' });
-        return;
+
+        params['order_by'] = 'code';
+        params['order_type'] = 'desc';
+
+        break;
       case 'code-asc':
         this.setState({ sortby: 'code', order: 'asc' });
-        return;
+
+        params['order_by'] = 'code';
+        params['order_type'] = 'asc';
+
+        break;
       default:
-        return;
+        break;
     }
+
+    params['page'] = this.state.page;
+    params['page_size'] = this.state.pageSize;
+    this.getProjectList(params, this.state.filters);
   };
 
   resetSort = () => {
-    this.setState({ sortby: 'timeCreated', order: 'desc', sortReset: false });
+    this.setState({ sortby: 'time_created', order: 'desc', sortReset: false });
+
+    let params = this.state.params;
+    params['order_by'] = 'time_created';
+    params['order_type'] = 'desc';
+    params['page'] = this.state.page;
+    params['page_size'] = this.state.pageSize;
+    this.getProjectList(params, this.state.filters);
   };
 
   tagsData = ['My Projects', 'All Projects'];
@@ -245,6 +354,7 @@ class Uploader extends Component {
   onTabChange = (tabkey) => {
     this.setState({
       selectedTab: tabkey,
+      page: 0,
     });
   };
 
@@ -260,7 +370,51 @@ class Uploader extends Component {
         filters[key] = values[key];
       }
     }
+
     this.setState({ filters });
+
+    const params = {
+      order_by: 'time_created',
+      order_type: 'desc',
+      page: 0,
+      page_size: 10,
+    };
+
+    let params4All = { ...params, type: 'usecase' };
+
+    if (Object.keys(filters) && Object.keys(filters).length)
+      params['end_params'] = filters;
+
+    params4All = { ...params4All, ...filters };
+
+    if (filters['date']) {
+      filters['date'][0] = moment(filters['date'][0]).startOf('day');
+      filters['date'][1] = moment(filters['date'][1]).endOf('day');
+
+      params['end_params']['create_time_start'] = filters['date'][0].unix();
+      params['end_params']['create_time_end'] = filters['date'][1].unix();
+
+      params4All['create_time_start'] = filters['date'][0].unix();
+      params4All['create_time_end'] = filters['date'][1].unix();
+
+      delete params['end_params']['date'];
+      delete params4All['date'];
+    }
+
+    listUsersContainersPermission(this.props.username, params).then((res) => {
+      const { code, result, total } = res.data;
+
+      if (code === 200) {
+        this.setState({ myProjects: result, myNums: total });
+      }
+    });
+    getDatasetsAPI(params4All).then((res) => {
+      const { code, result, total } = res.data;
+
+      if (code === 200) {
+        this.setState({ allProjects: result, allNums: total });
+      }
+    });
   };
 
   onTagClose = (key, value) => {
@@ -276,17 +430,22 @@ class Uploader extends Component {
     }
   };
 
+  onPageChange = (page) => {
+    this.setState({ page: page - 1 });
+
+    const params = {
+      order_by: this.state.sortby,
+      order_type: this.state.order,
+      page: page - 1,
+      page_size: this.state.pageSize,
+    };
+
+    this.getProjectList(params, this.state.filters, this.state.selectedTab);
+  };
+
   render() {
-    const {
-      uploader,
-      datasetId,
-      sortby,
-      order,
-      sortReset,
-      selectedTab,
-      filters,
-    } = this.state;
-    const { datasetList: tabs = [] } = this.props;
+    const { sortby, order, sortReset, selectedTab, filters } = this.state;
+    let { myProjects } = this.state;
 
     if (Object.keys(filters))
       formRef.current && formRef.current.setFieldsValue(filters);
@@ -295,11 +454,13 @@ class Uploader extends Component {
 
     let projectPermission = [];
 
+    /* eslint-disable */
     let filtersNameText = null;
     let filtersCodeText = null;
     let filtersDateText = null;
     let filtersTagText = null;
     let filtersDescriptionText = null;
+    /* eslint-enable */
 
     if (
       this.props.datasetList &&
@@ -371,13 +532,7 @@ class Uploader extends Component {
           filtersCodeText = (
             <div>
               <span>Project Code:</span>
-              <Tag
-                style={{ marginLeft: 5 }}
-                color="cyan"
-                key="code"
-                // closable
-                // onClose={() => this.onTagClose('code', null)}
-              >
+              <Tag style={{ marginLeft: 5 }} color="cyan" key="code">
                 {filters[key]}
               </Tag>
             </div>
@@ -441,7 +596,7 @@ class Uploader extends Component {
                 ))}
               </div>
             );
-
+            // eslint-disable-next-line
             projectPermission = projectPermission.filter((el) => {
               let isMatch = false;
 
@@ -451,7 +606,7 @@ class Uploader extends Component {
                 if (isMatch) return true;
               }
             });
-
+            // eslint-disable-next-line
             projectNoPermission = projectNoPermission.filter((el) => {
               let isMatch = false;
 
@@ -493,11 +648,6 @@ class Uploader extends Component {
     }
 
     //Get projects based on selctedTags
-    const allProjects = this.getProjectsWithTab({
-      selectedTab,
-      projectNoPermission,
-      projectPermission,
-    });
 
     const sortPanel = (
       <Menu onClick={this.handleSortClick}>
@@ -612,6 +762,15 @@ class Uploader extends Component {
                       tags: undefined,
                       description: undefined,
                     });
+
+                    const params = {
+                      order_by: 'time_created',
+                      order_type: 'desc',
+                      page: 0,
+                      page_size: this.state.pageSize,
+                    };
+
+                    this.getProjectList(params, {});
                   }}
                 >
                   Clear
@@ -626,6 +785,8 @@ class Uploader extends Component {
         </Form>
       </Card>
     );
+
+    const isSafari = currentBrowser();
 
     return (
       <>
@@ -661,65 +822,21 @@ class Uploader extends Component {
 
           {this.state.isSearch ? SearchPanel : null}
 
-          {/* {
-            Object.keys(filters) && Object.keys(filters).length ? (
-              <div id="filters" style={{ marginTop: 20 }}>
-                <strong>
-                  Search Result For:
-                </strong>
-    
-                <Row gutter={24}>
-                  {
-                    filters['name'] && (
-                      <Col span={6} style={{ marginTop: 10 }}>
-                        {filtersNameText}
-                      </Col>
-                    )
-                  }
-    
-                  {
-                    filters['code'] && (
-                      <Col span={6} style={{ marginTop: 10 }}>
-                        {filtersCodeText}
-                      </Col>
-                    )
-                  }
-    
-                  {
-                    filters['date'] && (
-                      <Col span={8} style={{ marginTop: 10 }}>
-                        {filtersDateText}
-                      </Col>
-                    )
-                  }
-    
-                  {
-                    filters['tags'] && (
-                      <Col span={8} style={{ marginTop: 10 }}>
-                        {filtersTagText}
-                      </Col>
-                    )
-                  }
-
-                  {
-                    filters['description'] && (
-                      <Col span={8} style={{ marginTop: 10 }}>
-                        {filtersDescriptionText}
-                      </Col>
-                    )
-                  }
-    
-                </Row>
-              </div>
-            ) : null
-          } */}
-
           {Object.keys(filters) && Object.keys(filters).length ? (
             <div id="filters" style={{ marginTop: 20 }}>
               <strong>
-                {allProjects.length > 1
-                  ? `${allProjects.length} projects`
-                  : `${allProjects.length} project`}{' '}
+                {this.state.selectedTab === 'My Projects'
+                  ? `${
+                      this.state.myNums > 1
+                        ? `${this.state.myNums} projects`
+                        : `${this.state.myNums} project`
+                    }`
+                  : `${
+                      this.state.allNums > 1
+                        ? `${this.state.allNums} projects`
+                        : `${this.state.allNums} project`
+                    }`}
+                {`   `}
                 found
               </strong>
             </div>
@@ -735,31 +852,52 @@ class Uploader extends Component {
               <TabPane tab={tag} key={tag} />
             ))}
           </Tabs>
-          {tabs.map((tab, index) => (
-            <List
-              id="uploadercontent_project_list"
-              itemLayout="horizontal"
-              size="large"
-              pagination={{
-                onShowSizeChange: (current, pageSize) => {
-                  this.setState({ pageSize });
-                },
-                pageSize: this.state.pageSize,
-                showSizeChanger: true,
-              }}
-              key={index}
-              dataSource={allProjects}
-              renderItem={(item) => (
+          <List
+            id="uploadercontent_project_list"
+            itemLayout="horizontal"
+            size="large"
+            pagination={{
+              onShowSizeChange: (current, pageSize) => {
+                this.setState({ pageSize });
+                let params = this.state.params;
+                params['page_size'] = pageSize;
+                params['page'] = current - 1;
+
+                this.getProjectList(params, this.state.filters);
+              },
+              pageSize: this.state.pageSize,
+              pageSizeOptions: ['10', '20', '50'],
+              showSizeChanger: true,
+              total:
+                selectedTab === 'My Projects'
+                  ? this.state.myNums
+                  : this.state.allNums,
+              onChange: this.onPageChange,
+            }}
+            key={'project_list'}
+            dataSource={
+              selectedTab === 'My Projects'
+                ? myProjects
+                : this.state.allProjects
+            }
+            renderItem={(item) => {
+              return (
                 <List.Item
                   id={`uploader_content_${item?.code}`}
                   key={item.id}
                   className={styles.card}
                   actions={[
-                    (this.props.role === 'admin' ||
+                    (selectedTab === 'My Projects' ||
+                      this.props.role === 'admin' ||
                       _.some(this.props.containersPermission, (o) => {
-                        return parseInt(o.containerId) === parseInt(item.id);
+                        return parseInt(o.id) === parseInt(item.id);
                       })) && (
-                      <Link to={`/project/${item.id}/canvas`}>
+                      <Link
+                        to={`/project/${item.id}/canvas`}
+                        onClick={() =>
+                          this.props.setCurrentProjectProfile(item)
+                        }
+                      >
                         <IconText
                           icon={BarChartOutlined}
                           text="View"
@@ -770,6 +908,29 @@ class Uploader extends Component {
                   ]}
                 >
                   <List.Item.Meta
+                    avatar={
+                      item.icon ? (
+                        <Avatar src={item.icon} size={30}></Avatar>
+                      ) : (
+                        <Avatar
+                          style={{
+                            backgroundColor: '#13c2c2',
+                            verticalAlign: 'middle',
+                          }}
+                          size={30}
+                        >
+                          <span
+                            style={{
+                              fontSize: 20,
+                              fontWeight: 'bold',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {item.name ? item.name.charAt(0) : ''}
+                          </span>
+                        </Avatar>
+                      )
+                    }
                     title={
                       <Paragraph
                         style={{
@@ -783,17 +944,23 @@ class Uploader extends Component {
                           rows: 2,
                         }}
                       >
-                        {this.props.role === 'admin' ||
+                        {selectedTab === 'My Projects' ||
+                        this.props.role === 'admin' ||
                         _.some(this.props.containersPermission, (o) => {
-                          return parseInt(o.containerId) === parseInt(item.id);
+                          return parseInt(o.id) === parseInt(item.id);
                         }) ? (
-                          <Link to={`/project/${item.id}/canvas`}>
+                          <Link
+                            to={`/project/${item.id}/canvas`}
+                            onClick={() =>
+                              this.props.setCurrentProjectProfile(item)
+                            }
+                          >
                             {item.name + ' '}
                           </Link>
                         ) : this.props.containersPermission.some(
-                            (el) =>
-                              parseInt(el.containerId) === parseInt(item.id),
+                            (el) => parseInt(el.id) === parseInt(item.id),
                           ) ? (
+                          // eslint-disable-next-line
                           <a href="#" style={{ pointerEvents: 'none' }}>
                             {item.name}
                           </a>
@@ -812,12 +979,13 @@ class Uploader extends Component {
                                 <Tag
                                   key={i}
                                   color={
+                                    selectedTab === 'My Projects' ||
                                     this.props.role === 'admin' ||
                                     _.some(
                                       this.props.containersPermission,
                                       (o) => {
                                         return (
-                                          parseInt(o.containerId) ===
+                                          parseInt(o.id) ===
                                             parseInt(item.id) &&
                                           o.permission !== 'uploader' // Uploader should not enter project
                                         );
@@ -825,9 +993,9 @@ class Uploader extends Component {
                                     )
                                       ? 'cyan'
                                       : // : '#CCCC'
-                                      this.props.containersPermission.some(
+                                      this.state.myProjects.some(
                                           (el) =>
-                                            parseInt(el.containerId) ===
+                                            parseInt(el.id) ===
                                             parseInt(item.id),
                                         )
                                       ? 'cyan'
@@ -849,7 +1017,7 @@ class Uploader extends Component {
                             marginBottom: '5px',
                           }}
                         >
-                          Project code: {item.code && item.code}
+                          Project code: {item.code}
                         </span>
                         <br />
                         <Paragraph
@@ -873,9 +1041,9 @@ class Uploader extends Component {
                   />
                   <div></div>
                 </List.Item>
-              )}
-            />
-          ))}
+              );
+            }}
+          />
         </Content>
       </>
     );
@@ -883,8 +1051,8 @@ class Uploader extends Component {
 }
 export default connect(
   (state) => {
-    const { datasetList, containersPermission, role } = state;
-    return { datasetList, containersPermission, role };
+    const { datasetList, containersPermission, role, username } = state;
+    return { datasetList, containersPermission, role, username };
   },
-  { AddDatasetCreator, setDatasetCreator },
+  { AddDatasetCreator, setDatasetCreator, setCurrentProjectProfile },
 )(Uploader);

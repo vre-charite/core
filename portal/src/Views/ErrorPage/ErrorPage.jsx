@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { StandardLayout } from "../../Components/Layout";
-import { errorPageRoutes as routes } from "../../Routes/index";
-import { withRouter, Switch, Route, Redirect } from "react-router-dom";
-import _ from "lodash";
+import React from 'react';
+import { StandardLayout } from '../../Components/Layout';
+import { errorPageRoutes as routes } from '../../Routes/index';
+import { withRouter, Switch, Route, Redirect } from 'react-router-dom';
 function ErrorPage(props) {
   const {
     match: { path },
@@ -12,7 +11,7 @@ function ErrorPage(props) {
     initFunc: () => {},
   };
   return (
-    <StandardLayout {...config} >
+    <StandardLayout {...config}>
       <Switch>
         {routes.map((item) => (
           <Route
@@ -22,6 +21,7 @@ function ErrorPage(props) {
             render={() => <item.component />}
           ></Route>
         ))}
+        <Redirect to="/error/404" />
       </Switch>
     </StandardLayout>
   );

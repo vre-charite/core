@@ -10,7 +10,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import CollectionIcon from '../../../../../../../Components/Icons/Collection';
 import { setCurrentProjectTreeVFolder } from '../../../../../../../Redux/actions';
 import { trimString } from '../../../../../../../Utility';
-
+import i18n from '../../../../../../../i18n';
 const VirtualFolderModal = ({ visible, setVisible, files }) => {
   const { Option } = Select;
   const [openCreatePanel, setOpenCreatePanel] = useState(false);
@@ -56,6 +56,7 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
       }
     }
     loadVFolders();
+    // eslint-disable-next-line
   }, [visible]);
 
   async function addToExistFolder(values) {
@@ -64,14 +65,17 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
       const res = await addToVirtualFolder(folderId, files);
       if (res.data.result === 'duplicate') {
         message.success(
-          'Files added successfully with existing files skipped',
+          `${i18n.t('success:virtualFolder.addFilesDuplicate')}`,
           3,
         );
       } else {
-        message.success('Files have been added successfully', 3);
+        message.success(`${i18n.t('success:virtualFolder.addFiles')}`, 3);
       }
     } catch (e) {
-      message.error('Network error. Please try again later', 3);
+      message.error(
+        `${i18n.t('errormessages:addFilesToVirtualFolder.default.0')}`,
+        3,
+      );
       setSentExistBtnLoading(false);
       return;
     }
@@ -79,18 +83,20 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
     closeModal();
   }
   async function addToNewFolder(values) {
+    const collection = trimString(values.Name);
     const containerId = project.profile.id;
     try {
-      const collection = trimString(values.Name);
       const res = await createVirtualFolder(containerId, collection);
       if (parseInt(res.data.code / 100) !== 2) {
-        message.error(res.data.result, 3);
         setSentBtnLoading(false);
         return;
       }
       const folderId = res.data.result.id;
       if (!folderId) {
-        message.error('Network error. Please try again later', 3);
+        message.error(
+          `${i18n.t('errormessages:createVirtualFolder.default.0')}`,
+          3,
+        );
         setSentBtnLoading(false);
         return;
       }
@@ -99,11 +105,15 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
       const virualFolders = allVirtualRes.data.result;
       updateVFolder(virualFolders);
     } catch (e) {
-      message.error('Network error. Please try again later', 3);
+      const msg = e.response?.data?.error_msg;
+      message.error(
+        msg ? msg : `${i18n.t('errormessages:addFilesToNewFolder.default.0')}`,
+        3,
+      );
       setSentBtnLoading(false);
       return;
     }
-    message.success('Files have been added successfully', 3);
+    message.success(`${i18n.t('success:virtualFolder.addFiles')}`, 3);
     closeModal();
   }
 
@@ -185,9 +195,11 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
               },
               {
                 validator: (rule, value) => {
-                  const collection = value && trimString(value);
+                  const collection = value ? trimString(value) : null;
                   if (!collection) {
-                    return Promise.reject();
+                    return Promise.reject(
+                      'Collection name should be 1 ~ 20 characters',
+                    );
                   }
                   const isLengthValid =
                     collection.length >= 1 && collection.length <= 20;
@@ -206,6 +218,7 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
                       '>',
                       '|',
                       '"',
+                      "'",
                     ];
                     for (let char of specialChars) {
                       if (collection.indexOf(char) !== -1) {

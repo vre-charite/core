@@ -1,14 +1,9 @@
 import React from 'react';
 import { Layout } from 'antd';
-import { StandardLayout } from '../../Components/Layout';
 import { accountAssistant as routes } from '../../Routes/index';
 import { Switch, Route, useRouteMatch } from 'react-router-dom';
 
 function Support(props) {
-  const config = {
-    observationVars: [],
-    initFunc: () => {},
-  };
 
   const match = useRouteMatch();
   return (

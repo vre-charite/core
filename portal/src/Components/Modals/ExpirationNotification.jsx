@@ -9,7 +9,7 @@ const getText = (timeRemain, isRefreshed) => {
       <>
         {' '}
         <span>If no more actions, Your session will expire in </span>{' '}
-        <b>{timeRemain > 0 ? timeRemain : 0}</b>{' '}
+        <b>{timeRemain > 0 ? timeRemain : 0}</b>s{' '}
       </>
     );
   }
@@ -27,6 +27,7 @@ function ExpirationNotification({ getIsSessionMax, isRefreshed }) {
     };
     const condition = () => true;
     keycloakManager.addListener({ func, condition });
+    // eslint-disable-next-line
   }, []);
   const text = isSessionMax
     ? `You are reaching the max allowed session time in ${

@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Typography } from 'antd';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import G6 from '@antv/g6';
 import moment from 'moment';
-import { timeConvert, pathsMap } from '../../../../../Utility';
-import { DataSourceType } from './RawTableValues';
-
-const { Title } = Typography;
-
+import { pathsMap, pathNameMap } from '../../../../../Utility';
+const { detect } = require('detect-browser');
+const browser = detect();
+const toolBarNotSupported =
+  browser?.name === 'safari' || browser?.name === 'firefox';
 /**
  * format the string
  * @param {string} str The origin string
@@ -38,7 +37,6 @@ const fittingString = (str, maxWidth, fontSize) => {
 };
 export default function (props) {
   const ref = React.useRef(null);
-  let graph = null;
 
   const record = props.record;
 
@@ -47,192 +45,208 @@ export default function (props) {
   const relations = lineage && lineage?.relations;
   const nodeKeys = guidEntityMap ? Object.keys(guidEntityMap) : [];
 
-  const nodes = [];
-  const edges = [];
+  useEffect(() => {
+    let graph = null;
+    const nodes = [];
+    const edges = [];
 
-  if (relations) {
-    for (const item of relations) {
-      edges.push({
-        source: item.fromEntityId,
-        target: item.toEntityId,
-        style: {
-          lineWidth: '2',
-          endArrow: {
-            path: G6.Arrow.triangle(8, 8, 0),
-            fill: '#D9D9D9',
+    if (relations) {
+      for (const item of relations) {
+        edges.push({
+          source: item.fromEntityId,
+          target: item.toEntityId,
+          style: {
+            lineWidth: '2',
+            endArrow: {
+              path: G6.Arrow.triangle(8, 8, 0),
+              fill: '#D9D9D9',
+            },
+            stroke: '#D9D9D9',
           },
-          stroke: '#D9D9D9',
-        },
-      });
+        });
+      }
     }
-  }
 
-  const nodeList = [];
+    const nodeList = [];
 
-  for (let i = 0; i < nodeKeys.length; i++) {
-    const key = nodeKeys[i];
-    const nodeInfo = guidEntityMap[key];
-    let displayText = nodeInfo.displayText;
-    const attributes = nodeInfo.attributes;
+    for (let i = 0; i < nodeKeys.length; i++) {
+      const key = nodeKeys[i];
+      const nodeInfo = guidEntityMap[key];
+      let displayText = nodeInfo.displayText;
+      const attributes = nodeInfo.attributes;
+      let fileManifests = nodeInfo.fileManifests || [];
 
-    let label = null;
+      let label = null;
 
-    let createdTime =
-      attributes &&
-      attributes.createTime &&
-      moment(attributes.createTime * 1000).format('YYYY-MM-DD HH:mm:ss');
+      // let createdTime =
+      //   attributes &&
+      //   attributes.createTime &&
+      //   moment(attributes.createTime * 1000).format('YYYY-MM-DD HH:mm:ss');
 
-    let textArr = displayText.split('/');
-    label = textArr && textArr.length > 1 && textArr[textArr.length - 1];
+      // hide time for file node
+      let createdTime = null;
 
-    let location = textArr && pathsMap(textArr);
+      let textArr = displayText.split('/');
+      label = textArr && textArr.length > 1 && textArr[textArr.length - 1];
 
-    let isCurrentNode = attributes.name === record.name;
-    let pipelineImg = null;
+      let location = textArr && pathsMap(textArr);
+      let fileType = textArr && pathNameMap(textArr);
 
-    if (nodeInfo.typeName === 'Process') {
-      textArr = displayText.split(':');
-      label = textArr && textArr.length > 1 && textArr[1];
+      let isCurrentNode = attributes.name === record.name;
+      let pipelineImg = null;
 
-      if (label === 'dicom_edit') pipelineImg = '/vre/path.svg';
-      if (label === 'data_transfer') pipelineImg = '/vre/copy2.svg'
+      if (nodeInfo.typeName === 'Process') {
+        textArr = displayText.split(':');
+        label = textArr && textArr.length > 1 && textArr[1];
 
-      let time = null;
+        if (label === 'dicom_edit') pipelineImg = '/vre//path.svg';
+        if (label === 'data_transfer') pipelineImg = '/vre/copy2.svg';
+        if (label === 'data_delete') pipelineImg = '/vre/delete2.svg';
 
-      if (textArr && textArr.length > 6) {
-        time = `${textArr[2]}:${textArr[3]}:${textArr[4]}`;
-        createdTime = timeConvert(time, 'datetime');
-      } else if (textArr && textArr.length <= 6) {
+        let time = null;
+
         time = textArr[2];
         createdTime = moment(time * 1000).format('YYYY-MM-DD HH:mm:ss');
+
+        location = null;
+        fileType = 'Pipeline';
       }
 
-      location = null;
+      const isPipeline = nodeInfo.typeName === 'Process';
+
+      if (fileManifests.length) {
+        fileManifests = fileManifests.map((menifest) => {
+          return `<li><b>(${menifest.manifest_name})</b> ${menifest.name}: ${menifest.value}</li>`;
+        });
+        fileManifests = fileManifests.join(' ');
+      }
+
+      nodeList.push({
+        id: nodeInfo.guid,
+        label,
+        size: 40,
+        icon: {
+          show: true,
+          img: '/vre/file.svg',
+          width: 12,
+        },
+        style: {
+          fill: '#E6F7FF',
+          stroke: '#E6F7FF',
+        },
+        y: 40,
+        isPipeline,
+        createdTime,
+        typeName: fileType,
+        location,
+        isCurrentNode,
+        pipelineImg,
+        fileManifests,
+      });
     }
+    // eslint-disable-next-line
 
-    const isPipeline = nodeInfo.typeName === 'Process';
+    for (const node of nodeList) {
+      nodes.push({
+        ...node,
+        x: 50 + nodes.length * 200,
+      });
+    }
+    const data = {
+      nodes,
+      edges,
+    };
 
-    nodeList.push({
-      id: nodeInfo.guid,
-      label,
-      size: 40,
-      icon: {
-        show: true,
-        img: '/vre/file.svg',
-        width: 12,
-      },
-      style: {
-        fill: '#E6F7FF',
-        stroke: '#E6F7FF',
-      },
-      y: 40,
-      isPipeline,
-      createdTime,
-      typeName: nodeInfo.typeName,
-      location,
-      isCurrentNode,
-      pipelineImg,
-    });
-  }
-
-  let flowList = ['nfs_file', 'Process', 'nfs_file_processed'];
-
-  if (props.type === DataSourceType.GREENROOM_RAW) flowList = ['nfs_file'];
-
-  // for (const flow of flowList) {
-  //   const flowNode = nodeList.find((el) => el.typeName === flow);
-
-  //   if (flowNode) {
-  //     nodes.push({
-  //       ...flowNode,
-  //       x: 50 + nodes.length * 200,
-  //     });
-  //   }
-  // }
-  for (const node of nodeList) {
-    nodes.push({
-      ...node,
-      x: 50 + nodes.length * 200,
-    });
-  }
-
-  const data = {
-    nodes,
-    edges,
-  };
-
-  const tooltip = new G6.Tooltip({
-    offsetX: 0,
-    offsetY: 0,
-    itemTypes: ['node'],
-    getContent: (e) => {
-      const outDiv = document.createElement('div');
-      outDiv.style.width = '220px';
-      //outDiv.style.padding = '0px 0px 20px 0px';
-      outDiv.innerHTML = `
+    const tooltip = new G6.Tooltip({
+      offsetX: 0,
+      offsetY: 0,
+      itemTypes: ['node'],
+      getContent: (e) => {
+        const outDiv = document.createElement('div');
+        outDiv.style.width = '220px';
+        //outDiv.style.padding = '0px 0px 20px 0px';
+        outDiv.innerHTML = `
 				<h4>${e.item.getModel().isPipeline ? 'Pipeline Info' : 'Node Info'}</h4>
 				<ul style="padding-left:20px">
           <li>Type: ${e.item.getModel().typeName}</li>
           <li>Name: ${fittingString(e.item.getModel().label, 200, 12)}</li>
-          ${e.item.getModel().location ? `<li>Location: ${e.item.getModel().location} </li>`: `<div></div>`}
-          <li>Process Time: ${e.item.getModel().createdTime}</li>
+          ${
+            e.item.getModel().location
+              ? `<li>Location: ${e.item.getModel().location} </li>`
+              : `<div></div>`
+          }
+          ${
+            e.item.getModel().fileManifests.length
+              ? `
+            <li> Manifest:
+              <ul>
+               ${e.item.getModel().fileManifests}
+              </ul>
+            </li>
+          `
+              : `<div></div>`
+          }
+          ${
+            e.item.getModel().createdTime
+              ? `<li>Process Time: ${e.item.getModel().createdTime}</li>`
+              : `<div></div>`
+          }
 				</ul>
 				`;
-      return outDiv;
-    },
-  });
-
-  const toolbar = new G6.ToolBar({
-    className: 'g6-toolbar-ul',
-    getContent: () => {
-      return `
+        return outDiv;
+      },
+    });
+    const toolbar = new G6.ToolBar({
+      className: 'g6-toolbar-ul',
+      getContent: () => {
+        return `
       <ul>
         <li code='center'>Fit view</li>
       </ul>
     `;
-    },
-    handleClick: (code, graph) => {
-      if (code === 'center') {
-        graph.fitCenter();
-      }
-    },
-  });
-
-  /**
-   * This demo shows how to custom a behavior to allow drag and zoom canvas with two fingers on touchpad and wheel
-   * By Shiwu
-   */
-  G6.registerBehavior('double-finger-drag-canvas', {
-    getEvents: function getEvents() {
-      return {
-        wheel: 'onWheel',
-      };
-    },
-
-    onWheel: function onWheel(ev) {
-      if (ev.ctrlKey) {
-        const canvas = graph.get('canvas');
-        const point = canvas.getPointByClient(ev.clientX, ev.clientY);
-        let ratio = graph.getZoom();
-        if (ev.wheelDelta > 0) {
-          ratio = ratio + ratio * 0.05;
-        } else {
-          ratio = ratio - ratio * 0.05;
+      },
+      handleClick: (code) => {
+        if (code === 'center') {
+          graph.fitCenter();
         }
-        graph.zoomTo(ratio, {
-          x: point.x,
-          y: point.y,
-        });
-      } else {
-        const x = ev.deltaX || ev.movementX;
-        const y = ev.deltaY || ev.movementY;
-        graph.translate(-x, -y);
-      }
-      ev.preventDefault();
-    },
-  });
+      },
+    });
 
-  useEffect(() => {
+    /**
+     * This demo shows how to custom a behavior to allow drag and zoom canvas with two fingers on touchpad and wheel
+     * By Shiwu
+     */
+    G6.registerBehavior('double-finger-drag-canvas', {
+      getEvents: function getEvents() {
+        return {
+          wheel: 'onWheel',
+        };
+      },
+
+      onWheel: function onWheel(ev) {
+        if (ev.ctrlKey) {
+          const canvas = graph.get('canvas');
+          const point = canvas.getPointByClient(ev.clientX, ev.clientY);
+          let ratio = graph.getZoom();
+          if (ev.wheelDelta > 0) {
+            ratio = ratio + ratio * 0.05;
+          } else {
+            ratio = ratio - ratio * 0.05;
+          }
+          graph.zoomTo(ratio, {
+            x: point.x,
+            y: point.y,
+          });
+        } else {
+          const x = ev.deltaX || ev.movementX;
+          // fix firefox no scroll parameters
+          const y = ev.deltaY || ev.movementY || -ev.wheelDelta * 10;
+          graph.translate(-x, -y);
+        }
+        ev.preventDefault();
+      },
+    });
+
     data.nodes.forEach((node, i) => {
       if (node.isPipeline) {
         node.icon.img = node.pipelineImg;
@@ -248,11 +262,12 @@ export default function (props) {
     });
 
     if (!graph) {
+      // eslint-disable-next-line
       graph = new G6.Graph({
         container: ReactDOM.findDOMNode(ref.current),
         width: props.width ? props.width : 280,
         height: 500,
-        plugins: [tooltip, toolbar],
+        plugins: toolBarNotSupported ? [tooltip] : [tooltip, toolbar],
         fitCenter: true,
         defaultNode: {
           labelCfg: {
@@ -290,7 +305,6 @@ export default function (props) {
 
   return (
     <>
-      {/* <Title level={5}>Data Lineage Graph</Title> */}
       <div ref={ref}></div>
     </>
   );

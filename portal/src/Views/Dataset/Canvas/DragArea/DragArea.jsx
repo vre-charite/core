@@ -1,7 +1,5 @@
 import React from 'react';
-import { Button } from 'antd';
 import PropTypes from 'prop-types';
-import _ from 'lodash';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';

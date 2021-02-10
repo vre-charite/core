@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React  from "react";
 import { Typography } from "antd";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
@@ -14,13 +14,13 @@ function Description(props) {
   const currentContainer =
     containersPermission &&
     containersPermission.find((ele) => {
-      return parseInt(ele.containerId) === parseInt(datasetId);
+      return parseInt(ele.id) === parseInt(datasetId);
     });
   return (
     <>
       <Title level={3}>
         {currentContainer ? (
-          <>{currentContainer.containerName} </>
+          <>{currentContainer.name} </>
         ) : (
           "Not Available"
         )}

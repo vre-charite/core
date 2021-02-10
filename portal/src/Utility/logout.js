@@ -20,7 +20,7 @@ function preLogout(shouldClearCookie = true, shouldClearUsername = true) {
 }
 function logout(shouldClearCookie = true, shouldClearUsername = true) {
     preLogout(shouldClearCookie, shouldClearUsername)
-    keycloak.logout().then(res => {
+    keycloak.logout({redirectUri: window.location.origin +'/vre'}).then(res => {
     });
 };
 

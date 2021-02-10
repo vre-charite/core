@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { history } from '../../Routes';
-import { Card, Form, Input, Button, Layout, Typography, Space } from 'antd';
+import { Card, Form, Input, Button, Layout, Typography } from 'antd';
 import styles from './index.module.scss';
 import { sendResetPasswordEmailAPI } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
@@ -12,7 +12,7 @@ const { Title } = Typography;
 
 function Login() {
   const [loading, setLoading] = useState(false);
-  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
+  const { t } = useTranslation(['tooltips', 'formErrorMessages']);
 
   const onFinish = async (values) => {
     setLoading(true);

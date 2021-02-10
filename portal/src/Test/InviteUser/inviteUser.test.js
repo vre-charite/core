@@ -74,8 +74,6 @@ describe('Invite User Site Admin', () => {
         response.url().includes('/invitations') && response.status() === 200,
     );
 
-    console.log('New user Test Email', EMAIL);
-
     await page.waitForSelector('#header_username');
     await page.click('#header_username');
     await page.waitForSelector('#header_logout');

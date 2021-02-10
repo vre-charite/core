@@ -47,7 +47,6 @@ function checkStatus(it, testTitle, getPage, fileName) {
                 return false;
             }
         }, { timeout: 0 }, fileName);
-        console.log(fileName,'upload finish')
     })
 };
 
@@ -58,13 +57,11 @@ function checkFirstItem(it, testTitle, getPage, fileName, expect) {
         const statusDom = await page.waitForSelector(`#upload_item_${fileName.replace('.', '\\.')} span.ant-tag`);
         const status = await page.evaluate(element => element.textContent, statusDom);
         if (status === 'Success') {
-            console.log(`${fileName} is uploaded, checking if the file is on table`)
             await page.waitFor(3000);
             const firstCell = await page.waitForSelector('#files_table tbody tr td:nth-child(2)>div');
             const firstFileName = await page.evaluate(element => element.textContent, firstCell);
             await expect(fileName).toMatch(firstFileName);
         }
-        console.log(`${fileName} checked first item`)
     })
 }
 

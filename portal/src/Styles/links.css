@@ -22,6 +22,9 @@ body {
   max-width: 100%;
   padding: 0;
 }
+.ant-table-thead > tr > th {
+  overflow: hidden;
+}
 .ant-table-filter-trigger-container {
   top: -6px;
 }

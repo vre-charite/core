@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DeleteOutlined } from '@ant-design/icons';
-import { Button, Tooltip, message } from 'antd';
+import { Button } from 'antd';
 
 import VFolderFilesDeleteModal from './VFolderFilesDeleteModal';
 function VirtualFolderFilesDeletePlugin({
@@ -10,21 +10,20 @@ function VirtualFolderFilesDeletePlugin({
   setSelectedRowKeys,
 }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const files = selectedRows.map((v) => v.guid);
+  const files = selectedRows.map((v) => v.geid);
   return (
     <>
-      <Tooltip placement="top" title="Remove From Collection">
-        <Button
-          type="primary"
-          shape="circle"
-          disabled={!selectedRowKeys || selectedRowKeys.length == 0}
-          onClick={() => {
-            setModalVisible(true);
-          }}
-          icon={<DeleteOutlined />}
-          style={{ marginRight: 8 }}
-        />
-      </Tooltip>
+      <Button
+        type="link"
+        disabled={!selectedRowKeys || selectedRowKeys.length === 0}
+        onClick={() => {
+          setModalVisible(true);
+        }}
+        icon={<DeleteOutlined />}
+        style={{ marginRight: 8 }}
+      >
+        Remove From Collection
+      </Button>
       <VFolderFilesDeleteModal
         visible={modalVisible}
         setVisible={setModalVisible}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { connect, useSelector } from 'react-redux';
+import { connect } from 'react-redux';
 import {
   Form,
   Select,
@@ -7,8 +7,6 @@ import {
   message,
   Tooltip,
   Checkbox,
-  Row,
-  Col,
 } from 'antd';
 import { createProjectAPI } from '../../APIs/index';
 import {
@@ -21,7 +19,7 @@ import AsyncFormModal from './AsyncFormModal';
 import { useTranslation } from 'react-i18next';
 import { trimString } from '../../Utility';
 import _ from 'lodash';
-
+import { getDatasetByCode } from '../../APIs';
 function CreateDatasetModal({
   visible,
   cancel,
@@ -30,13 +28,13 @@ function CreateDatasetModal({
   setContainersPermissionCreator,
   containersPermission,
 }) {
-  const { username } = useSelector((state) => state);
+
   const cancelAxios = { cancelFunction: () => {} };
   const [form] = Form.useForm();
   const onFinish = () => {};
   const [submitting, toggleSubmitting] = useState(false);
   const [description, setDescription] = useState('');
-  const { t, i18n } = useTranslation([
+  const { t } = useTranslation([
     'tooltips',
     'success',
     'formErrorMessages',
@@ -65,7 +63,7 @@ function CreateDatasetModal({
           values.tags && values.tags.some((el) => el.indexOf(' ') >= 0);
 
         if (isTagHasSpace) {
-          message.error('Tag can not contain space.');
+          message.error(t('formErrorMessages:createProject.tag.space'))
           toggleSubmitting(false);
           return;
         }
@@ -102,8 +100,8 @@ function CreateDatasetModal({
             setContainersPermissionCreator([
               ...containersPermission,
               {
-                containerId: newContainer.id,
-                containerName: values.name,
+                id: newContainer.id,
+                name: values.name,
                 permission: 'admin',
                 code: values.code,
               },
@@ -113,7 +111,6 @@ function CreateDatasetModal({
             message.success(t('success:createProject'));
           })
           .catch((err) => {
-            console.log(err);
             toggleSubmitting(false);
             const errorMessage = new ErrorMessager(
               namespace.landing.createProject,
@@ -126,7 +123,6 @@ function CreateDatasetModal({
           });
       })
       .catch((info) => {
-        console.log('Validate Failed:', info);
         toggleSubmitting(false);
       });
   };
@@ -136,7 +132,8 @@ function CreateDatasetModal({
       const invalidTag = value && value.some((el) => el.length > 32);
       if (invalidTag) callback(t('formErrorMessages:project.tags.valid'));
 
-      if (value && value.includes('copied-to-core')) callback('Tag should be different with system reserved tag.');
+      if (value && value.includes('copied-to-core'))
+        callback('Tag should be different with system reserved tag.');
     }
 
     callback();
@@ -183,6 +180,20 @@ function CreateDatasetModal({
                 pattern: new RegExp(/^[a-z0-9]{1,32}$/g), // Format BXT-1234
                 message: t('formErrorMessages:project.code.valid'),
               },
+              {
+                validator: async (rule, value) => {
+                  try {
+                    await getDatasetByCode(value);
+                    return Promise.reject('The project code is taken');
+                  } catch (err) {
+                    if (err.response.status === 404) {
+                      return Promise.resolve();
+                    } else {
+                      return Promise.reject('Failed to check the project code');
+                    }
+                  }
+                },
+              },
             ]}
           >
             <Input />
@@ -209,7 +220,8 @@ function CreateDatasetModal({
                 if (!value) return Promise.reject();
 
                 const isLengthValid =
-                value && value.length >= 1 &&
+                  value &&
+                  value.length >= 1 &&
                   value.length <= 100 &&
                   trimString(value) &&
                   trimString(value).length > 0;
@@ -269,6 +281,7 @@ function CreateDatasetModal({
           ]}
         >
           <Select
+            getPopupContainer={() => document.getElementById('create_dataset')}
             mode="tags"
             style={{ width: '100%' }}
             placeholder="Add tags"
@@ -280,42 +293,6 @@ function CreateDatasetModal({
               ))}
           </Select>
         </Form.Item>
-        {/* <Form.Item
-          // label="Roles"
-          name="roles"
-          label={
-            <span>
-              Roles&nbsp;
-              <Tooltip title={t('create_project.roles')}>
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-          initialValue={['admin']}
-          required
-          style={{ marginBottom: '5px' }}
-        >
-          <Checkbox.Group style={{ width: '100%' }}>
-            <Row>
-              <Col span={10}>
-                <Checkbox value="admin" checked disabled>
-                  Project Administrator&nbsp;
-                  <Tooltip title={t('create_project.role_admin')}>
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </Checkbox>
-              </Col>
-              <Col span={10}>
-                <Checkbox value="contributor">
-                  Contributor&nbsp;
-                  <Tooltip title={t('create_project.role_contributor')}>
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </Checkbox>
-              </Col>
-            </Row>
-          </Checkbox.Group>
-        </Form.Item> */}
         <Form.Item
           label="Visibility"
           name="discoverable"

@@ -3,6 +3,7 @@ import requests
 import os
 import json
 import re
+import datetime
 from flask_jwt import jwt_required, current_identity
 from resources.decorator import check_role, check_user
 from resources.utils import *
@@ -755,9 +756,9 @@ class dataset_user(Resource):
 class user_dataset_query(Resource):
 
     @ users_entity_ns.response(200, permission_return)
-    @ jwt_required()
-    @ check_user()
-    def get(self, username):
+    # @ jwt_required()
+    # @ check_user()
+    def post(self, username):
         '''
         This method allow user to get the user's permission towards all containers (except default).
         '''
@@ -783,65 +784,94 @@ class user_dataset_query(Resource):
                 return {'result': "User %s does not exist." % username}, 404
             user_role = users[0]['role']
 
-            if user_role == "admin":
-                # Fetch all container
-                datasets = list_containers(access_token, "Dataset")
 
-                # Format response and filter out default
-                result = []
-                for x in datasets:
-                    dataset_type = x.get("type", None)
-                    if dataset_type and dataset_type != "default":
-                        temp = {
-                            "container_id": x['id'],
-                            "container_name": x['name'],
-                            "code": x['code'],
-                            "permission": "admin"
-                        }
-                        result.append(temp)
-                return {'result': {
-                    "role": user_role,
-                    "permission": result
-                }}, 200
-
-            # Fetch all datasets that connected to the user
-            url = ConfigClass.NEO4J_SERVICE + "relations/query"
+            data = request.get_json()
             payload = {
+                "extra_query": "where r.status <> 'hibernate' OR r.status IS NULL with * ",
                 "start_label": "User",
                 "end_label": "Dataset",
-                "start_params": {"name": username}
+                "start_params": data.get("start_params", None),
+                "end_params": data.get("end_params", None),
+                "partial": True,
+                "page": data.get("page", 0),
+                "page_size": data.get("page_size", 25),
+                "order_by": data.get("order_by", None),
+                "order_type": data.get("order_type", None),
+                "order_node": "end_node",
+                "is_all": data.get("is_all", None)
             }
-            res = requests.post(
-                url=url,
-                headers=headers,
-                json=payload
-            )
 
-            if(res.status_code != 200):
-                _logger.error("neo4j service: {}".format(json.loads(res.text)))
-                return {'result': json.loads(res.text)}, res.status_code
-
-            # Format response
-            result = []
-            for x in json.loads(res.text):
-                if x['r'].get('status') not in ["disable", "hibernate"]:
+            if payload["end_params"] and "create_time_start" in payload["end_params"] and "create_time_end" in payload["end_params"]:
+                payload["end_params"]["create_time_start"] = datetime.datetime.utcfromtimestamp(int(payload["end_params"]["create_time_start"])).strftime('%Y-%m-%dT%H:%M:%S')
+                payload["end_params"]["create_time_end"] = datetime.datetime.utcfromtimestamp(int(payload["end_params"]["create_time_end"])).strftime('%Y-%m-%dT%H:%M:%S')
+            
+            if user_role != "admin":
+                if not payload["start_params"]:
+                    payload["start_params"] = {}
+                    payload["start_params"]["name"] = username
+                url = ConfigClass.NEO4J_SERVICE + "relations/query"
+                response = neo4j_query_with_pagination(url, payload, partial=True)
+                if(response.code != 200):
+                    _logger.error('Failed to fetch info in neo4j: {}'.format(
+                        json.loads(res.text)))
+                    return response.to_dict
+                result = []
+                for x in response.result:
                     temp = {
-                        "container_id": x['end_node']['id'],
-                        "container_name": x['end_node']['name'],
-                        "code": x['end_node']['code'],
-                        "permission": x['r']['type']
+                        # "id": x['end_node']['id'],
+                        # "name": x['end_node']['name'],
+                        # "code": x['end_node']['code'],
+                        "permission": x['r']['type'],
+                        **x['end_node']
                     }
                     result.append(temp)
+    
+                response.set_result(result)
+                response.set_response("role", user_role)
+                return response.to_dict
+            else:
+                payload = {
+                    "page": data.get("page", 0),
+                    "page_size": data.get("page_size", 25),
+                    "order_by": data.get("order_by", None),
+                    "order_type": data.get("order_type", None),
+                    "is_all": data.get("is_all", None),
+                    **data.get("end_params", {})
+                }
+                url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query"
+                response = neo4j_query_with_pagination(url, payload, partial=True)
+                if(response.code != 200):
+                    _logger.error('Failed to fetch info in neo4j: {}'.format(
+                        json.loads(res.text)))
+                    return response.to_dict
+
+                result = []
+                for x in response.result:
+                    dataset_type = x.get("type", None)
+                    if dataset_type and dataset_type != "default":
+                        # temp = {
+                        #     "container_id": x['id'],
+                        #     "container_name": x['name'],
+                        #     "code": x['code'],
+                        #     "permission": "admin"
+                        # }
+                        # result.append(temp)
+                        x["permission"] = "admin"
+                        result.append(x)
+                response.set_result(result)
+                response.set_response("role", user_role)
+                return response.to_dict
 
         except Exception as e:
+            raise e
             _logger.error(
                 'Error in fetching user\'s role towards all projects: {}'.format(str(e)))
             return {'result': str(e)}, 500
 
-        return {'result': {
-            "role": user_role,
-            "permission": result
-        }}, 200
+        # return {'result': {
+        #     "role": user_role,
+        #     "permission": result
+        # }}, 200
 
 
 # Deprecate

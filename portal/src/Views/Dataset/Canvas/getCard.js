@@ -14,10 +14,8 @@ import Description from './Charts/Description/Description';
 import Info from './Cards/Info';
 import FileStats from './Cards/FileStats';
 import UserStats from './Cards/UserStats';
-
 import FileStatModal from '../Canvas/Modals/FileStatModal';
-
-var _ = require('lodash');
+import Superset from './Cards/Superset';
 
 const getcard = (card, data, actions, state, handleExpand) => {
   let res;
@@ -30,6 +28,9 @@ const getcard = (card, data, actions, state, handleExpand) => {
       break;
     case 'fileStats':
       res = <FileStats />;
+      break;
+    case 'superset':
+      res = <Superset />
       break;
     case 'userStats':
       const onExpand = () =>
@@ -99,9 +100,11 @@ const getcard = (card, data, actions, state, handleExpand) => {
           renderItem={(item) => (
             <List.Item
               actions={[
+                // eslint-disable-next-line
                 <a key="list-loadmore-edit">
                   <Link to={`/project/${parseInt(item.id)}/canvas`}>Enter</Link>{' '}
                 </a>,
+                // eslint-disable-next-line
                 <a key="list-loadmore-more">More</a>,
               ]}
             >

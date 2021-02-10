@@ -12,7 +12,6 @@ class KeycloakManager {
   constructor() {
     this.listeners = [];
     setInterval(() => {
-      //console.log('refreshToken remain time',this.getRefreshRemainTime());
       this._traverseListeners();
     }, 1000);
   }
@@ -92,7 +91,7 @@ class KeycloakManager {
     }
     if (shouldClearCookie) this.clearCookies();
     resetReduxState(shouldClearUsername);
-    keycloak.logout({ redirectUri: '/vre' }).then((res) => {});
+    keycloak.logout({ redirectUri: '/vre/' }).then((res) => {});
     Modal.destroyAll();
   }
 }

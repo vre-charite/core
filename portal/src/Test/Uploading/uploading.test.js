@@ -20,7 +20,6 @@ const round = 0; // test round
 const fileNames = fs.readdirSync(path.resolve(basePath, multipleFilesSubFolder));
 const fileNamesBeforeRefresh = fileNames.slice(start + amount * (2 * round), start + amount * (2 * round + 1));
 const fileNamesAfterRefresh = fileNames.slice(start + amount * (2 * round + 1), start + amount * (2 * round + 2));
-console.log(fileNamesBeforeRefresh)
 jest.setTimeout(20 * 60 * 1000);
 
 let page;

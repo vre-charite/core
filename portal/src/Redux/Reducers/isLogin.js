@@ -1,5 +1,4 @@
 import { SET_IS_LOGIN } from "../actionTypes";
-import {keycloakManager} from '../../Service/keycloak'
 
 /**
  * the user logout creator may dispatch a action with an empty {}

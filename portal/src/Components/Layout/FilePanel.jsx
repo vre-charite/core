@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  Button,
-  Tooltip,
-  Collapse,
-  Tag,
-  List,
-  Progress,
-  Badge,
-  Spin,
-} from 'antd';
+import { Button, Tooltip, Collapse, Tag, List, Progress, Badge } from 'antd';
 import { FileTextOutlined } from '@ant-design/icons';
 import styles from './index.module.scss';
 import {
@@ -20,40 +11,50 @@ import {
   setSuccessNum,
   setCurrentProjectTreeGreenRoom,
   setCurrentProjectTreeCore,
+  setDeletedFileList,
 } from '../../Redux/actions';
 import {
   useIsMount,
   getGreenRoomTreeNodes,
   getCoreTreeNodes,
+  keepAlive,
 } from '../../Utility';
 import {
   deleteUploadStatus,
   deleteDownloadStatus,
   listAllCopy2CoreFiles,
   traverseFoldersContainersAPI,
+  loadDeletedFiles,
 } from '../../APIs';
-import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { tokenManager } from '../../Service/tokenManager';
 
 const { Panel } = Collapse;
 
 function FilePanel() {
+  const sessionId = tokenManager.getCookie('sessionId');
   const [visibility, setVisibility] = useState(false);
   const [isActive, setIsActive] = useState(false);
 
   const uploadList = useSelector((state) => state.uploadList);
   const downloadList = useSelector((state) => state.downloadList);
-  const copy2CoreList = useSelector((state) => state.copy2CoreList);
+  let copy2CoreList = useSelector((state) => state.copy2CoreList);
   const panelActiveKey = useSelector((state) => state.panelActiveKey);
   const successNum = useSelector((state) => state.successNum);
   const project = useSelector((state) => state.project);
   const loadCopyEvent = useSelector((state) => state.events.LOAD_COPY_LIST);
+  const loadDeletedEvent = useSelector(
+    (state) => state.events.LOAD_DELETED_LIST,
+  );
+  const deletedFileList = useSelector((state) => state.deletedFileList);
+
   const dispatch = useDispatch();
   const isMount = useIsMount();
   let refreshJobStart = false;
+
   async function loadCopy2CoreList() {
     if (project && project.profile) {
       const projectCode = project.profile.code;
-      const sessionId = localStorage.getItem('sessionId');
+
       let res = await listAllCopy2CoreFiles(projectCode, sessionId);
       dispatch(updateCopy2CoreList(res.data.result));
       if (res.data.result.length) {
@@ -61,6 +62,7 @@ function FilePanel() {
           res.data.result.filter((v) => v.status === 'running').length !== 0
         ) {
           refreshJobStart = true;
+          keepAlive();
           setTimeout(() => {
             loadCopy2CoreList();
           }, 3 * 1000);
@@ -75,6 +77,52 @@ function FilePanel() {
       }
     }
   }
+
+  async function loadDeletedFilesList() {
+    if (project && project.profile) {
+      const projectCode = project.profile.code;
+
+      let res = await loadDeletedFiles(projectCode, sessionId);
+
+      const files = [];
+      for (const item of res.data.result) {
+        const filePaths = item.source.split('/');
+        const fileName = filePaths[filePaths.length - 1];
+
+        const file =
+          deletedFileList &&
+          deletedFileList.find(
+            (el) => el.fileName === fileName && el.input_path === item.source,
+          );
+
+        files.push({
+          ...item,
+          panelKey: file && file.panelKey,
+          fileName,
+        });
+      }
+
+      dispatch(setDeletedFileList(files));
+      if (res.data.result.length) {
+        if (
+          res.data.result.filter((v) => v.status === 'running').length !== 0
+        ) {
+          refreshJobStart = true;
+          keepAlive();
+          setTimeout(() => {
+            loadDeletedFilesList();
+          }, 3 * 1000);
+        } else {
+          if (refreshJobStart) {
+            dispatch(setSuccessNum(successNum + 1));
+            updateFolders();
+            refreshJobStart = false;
+          }
+        }
+      }
+    }
+  }
+
   async function updateFolders() {
     const allFolders = await traverseFoldersContainersAPI(project.profile.id);
     const greenRoomTree = getGreenRoomTreeNodes(allFolders);
@@ -82,18 +130,29 @@ function FilePanel() {
     dispatch(setCurrentProjectTreeGreenRoom(greenRoomTree));
     dispatch(setCurrentProjectTreeCore(coreTreeData));
   }
+
   useEffect(() => {
     if (loadCopyEvent !== 0) {
+      // eslint-disable-next-line
       refreshJobStart = false;
       loadCopy2CoreList();
     }
   }, [loadCopyEvent]);
 
   useEffect(() => {
+    if (loadDeletedEvent !== 0) {
+      // eslint-disable-next-line
+      refreshJobStart = false;
+      loadDeletedFilesList();
+    }
+  }, [loadDeletedEvent]);
+
+  useEffect(() => {
     if (isMount) {
       setVisibility(true);
       setIsActive(true);
     }
+    // eslint-disable-next-line
   }, [uploadList.length, downloadList.length, copy2CoreList.length]);
 
   useEffect(() => {
@@ -106,6 +165,7 @@ function FilePanel() {
         );
       }
     }
+    // eslint-disable-next-line
   }, [uploadList.length]);
 
   useEffect(() => {
@@ -118,22 +178,57 @@ function FilePanel() {
         );
       }
     }
+    // eslint-disable-next-line
   }, [downloadList.length]);
 
   useEffect(() => {
     if (isMount) {
       if (!visibility) {
-        dispatch(setPanelActiveKey(['copy2core']));
+        // eslint-disable-next-line
+        const core2Processed = copy2CoreList.filter((item) => {
+          const sourcePath = item.source;
+          const pathArray = sourcePath.split('/');
+
+          if (pathArray.includes('vre-storage') && pathArray.includes('raw'))
+            return true;
+        });
+        // eslint-disable-next-line
+        const copy2Core = copy2CoreList.filter((item) => {
+          const sourcePath = item.source;
+          const pathArray = sourcePath.split('/');
+
+          if (
+            pathArray.includes('vre-storage') &&
+            pathArray.includes('processed') &&
+            pathArray.includes('straight_copy')
+          )
+            return true;
+          if (
+            pathArray.includes('vre-storage') &&
+            pathArray.includes('processed') &&
+            pathArray.includes('dicom_edit')
+          )
+            return true;
+        });
+
+        if (core2Processed.length && copy2Core.length)
+          dispatch(setPanelActiveKey(['copy2core', 'copy2processed']));
+        if (core2Processed.length && copy2Core.length === 0)
+          dispatch(setPanelActiveKey(['copy2processed']));
+        if (core2Processed.length === 0 && copy2Core.length)
+          dispatch(setPanelActiveKey(['copy2core']));
       } else {
         dispatch(
-          setPanelActiveKey([...new Set([...panelActiveKey, 'copy2core'])]),
+          setPanelActiveKey([
+            ...new Set([...panelActiveKey, 'copy2core', 'copy2processed']),
+          ]),
         );
       }
     }
+    // eslint-disable-next-line
   }, [copy2CoreList.length]);
 
   function callback(key) {
-    console.log(key);
     dispatch(setPanelActiveKey(key));
   }
 
@@ -141,28 +236,31 @@ function FilePanel() {
     setVisibility(!visibility);
   }
   const statusTags = (status, type) => {
-    if (type == 'copy2core') {
-      switch (status) {
-        case 'running': {
-          return (
-            <LoadingOutlined style={{ color: '#1b90fe', marginRight: 10 }} />
-          );
-        }
-        case 'succeed': {
-          return (
-            <CheckCircleOutlined
-              style={{ color: '#52c41a', marginRight: 10 }}
-            />
-          );
-        }
-        default: {
-          return null;
-        }
-      }
-    }
+    // if (type == 'copy2core') {
+    //   switch (status) {
+    //     case 'running': {
+    //       return (
+    //         <LoadingOutlined style={{ color: '#1b90fe', marginRight: 10 }} />
+    //       );
+    //     }
+    //     case 'succeed': {
+    //       return (
+    //         <CheckCircleOutlined
+    //           style={{ color: '#52c41a', marginRight: 10 }}
+    //         />
+    //       );
+    //     }
+    //     default: {
+    //       return null;
+    //     }
+    //   }
+    // }
     switch (status) {
       case 'waiting': {
         return <Tag color="default">Waiting</Tag>;
+      }
+      case 'running': {
+        return <Tag color="yellow">Waiting</Tag>;
       }
       case 'uploading': {
         return <Tag color="blue">Uploading</Tag>;
@@ -177,6 +275,9 @@ function FilePanel() {
       case 'success': {
         return <Tag color="green">Success</Tag>;
       }
+      case 'succeed': {
+        return <Tag color="green">Success</Tag>;
+      }
 
       default: {
         return null;
@@ -185,8 +286,6 @@ function FilePanel() {
   };
 
   const cleanUploadList = async () => {
-    const sessionId = localStorage.getItem('sessionId');
-
     const res = await deleteUploadStatus(0, sessionId);
 
     if (res.status === 200 && res.data.code === 200) {
@@ -195,7 +294,6 @@ function FilePanel() {
   };
 
   const cleanDownloadList = async () => {
-    const sessionId = localStorage.getItem('sessionId');
     const res = await deleteDownloadStatus(sessionId);
 
     if (res.status === 200) {
@@ -317,11 +415,37 @@ function FilePanel() {
       successDownloadList.length === 1 ? 'file is' : 'files are'
     } downloaded successfully`;
   }
-
+  // eslint-disable-next-line
   let defaultKey = ['upload'];
   if (processDownloadList && processDownloadList.length > 0)
     defaultKey = ['download'];
   if (uploadingList && uploadingList.length > 0) defaultKey = ['upload'];
+  // eslint-disable-next-line
+  const core2Processed = copy2CoreList.filter((item) => {
+    const sourcePath = item.source;
+    const pathArray = sourcePath.split('/');
+
+    if (pathArray.includes('vre-storage') && pathArray.includes('raw'))
+      return true;
+  });
+  // eslint-disable-next-line
+  copy2CoreList = copy2CoreList.filter((item) => {
+    const sourcePath = item.source;
+    const pathArray = sourcePath.split('/');
+
+    if (
+      pathArray.includes('vre-storage') &&
+      pathArray.includes('processed') &&
+      pathArray.includes('straight_copy')
+    )
+      return true;
+    if (
+      pathArray.includes('vre-storage') &&
+      pathArray.includes('processed') &&
+      pathArray.includes('dicom_edit')
+    )
+      return true;
+  });
 
   return (
     <>
@@ -348,7 +472,10 @@ function FilePanel() {
         onChange={callback}
         className={styles.fileCollapse + ' ' + (visibility && styles.active)}
       >
-        <Panel id={`file_panel_upload`} header={uploadHeader} key="upload">
+        <Panel id={`file_panel_upload`} header="File Upload" key="upload">
+          <p style={{ paddingLeft: 16 }}>
+            {uploadList && uploadList.length > 0 && uploadHeader}
+          </p>
           <List
             size="small"
             dataSource={uploadList}
@@ -396,11 +523,10 @@ function FilePanel() {
             Clear Upload history
           </Button>
         </Panel>
-        <Panel
-          id={`file_panel_download`}
-          header={downloadHeader}
-          key="download"
-        >
+        <Panel id={`file_panel_download`} header="File Download" key="download">
+          <p style={{ paddingLeft: 16 }}>
+            {downloadList && downloadList.length > 0 && downloadHeader}
+          </p>
           <List
             size="small"
             dataSource={downloadList}
@@ -439,21 +565,71 @@ function FilePanel() {
           </Button>
         </Panel>
         <Panel
+          id={`file_panel_copy2processed`}
+          header={'Data copying to Processed'}
+          key="copy2processed"
+        >
+          {core2Processed && core2Processed.length ? (
+            <p style={{ paddingLeft: 16 }}>
+              {core2Processed.length}{' '}
+              {core2Processed.length > 1 ? 'files ' : 'file '}
+              in list,{' '}
+              {core2Processed.filter((v) => v.status === 'succeed').length}{' '}
+              {core2Processed.filter((v) => v.status === 'succeed').length > 1
+                ? 'files '
+                : 'file '}
+              succeed.
+            </p>
+          ) : null}
+          {core2Processed ? (
+            <List
+              size="small"
+              dataSource={core2Processed}
+              className={styles.copy_list}
+              renderItem={(item) => {
+                const filePaths = item.source.split('/');
+                const fileName = filePaths[filePaths.length - 1];
+                return (
+                  <>
+                    <List.Item
+                      id={`copy2processed_item_${fileName}`}
+                      style={{ overflowWrap: 'anywhere' }}
+                    >
+                      <List.Item.Meta
+                        title={
+                          <>
+                            <Tooltip placement="bottom" title={item.status}>
+                              {statusTags(item.status, 'copy2core')}
+                            </Tooltip>
+                            {fileName}
+                          </>
+                        }
+                      />
+                    </List.Item>
+                  </>
+                );
+              }}
+            />
+          ) : null}
+        </Panel>
+        <Panel
           id={`file_panel_copy2core`}
-          header={'Data copying'}
+          header={'Data copying to Core'}
           key="copy2core"
         >
-          <p style={{ paddingLeft: 16 }}>
-            {copy2CoreList.length}{' '}
-            {copy2CoreList.length > 1 ? 'files ' : 'file '}
-            in list,{' '}
-            {copy2CoreList.filter((v) => v.status === 'succeed').length}{' '}
-            {copy2CoreList.filter((v) => v.status === 'succeed').length > 1
-              ? 'files '
-              : 'file '}
-            succeed.
-          </p>
           {copy2CoreList && copy2CoreList.length ? (
+            <p style={{ paddingLeft: 16 }}>
+              {copy2CoreList.length}{' '}
+              {copy2CoreList.length > 1 ? 'files ' : 'file '}
+              in list,{' '}
+              {copy2CoreList.filter((v) => v.status === 'succeed').length}{' '}
+              {copy2CoreList.filter((v) => v.status === 'succeed').length > 1
+                ? 'files '
+                : 'file '}
+              succeed.
+            </p>
+          ) : null}
+          {copy2CoreList ? (
             <List
               size="small"
               dataSource={copy2CoreList}
@@ -472,6 +648,54 @@ function FilePanel() {
                           <>
                             <Tooltip placement="bottom" title={item.status}>
                               {statusTags(item.status, 'copy2core')}
+                            </Tooltip>
+                            {fileName}
+                          </>
+                        }
+                      />
+                    </List.Item>
+                  </>
+                );
+              }}
+            />
+          ) : null}
+        </Panel>
+        <Panel id={`file_panel_delete`} header={'File Deletion'} key="delete">
+          {deletedFileList && deletedFileList.length ? (
+            <p style={{ paddingLeft: 16 }}>
+              {deletedFileList.length}{' '}
+              {deletedFileList.length > 1 ? 'files ' : 'file '}
+              in list,{' '}
+              {
+                deletedFileList.filter((v) => v.status === 'succeed').length
+              }{' '}
+              {deletedFileList.filter((v) => v.status === 'succeed').length > 1
+                ? 'files '
+                : 'file '}
+              succeed.
+            </p>
+          ) : null}
+          {deletedFileList ? (
+            <List
+              size="small"
+              dataSource={deletedFileList}
+              className={styles.copy_list}
+              renderItem={(item) => {
+                const filePaths = item.source
+                  ? item.source.split('/')
+                  : item.input_path && item.input_path.split('/');
+                const fileName = filePaths && filePaths[filePaths.length - 1];
+                return (
+                  <>
+                    <List.Item
+                      id={`delete_item_${fileName}`}
+                      style={{ overflowWrap: 'anywhere' }}
+                    >
+                      <List.Item.Meta
+                        title={
+                          <>
+                            <Tooltip placement="bottom" title={item.status}>
+                              {statusTags(item.status, 'delete')}
                             </Tooltip>
                             {fileName}
                           </>

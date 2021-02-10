@@ -167,22 +167,6 @@ export default function ErrorMessager(name) {
         );
       },
     },
-    [namespace.dataset.files.getRawFilesAPI]: {
-      403: (err, params) => {
-        message.error(`${i18n.t('errormessages:getRawFilesAPI.403.0')}`);
-      },
-      500: (err, params) => {
-        message.error(`${i18n.t('errormessages:getRawFilesAPI.500.0')}`);
-      },
-      404: (err, params) => {
-        message.error(
-          `${i18n.t('errormessages:getRawFilesAPI.404.0')} ${params.datasetId}`,
-        );
-      },
-      default: (err, params) => {
-        message.error(`${i18n.t('errormessages:getRawFilesAPI.default.0')}`);
-      },
-    },
     [namespace.dataset.files.getChildrenDataset]: {
       403: (err, params) => {
         message.error(`${i18n.t('errormessages:getChildrenDataset.403.0')}`);
@@ -533,5 +517,4 @@ ErrorMessager.prototype.triggerMsg = function (errorCode, err, params) {
   ) {
     return;
   }
-  console.log('error message logging', store.getState());
 };

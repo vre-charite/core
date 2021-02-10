@@ -1,5 +1,6 @@
 import Canvas from '../Views/Dataset/Canvas/Canvas';
 import Teams from '../Views/Dataset/Teams/Teams';
+import Settings from '../Views/Dataset/Settings/Settings';
 
 const routes = [
   {
@@ -10,6 +11,11 @@ const routes = [
   {
     path: '/teams',
     component: Teams,
+    protectedType: 'projectAdmin',
+  },
+  {
+    path: '/settings',
+    component: Settings,
     protectedType: 'projectAdmin',
   },
 ];

@@ -1,4 +1,5 @@
 import {
+  serverAxiosNoIntercept,
   serverAxios as axios,
   devOpServer as devOpAxios,
   devOpServerUrl,
@@ -142,44 +143,44 @@ function createFolderApi(containerId, path, folderName) {
   });
 }
 
-/**
- * get a page of raw files from atlas
- * VRE-212
- * @param {number} containerId
- * @param {number} pageSize
- * @param {number} page
- */
-function getRawFilesAPI(
-  containerId,
-  pageSize,
-  page,
-  column,
-  text,
-  order,
-  admin_view,
-  entityType,
-  filters,
-) {
-  let params = {
-    page,
-    pageSize,
-    column,
-    // text,
-    order,
-    admin_view,
-  };
-
-  if (entityType) params = { ...params, entityType };
-  if (!admin_view) params = { ...params, admin_view };
-  if (filters && Object.keys(filters).length > 0)
-    params = { ...params, filter: JSON.stringify(filters) };
-
-  return axios({
-    url: `/v1/files/containers/${containerId}/files/meta`,
-    params: objectKeysToSnakeCase(params),
+function getFileManifestAttrs(filePaths, lineageView = false) {
+  return serverAxiosNoIntercept({
+    url: `/v1/file/manifest/query`,
+    method: 'POST',
+    data: {
+      file_paths: filePaths,
+      lineage_view: lineageView
+    },
   });
 }
 
+function getLabels(paths) {
+  const ZoneMap = {
+    greenroom: 'Greenroom',
+    core: 'VRECore',
+  };
+  const zoneLabel = ZoneMap[paths[0]];
+  const relevant_path = paths
+    .slice(1)
+    .map((v) => _.snakeCase(v))
+    .join('/');
+  if (relevant_path === 'trash') {
+    return [zoneLabel, 'TrashFile'];
+  }
+
+  const labels = ['File'];
+  labels.push(zoneLabel);
+  if (zoneLabel === 'Greenroom') {
+    if (paths.find((p) => p.toLowerCase() === 'processed')) {
+      labels.push('Processed');
+    }
+    if (paths.find((p) => p.toLowerCase() === 'raw')) {
+      labels.push('Raw');
+    }
+  }
+
+  return labels;
+}
 /**
  * get a page of processed file on a path
  * @param {number} containerId
@@ -187,50 +188,125 @@ function getRawFilesAPI(
  * @param {number} page
  * @param {string} path
  */
-function getFilesByTypeAPI(
+async function getFilesByTypeAPI(
   containerId,
   pageSize,
   page,
   pipeline,
   column,
   order,
-  admin_view,
-  entityType,
+  role,
+  username,
   activePane,
   filters,
 ) {
+  const columnMap = {
+    createTime: 'time_created',
+    fileName: 'name',
+    owner: 'uploader',
+    fileSize: 'file_size',
+    generateID: 'generate_id',
+  };
   let params = {
     page,
-    pageSize,
-    column,
-    order,
-    container_id: containerId,
+    page_size: pageSize,
+    order_by: columnMap[column] ? columnMap[column] : column,
+    order_type: order,
+    partial: true,
+    query: {},
   };
   if (activePane) {
     const paths = activePane.split('-');
+    const labels = getLabels(paths);
     const relevant_path = paths
       .slice(1)
       .map((v) => _.snakeCase(v))
       .join('/');
-    params.namespace = paths[0] === 'core' ? 'vrecore' : paths[0];
-    params.relevant_path = relevant_path;
+    if (relevant_path === 'trash') {
+      params.query.labels = labels;
+    } else {
+      params.query.archived = false;
+      params.query.path = relevant_path;
+      params.query.labels = labels;
+      if (
+        pipeline === pipelines['DATA_COPY'] ||
+        pipeline === pipelines['GENERATE_PROCESS'] ||
+        pipeline === pipelines['DATA_DELETE']
+      ) {
+        params.query.process_pipeline = _.snakeCase(pipeline);
+      }
+    }
+    if (labels.indexOf('Greenroom') !== -1 && role === 'collaborator') {
+      params.query.uploader = username;
+    }
+    if (role === 'contributor') {
+      params.query.uploader = username;
+    }
+    if (filters && filters.fileName) {
+      params.query.name = filters.fileName;
+      params.partial = true;
+    }
+    if (filters && filters.owner) {
+      params.query.uploader = filters.owner;
+      params.partial = true;
+    }
+    if (filters && filters.generateID) {
+      params.query.generate_id = filters.generateID;
+      params.partial = true;
+    }
   }
 
-  if (
-    pipeline === pipelines['DATA_COPY'] ||
-    pipeline === pipelines['GENERATE_PROCESS']
-  ) {
-    params.process_pipeline = _.snakeCase(pipeline);
-    params['entityType'] = entityType ? entityType : 'nfs_file_processed';
-  }
-
-  if (!admin_view) params = { ...params, admin_view };
-  if (filters && Object.keys(filters).length > 0)
-    params = { ...params, filter: JSON.stringify(filters) };
-  return axios({
-    url: `/v1/files/containers/${containerId}/files/meta`,
+  let res = await axios({
+    url: `/v2/files/containers/${containerId}/files/meta`,
     params: objectKeysToSnakeCase(params),
   });
+  const entities = res.data.result.map((item) => {
+    let typeName =
+      item.labels.indexOf('Raw') !== -1 ? 'nfs_file' : 'nfs_file_processed';
+    let formatRes = {
+      displayText: item.fullPath,
+      guid: item.guid,
+      geid: item.globalEntityId,
+      typeName: typeName,
+      attributes: {
+        createTime: item.timeCreated,
+        fileName: item.name,
+        fileSize: item.fileSize,
+        name: item.fullPath,
+        owner: item.uploader,
+        path: item.path,
+        qualifiedName: item.fullPath,
+        generateId:
+          item.generateId && typeof item.generateId !== 'undefined'
+            ? item.generateId
+            : 'undefined',
+      },
+      labels: item.tags,
+    };
+    return formatRes;
+  });
+  res.data.result = {
+    approximateCount: res.data.total,
+    entities,
+  };
+  if (activePane && activePane === 'greenroom-raw') {
+    const filePaths = res.data.result.entities.map(
+      (e) => e.attributes.qualifiedName,
+    );
+    let attrsMap = await getFileManifestAttrs(filePaths);
+    attrsMap = attrsMap.data.result;
+    res.data.result.entities = res.data.result.entities.map((entity) => {
+      return {
+        ...entity,
+        manifest:
+          attrsMap[entity.attributes.qualifiedName] &&
+          attrsMap[entity.attributes.qualifiedName].length
+            ? attrsMap[entity.attributes.qualifiedName]
+            : null,
+      };
+    });
+  }
+  return res;
 }
 
 /**
@@ -417,7 +493,6 @@ function projectFileCountToday(containerId, admin_view) {
  * @VRE-315
  */
 function projectFileSummary(containerId, admin_view, params) {
-  // console.log( objectKeysToSnakeCase(...params))
   if (admin_view === false) {
     return axios({
       url: `v1/files/containers/${containerId}/files/count/daily?admin_view=false`,
@@ -451,9 +526,9 @@ function listProjectTagsAPI(containerId, query, pattern, length) {
  * @param {dict} data data
  * @VRE-314
  */
-function addProjectTagsAPI(containerId, data) {
+function updateProjectTagsAPI(containerId, data) {
   return devOpAxios({
-    url: `/v1/containers/${containerId}/tags`,
+    url: `/v2/containers/${containerId}/tags`,
     method: 'POST',
     data,
   });
@@ -470,7 +545,7 @@ function addProjectTagsAPI(containerId, data) {
  */
 function deleteProjectTagsAPI(containerId, params) {
   return devOpAxios({
-    url: `/v1/containers/${containerId}/tags`,
+    url: `/v2/containers/${containerId}/tags`,
     method: 'DELETE',
     data: params,
   });
@@ -506,23 +581,40 @@ function copyFiles(inputFiles, projectCode, operator, sessionId, opType) {
   });
 }
 
-function addToVirtualFolder(folderId, guids) {
-  return devOpServer({
-    url: `/v1/vfolders/${folderId}/files`,
+function addToVirtualFolder(folderId, geids) {
+  return axios({
+    url: `/v1/vfolder/${folderId}/files`,
     method: 'POST',
     data: {
-      guids: guids,
+      geids: geids,
     },
   });
 }
 
-function removeFromVirtualFolder(folderId, guids) {
-  return devOpServer({
-    url: `/v1/vfolders/${folderId}/files`,
+function removeFromVirtualFolder(folderId, geids) {
+  return axios({
+    url: `/v1/vfolder/${folderId}/files`,
     method: 'DELETE',
     data: {
-      guids: guids,
+      geids: geids,
     },
+  });
+}
+
+function getZipContentAPI(file) {
+  return devOpServer({
+    url: '/v1/archive',
+    params: {
+      file_path: file,
+    },
+  });
+}
+
+function deleteFileAPI(data) {
+  return axios({
+    url: '/v1/files/actions',
+    method: 'DELETE',
+    data,
   });
 }
 
@@ -531,7 +623,6 @@ export {
   getFilesAPI,
   listFoldersAndFilesUnderContainerApi,
   createFolderApi,
-  getRawFilesAPI,
   downloadFilesAPI,
   checkDownloadStatusAPI,
   checkPendingStatusAPI,
@@ -546,7 +637,7 @@ export {
   checkUploadStatus,
   listProjectTagsAPI,
   deleteUploadStatus,
-  addProjectTagsAPI,
+  updateProjectTagsAPI,
   deleteProjectTagsAPI,
   fileLineageAPI,
   checkDownloadStatus,
@@ -555,4 +646,7 @@ export {
   addToVirtualFolder,
   removeFromVirtualFolder,
   fileAuditLogsAPI,
+  getZipContentAPI,
+  deleteFileAPI,
+  getFileManifestAttrs,
 };

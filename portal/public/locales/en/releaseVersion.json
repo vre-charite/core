@@ -1,0 +1,24 @@
+{
+  "versions": [
+    {
+      "version": "1.0.0",
+      "date": "15.02.2021",
+      "note": "<h3>What’s new</h3> <ul> <li> Data deletion protocol implemented for deleting data into Trash Bin under each zone. </li> <li> Project-based File Manifest can be configured by Administrator to be attached before and after project data uploaded for describing and categorizing data. </li> <li> External open-source services of Xwiki and Guacamole are deployed and configured with VRE portal for documentation management and workbench initiation. </li> <li> Contents previewer for zip files is implemented to view file structures inside a zip. </li> </ul> <h3>Bug Fixes</h3> <ul> <li> Email notifications now can be sent to specified platform users instead of all users by default. </li> <li> Portal release notes now can be checked in each portal page footer. </li> <li>Fixed bug of audit logs showing incorrect file activities time.</li> </ul>"
+    },
+    {
+      "version": "0.3.0",
+      "date": "15.12.2020",
+      "note": "<h3>What’s new</h3><ul><li>Single Sign-On Integration implemented between VRE Portal and workbench clients</li><li>Manual Data Copy workflow implemented for copying data from Green Room to Core.</li><li>Personal Collections can now be created by users for grouping and organizing files.</li></ul><h3>Bug Fixes</h3><ul><li>Attachments can now be added to support requests.</li><li>Sending a new platform invitation will now cause any previous invitations sent to the same email address to expire.</li><li>Fixed issue causing white page to appear on manual logout instead of the login page.</li><li>Fixed 403 errors occurring on page refresh in the Administrators Console.</li><li>Fixed issue in File Statistics that was causing logs from the previous day to be displayed.</li><li>Minor fixes to the User Management tab.</li></ul>"
+    },
+    {
+      "version": "0.2.0",
+      "date": "30.11.2020",
+      "note": "<h3>What's new</h3><ul><li>Enhanced file tagging &amp; annotation</li><li>Data lineage graph</li><li>Search project attributes</li><li>Platform Administrators user management console, Search Panel and Properties Side Panel</li><li>Updated URL to include “/vre”extension</li><li>Revised content for clarity and flow.</li></ul>"
+    },
+    {
+      "version": "0.1.0",
+      "date": "28.10.2020",
+      "note": "<h3>What’s new</h3><ul><li>Initial Version</li><li>Updated text and screenshots for clarity; </li><li>Added Change Log</li></ul>"
+    }
+  ]
+}

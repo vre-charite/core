@@ -1,9 +1,4 @@
-import axios, {
-  AxiosPromise,
-  AxiosResponse,
-  AxiosError,
-  CancelTokenSource,
-} from 'axios';
+import axios from 'axios';
 import { message } from 'antd';
 import _ from 'lodash';
 import camelcaseKeys from 'camelcase-keys';
@@ -26,8 +21,8 @@ const useHeader = (item) => {
   item.interceptors.request.use((request) => {
     request.headers['Authorization'] = 'Bearer ' + keycloak.token;
     return request;
-  })
-}
+  });
+};
 
 /**
  *
@@ -39,37 +34,24 @@ function errorHandler(error) {
 
     // The request was made and the server responded with a status code
     // that falls out of the range of 2xx
-    const {
-      response: {
-        config: { baseURL, url },
-      },
-    } = error;
+
     switch (status) {
       case 401: {
-        console.log('???', window.location.pathname);
         if (data.result === 'Permission Denied') {
           message.warning('User permission denied.');
-        } else if (
-          window.location.pathname !== '/vre' &&
-          window.location.pathname !== '/vre/'
-        ) {
-          // message.error(
-          //   'The session is expired or token is invalid. Please log in again',
-          // );
+        } else if (window.location.pathname !== '/vre/') {
           console.log('logout in config.js since 401');
         }
 
         break;
+      }
+      default: {
       }
     }
   } else if (error.request) {
     if (error.request.status === 0) {
     }
   } else {
-    // The request has no response nor request -
-    // Something happened in setting up the request that triggered an Error
-    console.log('handleApiFailure -> error', error);
-
     // If caused by axios canceltoken, it will have an error message.
     if (error.message) {
       message.error(error.message || 'The request has been cancelled');
@@ -87,8 +69,9 @@ let devOpServerUrl = 'http://10.3.7.220/vre/api/vre/portal/dataops';
 
 // for staging env
 if (process.env.REACT_APP_ENV === 'staging') {
-  kongAPI = 'https://nx.indocresearch.org/vre/api/vre/portal';
-  devOpServerUrl = 'https://nx.indocresearch.org/vre/api/vre/portal/dataops';
+  kongAPI = 'https://vre-staging.indocresearch.org/vre/api/vre/portal';
+  devOpServerUrl =
+    'https://vre-staging.indocresearch.org/vre/api/vre/portal/dataops';
 }
 
 // for charite env
@@ -112,6 +95,13 @@ const CancelToken = axios.CancelToken;
 serverAxios.interceptors.response.use(successHandler, errorHandler);
 useHeader(serverAxios);
 
+const serverAxiosNoIntercept = axios.create({
+  baseURL: kongAPI,
+});
+serverAxiosNoIntercept.defaults.headers.post['Content-Type'] =
+  'application/json';
+serverAxiosNoIntercept.defaults.timeout = 10000;
+useHeader(serverAxiosNoIntercept);
 /**
  * executes the api calling function
  * and returns both the cancel object of the axios call and the promise.
@@ -136,7 +126,7 @@ tempAxios.defaults.headers.post['Content-Type'] = 'application/json';
 tempAxios.defaults.timeout = 5000;
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 tempAxios.interceptors.response.use(successHandler, errorHandler);
-useHeader(tempAxios)
+useHeader(tempAxios);
 
 const devOpServer = axios.create({ baseURL: devOpServerUrl });
 // devOpServer.defaults.withCredentials = true;
@@ -145,7 +135,7 @@ devOpServer.defaults.timeout = 100000000000;
 
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 devOpServer.interceptors.response.use(successHandler, errorHandler);
-useHeader(devOpServer)
+useHeader(devOpServer);
 
 // devOpServer.defaults.withCredentials = true;
 
@@ -153,7 +143,7 @@ const authServerAxios = axios.create({ baseURL: authService });
 // authServerAxios.defaults.withCredentials = true;
 authServerAxios.defaults.headers.post['Content-Type'] = 'application/json';
 authServerAxios.defaults.timeout = 10000;
-useHeader(authServerAxios)
+useHeader(authServerAxios);
 
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
 //authServerAxios.interceptors.response.use(successHandler, errorHandler);
@@ -162,27 +152,7 @@ const invitationAxios = axios.create({ baseURL: 'http://bff.utility:5060' });
 // authServerAxios.defaults.withCredentials = true;
 invitationAxios.defaults.headers.post['Content-Type'] = 'application/json';
 invitationAxios.defaults.timeout = 10000;
-useHeader(invitationAxios)
-
-const dataOpsServer = axios.create({ baseURL: 'http://10.3.7.239:5063' });
-dataOpsServer.defaults.headers.post['Content-Type'] = 'application/json';
-dataOpsServer.defaults.timeout = 100000000000;
-useHeader(dataOpsServer)
-
-
-// [
-//   serverAxios,
-//   tempAxios,
-//   devOpServer,
-//   authServerAxios,
-//   invitationAxios,
-//   dataOpsServer
-// ].forEach((item) => [
-//   item.interceptors.request.use((request) => {
-//     request.headers['Authorization'] = 'Bearer ' + keycloak.token;
-//     return request;
-//   }),
-// ]);
+useHeader(invitationAxios);
 
 export {
   axios,
@@ -191,6 +161,6 @@ export {
   devOpServer,
   authServerAxios,
   invitationAxios,
-  dataOpsServer,
   devOpServerUrl,
+  serverAxiosNoIntercept,
 };

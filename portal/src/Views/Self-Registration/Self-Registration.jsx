@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 //import { StandardLayout } from "../../Components/Layout";
 import { withRouter, Link } from 'react-router-dom';
 import {
-  Layout,
   Row,
   Col,
   Form,
@@ -11,28 +10,21 @@ import {
   message,
   Tooltip,
   Checkbox,
-  Modal,
   Button,
   Card,
 } from 'antd';
-import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
 import styles from './index.module.scss';
-import AggrementPDF from './Components/AggrementPDF';
 import {
   checkIsUserExistAPI,
   parseInviteHashAPI,
   UserSelfRegistrationAPI,
 } from '../../APIs';
-import _ from 'lodash';
-import { apiErrorHandling } from '../../Utility';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import { useTranslation } from 'react-i18next';
 
 const { Title } = Typography;
-const { TextArea } = Input;
-const { Content } = Layout;
 const formItemLayout = {
   labelCol: {
     xs: { span: 24 },
@@ -59,7 +51,7 @@ function SelfRegistration(props) {
   });
   const [visible, setVisible] = useState(false);
   const [btnDisable, setBtnDisable] = useState(true);
-  const { t, i18n } = useTranslation([
+  const { t} = useTranslation([
     'tooltips',
     'success',
     'formErrorMessages',
@@ -79,7 +71,6 @@ function SelfRegistration(props) {
     } else {
       params = { ...params, portalRole: info.role, email: info.email, status: 'active' };
     }
-    console.log(params);
     UserSelfRegistrationAPI(params)
       .then((res) => {
         message.success(t('success:selfRegistration'));
@@ -112,6 +103,7 @@ function SelfRegistration(props) {
           errorMessager.triggerMsg(err.response.status);
         }
       });
+      // eslint-disable-next-line
   }, []);
 
   const onCancel = () => {
@@ -188,12 +180,6 @@ function SelfRegistration(props) {
                     // },
                     ({ getFieldValue }) => ({
                       validator: async (rule, value) => {
-                        // const hasBackslash = value.indexOf('\\');
-                        // if (hasBackslash !== -1)
-                        //   return Promise.reject(
-                        //     t('formErrorMessages:common.username.valid'),
-                        //   );
-
                         if (!value.length) {
                           setValidatingStatus('error');
                           return;
@@ -257,15 +243,7 @@ function SelfRegistration(props) {
                 <Form.Item label="Email">
                   <Input value={info.email} disabled />
                 </Form.Item>
-                {/*
-                <Form.Item label="Project ID">
-                  <Input value={info.projectId} disabled />
-                </Form.Item> */}
-                {/* <Form.Item label="Role">
-                  <Input value={info.role} disabled />
-                </Form.Item> */}
                 <Form.Item
-                  label="Password"
                   label={
                     <span>
                       Password&nbsp;

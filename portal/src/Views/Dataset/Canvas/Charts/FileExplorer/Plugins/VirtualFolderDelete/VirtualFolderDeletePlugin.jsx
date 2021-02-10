@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, Tooltip, message } from 'antd';
-
+import { Button } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
 import VFolderDeleteModal from './VFolderDeleteModal';
 function VirtualFolderDeletePlugin({
   selectedRows,
@@ -13,7 +13,8 @@ function VirtualFolderDeletePlugin({
   return (
     <>
       <Button
-        danger
+        type="link"
+        icon={<DeleteOutlined />}
         onClick={() => {
           setModalVisible(true);
         }}

@@ -56,24 +56,21 @@ const UploadFileToFolder = ({
           name: values.file.file.name,
           file_type: values.file.file.type,
           uploader: username,
-          projectName: currentDataset.containerName,
+          projectName: currentDataset.name,
           projectCode: currentDataset.code,
         });
         const subPath = '';
-        console.log('handleOk -> data', data);
         uploadStarter(data, q);
         form.resetFields();
         cancel();
       })
       .catch((info) => {
-        console.log('Validate Failed:', info);
         setIsloading(false);
       });
   };
 
   const props = {
     beforeUpload(file) {
-      console.log(file)
       return false;
     },
   };

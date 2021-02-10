@@ -7,9 +7,8 @@ import { withCookies, Cookies } from 'react-cookie';
 import { axios } from '../../APIs/config';
 import styles from './index.module.scss';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
-import { withRouter, Link } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { v4 as uuidv4 } from 'uuid';
 import {
   AddDatasetCreator,
   setUserListCreator,
@@ -21,15 +20,14 @@ import {
   setRefreshModal,
   setIsLoginCreator,
   setUsernameCreator,
+  setIsReleaseNoteShownCreator,
 } from '../../Redux/actions';
-import { tokenManager } from '../../Service/tokenManager';
-import { broadcastManager } from '../../Service/broadcastManager';
-import { namespace as serviceNamespace } from '../../Service/namespace';
 import { getDatasetsAPI, listAllContainersPermission } from '../../APIs';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import CoookiesDrawer from './CookiesDrawer';
 import { withTranslation } from 'react-i18next';
 import { keycloak } from '../../Service/keycloak';
+import { version } from '../../../package.json';
 
 const { confirm } = Modal;
 
@@ -61,7 +59,6 @@ class Auth extends Component {
 
     if (!cookiesNotified) {
       const closeNotification = () => {
-        console.log('closing!!');
         notification.close(key);
         localStorage.setItem('cookies_notified', true);
       };
@@ -136,8 +133,7 @@ class Auth extends Component {
 
     keycloak
       .login()
-      .then((res) => {
-      })
+      .then((res) => {})
       .catch((err) => {
         if (err.response) {
           const errorMessager = new ErrorMessager(namespace.login.auth);
@@ -148,13 +144,11 @@ class Auth extends Component {
   };
 
   initApis = async (username) => {
-    console.log(axios.defaults.headers.common, 'axios.defaults.headers.common');
     getDatasetsAPI({ type: 'usecase' })
       .then((res) => {
         this.props.AddDatasetCreator(res.data.result, 'All Use Cases');
       })
       .catch((err) => {
-        console.log(err);
         const errorMessager = new ErrorMessager(namespace.common.getDataset);
         errorMessager.triggerMsg(err.response && err.response.status);
       });
@@ -162,10 +156,10 @@ class Auth extends Component {
       const {
         data: { result: containersPermission },
       } = await listAllContainersPermission(username);
+      this.props.setUserRoleCreator(containersPermission.role);
       this.props.setContainersPermissionCreator(
         containersPermission.permission,
       );
-      this.props.setUserRoleCreator(containersPermission.role);
     } catch (err) {
       const errorMessager = new ErrorMessager(
         namespace.common.listAllContainersPermission,
@@ -181,14 +175,12 @@ class Auth extends Component {
   };
 
   handleOk = (e) => {
-    console.log(e);
     this.setState({
       visible: false,
     });
   };
 
   handleCancel = (e) => {
-    console.log(e);
     this.setState({
       visible: false,
     });
@@ -329,7 +321,16 @@ class Auth extends Component {
             />
           </div>
           <small className={styles.copyright}>
-            Version 0.3.0. Copyright © {new Date().getFullYear()},{' '}
+            <Button
+              onClick={() => {
+                this.props.setIsReleaseNoteShownCreator(true);
+              }}
+              type="link"
+            >
+              {' '}
+              <small> Version {version}</small>
+            </Button>{' '}
+            Copyright © {new Date().getFullYear()},{' '}
             <a
               href="https://www.indocresearch.org/"
               target="_blank"
@@ -359,6 +360,7 @@ export default withTranslation('formErrorMessages')(
         setRefreshModal,
         setIsLoginCreator,
         setUsernameCreator,
+        setIsReleaseNoteShownCreator,
       })(Auth),
     ),
   ),

@@ -63,8 +63,6 @@ describe('projectList', () => {
 
     expect(attr[0].tabName).toMatch('My Projects');
 
-    console.log(attr);
-
     //click secondTab
     const tabs = await page.$$('div[role="tab"]');
 
@@ -84,9 +82,6 @@ describe('projectList', () => {
 
     expect(attr2[1].tabName).toMatch('All Projects');
 
-    console.log(attr2);
-
-    // await myProject[1].console.log(myProject);
   });
   it('Check if Inside Project', async () => {
     const btn = await page.waitForSelector('#uploadercontent_dropdown');

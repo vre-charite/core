@@ -28,7 +28,7 @@ function ContactUs() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const username = useSelector((state) => state.username);
-  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
+  const { t } = useTranslation(['tooltips', 'formErrorMessages']);
   let history = useHistory();
 
   function onFinish(values) {

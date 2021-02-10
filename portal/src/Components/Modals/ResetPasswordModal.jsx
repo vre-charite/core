@@ -9,12 +9,7 @@ const ResetPasswordModal = (props) => {
   const [userInfo, setUserInfo] = useState({});
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { t, i18n } = useTranslation([
-    'tooltips',
-    'success',
-    'formErrorMessages',
-  ]);
+  const { t } = useTranslation(['tooltips', 'success', 'formErrorMessages']);
 
   useEffect(() => {
     const info = { username: props.username };

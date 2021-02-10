@@ -11,13 +11,14 @@ import {
   Row,
   Space,
 } from 'antd';
+import { SettingOutlined } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import _ from 'lodash';
 import {
   updateDatasetInfoAPI,
   getAdminsOnDatasetAPI,
-  getSystemTagsAPI,
+  getProjectInfoAPI,
 } from '../../../../APIs';
 import { UpdateDatasetCreator } from '../../../../Redux/actions';
 import {
@@ -27,27 +28,34 @@ import {
   trimString,
   reduxActionWrapper,
 } from '../../../../Utility';
+import { Link } from 'react-router-dom';
 import { objectKeysToCamelCase } from '../../../../Utility';
 import { useTranslation } from 'react-i18next';
 import {
   setContainersPermissionCreator,
-  setUserRoleCreator,
   setCurrentProjectProfile,
   setCurrentProjectManifest,
   triggerEvent,
 } from '../../../../Redux/actions';
 import { useSelector, useDispatch } from 'react-redux';
 const { TextArea } = Input;
-const { Paragraph, Title } = Typography;
+const { Paragraph } = Typography;
 
 function Description(props) {
+  const project = useSelector((state) => state.project);
+
   const [editView, setEditView] = useState(false);
-  const [datasetInfo, setDatasetInfo] = useState(null);
-  const [datasetUpdate, setDatasetUpdate] = useState(null);
+  const [datasetInfo, setDatasetInfo] = useState(
+    project ? project.profile : null,
+  );
+  const [datasetUpdate, setDatasetUpdate] = useState(
+    project ? project.profile : null,
+  );
   const [userListOnDataset, setUserListOnDataset] = useState(null);
   const [tagErrorMsg, setTagErrorMsg] = useState(null);
+  // eslint-disable-next-line
   const [nameErrorMsg, setNameErrorMsg] = useState(null);
-  const { t, i18n } = useTranslation(['formErrorMessages']);
+  const { t } = useTranslation(['formErrorMessages']);
   const [isSaving, setIsSaving] = useState(false);
   const dispatch = useDispatch();
   const {
@@ -58,30 +66,27 @@ function Description(props) {
     datasetList,
   } = props;
 
-  const [
-    setContainersPermissionDispatcher,
-    setUserRoleDispatcher,
-  ] = reduxActionWrapper([setContainersPermissionCreator, setUserRoleCreator]);
-
-  const { username } = useSelector((state) => state);
+  const [setContainersPermissionDispatcher] = reduxActionWrapper([
+    setContainersPermissionCreator,
+  ]);
 
   useEffect(() => {
-    if (datasetList.length > 0) {
-      const currentDataset = _.find(
-        datasetList[0].datasetList,
-        (d) => d.id === parseInt(datasetId),
-      );
-
-      setDatasetInfo(currentDataset);
-      dispatch(setCurrentProjectProfile(currentDataset));
-      dispatch(
-        setCurrentProjectManifest({
-          tags: currentDataset.systemTags,
-        }),
-      );
-      dispatch(triggerEvent('LOAD_COPY_LIST'));
-      setDatasetUpdate(currentDataset);
-    }
+    dispatch(
+      setCurrentProjectManifest({
+        tags: datasetInfo && datasetInfo.systemTags,
+      }),
+    );
+    dispatch(triggerEvent('LOAD_COPY_LIST'));
+    dispatch(triggerEvent('LOAD_DELETED_LIST'));
+    getProjectInfoAPI(datasetId).then((res) => {
+      if (res.status === 200 && res.data && res.data.code === 200) {
+        const currentDataset = res.data.result;
+        dispatch(setCurrentProjectProfile(currentDataset));
+        setDatasetInfo(currentDataset);
+        setDatasetUpdate(currentDataset);
+      }
+    });
+    // eslint-disable-next-line
   }, [containersPermission, datasetList, datasetId]);
 
   const [currentContainer] = useCurrentProject();
@@ -89,12 +94,9 @@ function Description(props) {
   useEffect(() => {
     currentContainer &&
       getAdminsOnDatasetAPI(datasetId).then((res) => {
-        console.log(
-          'Description -> res',
-          objectKeysToCamelCase(res.data.result),
-        );
         setUserListOnDataset(objectKeysToCamelCase(res.data.result));
       });
+    // eslint-disable-next-line
   }, [null]);
 
   const saveDatasetInfo = () => {
@@ -109,7 +111,7 @@ function Description(props) {
       return;
     }
 
-    if (datasetUpdate['name'] && datasetUpdate['name'].length > 250) {
+    if (datasetUpdate['name'] && datasetUpdate['name'].length > 100) {
       message.error(t('formErrorMessages:project.card.save.name.valid'));
       setIsSaving(false);
       return;
@@ -142,7 +144,14 @@ function Description(props) {
     let data2Update = {};
 
     for (const key in datasetUpdate) {
-      if (!['timeCreated', 'timeLastmodified'].includes(key)) {
+      if (
+        ![
+          'timeCreated',
+          'timeLastmodified',
+          'time_created',
+          'time_lastmodified',
+        ].includes(key)
+      ) {
         data2Update[key] = datasetUpdate[key];
       }
     }
@@ -151,33 +160,17 @@ function Description(props) {
     updateDatasetInfoAPI(datasetId, objectKeysToSnakeCase(data2Update))
       .then((res) => {
         let newDataInfo = res.data.result[0];
-        let index = datasetList[0].datasetList.findIndex(
-          (d) => d.id === parseInt(datasetId),
-        );
-        let newDatasetList = [
-          ...datasetList,
-          (datasetList[0].datasetList[index] = newDataInfo),
-        ];
-        console.log(newDatasetList);
-        props.UpdateDatasetCreator(
-          newDatasetList[0].datasetList,
-          'All Projects',
-        );
-
         const newContainerPermission = containersPermission.map((el) => {
-          if (el.containerId === parseInt(datasetId)) {
+          if (el.id === parseInt(datasetId)) {
             return {
               ...el,
-              containerName: newDataInfo.name,
+              name: newDataInfo.name,
             };
           }
           return el;
         });
 
         updateContainerPremission(newContainerPermission);
-        setDatasetInfo(newDataInfo);
-        dispatch(setCurrentProjectProfile(newDataInfo));
-        setDatasetUpdate(newDataInfo);
         setEditView(false);
       })
       .finally(() => {
@@ -210,7 +203,7 @@ function Description(props) {
     }
 
     if (field === 'name') {
-      let isNameInvalid = value.length > 250;
+      let isNameInvalid = value.length > 100;
       if (isNameInvalid) {
         message.error(t('formErrorMessages:project.card.update.name.valid'));
         setNameErrorMsg(t('formErrorMessages:project.card.update.name.valid'));
@@ -253,7 +246,6 @@ function Description(props) {
       borderColor: 'red',
     };
   }
-
   const printDetails = () => {
     if (datasetInfo) {
       return (
@@ -296,7 +288,10 @@ function Description(props) {
                 </Button>
               </Space>
             ) : (
-              <Button onClick={(e) => setEditView(true)}>Edit</Button>
+              <Link to="settings">
+                <SettingOutlined />
+              </Link>
+              // <Button onClick={(e) => setEditView(true)}>Edit</Button>
             )}
           </div>
 
@@ -382,8 +377,9 @@ function Description(props) {
                           i.email +
                           `?subject=[VRE Platform: ${datasetInfo.name}]`
                         }
+                        //ref="noopener noreferrer"
+                        // eslint-disable-next-line
                         target="_blank"
-                        // ref="noreferrer noopener"
                         style={{ paddingRight: '5px' }}
                         key={index}
                       >

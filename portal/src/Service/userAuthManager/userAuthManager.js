@@ -1,18 +1,16 @@
-import { userLogoutCreator, setRefreshModal, setUploadListCreator, setIsLoginCreator, setUsernameCreator } from '../../Redux/actions'
+import { setRefreshModal, } from '../../Redux/actions'
 import { store } from '../../Redux/store'
 import { q } from '../../Context';
-import { history } from '../../Routes';
 import { tokenManager } from '../tokenManager';
 import { keycloakManager } from '../keycloak'
 import { activeManager } from '../activeManager'
 import { reduxActionWrapper, resetReduxState } from '../../Utility';
 import { broadcastManager } from '../broadcastManager';
 import { namespace } from '../namespace';
-import { refreshTokenAPI } from '../../APIs'
 import { namespace as serviceNamespace } from '../namespace';
 import { keycloak } from '../keycloak'
 import { message, Modal } from 'antd';
-const [userLogoutDispatcher, setRefreshModalDispatcher, setUploadListDispatcher, setIsLoginDispatcher, setUsernameDispatcher] = reduxActionWrapper([userLogoutCreator, setRefreshModal, setUploadListCreator, setIsLoginCreator, setUsernameCreator]);
+const [setRefreshModalDispatcher,] = reduxActionWrapper([setRefreshModal,]);
 const modalTime = 60;
 class UserAuthManager {
     openRefreshModalId;
@@ -59,7 +57,6 @@ class UserAuthManager {
             let { downloadList } = store.getState();
             downloadList = downloadList.filter(el => el.status === 'pending');
             const tasks = q.length() + q.running() + downloadList.length;
-            console.log(tasks, 'tasks')
             if (tasks !== 0 || activeManager.isActive()) {
                 const { username } = store.getState();
                 this.extendAuth().then(res => {
@@ -85,8 +82,6 @@ class UserAuthManager {
         broadcastManager.addListener('login', (msg, channelNamespace) => {
 
             const { isLogin, username } = store.getState();
-            console.log(username, 'username')
-            console.log(msg, '  msg')
             if (!isLogin) {
                 return;
             } else if (msg === username) {

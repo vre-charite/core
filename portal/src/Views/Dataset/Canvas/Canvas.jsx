@@ -8,8 +8,8 @@ import fakeLayout from './fakeLayout';
 import DragArea from './DragArea/DragArea';
 import _ from 'lodash';
 import { connect } from 'react-redux';
-import { AddDatasetCreator } from '../../../Redux/actions';
-import { getChildrenDataset } from '../../../APIs';
+import { AddDatasetCreator, setCurrentProjectProfile } from '../../../Redux/actions';
+import { getChildrenDataset, getProjectInfoAPI } from '../../../APIs';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
 import { withCurrentProject } from '../../../Utility';
 import userRoles from '../../../Utility/project-roles.json';
@@ -25,12 +25,14 @@ const defaultLayout = {
       { i: '2', x: 12, y: 0, w: 3, h: 4 },
       { i: '3', x: 15, y: 0, w: 9, h: 4 },
       { i: '1', x: 0, y: 7, w: 24, h: 8 },
+      
     ],
     sm: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
       { i: '2', x: 0, y: 4, w: 3, h: 4 },
       { i: '3', x: 3, y: 4, w: 9, h: 4 },
       { i: '1', x: 0, y: 8, w: 24, h: 8 },
+      
     ],
   },
   //Uploader panel
@@ -93,6 +95,7 @@ class Canvas extends Component {
       currentUser: null,
     };
   }
+
   findStudyId() {
     const urlArr = window.location.href.split('/');
     return urlArr[urlArr.length - 2];
@@ -102,6 +105,15 @@ class Canvas extends Component {
     this.setState({ currentUser: this.props.username });
     this.fetchDatasetName();
     this.updatePermision();
+
+    getProjectInfoAPI(this.props.datasetId)
+      .then((res) => {
+        if (res.status === 200 && res.data && res.data.code === 200) {
+          const currentDataset = res.data.result;
+          this.props.setCurrentProjectProfile(currentDataset);
+        }
+      })
+
     window.setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
     }, 0);
@@ -134,7 +146,7 @@ class Canvas extends Component {
   fetchDatasetName = () => {
     const currentProject = this.props.currentProject;
     if (currentProject) {
-      this.setState({ datasetName: currentProject.containerName });
+      this.setState({ datasetName: currentProject.name });
     }
   };
 
@@ -152,6 +164,7 @@ class Canvas extends Component {
 
   filterData = (filter) => {
     let data = this.state.fulldata;
+    // eslint-disable-next-line
     Object.keys(filter).map((key) => {
       let rule = filter[key];
       if (rule.length > 0) {
@@ -231,8 +244,6 @@ class Canvas extends Component {
 
   handleSaveLayout = () => {
     const { layout, cardTypes } = this.state;
-
-    console.log('sending layout to endpoint....', layout);
     localStorage.setItem('layout', JSON.stringify(layout));
     localStorage.setItem('cardTypes', JSON.stringify(cardTypes));
   };
@@ -307,13 +318,11 @@ class Canvas extends Component {
     this.setState(
       {
         uploader: true,
-      },
-      console.log('click upload'),
+      }
     );
   };
 
   handleCancelUploader = () => {
-    console.log('cancelling');
     this.setState({ uploader: false });
   };
 
@@ -328,9 +337,9 @@ class Canvas extends Component {
       cardTypes,
     } = this.state;
     let tags = [];
-    Object.keys(filter).map((key) => {
+    Object.keys(filter).forEach((key) => {
       let items = filter[key];
-      items.map((i) =>
+      items.forEach((i) =>
         tags.push({
           key,
           i,
@@ -483,5 +492,5 @@ export default connect(
     const { datasetList, containersPermission, username, role } = state;
     return { datasetList, containersPermission, username, role };
   },
-  { AddDatasetCreator },
+  { AddDatasetCreator, setCurrentProjectProfile },
 )(withCurrentProject(withRouter(Canvas)));

@@ -2,6 +2,7 @@ import { TRIGGER_EVENT } from '../actionTypes';
 
 const init = {
   LOAD_COPY_LIST: 0,
+  LOAD_DELETED_LIST: 0,
 };
 function events(state = init, action) {
   const { type, payload } = action;

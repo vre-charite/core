@@ -4,8 +4,9 @@ import {
   CloudUploadOutlined,
   CloudDownloadOutlined,
   CopyOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
-import _ from 'lodash';
+import { useSelector } from 'react-redux';
 
 import { projectFileCountToday, fileAuditLogsAPI } from '../../../../APIs';
 
@@ -24,6 +25,8 @@ function UserStats(props) {
   const [downloadLog, setDownloadLog] = useState([]);
   const [copyCount, setCopyCount] = useState(0);
   const [copyLogs, setCopyLogs] = useState([]);
+  const [deleteCount, setDeleteCount] = useState(0);
+  const [deleteLogs, setDeleteLogs] = useState([]);
 
   const {
     match: {
@@ -31,14 +34,13 @@ function UserStats(props) {
     },
   } = props;
 
-  const currentDataset = _.find(
-    props.datasetList && props.datasetList[0].datasetList,
-    (d) => d.id === parseInt(datasetId),
-  );
+  const projectInfo = useSelector((state) => state.project);
 
-  const currentPermission = props.containersPermission.find(
-    (el) => el.containerId === parseInt(datasetId),
-  );
+  const currentDataset = projectInfo.profile;
+
+  const currentPermission =
+    props.containersPermission &&
+    props.containersPermission.find((el) => el.id === parseInt(datasetId));
 
   useEffect(() => {
     projectFileCountToday(datasetId).then((res) => {
@@ -74,8 +76,19 @@ function UserStats(props) {
       setUploadLog(uploadLog);
       setDownloadLog(downloadLog);
     });
+    if (currentPermission === undefined) {
+      console.err('currentPermission is undefined');
+      console.log(
+        'props.containersPermission',
+        props.containersPermission,
+        'datasetId',
+        datasetId,
+      );
+    }
 
-    currentPermission.permission === 'admin' &&
+    currentDataset &&
+      currentPermission &&
+      currentPermission.permission === 'admin' &&
       fileAuditLogsAPI({
         page_size: 50,
         page: 0,
@@ -86,14 +99,34 @@ function UserStats(props) {
         start_date: moment().startOf('day').unix(),
         end_date: moment().endOf('day').unix(),
       }).then((res) => {
-        if (res.status === 200) {
+        if (res.status === 200 && res.data) {
           const { result, total } = res.data;
 
           setCopyCount(total);
           setCopyLogs(result);
         }
       });
-  }, [datasetId, props.successNum]);
+
+    currentDataset &&
+      fileAuditLogsAPI({
+        page_size: 50,
+        page: 0,
+        operation_type: 'data_delete',
+        project_code: currentDataset && currentDataset.code,
+        operator: props.isAdmin ? null : props.username,
+        container_id: datasetId,
+        start_date: moment().startOf('day').unix(),
+        end_date: moment().endOf('day').unix(),
+      }).then((res) => {
+        if (res.status === 200 && res.data) {
+          const { result, total } = res.data;
+
+          setDeleteCount(total);
+          setDeleteLogs(result);
+        }
+      });
+    // eslint-disable-next-line
+  }, [datasetId, props.successNum, currentDataset?.code]);
 
   const operations = (
     <Button type="primary" size="small" onClick={props.onExpand}>
@@ -124,18 +157,28 @@ function UserStats(props) {
             fontSize: '22px',
           }}
         />
-        {currentPermission.permission === 'admin' ? (
+        {currentPermission && currentPermission.permission === 'admin' ? (
           <Statistic
             title="Copies (today)"
             value={copyCount}
             prefix={<CopyOutlined />}
-            style={{ textAlign: 'center' }}
+            style={{ textAlign: 'center', paddingRight: '36px' }}
             valueStyle={{
               color: '#13c2c2',
               fontSize: '22px',
             }}
           />
         ) : null}
+        <Statistic
+          title="Deletions (today)"
+          value={deleteCount}
+          prefix={<DeleteOutlined />}
+          style={{ textAlign: 'center' }}
+          valueStyle={{
+            color: '#13c2c2',
+            fontSize: '22px',
+          }}
+        />
       </div>
       <br />
       <Tabs defaultActiveKey="1" tabBarExtraContent={operations}>
@@ -165,7 +208,7 @@ function UserStats(props) {
             })}
           </Timeline>
         </TabPane>
-        {currentPermission.permission === 'admin' ? (
+        {currentPermission && currentPermission.permission === 'admin' ? (
           <TabPane tab="Copy Logs" key="3">
             <Timeline>
               {copyLogs.map((i, ind) => {
@@ -180,6 +223,20 @@ function UserStats(props) {
             </Timeline>
           </TabPane>
         ) : null}
+
+        <TabPane tab="Delete Logs" key="4">
+          <Timeline>
+            {deleteLogs.map((i, ind) => {
+              let { operator, createTime, fileName } = i['attributes'];
+              return (
+                <Timeline.Item color="green" key={ind}>
+                  {operator} deleted {fileName} at{' '}
+                  {moment(createTime * 1000).format('YYYY-MM-DD HH:mm:ss')}
+                </Timeline.Item>
+              );
+            })}
+          </Timeline>
+        </TabPane>
       </Tabs>
     </>
   );
@@ -187,7 +244,6 @@ function UserStats(props) {
 
 export default connect((state) => ({
   containersPermission: state.containersPermission,
-  datasetList: state.datasetList,
   successNum: state.successNum,
   username: state.username,
 }))(withRouter(UserStats));

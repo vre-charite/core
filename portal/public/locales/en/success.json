@@ -18,5 +18,17 @@
   "selfRegistration": "Signup completed successfully.",
   "userManagement": {
     "inviteUser": ["Invitation has been sent to"]
+  },
+  "importManifestAPI": {
+    "default": ["Manifest imported"]
+  },
+  "fileOperations": {
+    "delete": "Files deleted successfully"
+  },
+  "virtualFolder": {
+    "delete": "Collection has been deleted successfully",
+    "removeFiles": "Files have been removed successfully",
+    "addFilesDuplicate": "Files added successfully with existing files skipped",
+    "addFiles": "Files have been added successfully"
   }
 }

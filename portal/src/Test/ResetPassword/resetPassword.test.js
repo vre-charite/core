@@ -67,7 +67,7 @@ describe('resetPassword', () => {
             screenShotLogger(String(Date.now()))
         })
     });
-    login(it, getPage, username, oldPassword);
+ /*    login(it, getPage, username, oldPassword);
     it('new password not follow the password pattern', async () => {
         await page.click('#header_username');
         await page.waitForSelector('#header_reset_password');
@@ -146,8 +146,9 @@ describe('resetPassword', () => {
         await page.waitForResponse(`${serverUrl}/users/password`);
         const isSuccess = await checkErrorMessage(page, 'Reset password successfully');
         await expect(isSuccess).toBeTruthy();
-    });
+    }); */
     it(`test invalid password`, async () => {
+        await page.waitForSelector('#header_username',{timeout:15*1000});
         await page.click('#header_username');
         await page.waitForSelector('#header_reset_password');
         await page.click('#header_reset_password');

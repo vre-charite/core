@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { history } from '../../Routes';
-import {
-  Card,
-  Form,
-  Input,
-  Button,
-  Layout,
-  Typography,
-  Space,
-  Tooltip,
-} from 'antd';
+import { Card, Form, Input, Button, Layout, Typography, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import styles from './index.module.scss';
 
@@ -24,7 +15,7 @@ const { Title } = Typography;
 function Login(props) {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
+  const { t } = useTranslation(['tooltips', 'formErrorMessages']);
 
   const FormInstance = React.createRef();
   const token = props.location.search.split('=')[1];
@@ -42,6 +33,7 @@ function Login(props) {
         }
         setLoading(false);
       });
+    // eslint-disable-next-line
   }, []);
 
   const onFinish = (values) => {

@@ -107,10 +107,6 @@ describe('Contributor Canvas', () => {
 
     const arrTimelineItem = firstTimelineItemText.trim().split(' ');
 
-    console.log(arrTimelineItem[2]);
-
-    console.log(`${GENERATE_ID}_${FILENAME}`);
-
     expect(arrTimelineItem[0]).toBe(USERNAME);
     expect(arrTimelineItem[2]).toBe(`${GENERATE_ID}_${FILENAME}`);
   });
@@ -127,7 +123,6 @@ describe('Contributor Canvas', () => {
     const projectId = projectUrl.split('/')[3];
     await projecTitle.click();
     const antTree = await page.$('div.ant-tree');
-    console.log(antTree);
 
     expect(antTree).toBe(null);
     await page.waitForTimeout(8000);

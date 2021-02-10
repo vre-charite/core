@@ -15,5 +15,4 @@ class ActiveManager {
 }
 
 const activeManager = new ActiveManager();
-console.log(activeManager);
 export {activeManager};

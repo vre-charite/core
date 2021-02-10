@@ -112,3 +112,15 @@ This api is used when submitting the from the support panel
 ## inviteUserApi
 
 This api is called when inviting user from platform users management
+
+## editManifestOnFile
+edit a single file's manifest attribute on Canvas
+
+## updateFileManifestAPI
+This api is called when updating a single file's manifest attribute on Canvas
+
+## importExportManifest
+Import and export manifest as a json for a project
+
+## importManifestAPI
+This api is called when importing a manifest from json

@@ -27,7 +27,6 @@ async function validTest(page,username,oldPassword,testcases){
         await page.type('#basic_newPassword', curPassword);
         await clearInput(page, '#basic_newPassword2');
         await page.type('#basic_newPassword2', curPassword);
-        console.log(`testing password ${curPassword}`);
         await page.screenshot({path:`C:\\Users\\combo\\projects\\VRE-portal\\portal\\src\\Test\\Log\\resetPassword\\screenShot\\validTest.png`})
         await page.waitForSelector('#basic .ant-form-item-explain div',{hidden:true});
         await page.click('#reset_password_modal_submit');

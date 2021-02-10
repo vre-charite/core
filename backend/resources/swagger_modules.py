@@ -135,32 +135,38 @@ dataset_sample_return = '''
     '''
 
 datasets_sample_return = '''
-    {
-        "result": [
-            {
-                "id": 12,
-                "labels": [
-                    "Dataset"
-                ],
-                "path": "Carsten Finke Generate",
-                "time_lastmodified": "2020-07-03T18:18:47",
-                "name": "Carsten Finke Generate",
-                "time_created": "2020-07-03T18:18:47",
-                "admin": [
-                    "user1",
-                    "user2",
-                    "user3"
-                ],
-                "type": "Usecase",
-                "_key1": "value1",
-                "_key2": "value2",
-                "tags": [
-                    "tag1",
-                    "tag2"
-                ]
-            },
+    {   
+        "code": 200,
+        "error_msg": "",
+        "num_of_pages": 14,
+        "page": 0,
+        "result": [   {   "admin": ["admin"],
+                          "code": "autotest161",
+                          "description": "auto test description",
+                          "discoverable": True,
+                          "id": 583,
+                          "labels": ["Dataset"],
+                          "name": "autotest161",
+                          "path": "autotest161",
+                          "roles": ["admin"],
+                          "time_created": "2020-11-06T17:47:10",
+                          "time_lastmodified": "2020-11-06T17:47:10",
+                          "type": "Usecase"},
+                      {   "admin": ["admin"],
+                          "code": "autotest1693",
+                          "description": "auto test description",
+                          "discoverable": True,
+                          "id": 603,
+                          "labels": ["Dataset"],
+                          "name": "autotest1693",
+                          "path": "autotest1693",
+                          "roles": ["admin"],
+                          "time_created": "2020-11-06T20:46:06",
+                          "time_lastmodified": "2020-11-06T20:46:06",
+                          "type": "Usecase"}],
+        "total": 27
     }
-    '''
+'''
 
 users_sample_return = '''
     {
@@ -201,27 +207,26 @@ user_sample_return = '''
     '''
 
 permission_return = '''
-    {
-        "result": {
-            "role": "admin",
-            "permission": [
-                {
-                    "permission": "admin",
-                    "container_name": "test1111",
-                    "container_id": 16
-                },
-                {
-                    "permission": "admin",
-                    "container_name": "dataset-test-1",
-                    "container_id": 97
-                },
-                {
-                    "permission": "admin",
-                    "container_name": "admin_default",
-                    "container_id": 78
-                }
-            ]
-        }
+    {   
+        'code': 200,
+        'error_msg': '',
+        'num_of_pages': 6,
+        'page': 0,
+        'result': {
+             'permission': [{
+                  'code': '0timetest',
+                  'container_id': 642,
+                  'container_name': 'ZeroClock',
+                  'permission': 'admin'
+              },
+              {
+                  'code': '0timetest',
+                  'container_id': 642,
+                  'container_name': 'ZeroClock',
+              }],
+              'role': 'admin'
+        },
+        'total': 27
     }
 '''
 
@@ -235,3 +240,26 @@ success_return = '''
 dataset_user_status= module_api.model("dataset_user_status", {
     "status": fields.String,
 })
+
+data_manifests = module_api.model("data_manifests", {
+    "project_code": fields.String,
+})
+
+data_manifests_return = """
+    {   
+        'code': 200,
+        'error_msg': '',
+        'num_of_pages': 1,
+        'page': 1,
+        'result': [   {   'attribute': 'test',
+                          'id': 1,
+                          'name': 'Manifest 1',
+                          'optional': False,
+                          'project_code': 'test2',
+                          'type': 'multiple_choice',
+                          'value': 'testing 123'},
+        ],
+        'total': 1,
+    }
+"""
+

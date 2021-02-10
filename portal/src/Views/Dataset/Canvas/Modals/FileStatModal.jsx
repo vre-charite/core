@@ -3,8 +3,6 @@ import {
   Timeline,
   Tabs,
   DatePicker,
-  Row,
-  Col,
   Form,
   Select,
   Button,
@@ -30,7 +28,7 @@ const dateFormat = 'YYYY-MM-DD';
 const FileStatModal = (props) => {
   const [form] = Form.useForm();
   const today = new Date();
-  const { t, i18n } = useTranslation(['tooltips', 'formErrorMessages']);
+  const { t } = useTranslation(['tooltips', 'formErrorMessages']);
 
   const [treeData, setTreeData] = useState([]);
   const [action, setAction] = useState('upload');
@@ -45,15 +43,14 @@ const FileStatModal = (props) => {
   const [loading, setLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const { datasetId, currentUser, isAdmin } = props;
-  const datasetList = useSelector((state) => state.datasetList);
   const containersPermission = useSelector((state) => state.containersPermission);
 
   const currentDataset = _.find(
-    datasetList && datasetList[0].datasetList,
+    containersPermission,
     (d) => d.id === parseInt(datasetId),
   );
 
-  const currentPermission = containersPermission.find(el => el.containerId === parseInt(datasetId));
+  const currentPermission = containersPermission.find(el => el.id === parseInt(datasetId));
 
   useEffect(() => {
     const now = moment();
@@ -102,6 +99,7 @@ const FileStatModal = (props) => {
         setLoading(false);
       });
     }
+    // eslint-disable-next-line
   }, [datasetId]);
 
   const userOptions = users.map((el) => (
@@ -138,11 +136,11 @@ const FileStatModal = (props) => {
     setAction(values.action);
     setSelectedUser(values.user);
 
-    if (values.action === 'copy') {
+    if (values.action === 'copy' || values.action === 'delete') {
       const params4Copy = {
         'page_size': 10,
         'page': 0,
-        'operation_type': 'data_transfer',
+        'operation_type': values.action === 'copy' ? 'data_transfer' : 'data_delete',
         'project_code': currentDataset && currentDataset.code,
         'start_date': moment(date[0]).startOf('day').unix(),
         'end_date': moment(date[1]).endOf('day').unix(),
@@ -198,11 +196,11 @@ const FileStatModal = (props) => {
     params.page = page - 1;
     params.size = 10;
 
-    if (action === 'copy') {
+    if (action === 'copy' || action === 'delete') {
       const params4Copy = {
         'page_size': 10,
         'page': page - 1,
-        'operation_type': 'data_transfer',
+        'operation_type': action === 'copy' ? 'data_transfer' : 'data_delete',
         'project_code': currentDataset && currentDataset.code,
         'start_date': params.startDate,
         'end_date': params.endDate,
@@ -256,18 +254,21 @@ const FileStatModal = (props) => {
                 localTime = timeConvert(createTime, 'datetime');
               }
 
-              if (action === 'copy') {
+              if (action === 'copy' || action === 'delete') {
                 const originPathArray = originPath && originPath.split('/');
                 const pathArray = path && path.split('/');
 
                 const originPathName = originPathArray && pathsMap(originPathArray);
                 const pathName = pathArray && pathsMap(pathArray);
 
+                let operate = 'copied';
+                if (action === 'delete') operate = 'deleted'
+
                 if (originPathName && pathName) {
                   return (
                     <Timeline.Item color="green">
                       <span>
-                      {operator} copied {fileName} from {originPathName} to {pathName} at{' '}
+                      {operator} {operate} {fileName} from {originPathName} to {pathName} at{' '}
                       {localTime}
                       </span>
                     </Timeline.Item>
@@ -276,7 +277,7 @@ const FileStatModal = (props) => {
 
                 return (
                   <Timeline.Item color="green">
-                    {operator} copied {fileName} at{' '}
+                    {operator} {operate} {fileName} at{' '}
                     {localTime}
                   </Timeline.Item>
                 );
@@ -377,7 +378,7 @@ const FileStatModal = (props) => {
                     {currentPermission.permission === 'admin' ? (
                       <Option value="copy">Copy</Option>
                     ) : null }
-                   
+                    <Option value="delete">Delete</Option>
                   </Select>
                 </Form.Item>
               </div>

@@ -10,6 +10,25 @@ import pytz
 from models.api_response import APIResponse, EAPIResponseCode
 
 
+def get_project_permissions(project_code, user_id):
+    # Get dataset
+    res = requests.post(
+        url=ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/query",
+        json={"code": project_code}
+    )
+    dataset = res.json()[0]
+    res = requests.post(
+        url=ConfigClass.NEO4J_SERVICE + f"relations/query",
+        json={
+            "start_label": "User",
+            "end_label": "Dataset",
+            "start_params": {"id": user_id}, 
+            "end_params": {"id": dataset["id"]}
+        }
+    )
+    return res.json()[0]['r']['type']
+
+
 def remove_user_from_project_group(container_id, username, logger):
     # Remove user from keycloak group with the same name as the project
     res = requests.get(
@@ -122,9 +141,9 @@ def neo4j_query_with_pagination(url, data, partial=False):
     page = int(data.get('page', 0))
     page_size = int(data.get('page_size', 25))
     data = data.copy()
-    if data.get("page"):
+    if "page" in data:
         del data["page"]
-    if data.get("page_size"):
+    if "page_size" in data:
         del data["page_size"]
 
     # Get token from reuqest's header
@@ -157,7 +176,8 @@ def neo4j_query_with_pagination(url, data, partial=False):
         headers=headers,
         json={"count": True, **page_data},
     )
-    total = json.loads(count_res.content).get("count")
+    res_data = json.loads(count_res.content)
+    total = res_data.get('count')
     response = APIResponse()
     response.set_result(json.loads(res.content))
     response.set_page(page)

@@ -50,7 +50,6 @@ function DynamicFields({ data = [] }) {
 
     function handleNewField(value, add) {
         setAddField(false);
-        console.log("handleNewField", value);
         // TODO: should also add options information
         add(value);
     }

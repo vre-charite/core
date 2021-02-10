@@ -22,7 +22,6 @@ const dataset = {
   files: {
     uploadFileApi: 'dataset.files.uploadFileApi',
     uploadRequestFail: 'dataset.files.uploadRequestFail',
-    getRawFilesAPI: 'dataset.files.getRawFilesAPI',
     getChildrenDataset: 'dataset.files.getChildrenDataset',
     traverseFoldersContainersAPI: 'dataset.files.traverseFoldersContainersAPI',
     getFilesByTypeAPI: 'dataset.files.getFilesByTypeAPI',

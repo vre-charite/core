@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Drawer, Collapse, Divider, Typography, Anchor } from 'antd';
+import { Button, Drawer,  Divider, Typography, Anchor } from 'antd';
 import { SwapOutlined, PauseOutlined } from '@ant-design/icons';
 import SupportCollapse from './SupportCollapse';
 import ContactUsForm from './ContactUsForm';
@@ -7,14 +7,13 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './index.module.scss';
 
-const { Panel } = Collapse;
-const { Title, Paragraph } = Typography;
+const { Title,  } = Typography;
 const { Link } = Anchor;
 
 function SupportDrawer(props) {
   const [placement, setPlacement] = useState('right');
   const [width, setWidth] = useState(400);
-  const { t, i18n } = useTranslation('support');
+  const { t } = useTranslation('support');
   const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
@@ -26,6 +25,7 @@ function SupportDrawer(props) {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
+    // eslint-disable-next-line
   }, [width]);
 
   function swapPosition() {
@@ -36,7 +36,6 @@ function SupportDrawer(props) {
     }
   }
   function mouseDown(e) {
-    console.log('mouseDown', e);
     document.addEventListener('mousemove', mouseMove, true);
     document.addEventListener('mouseup', stopMove, true);
   }
@@ -61,7 +60,6 @@ function SupportDrawer(props) {
   }
 
   function stopMove() {
-    console.log('stepMove');
     document.removeEventListener('mousemove', mouseMove, true);
     document.removeEventListener('mouseup', stopMove, true);
   }
@@ -108,7 +106,6 @@ function SupportDrawer(props) {
       title="Support"
       id="support-drawer"
       placement={placement}
-      closable={false}
       onClose={props.onClose}
       visible={props.visible}
       mask={false}
@@ -169,35 +166,6 @@ function SupportDrawer(props) {
       >
         <SwapOutlined />
       </Button>
-      {/* <Collapse border={false}>
-        <Panel header="Recommended resources" key="a">
-          <p>
-            Download the User Guide (pdf) to learn more about the VRE platform
-            services, tools and workflows.​
-          </p>
-          <Button type="primary" ghost>
-            <a
-              href="/vre/files/VRE User Manual Release 0.1.1 2020-10-28.pdf"
-              download
-              target="_self"
-            >
-              {' '}
-              Download Guide
-            </a>
-          </Button>
-        </Panel>
-        <Panel header="Frequently asked questions" key="b">
-          <SupportCollapse />
-        </Panel>
-        <Panel header="Still need help?" key="c">
-          <Title level={4}>Still need help?</Title>
-          <Paragraph>
-            ontact the VRE Support Team for additional help with platform tools
-            and services, to report a bug, or other general questions.​
-          </Paragraph>
-          <ContactUsForm />
-        </Panel>
-      </Collapse> */}
       <Title level={4} id="user-guide">
         {t('userguide')}
       </Title>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Button, Input, message, Form, Select } from 'antd';
+import { Modal, message } from 'antd';
 import {
   deleteVirtualFolder,
   listAllVirtualFolder,
@@ -7,7 +7,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentProjectTreeVFolder } from '../../../../../../../Redux/actions';
 import CollectionIcon from '../../../../../../../Components/Icons/Collection';
-
+import i18n from '../../../../../../../i18n';
 const VFolderFilesDeleteModal = ({
   visible,
   setVisible,
@@ -42,11 +42,14 @@ const VFolderFilesDeleteModal = ({
       try {
         await deleteVirtualFolder(vfolder.id);
       } catch (e) {
-        message.error('Network error. Please try again later', 3);
+        message.error(
+          `${i18n.t('errormessages:deleteVirtualFolder.default.0')}`,
+          3,
+        );
         setConfirmLoading(false);
         return;
       }
-      message.success('Collection has been deleted successfully', 3);
+      message.success(`${i18n.t('success:virtualFolder.delete')}`, 3);
       setConfirmLoading(false);
       closeModal();
       updateVFolder(vfolders.filter((v) => v.id !== vfolder.id));
@@ -63,6 +66,7 @@ const VFolderFilesDeleteModal = ({
       setVFolders(virualFolders);
     }
     loadVFolders();
+    // eslint-disable-next-line
   }, []);
 
   return (

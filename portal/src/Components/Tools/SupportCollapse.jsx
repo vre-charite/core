@@ -1,12 +1,11 @@
 import React from 'react';
-import { Card, Button, Typography, Collapse, Breadcrumb } from 'antd';
+import { Collapse } from 'antd';
 import { useTranslation } from 'react-i18next';
 
-const { Title } = Typography;
 const { Panel } = Collapse;
 
 function SupportCollapse(props) {
-  const { t, i18n } = useTranslation('support');
+  const { t } = useTranslation('support');
 
   const callback = (v) => {
     console.log(v);

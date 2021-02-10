@@ -4,7 +4,6 @@ import {
   Card,
   PageHeader,
   Layout,
-  Table,
   Menu,
   Dropdown,
   Button,
@@ -16,7 +15,6 @@ import {
   Space,
   Divider,
 } from 'antd';
-import moment from 'moment';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { DownOutlined } from '@ant-design/icons';
 import AddUserModal from './Components/AddUserModal';
@@ -28,14 +26,13 @@ import {
   removeUserFromDatasetApi,
   setUserStatusFromDatasetApi,
 } from '../../../APIs';
-import { objectKeysToSnakeCase, objectKeysToCamelCase, partialString } from '../../../Utility';
-import { namespace, ErrorMessager } from '../../../ErrorMessages';
 import {
-  withCurrentProject,
-  formatRole,
-  convertRole,
-  timeConvert,
+  objectKeysToSnakeCase,
+  objectKeysToCamelCase,
+  partialString,
 } from '../../../Utility';
+import { namespace, ErrorMessager } from '../../../ErrorMessages';
+import { withCurrentProject, formatRole } from '../../../Utility';
 import SearchTable from '../../../Components/Table/SearchTable';
 import { withTranslation } from 'react-i18next';
 import InvitationTable from '../../../Components/Table/InvitationTable';
@@ -301,10 +298,9 @@ class Teams extends Component {
       this.props.containersPermission &&
       this.props.containersPermission.some(
         (el) =>
-          el.containerId === Number(this.props.datasetId) &&
-          el.permission === 'admin',
+          el.id === Number(this.props.datasetId) && el.permission === 'admin',
       );
-    const projectName = this.props.currentProject?.containerName;
+    const projectName = this.props.currentProject?.name;
     let role = this.props.currentProject?.permission;
 
     const menu = (record, role) => (
@@ -331,23 +327,18 @@ class Teams extends Component {
               return null;
             }
           })} */}
-        {
-          this.props.rolesDetail && this.props.rolesDetail.map((el) => (
+        {this.props.rolesDetail &&
+          this.props.rolesDetail.map((el) => (
             <Menu.Item
               onClick={() => {
-                this.confirmModal(
-                  record.name,
-                  record.permission,
-                  el.value,
-                );
+                this.confirmModal(record.name, record.permission, el.value);
               }}
               disabled={role === el.value}
               key={el.value}
             >
               {el.label}
             </Menu.Item>
-          ))
-        }
+          ))}
       </Menu>
     );
 
@@ -417,11 +408,12 @@ class Teams extends Component {
             record.role !== 'admin'
           )
             isEnable = true;
-
+            /* eslint-disable */
           return (
             isEnable && (
               <Space>
                 {record.projectStatus === 'hibernate' ? (
+                  // eslint-disable-next-line
                   <a
                     onClick={() => {
                       this.restoreUser(record.name);
@@ -442,7 +434,7 @@ class Teams extends Component {
                     </a>
                   </Dropdown>
                 )}
-                <Divider type="vertical" />
+                <Divider type="vertical" />({/* eslint-disable-next-line */}
                 <a
                   onClick={() => {
                     this.confirmModal(record.name, record.permission, 'delete');
@@ -450,13 +442,14 @@ class Teams extends Component {
                 >
                   Remove
                 </a>
+                )
               </Space>
             )
           );
         },
       },
     ];
-
+/* eslint-enable */
     const routes = [
       {
         path: '/landing',

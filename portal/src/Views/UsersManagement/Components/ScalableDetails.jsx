@@ -11,7 +11,6 @@ import { getUserProjectListAPI } from '../../../APIs';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
-const _ = require('lodash');
 
 function ScalableDetails(props) {
   const { close, width, record } = props;
@@ -22,7 +21,7 @@ function ScalableDetails(props) {
 
   useEffect(() => {
     getUserProjectListAPI(record.name).then((res) => {
-      const projectList = res.data.result.permission;
+      const projectList = res.data.result;
       setProjectList(projectList);
     });
   }, [record.name]);

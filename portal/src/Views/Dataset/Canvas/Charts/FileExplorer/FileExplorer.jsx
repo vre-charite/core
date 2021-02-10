@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React from 'react';
 import FilesContent from './FilesContent'
 import {withRouter} from 'react-router-dom'
 function FileExplorer({match:{params}}){

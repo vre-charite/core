@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { CopyOutlined, LeftOutlined, CheckOutlined } from '@ant-design/icons';
+import { CopyOutlined } from '@ant-design/icons';
 import { TABLE_STATE } from '../../RawTableValues';
-import { Button, Tooltip, message } from 'antd';
+import { Button, message } from 'antd';
 import Copy2ProcessedModal from './Copy2ProcessedModal';
+import i18n from '../../../../../../../i18n';
 function Copy2Processed({
   selectedRowKeys,
   setSelectedRowKeys,
@@ -22,8 +23,11 @@ function Copy2Processed({
     })
     .filter((v) => !!v);
   function copy2Processed(e) {
-    if (selectedRowKeys.length == 0) {
-      message.error('Please select files to copy.', 3);
+    if (selectedRowKeys.length === 0) {
+      message.error(
+        `${i18n.t('formErrorMessages:copyFilesModal.files.empty')}`,
+        3,
+      );
       return;
     }
     setTableState(TABLE_STATE.NORMAL);
@@ -31,17 +35,16 @@ function Copy2Processed({
   }
   return (
     <>
-      <Tooltip placement="top" title="Copy To Green Room Processed">
-        <Button
-          type="primary"
-          shape="circle"
-          onClick={() => {
-            copy2Processed();
-          }}
-          icon={<CopyOutlined />}
-          style={{ marginRight: 8 }}
-        />
-      </Tooltip>
+      <Button
+        type="link"
+        onClick={() => {
+          copy2Processed();
+        }}
+        icon={<CopyOutlined />}
+        style={{ marginRight: 8 }}
+      >
+        Copy To Green Room Processed
+      </Button>
       <Copy2ProcessedModal
         visible={copyModalVisible}
         setVisible={setCopyModalVisible}

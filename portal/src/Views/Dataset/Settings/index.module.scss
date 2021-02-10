@@ -1,0 +1,62 @@
+.custom_tabs {
+  :global {
+    .ant-tabs-bar {
+      margin-bottom: 0 !important;
+      .ant-tabs-tab {
+        margin-right: 0 !important;
+      }
+    }
+  }
+}
+
+.custom_general_info_form {
+  :global {
+    .ant-form-item-label {
+      padding-bottom: 4px !important;
+    }
+    .ant-form-item-label > label {
+      color: rgba(0, 0, 0, 0.25) !important;
+    }
+    .ant-form-item {
+      margin-bottom: 14px !important;
+    }
+  }
+}
+.custom_select_tag {
+  :global {
+    .ant-select-selector {
+      > span:not(.ant-select-selection-search) {
+        overflow: hidden;
+        max-width: 100%;
+        .ant-tag {
+          overflow: hidden;
+          max-width: 100%;
+          text-overflow: ellipsis;
+          vertical-align: middle;
+        }
+      }
+    }
+  }
+}
+.manifest_table {
+  width: 100%;
+  border: 1px solid #f0f0f0;
+  table-layout: fixed;
+  margin-top: 6px;
+  word-wrap: break-word;
+  :global {
+    td,
+    th {
+      padding: 8px 20px;
+      border: 1px solid #f0f0f0;
+    }
+    th {
+      color: rgba(0, 0, 0, 0.3);
+      background-color: rgba(233, 233, 233, 0.4);
+    }
+    td {
+      vertical-align: top;
+      padding: 20px;
+    }
+  }
+}

@@ -47,6 +47,8 @@ class APIResponse:
         self._attribute_map['error_msg'] = error_msg
     def set_result(self, result):
         self._attribute_map['result'] = result
+    def set_response(self, key, value):
+        self._attribute_map[key] = value
     def set_page(self, page_current: int):
         self._attribute_map['page'] = page_current
     def set_total(self, total_rows: int):

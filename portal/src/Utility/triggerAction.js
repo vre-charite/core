@@ -3,7 +3,7 @@ import { broadcastManager } from '../Service/broadcastManager';
 import { namespace as serviceNamespace } from '../Service/namespace';
 
 const actionType = 'touchmove';
-const uploadProxyActionType = 'keydown';
+const proxyActionType = 'keydown';
 
 const debouncedBroadcastAction = _.debounce(() => {
     broadcastManager.postMessage('refresh', serviceNamespace.broadCast.ONACTION);
@@ -13,9 +13,9 @@ const broadcastAction = ()=>{
     document.dispatchEvent(new Event(actionType));
 };
 
-const uploadAction = ()=>{
-    document.dispatchEvent(new Event(uploadProxyActionType));
+const keepAlive = ()=>{
+    document.dispatchEvent(new Event(proxyActionType));
 }
 
 
-export {actionType,broadcastAction,uploadAction,debouncedBroadcastAction};
+export {actionType,broadcastAction,keepAlive,debouncedBroadcastAction};

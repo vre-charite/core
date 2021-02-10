@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { CopyOutlined, LeftOutlined, CheckOutlined } from '@ant-design/icons';
+import { CopyOutlined, LeftOutlined } from '@ant-design/icons';
 import { TABLE_STATE } from '../../RawTableValues';
-import { Button, Tooltip, message } from 'antd';
+import { Button, message } from 'antd';
 import Copy2CoreModal from './Copy2CoreModal';
+import i18n from '../../../../../../../i18n';
 function Copy2CorePlugin({
   selectedRowKeys,
   setSelectedRowKeys,
@@ -23,8 +24,11 @@ function Copy2CorePlugin({
     })
     .filter((v) => !!v);
   function copy2Core(e) {
-    if (selectedRowKeys.length == 0) {
-      message.error('Please select files to copy.', 3);
+    if (selectedRowKeys.length === 0) {
+      message.error(
+        `${i18n.t('formErrorMessages:copyFilesModal.files.empty')}`,
+        3,
+      );
       return;
     }
     setTableState(TABLE_STATE.NORMAL);
@@ -65,19 +69,18 @@ function Copy2CorePlugin({
   );
   return (
     <>
-      <Tooltip placement="top" title="Copy To Core">
-        <Button
-          type="primary"
-          shape="circle"
-          onClick={() => {
-            // fake copy data, will be deleted
-            // deleteCopiedItemFromSel();
-            setTableState(TABLE_STATE.COPY_TO_CORE);
-          }}
-          icon={<CopyOutlined />}
-          style={{ marginRight: 8 }}
-        />
-      </Tooltip>
+      <Button
+        type="link"
+        onClick={() => {
+          // fake copy data, will be deleted
+          // deleteCopiedItemFromSel();
+          setTableState(TABLE_STATE.COPY_TO_CORE);
+        }}
+        icon={<CopyOutlined />}
+        style={{ marginRight: 8 }}
+      >
+        Copy To Core
+      </Button>
       {tableState === TABLE_STATE.COPY_TO_CORE ? CopyToCoreToolTips : null}
       <Copy2CoreModal
         visible={copyModalVisible}

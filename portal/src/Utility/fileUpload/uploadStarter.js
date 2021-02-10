@@ -41,6 +41,7 @@ const uploadStarter = (data, q) => {
       uploader: data.uploader,
       projectCode: data.projectCode,
       tags: data.tags,
+      manifest: data.manifest,
     })),
   );
   q.error((err, task) => {

@@ -32,8 +32,6 @@ import ScalableDetails from './Components/ScalableDetails';
 import InvitationsTable from '../../Components/Table/InvitationTable';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import UserManagementToolBar from './Components/UserManagementToolBar';
-import { keycloak } from '../../Service/keycloak';
-import { serverAxios } from '../../APIs/config';
 
 const { Content } = Layout;
 const { TabPane } = Tabs;
@@ -454,18 +452,6 @@ class UserManagement extends Component {
       </Menu>
     );
 
-    const roleMenus = (
-      <Menu onClick={(e) => this.handleMenuClick(e, 'role')}>
-        <Menu.Item key="all-users">All</Menu.Item>
-        <Menu.Item key="admin" id="Platform Administrator">
-          Platform Administrator
-        </Menu.Item>
-        <Menu.Item key="member" id="Platform User">
-          Platform User
-        </Menu.Item>
-      </Menu>
-    );
-
     const searchPanel = (
       <div
         style={{
@@ -477,14 +463,17 @@ class UserManagement extends Component {
           <div>
             <strong>Status:</strong>
             <Dropdown overlay={statusMenu}>
-              <a
-                className="ant-dropdown-link"
-                onClick={(e) => e.preventDefault()}
-                style={{ marginLeft: 10, color: 'rgba(0, 0, 0, 0.5)' }}
-              >
-                {this.state.statusFilter}{' '}
-                <DownOutlined style={{ marginLeft: 5 }} />
-              </a>
+              {
+                // eslint-disable-next-line
+                <a
+                  className="ant-dropdown-link"
+                  onClick={(e) => e.preventDefault()}
+                  style={{ marginLeft: 10, color: 'rgba(0, 0, 0, 0.5)' }}
+                >
+                  {this.state.statusFilter}{' '}
+                  <DownOutlined style={{ marginLeft: 5 }} />
+                </a>
+              }
             </Dropdown>
           </div>
           <div>

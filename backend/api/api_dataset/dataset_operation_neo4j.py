@@ -3,6 +3,7 @@ from flask_restx import Resource
 from flask_jwt import jwt_required, current_identity
 import requests
 import json
+import datetime
 from resources.utils import *
 from resources.decorator import check_role
 from resources.swagger_modules import dataset_module, dataset_sample_return, datasets_sample_return
@@ -26,6 +27,7 @@ class datasets(Resource):
         '''
         try:
             param = request.args.get('type', None)  # metadata/tag/usecase
+            tags = request.args.get('tags', None)
             _logger.info(
                 'Call API for fetching project info: type {}'.format(param))
             access_token = request.headers.get("Authorization", None)
@@ -42,46 +44,29 @@ class datasets(Resource):
                         if key.startswith('_'):
                             result[key] = value
             else:
-                payload = {"type": "Usecase"} if param == "usecase" else None
-                result = list_containers(access_token, "Dataset", payload)
-
-                _logger.info('success in calling neo4j')
-
                 role = current_identity["role"]
                 username = current_identity["username"]
 
-                if role == 'admin':
-                    return {'result': result}, 200
+                payload = {"type": "Usecase", **request.args} if param == "usecase" else {}
+                if role != "admin":
+                    payload["discoverable"] = True
+                payload = {**payload, **request.args}
 
-                # Fetch all datasets that connected to the user
-                url = ConfigClass.NEO4J_SERVICE + "relations/query"
-                payload = {
-                    "start_label": "User",
-                    "end_label": "Dataset",
-                    "start_params": {"name": username}
-                }
-                res = requests.post(url=url, json=payload, timeout=10)
-                _logger.info(res.json())
-                if res.status_code == 200:
-                    visible_projects = [
-                        x for x in result if x.get('discoverable', False)]
+                if "create_time_start" in payload and "create_time_end" in payload:
+                    payload["create_time_start"] = datetime.datetime.utcfromtimestamp(int(payload["create_time_start"])).strftime('%Y-%m-%dT%H:%M:%S')
+                    payload["create_time_end"] = datetime.datetime.utcfromtimestamp(int(payload["create_time_end"])).strftime('%Y-%m-%dT%H:%M:%S')
+               
+                url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query"
+                response = neo4j_query_with_pagination(url, payload, partial=True)
 
-                    accessible_projects = [x['end_node']
-                                           for x in json.loads(res.text)]
+                if(response.code != 200):
+                    _logger.error('Failed to fetch info in neo4j: {}'.format(
+                        json.loads(response.result)))
+                    return response.to_dict
 
-                    # Iterating and using extend to convert
-                    for i in accessible_projects:
-                        for j in visible_projects:
-                            if i['id'] == j['id']:
-                                break
-                        else:
-                            visible_projects.append(i)
+                _logger.info('success in calling neo4j')
 
-                    _logger.info('Fetching succeed.')
-                    return {'result': visible_projects}, 200
-                else:
-                    _logger.error(res.text)
-                    return {'error_msg': res.text}, 403
+                return response.to_dict
         except Exception as e:
             _logger.error('Error in fetching project info: {}'.format(str(e)))
             return {'result': 'Error %s' % str(e)}, 403
@@ -113,6 +98,8 @@ class datasets(Resource):
             _logger.error('Field dataset_name and code field is required.')
             return {'result': "Error the dataset_name and code field is required"}, 403
 
+        auth_result = None
+
         # as the easy start the payload are only description and admin
         try:
             # Duplicate check 
@@ -134,6 +121,11 @@ class datasets(Resource):
             # pop the metadatas one layer out
             for x in metadatas:
                 post_data.update({'_%s' % x: metadatas[x]})
+
+            if post_data.get("icon"):
+                # check if icon is bigger then limit
+                if len(post_data.get("icon")) > ConfigClass.ICON_SIZE_LIMIT:
+                    return {'result': 'icon too large'}, 413
 
             result = requests.post(ConfigClass.NEO4J_SERVICE+"nodes/Dataset",
                                    json=post_data)
@@ -191,11 +183,24 @@ class datasets(Resource):
             container_mgr = SrvContainerManager()
             res = container_mgr.list_containers('Dataset', {'type': 'Usecase'})
 
+            # create Project User Group
+            auth_url = ConfigClass.AUTH_SERVICE + 'admin/users/group'
+            auth_payload = {
+                "realm": "vre",
+                "username": ConfigClass.GROUP_ADMIN,
+                "groupname": code
+            }
+
+            auth_res = requests.post(url=auth_url, json=auth_payload)
+
+            if(auth_res.status_code != 200):
+                    return {'result': json.loads(res.text), 'auth_result': 'failed to create user group'}, res.status_code
+
         except Exception as e:
             _logger.error('Error in creating project: {}'.format(str(e)))
             return {'result': 'Error %s' % str(e)}, 403
 
-        return {'result': res}, 200
+        return {'result': res, 'auth_result': 'create user group successfully'}, 200
 
 
 class dataset(Resource):
@@ -219,6 +224,11 @@ class dataset(Resource):
             if(len(datasets) == 0):
                 _logger.error('Field dataset_id is not valid.')
                 return {'result': "Dataset %s is not available." % dataset_id}, 403
+
+            if post_data.get("icon"):
+                # check if icon is bigger then limit
+                if len(post_data.get("icon")) > ConfigClass.ICON_SIZE_LIMIT:
+                    return {'result': 'icon to large'}, 413
 
             # Update dataset properties
             result = requests.put(

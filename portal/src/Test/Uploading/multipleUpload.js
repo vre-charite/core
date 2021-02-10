@@ -32,7 +32,6 @@ function checkMultipleStatus(it, testTitle, getPage, fileNames) {
         await Promise.all(fileNames.map(item => {
             return checkSingleStatus(page, item);
         }))
-        console.log('the ending of' + testTitle)
     })
 };
 
@@ -57,7 +56,6 @@ async function checkSingleStatus(page, fileName) {
     }, { timeout: 0 }, fileName)
     const statusDom = await page.waitForSelector(`#upload_item_${_.escapeRegExp(fileName)} span.ant-tag`);
     const status = await page.evaluate(element => element.textContent, statusDom);
-    console.log(status)
     if (status === 'Success') {
         /*         await page.waitForResponse(response => {
                     const url = new URL(response.url());

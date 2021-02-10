@@ -48,7 +48,7 @@
       "update": {
         "name": {
           "empty": "Project name is required.",
-          "valid": "Project name must be between 1 and 250 characters."
+          "valid": "Project name must be between 1 and 100 characters."
         },
         "tags": {
           "valid": "Tag must be between 1 and 32 characters and may only contain lowercase letters, numbers and/or hyphens.",
@@ -57,12 +57,15 @@
       },
       "save": {
         "name": {
-          "valid": "Project name should be between 1 and 250 characters.",
+          "valid": "Project name should be between 1 and 100 characters.",
           "empty": "Project name is required."
         },
         "tags": {
           "space": "Project tags may not contain spaces.",
           "valid": "Tags must be between 1 and 32 characters and may only contain lowercase letters, numbers and/or hyphens."
+        },
+        "description": {
+          "valid": "Project description must be less than 250 characters."
         }
       }
     },
@@ -121,11 +124,16 @@
       "empty": "Please provide a title",
       "valid": "Titles must be between 2 and 200 characters"
     },
-
     "description": {
       "empty": "Please provide a description",
       "valid": "The description must be between 10 and 1000 characters"
+    },
+    "attachment": {
+      "number": "Please do not attach more than 4 files",
+      "size": "File size must be smaller than 2MB",
+      "format": "File format is not accepted"
     }
+   
   },
   "resetPassword": {
     "oldPassword": {
@@ -142,6 +150,61 @@
   "platformUserManagement": {
     "role": {
       "empty": "Please select a role"
+    }
+  },
+  "copyFilesModal":{
+    "files": {
+      "empty": "Please select files to copy"
+    }
+  },
+  "addToVfolderModal":{
+    "files": {
+      "empty": "Please select files to copy"
+    }
+  },
+  "attachManifestModal":{
+    "manifest": {
+      "empty": "Please select manifest first"
+    },
+    "files": {
+      "empty": "Please select files to copy"
+    }
+  },
+  "manifestAttrsForm": {
+    "attr": {
+      "required": "Please fill in all required manifest attributes",
+      "text": "Text must be 1-100 characters"
+    }
+  },
+  "manifestSettings": {
+    "manifestAttrs": {
+      "saved": "You have unsaved changes on attributes. Please save it first",
+      "empty": "Please add one attribute at least"
+    },
+    "manifestName": {
+      "empty": "Please input manifest name",
+      "length": "Manifest name must be between 1 and 32 characters",
+      "format": "Manifest name can not contain any of the following character \\ / : ? * < > | \" '",
+      "existent": "This name has already been declared"
+    },
+    "attributeName":{
+      "empty": "Please input attribute name",
+      "length": "Attribute name must be between 1 and 32 characters",
+      "format": "Only letters and numbers is allowed for attribute name",
+      "existent": "This name has already been defined in manifest"
+    },
+    "attributeValue":{
+      "length": "Value must be between 1 and 32 characters",
+      "format": "Value may only contain letters, numbers, and/or special characters in ( -_!%&/()=?*+#.;)",
+      "error": "Please check the value of attribute",
+      "multipleChoice": {
+        "empty": "Please input at least 1 option for multiple choice"
+      }
+    },
+    "createProject": {
+      "tag": {
+        "space": "Tag can not contain space."
+      }
     }
   }
 }

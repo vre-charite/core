@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Layout } from 'antd';
 import AppHeader from './Header';
 import Footer from './Footer';
@@ -7,16 +7,6 @@ import RightSlider from './RightSlider';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import {} from '../../Utility';
-import { useSelector, useDispatch } from 'react-redux';
-import {
-  updateUploadItemCreator,
-  updateClearIdCreator,
-  setSuccessNum,
-} from '../../Redux/actions';
-import { namespace, ErrorMessager } from '../../ErrorMessages';
-import { checkPendingStatusAPI } from '../../APIs';
-import _ from 'lodash';
-import Promise from 'bluebird';
 
 const { Content } = Layout;
 function StandardLayout(props) {
@@ -29,6 +19,7 @@ function StandardLayout(props) {
 
   useEffect(() => {
     initFunc();
+    // eslint-disable-next-line
   }, [...observationVars]);
 
   return (

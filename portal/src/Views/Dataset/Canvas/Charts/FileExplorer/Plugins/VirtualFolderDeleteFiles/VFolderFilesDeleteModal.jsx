@@ -6,7 +6,7 @@ import {
 } from '../../../../../../../APIs';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSuccessNum } from '../../../../../../../Redux/actions';
-
+import i18n from '../../../../../../../i18n';
 const VFolderFilesDeleteModal = ({
   visible,
   setVisible,
@@ -17,6 +17,7 @@ const VFolderFilesDeleteModal = ({
   const dispatch = useDispatch();
   const successNum = useSelector((state) => state.successNum);
   const project = useSelector((state) => state.project);
+  // eslint-disable-next-line
   const [confirmLoading, setConfirmLoading] = React.useState(false);
   const [vfolders, setVFolders] = useState([]);
   function closeModal() {
@@ -30,9 +31,12 @@ const VFolderFilesDeleteModal = ({
         await removeFromVirtualFolder(vfolder.id, files);
         setSelectedRowKeys([]);
       } catch (e) {
-        message.error('Network error. Please try again later', 3);
+        message.error(
+          `${i18n.t('errormessages:removeFromVirtualFolder.default.0')}`,
+          3,
+        );
       }
-      message.success('Files have been removed successfully', 3);
+      message.success(`${i18n.t('success:virtualFolder.removeFiles')}`, 3);
       dispatch(setSuccessNum(successNum - files.length));
       closeModal();
     }
@@ -45,10 +49,10 @@ const VFolderFilesDeleteModal = ({
       const containerId = project.profile.id;
       const res = await listAllVirtualFolder(containerId);
       const virualFolders = res.data.result;
-      console.log(virualFolders);
       setVFolders(virualFolders);
     }
     loadVFolders();
+    // eslint-disable-next-line
   }, []);
 
   return (

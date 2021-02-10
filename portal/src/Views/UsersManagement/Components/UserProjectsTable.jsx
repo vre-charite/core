@@ -11,7 +11,7 @@ function UserProjectsTable(props) {
   const columns = [
     {
       title: 'Project Name',
-      dataIndex: 'containerName',
+      dataIndex: 'name',
       key: 'containerName',
       sorter: (a, b) => a.containerName > b.containerName ? 1 : -1,
       width: '65%',

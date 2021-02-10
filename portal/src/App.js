@@ -4,7 +4,6 @@ import { authedRoutes, unAuthedRoutes } from './Routes';
 import './App.css';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  AddDatasetCreator,
   setContainersPermissionCreator,
   setUserRoleCreator,
   updateUploadItemCreator,
@@ -14,26 +13,29 @@ import {
   setUploadListCreator,
   updateDownloadItemCreator,
   setDownloadListCreator,
-  setIsLoginCreator,
   setUsernameCreator,
   setEmailCreator,
+  setIsReleaseNoteShownCreator,
 } from './Redux/actions';
 import {
-  getDatasetsAPI,
-  listAllContainersPermission,
   checkDownloadStatusAPI,
   checkUploadStatus,
   checkDownloadStatus,
   lastLoginAPI,
+  listUsersContainersPermission,
+  attachManifest,
 } from './APIs';
 import {
   protectedRoutes,
   reduxActionWrapper,
   preLogout,
   logout,
-  actionType, broadcastAction, uploadAction, debouncedBroadcastAction
+  actionType,
+  broadcastAction,
+  keepAlive,
+  debouncedBroadcastAction,
 } from './Utility';
-import { message, Modal, Spin, Button } from 'antd';
+import { message, Modal, Spin, Button, notification } from 'antd';
 import Promise from 'bluebird';
 import _ from 'lodash';
 import ExpirationNotification from './Components/Modals/ExpirationNotification';
@@ -42,12 +44,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { history } from './Routes';
 import { tokenManager } from './Service/tokenManager';
 import { broadcastManager } from './Service/broadcastManager';
-import { namespace as serviceNamespace } from './Service/namespace';
 import { useKeycloak } from '@react-keycloak/web';
 import { useIdleTimer } from 'react-idle-timer';
 import { keycloakManager } from './Service/keycloak';
 import { Loading } from './Components/Layout';
-
+import { version } from '../package.json';
+import semver from 'semver';
+import ReleaseNoteModal from './Components/Modals/RelaseNoteModal';
 // router change
 history.listen(() => {
   Modal.destroyAll();
@@ -58,7 +61,6 @@ message.config({
   duration: 5,
 });
 const [
-  AddDatasetDispatcher,
   setContainersPermissionDispatcher,
   setUserRoleDispatcher,
   updateUploadItemDispatcher,
@@ -68,11 +70,10 @@ const [
   setSuccessNumDispatcher,
   setDownloadListDispatcher,
   updateDownloadItemDispatch,
-  setIsLoginDispatcher,
   setUsernameDispatcher,
   setEmailDispatcher,
+  setIsReleaseNoteShownDispatcher,
 ] = reduxActionWrapper([
-  AddDatasetCreator,
   setContainersPermissionCreator,
   setUserRoleCreator,
   updateUploadItemCreator,
@@ -82,9 +83,9 @@ const [
   setSuccessNum,
   setDownloadListCreator,
   updateDownloadItemCreator,
-  setIsLoginCreator,
   setUsernameCreator,
   setEmailCreator,
+  setIsReleaseNoteShownCreator,
 ]);
 
 let isSessionMax = false;
@@ -96,6 +97,7 @@ let refreshTokenLiftTime; // (s) refresh token life time, which equals to SSO se
 const idleTimeout = 60 * 5; // (s) after how many seconds no action, the status will become idle.
 const defaultTimeToClose = 10; //(s) how many seconds to auto close session modal, after onActive event
 let intervalId; //button count down interval id
+
 switch (process.env.REACT_APP_ENV) {
   case 'dev':
     refreshTokenLiftTime = 6 * 60;
@@ -110,19 +112,21 @@ switch (process.env.REACT_APP_ENV) {
     refreshTokenLiftTime = 6 * 60;
     break;
 }
-console.log(process.env.REACT_APP_ENV, 'process.env.REACT_APP_ENV')
 
 function App() {
   const {
     uploadList,
     downloadList,
     clearId,
-    datasetList,
     isLogin,
     downloadClearId,
-    successNum,isKeycloakReady
+    successNum,
+    isKeycloakReady,
+    isReleaseNoteShown,
+    containersPermission,
+    role,
+    uploadFileManifest,
   } = useSelector((state) => state);
-
   const { keycloak } = useKeycloak();
   const [isRefrshing, setIsRefreshing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -130,15 +134,9 @@ function App() {
   const [timeToClose, setTimeToClose] = useState(defaultTimeToClose);
   const dispatch = useDispatch();
 
-  const sessionId = localStorage.getItem('sessionId');
+  //const sessionId = localStorage.getItem('sessionId');
 
-
-  
   const openNotification = () => {
-    console.log(
-      keycloakManager.getRefreshRemainTime(),
-      'refreshRemain time, opening modal', isModalOpen, 'isModalOpen', isIdle(), 'isIdle'
-    );
     if (!isModalOpen) {
       setIsModalOpen(true);
     }
@@ -152,47 +150,46 @@ function App() {
   };
 
   const handleOnActive = () => {
-    console.log('on active', isLogin, 'isLogin', new Date());
     if (isLogin) {
       setIsRefreshing(true);
-      keycloak.updateToken(-1).then((isSuccess) => {
-        if (isSuccess && isModalOpen && !isSessionMax) {
-          setIsRefreshed(true);
-          intervalId = window.setInterval(() => {
-            setTimeToClose((preTimeToClose) => {
-              if (preTimeToClose <= 0) {
-                closeNotification();
-                clearInterval(intervalId);
-              }
-              return (preTimeToClose - 1)
-            });
-          }, 1000)
-        } else {
-
-        }
-      }).finally(() => {
-        setIsRefreshing(false);
-      });
+      keycloak
+        .updateToken(-1)
+        .then((isSuccess) => {
+          if (isSuccess && isModalOpen && !isSessionMax) {
+            setIsRefreshed(true);
+            intervalId = window.setInterval(() => {
+              setTimeToClose((preTimeToClose) => {
+                if (preTimeToClose <= 0) {
+                  closeNotification();
+                  clearInterval(intervalId);
+                }
+                return preTimeToClose - 1;
+              });
+            }, 1000);
+          } else {
+          }
+        })
+        .finally(() => {
+          setIsRefreshing(false);
+        });
     }
   };
 
   const openNotifConfig = {
     condition: (timeRemain) => {
-      return (timeRemain >= 0) && (timeRemain === showExpiringModalTime) && (isIdle() || isSessionMax);
+      return (
+        timeRemain >= 0 &&
+        timeRemain === showExpiringModalTime &&
+        (isIdle() || isSessionMax)
+      );
     },
     func: openNotification,
   };
 
-
-
-  const { isIdle, reset } = useIdleTimer({
+  const { isIdle } = useIdleTimer({
     timeout: 1000 * idleTimeout,
     onActive: handleOnActive,
-    onIdle: () => {
-      console.log('onIdle', new Date());
-    },
     onAction: (e) => {
-      console.log('onAction', new Date());
       if (e.type !== actionType) {
         debouncedBroadcastAction();
       }
@@ -202,13 +199,6 @@ function App() {
 
   const refreshConfig = {
     condition: (timeRemain) => {
-      if (
-        timeRemain < refreshTokenLiftTime &&
-        timeRemain > 0 &&
-        timeRemain % checkRefreshInterval === 0
-      ) {
-        console.log(timeRemain, checkRefreshInterval);
-      }
       return (
         timeRemain < refreshTokenLiftTime &&
         timeRemain > 0 &&
@@ -216,7 +206,6 @@ function App() {
       );
     },
     func: () => {
-      console.log('update token checkpoint, isIdle', isIdle());
       !isIdle() &&
         keycloak
           .updateToken(-1)
@@ -258,14 +247,9 @@ function App() {
         setIsRefreshed(true);
       }
     };
-    keycloak.onAuthSuccess = () => {
-      console.log(keycloak.tokenParsed, 'onAuthSuccess')
-      if (!isLogin) {
+    keycloak.onAuthSuccess = async () => {
+      if (!tokenManager.getCookie('sessionId')) {
         const sourceId = uuidv4();
-        localStorage.setItem(
-          'sessionId',
-          `${keycloak?.tokenParsed.preferred_username}-${sourceId}`,
-        );
         tokenManager.setCookies({
           sessionId: `${keycloak?.tokenParsed.preferred_username}-${sourceId}`,
         });
@@ -273,11 +257,13 @@ function App() {
       }
       setUsernameDispatcher(keycloak?.tokenParsed.preferred_username);
       setEmailDispatcher(keycloak?.tokenParsed.email);
-      initApis(keycloak?.tokenParsed.preferred_username);
+      await initApis(keycloak?.tokenParsed.preferred_username);
       const timeRemain = keycloakManager.getRefreshRemainTime();
       if (
+        keycloak &&
+        keycloak.refreshTokenParsed &&
         keycloak.refreshTokenParsed.exp - keycloak.refreshTokenParsed.iat <
-        refreshTokenLiftTime
+          refreshTokenLiftTime
       ) {
         isSessionMax = true;
       } else {
@@ -287,22 +273,57 @@ function App() {
         openNotification();
       }
     };
-    keycloak.onAuthRefreshError = () => {
-      console.log('on refresh error');
-    };
     keycloakManager.addListener(openNotifConfig);
     keycloakManager.addListener(refreshConfig);
     keycloakManager.addListener(logoutConfig);
     broadcastManager.addListener('logout', (msg, channelNamespace) => {
-      console.log('logout broadcast')
       if (keycloak.authenticated) {
         logout();
       }
     });
     broadcastManager.addListener('refresh', () => {
       broadcastAction();
-    })
+    });
+    // eslint-disable-next-line
   }, []);
+
+  //check version number
+  useEffect(() => {
+    const versionNumLocal = localStorage.getItem('version');
+    const isLatest =
+      semver.valid(versionNumLocal) && semver.eq(version, versionNumLocal);
+    if (!isLatest && isLogin) {
+      const args = {
+        message: (
+          <>
+            <img alt="release note" width={30} src="/vre/Rocket.svg"></img>{' '}
+            <b>{' Release ' + version}</b>
+          </>
+        ), //,
+        description: (
+          <span
+            onClick={() => {
+              setIsReleaseNoteShownDispatcher(true);
+              notification.close('releaseNote');
+              localStorage.setItem('version', version);
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            <u style={{ marginLeft: 34 }}>
+              Click here to view the release notes
+            </u>
+          </span>
+        ),
+        duration: 0,
+        onClose: () => {
+          localStorage.setItem('version', version);
+        },
+        key: 'releaseNote',
+        //onClick: () => { localStorage.setItem('version', version) }
+      };
+      notification.open(args);
+    }
+  }, [isLogin]);
 
   //upload list update
   useEffect(() => {
@@ -310,6 +331,7 @@ function App() {
     setRefreshConfirmation(
       uploadList.filter((item) => item.status === 'uploading'),
     );
+    // eslint-disable-next-line
   }, [uploadList]);
 
   //download list update
@@ -319,24 +341,24 @@ function App() {
     );
     updateDownloadStatus(pendingDownloadList);
     setRefreshConfirmation(pendingDownloadList);
+    // eslint-disable-next-line
   }, [downloadList]);
 
   const initApis = async (username) => {
     try {
-      const res = await getDatasetsAPI({ type: 'usecase' });
-      AddDatasetDispatcher(res.data.result, 'All Use Cases');
-    } catch (err) {
-      const errorMessager = new ErrorMessager(namespace.common.getDataset);
-      errorMessager.triggerMsg(err.response && err.response.status);
-    }
-    try {
+      const params = {
+        order_by: 'time_created',
+        order_type: 'desc',
+        is_all: true,
+      };
+
       const {
-        data: { result: containersPermission },
-      } = await listAllContainersPermission(username);
+        data: { result: containersPermission, role },
+      } = await listUsersContainersPermission(username, params);
+      setUserRoleDispatcher(role);
+      setContainersPermissionDispatcher(containersPermission);
 
-      setContainersPermissionDispatcher(containersPermission.permission);
-      setUserRoleDispatcher(containersPermission.role);
-
+      const sessionId = tokenManager.getCookie('sessionId');
       const res = await checkUploadStatus(0, sessionId);
       const { code, result } = res.data;
 
@@ -379,7 +401,7 @@ function App() {
     };
 
     if (arr.length > 0) {
-      uploadAction();
+      keepAlive();
     }
     const func = () => {
       Promise.map(arr, (item, index) => {
@@ -411,7 +433,7 @@ function App() {
     if (arr.length > 0) {
       window.onbeforeunload = confirmation;
     } else {
-      window.onbeforeunload = () => { };
+      window.onbeforeunload = () => {};
     }
   };
 
@@ -423,14 +445,15 @@ function App() {
       return;
     }
     if (arr.filter((item) => item.status === 'uploading').length > 0) {
-      uploadAction();
+      keepAlive();
     }
 
+    const sessionId = tokenManager.getCookie('sessionId');
     const time = 4;
     const func = () => {
       Promise.map(pendingArr, (item, index) => {
         checkUploadStatus(item.projectId, sessionId)
-          .then((res) => {
+          .then(async (res) => {
             const { code, result } = res.data;
             if (code === 200) {
               let fileName = item.fileName;
@@ -442,6 +465,18 @@ function App() {
                 );
 
               if (isSuccess) {
+                const manifestItem = uploadFileManifest.find((x) => {
+                  const fileArr = x.files[0].split('/');
+                  const fileNameFromPath = fileArr[fileArr.length - 1];
+                  return fileNameFromPath === fileName;
+                });
+                if (manifestItem && manifestItem.manifestId) {
+                  await attachManifest(
+                    manifestItem.manifestId,
+                    manifestItem.files,
+                    manifestItem.attributes,
+                  );
+                }
                 item.status = 'success';
                 dispatch(setSuccessNum(successNum + 1));
               }
@@ -468,10 +503,10 @@ function App() {
     trailing: true,
     maxWait: 15 * 1000,
   });
-  if(!isKeycloakReady){
-    return <Loading />
-  };
-  
+  if (!isKeycloakReady) {
+    return <Loading />;
+  }
+
   return (
     <>
       <Spin spinning={isRefrshing} tip="reconnecting">
@@ -483,18 +518,12 @@ function App() {
                 key={item.path}
                 exact={item.exact || false}
                 render={(props) => {
-                 /*  if (!keycloak.refreshToken && isLogin) {
-                    return <Loading />;
-                  } else if (!keycloak.refreshToken && !isLogin) {
-                    return <Redirect to="/" />;
-                  } */
-
                   let res = protectedRoutes(
                     item.protectedType,
                     isLogin,
                     props.match.params.datasetId,
-                    null,
-                    datasetList,
+                    containersPermission,
+                    role,
                   );
                   if (res === '403') {
                     return <Redirect to="/error/403" />;
@@ -518,14 +547,26 @@ function App() {
                   return !isLogin ? (
                     <item.component />
                   ) : (
-                      <Redirect to="/landing" />
-                    );
+                    <Redirect to="/landing" />
+                  );
                 }}
               ></Route>
             ))}
+            <Route
+              path="/"
+              //component={item.component}
+              render={(props) => {
+                return isLogin ? (
+                  <Redirect to="/error/404" />
+                ) : (
+                  <Redirect to="/" />
+                );
+              }}
+            ></Route>
           </Switch>
         </Suspense>
       </Spin>
+      <ReleaseNoteModal visible={isReleaseNoteShown} currentVersion={version} />
       <Modal
         title={'Session Expiring'}
         closable={false}
@@ -546,3 +587,5 @@ function App() {
 }
 
 export default withRouter(App);
+
+// trigger cicd 

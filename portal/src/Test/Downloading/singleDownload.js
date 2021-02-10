@@ -27,9 +27,7 @@ function singleDownload(it, testTitle, getPage, expect) {
 }
 
 function downloadFile(link, dest) {
-    console.log(link,'link')
     return new Promise((resolve, reject) => {
-        console.log(`downloading file to ${dest}`);
         const file = fs.createWriteStream(dest);
         const request = http.get(link, (response) => {
             if(response.statusCode!==200){
@@ -39,12 +37,10 @@ function downloadFile(link, dest) {
             response.pipe(file);
             file.on('finish', () => {
                 file.close(() => {
-                    console.log(`${dest} downloaded success`);
                     resolve();
                 });
             });
             file.on('error', (err) => {
-                console.log(err, dest);
                 fs.unlink(dest);
                 reject();
             });
