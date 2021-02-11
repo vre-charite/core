@@ -121,7 +121,6 @@ class FileInfoV2(Resource):
 
 class FileTags(Resource):
     @jwt_required()
-
     def post(self, dataset_id):
         _res = APIResponse()
         _logger.info(f'Call API for attaching tag to file info for container: {dataset_id}')
@@ -215,7 +214,7 @@ class FileTags(Resource):
                             return _res.to_dict, _res.code
 
                     elif project_role == 'collaborator':
-                        if 'Raw' in file_labels and uploader == current_identity['username']:
+                        if ('Raw' in file_labels and uploader == current_identity['username']) or ('VRECore' in file_labels and 'Processed' in file_labels):
                             response = requests.post(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to attach tags to file:   '+ str(response.text))
@@ -240,7 +239,7 @@ class FileTags(Resource):
 
             return _res.to_dict, _res.code
 
-
+    @jwt_required()
     def delete(self, dataset_id):
         _res = APIResponse()
         _logger.info(f'Call API for deleting tag to file info for container: {dataset_id}')
@@ -334,7 +333,7 @@ class FileTags(Resource):
                             return _res.to_dict, _res.code
 
                     elif project_role == 'collaborator':
-                        if 'Raw' in file_labels and uploader == current_identity['username']:
+                        if ('Raw' in file_labels and uploader == current_identity['username']) or ('VRECore' in file_labels and 'Processed' in file_labels):
                             response = requests.delete(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to delete tags from file:   '+ str(response.text))

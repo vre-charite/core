@@ -187,7 +187,7 @@ function SelfRegistration(props) {
 
                         setValidatingStatus('validating');
                         try {
-                          const re = /^[a-z0-9]{6,20}$/i;
+                          const re = /^[a-z0-9]{6,20}$/;
 
                           if (re.test(value)) {
                             await checkIsUserExistAPI(
