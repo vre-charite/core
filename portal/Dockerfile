@@ -3,7 +3,6 @@ COPY .  ./
 #ARG PORTAL_ENV
 RUN npm config set proxy "http://proxy.charite.de:8080/"
 RUN npm config set https-proxy "http://proxy.charite.de:8080/"
-RUN npm cache clear
 RUN npm install
 RUN npm run build-charite
 #RUN npm run ${PORTAL_ENV}
