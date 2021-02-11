@@ -284,7 +284,8 @@ function RawTable(props) {
           const content = <span>{text}</span>;
           return (
             <div>
-              {record.tags.indexOf(SYSTEM_TAGS['COPIED_TAG']) !== -1 &&
+              {record.tags &&
+              record.tags.indexOf(SYSTEM_TAGS['COPIED_TAG']) !== -1 &&
               tableState === TABLE_STATE.COPY_TO_CORE ? (
                 <Tag color="default">{SYSTEM_TAGS['COPIED_TAG']}</Tag>
               ) : null}
@@ -304,7 +305,8 @@ function RawTable(props) {
 
         return (
           <div>
-            {record.tags.indexOf(SYSTEM_TAGS['COPIED_TAG']) !== -1 &&
+            {record.tags &&
+            record.tags.indexOf(SYSTEM_TAGS['COPIED_TAG']) !== -1 &&
             tableState === TABLE_STATE.COPY_TO_CORE ? (
               <Tag color="default">{SYSTEM_TAGS['COPIED_TAG']}</Tag>
             ) : null}
@@ -525,15 +527,12 @@ function RawTable(props) {
     setSelectedRows(totalSelectedRows);
   };
 
-  async function onPanelChange(keys) {
-    if (keys.includes('2')) {
-      await updateLineage(currentRecord, 'INPUT');
-    }
-  }
+  async function onPanelChange(keys) {}
 
   async function openFileSider(record) {
     setSidepanel(true);
     setCurrentRecord(record);
+    await updateLineage(record, 'INPUT');
   }
 
   async function updateLineage(record, direction) {

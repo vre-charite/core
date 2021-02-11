@@ -37,41 +37,23 @@ const fittingString = (str, maxWidth, fontSize) => {
 };
 export default function (props) {
   const ref = React.useRef(null);
-
   const record = props.record;
-
-  const lineage = record?.lineage;
-  const guidEntityMap = lineage && lineage?.guidEntityMap;
-  const relations = lineage && lineage?.relations;
-  const nodeKeys = guidEntityMap ? Object.keys(guidEntityMap) : [];
-
   useEffect(() => {
+    const lineage = record?.lineage;
+    const guidEntityMap = lineage && lineage?.guidEntityMap;
+    const relations = lineage && lineage?.relations;
+    const nodeKeys = guidEntityMap ? Object.keys(guidEntityMap) : [];
     let graph = null;
     const nodes = [];
-    const edges = [];
-
-    if (relations) {
-      for (const item of relations) {
-        edges.push({
-          source: item.fromEntityId,
-          target: item.toEntityId,
-          style: {
-            lineWidth: '2',
-            endArrow: {
-              path: G6.Arrow.triangle(8, 8, 0),
-              fill: '#D9D9D9',
-            },
-            stroke: '#D9D9D9',
-          },
-        });
-      }
-    }
-
     const nodeList = [];
-
+    const deleteNodeKeys = [];
     for (let i = 0; i < nodeKeys.length; i++) {
       const key = nodeKeys[i];
       const nodeInfo = guidEntityMap[key];
+      if (nodeInfo.status === 'DELETED') {
+        deleteNodeKeys.push(key);
+        continue;
+      }
       let displayText = nodeInfo.displayText;
       const attributes = nodeInfo.attributes;
       let fileManifests = nodeInfo.fileManifests || [];
@@ -151,6 +133,30 @@ export default function (props) {
         ...node,
         x: 50 + nodes.length * 200,
       });
+    }
+
+    const edges = [];
+    if (relations) {
+      for (const item of relations) {
+        if (
+          deleteNodeKeys.indexOf(item.fromEntityId) !== -1 ||
+          deleteNodeKeys.indexOf(item.toEntityId) !== -1
+        ) {
+          continue;
+        }
+        edges.push({
+          source: item.fromEntityId,
+          target: item.toEntityId,
+          style: {
+            lineWidth: '2',
+            endArrow: {
+              path: G6.Arrow.triangle(8, 8, 0),
+              fill: '#D9D9D9',
+            },
+            stroke: '#D9D9D9',
+          },
+        });
+      }
     }
     const data = {
       nodes,
@@ -260,38 +266,35 @@ export default function (props) {
         node.icon.img = '/vre/file-white.svg';
       }
     });
-
-    if (!graph) {
-      // eslint-disable-next-line
-      graph = new G6.Graph({
-        container: ReactDOM.findDOMNode(ref.current),
-        width: props.width ? props.width : 280,
-        height: 500,
-        plugins: toolBarNotSupported ? [tooltip] : [tooltip, toolbar],
-        fitCenter: true,
-        defaultNode: {
-          labelCfg: {
-            position: 'bottom',
-            style: {
-              opacity: 0,
-            },
+    // eslint-disable-next-line
+    graph = new G6.Graph({
+      container: ReactDOM.findDOMNode(ref.current),
+      width: props.width ? props.width : 280,
+      height: 500,
+      plugins: toolBarNotSupported ? [tooltip] : [tooltip, toolbar],
+      fitCenter: true,
+      defaultNode: {
+        labelCfg: {
+          position: 'bottom',
+          style: {
+            opacity: 0,
           },
         },
-        defaultEdge: {
-          labelCfg: {
-            autoRotate: true,
-            refY: 20,
-          },
+      },
+      defaultEdge: {
+        labelCfg: {
+          autoRotate: true,
+          refY: 20,
         },
-        layout: {
-          type: 'dagre', // Layout type
-          rankdir: 'TB', // 'TB' / 'BT' / 'LR' / 'RL' => T: top; B: bottom; L: left; R: right
-        },
-        modes: {
-          default: ['double-finger-drag-canvas'],
-        },
-      });
-    }
+      },
+      layout: {
+        type: 'dagre', // Layout type
+        rankdir: 'TB', // 'TB' / 'BT' / 'LR' / 'RL' => T: top; B: bottom; L: left; R: right
+      },
+      modes: {
+        default: ['double-finger-drag-canvas'],
+      },
+    });
     if (nodes.length > 0) {
       graph.data(data);
       graph.render();
