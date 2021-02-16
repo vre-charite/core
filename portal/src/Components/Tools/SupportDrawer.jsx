@@ -138,6 +138,8 @@ function SupportDrawer(props) {
               <Link href="#projects" title="Projects" />
               <Link href="#security" title="Site security" />
               <Link href="#file" title="File upload" />
+              <Link href="#file-organization" title={t('drawers.4.title')} />
+              <Link href="#external-project-tools" title={t('drawers.5.title')} />
             </div>
           </Link>
         </div>
@@ -173,7 +175,7 @@ function SupportDrawer(props) {
 
       <Button type="primary" ghost>
         <a
-          href="/vre/files/VRE User Manual Release 0.2.0 2020-11-30.pdf"
+          href="/vre/files/VRE User Manual Release 1.0.0 2021-02-12.pdf"
           download
           target="_self"
         >
