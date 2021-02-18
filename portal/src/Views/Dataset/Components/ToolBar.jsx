@@ -33,9 +33,7 @@ const ToolBar = ({
       );
     });
   const currentProject = useCurrentProject();
-  const showJupyter =
-    currentProject[0]?.code === 'tvbcloud' ||
-    currentProject[0]?.code === 'indoctestproject';
+  const showJupyter = ['tvbcloud', 'indoctestproject','retunetest'].includes(currentProject[0]?.code);
   const showGuacamole =
     currentProject[0]?.code === 'tvbcloud' ||
     currentProject[0]?.code === 'indoctestproject';
