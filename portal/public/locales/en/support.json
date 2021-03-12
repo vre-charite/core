@@ -1,7 +1,7 @@
 {
   "userguide": "User Guide",
-  "userguide_content": "Download the User Guide to learn more about the VRE platform services, tools and workflows.​",
-  "download_guide_button_text": "Download Guide",
+  "userguide_content": "Click the link below and log into the VRE Wiki to access the VRE User Guide and learn more about the VRE platform services, tools and workflows.",
+  "download_guide_button_text": "User Guide",
   "faq_title": "Frequently Asked Questions",
 
   "drawers": [
@@ -124,7 +124,7 @@
         {
           "question": "What is a Guacamole?",
           "answer": "Apache Guacamole is a clientless remote desktop gateway that supports standard protocols like VNC, RDP, and SSH. Contact a Platform Administrator for more information about deploying Guacamole for your Project."
-        }, 
+        },
         {
           "question": "What is a JupyterHub?",
           "answer": "JupyterHub is an open source, multi-user version of Jupyter Notebook integrated for performing analysis of data in the VRE Core. Contact a Platform Administrator for more information about deploying JupyterHub for your Project."

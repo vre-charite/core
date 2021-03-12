@@ -10,8 +10,7 @@ export default class RightSlider extends React.Component {
         collapsed={true}
         reverseArrow={true}
         trigger={null}
-        theme="light"
-        style={{ zIndex: '9', float: 'right' }}
+        style={{ zIndex: '9', float: 'right', backgroundColor: '#003262' }}
       >
         {this.props.children}
       </Sider>

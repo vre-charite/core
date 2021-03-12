@@ -190,11 +190,16 @@ class datasets(Resource):
                 "username": ConfigClass.GROUP_ADMIN,
                 "groupname": code
             }
-
             auth_res = requests.post(url=auth_url, json=auth_payload)
 
             if(auth_res.status_code != 200):
-                    return {'result': json.loads(res.text), 'auth_result': 'failed to create user group'}, res.status_code
+                return {'result': json.loads(res.text), 'auth_result': 'failed to create user group'}, res.status_code
+
+            # Add all platform admins to new group in keycloak
+            response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/User/query", json={"role": "admin"})
+            platform_admins = response.json()
+            for admin in platform_admins:
+                add_user_to_project_group(dataset_id, admin["name"], _logger)
 
         except Exception as e:
             _logger.error('Error in creating project: {}'.format(str(e)))

@@ -11,6 +11,9 @@ from .api_dataset.route_registry import APIDateSet
 from .api_data_manifest.data_manifest import APIDataManifest
 from .api_project import APIProject
 from .api_system_tags import APISystemTags
+from .api_announcement.announcement import APIAnnouncement
+from .api_users import APIUsers
+from .api_provenance import APIProvenance
 
 apis = [
     APIHelloWorld(),
@@ -24,7 +27,10 @@ apis = [
     APINotification(),
     APIDataManifest(),
     APIProject(),
-    APISystemTags()
+    APISystemTags(),
+    APIAnnouncement(),
+    APIUsers(),
+    APIProvenance(),
 ]
 
 

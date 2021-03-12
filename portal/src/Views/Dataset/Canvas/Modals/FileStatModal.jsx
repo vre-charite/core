@@ -17,7 +17,7 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import styles from './index.module.scss';
 
-import { getUsersOnDatasetAPI, projectFileSummary, fileAuditLogsAPI } from '../../../../APIs';
+import { getUsersOnDatasetAPI, projectFileSummary, fileAuditLogsAPI, getAuditLogsApi } from '../../../../APIs';
 import { objectKeysToCamelCase, timeConvert, pathsMap } from '../../../../Utility';
 
 const { TabPane } = Tabs;
@@ -44,6 +44,7 @@ const FileStatModal = (props) => {
   const [isSearching, setIsSearching] = useState(false);
   const { datasetId, currentUser, isAdmin } = props;
   const containersPermission = useSelector((state) => state.containersPermission);
+  const username = useSelector((state) => state.username);
 
   const currentDataset = _.find(
     containersPermission,
@@ -54,52 +55,70 @@ const FileStatModal = (props) => {
 
   useEffect(() => {
     const now = moment();
-    if (isAdmin) {
-      getUsersOnDatasetAPI(datasetId).then((res) => {
-        const result = objectKeysToCamelCase(res.data.result);
-        setUsers(result);
 
-        setSelectedUser('all');
-        form.setFieldsValue({ user: 'all' });
-        form.setFieldsValue({
-          date: [moment(today, dateFormat), moment(today, dateFormat)],
-        });
-        form.setFieldsValue({ action: 'upload' });
+    if (props.isAdmin) {
+      getUsersOnDatasetAPI(datasetId)
+        .then((res) => {
+          const result = objectKeysToCamelCase(res.data.result);
+          setUsers(result);
 
-        projectFileSummary(datasetId, isAdmin, {
-          page: 0,
-          size: 10,
-          action: 'upload',
-          startDate: now.startOf('day').unix(),
-          endDate: now.endOf('day').unix(),
-        }).then((res) => {
-          setTreeData(res.data.result.recentUpload);
-          setTotal(res.data.result.uploadCount);
-          setLoading(false);
+          setSelectedUser('all');
+          form.setFieldsValue({ user: 'all' });
+          form.setFieldsValue({
+            date: [moment(today, dateFormat), moment(today, dateFormat)],
+          });
+          form.setFieldsValue({ action: 'upload' });
+
+          const paginationParams = {
+            "page": 0,
+            "page_size": 10,
+          };
+          const query = {
+            "action": 'data_upload',
+            "start_date": now.startOf('day').unix(),
+            "end_date": now.endOf('day').unix(),
+            "resource": "file",
+            'project_code': currentDataset && currentDataset.code
+          }
+          getAuditLogsApi(datasetId, paginationParams, query)
+            .then((res) => {
+              setTreeData(res.data.result);
+              setTotal(res.data.total);
+              setLoading(false);
+            })
         });
-      });
     } else {
-      setUsers([{ name: currentUser }]);
-      form.setFieldsValue({ user: currentUser });
+      const users = [];
+      users.push({
+        name: username,
+      });
+      setUsers(users);
+      setSelectedUser(username);
+      form.setFieldsValue({ user: username });
       form.setFieldsValue({
         date: [moment(today, dateFormat), moment(today, dateFormat)],
       });
       form.setFieldsValue({ action: 'upload' });
 
-      projectFileSummary(datasetId, isAdmin, {
-        user: currentUser,
-        page: 0,
-        size: 10,
-        action: 'upload',
-        startDate: now.startOf('day').unix(),
-        endDate: now.endOf('day').unix(),
-      }).then((res) => {
-        setTreeData(res.data.result.recentUpload);
-        setTotal(res.data.result.uploadCount);
-        setLoading(false);
-      });
+      const paginationParams = {
+        "page": 0,
+        "page_size": 10,
+      };
+      const query = {
+        "action": 'data_upload',
+        "start_date": now.startOf('day').unix(),
+        "end_date": now.endOf('day').unix(),
+        "resource": "file",
+        "operator": username,
+        'project_code': currentDataset && currentDataset.code
+      }
+      getAuditLogsApi(datasetId, paginationParams, query)
+        .then((res) => {
+          setTreeData(res.data.result);
+          setTotal(res.data.total);
+          setLoading(false);
+        })
     }
-    // eslint-disable-next-line
   }, [datasetId]);
 
   const userOptions = users.map((el) => (
@@ -136,45 +155,31 @@ const FileStatModal = (props) => {
     setAction(values.action);
     setSelectedUser(values.user);
 
-    if (values.action === 'copy' || values.action === 'delete') {
-      const params4Copy = {
-        'page_size': 10,
-        'page': 0,
-        'operation_type': values.action === 'copy' ? 'data_transfer' : 'data_delete',
-        'project_code': currentDataset && currentDataset.code,
-        'start_date': moment(date[0]).startOf('day').unix(),
-        'end_date': moment(date[1]).endOf('day').unix(),
-        'container_id': datasetId
-      };
-      if (values.user !== 'all') params4Copy['operator'] = values.user;
-      fileAuditLogsAPI(params4Copy)
-        .then((res) => {
-          if (res.status === 200) {
-            const { result, total } = res.data;
+    let operation = 'data_transfer';
+    if (values.action === 'delete') operation = 'data_delete';
+    if (values.action === 'download') operation = 'data_download';
+    if (values.action === 'upload') operation = 'data_upload';
 
-            setTreeData(result);
-            setTotal(total);
-            setPage(1);
-            setLoading(false);
-          }
-        }).finally(()=>{
-          setIsSearching(false);
-        });
-    } else {
-      projectFileSummary(datasetId, isAdmin, params).then((res) => {
-        if (values.action === 'upload') {
-          setTreeData(res.data.result.recentUpload);
-          setTotal(res.data.result.uploadCount);
-        } else {
-          setTreeData(res.data.result.recentDownload);
-          setTotal(res.data.result.downloadCount);
-        }
+    const paginationParams = {
+      "page": 0,
+      "page_size": 10,
+    };
+    const query = {
+      "action": operation,
+      "start_date": moment(date[0]).startOf('day').unix(),
+      "end_date": moment(date[1]).endOf('day').unix(),
+      "resource": "file",
+      'project_code': currentDataset && currentDataset.code
+    };
+    if (values.user !== 'all') query['operator'] = values.user;
+    getAuditLogsApi(datasetId, paginationParams, query)
+      .then((res) => {
+        setTreeData(res.data.result);
+        setTotal(res.data.total);
         setPage(1);
         setLoading(false);
-      }).finally(()=>{
-        setIsSearching(false);
-      });
-    }
+      })
+      .finally(() => setIsSearching(false));
   };
 
   const onReset = () => {
@@ -183,55 +188,32 @@ const FileStatModal = (props) => {
   };
 
   const onChangePage = (page, pageSize) => {
-    const params = {};
     setPage(page);
     setLoading(true);
 
-    params.action = action;
-    if (selectedUser !== 'all') params.user = selectedUser;
+    let operation = 'data_transfer';
+    if (action === 'delete') operation = 'data_delete';
+    if (action === 'download') operation = 'data_download';
+    if (action === 'upload') operation = 'data_upload';
 
-    params.startDate = moment(dateRange[0]).startOf('day').unix();
-    params.endDate = moment(dateRange[1]).endOf('day').unix();
-
-    params.page = page - 1;
-    params.size = 10;
-
-    if (action === 'copy' || action === 'delete') {
-      const params4Copy = {
-        'page_size': 10,
-        'page': page - 1,
-        'operation_type': action === 'copy' ? 'data_transfer' : 'data_delete',
-        'project_code': currentDataset && currentDataset.code,
-        'start_date': params.startDate,
-        'end_date': params.endDate,
-        'container_id': datasetId
-      };
-      if (selectedUser !== 'all') params4Copy['operator'] = selectedUser;
-      fileAuditLogsAPI(params4Copy)
-        .then((res) => {
-          if (res.status === 200) {
-            const { result, total } = res.data;
-
-            setTreeData(result);
-            setTotal(total);
-            setLoading(false);
-          }
-        }).finally(()=>{
-          setIsSearching(false);
-        });
-
-    } else {
-      projectFileSummary(datasetId, isAdmin, params).then((res) => {
-        if (action === 'upload') {
-          setTreeData(res.data.result.recentUpload);
-          setTotal(res.data.result.uploadCount);
-        } else {
-          setTreeData(res.data.result.recentDownload);
-          setTotal(res.data.result.downloadCount);
-        }
-        setLoading(false);
-      });
+    const paginationParams = {
+      "page": page - 1,
+      "page_size": 10,
+    };
+    const query = {
+      "action": operation,
+      "start_date": moment(dateRange[0]).startOf('day').unix(),
+      "end_date": moment(dateRange[1]).endOf('day').unix(),
+      "resource": "file",
+      'project_code': currentDataset && currentDataset.code
     }
+    if (selectedUser !== 'all') query['operator'] = selectedUser;
+    getAuditLogsApi(datasetId, paginationParams, query)
+      .then((res) => {
+        setTreeData(res.data.result);
+        setTotal(res.data.total);
+        setLoading(false);
+      })
   };
 
   let resultContent = (
@@ -246,46 +228,34 @@ const FileStatModal = (props) => {
         <Timeline style={{ marginTop: 40 }}>
           {filterData &&
             filterData.map((i) => {
-              let { owner, createTime, fileName, downloader, operator, originPath, path } = i['attributes'];
-              let localTime = null;
-              if (typeof createTime === 'number') {
-                localTime = moment(createTime*1000).format('YYYY-MM-DD HH:mm:ss');
-              } else {
-                localTime = timeConvert(createTime, 'datetime');
-              }
+              let { createdTime, displayName, operator, target, outcome } = i['source'];
+              let localTime = moment(createdTime*1000).format('YYYY-MM-DD HH:mm:ss');
 
-              if (action === 'copy' || action === 'delete') {
-                const originPathArray = originPath && originPath.split('/');
-                const pathArray = path && path.split('/');
+              let operate = 'copied';
+              if (action === 'delete') operate = 'deleted';
+              if (action === 'download') operate = 'downloaded';
+              if (action === 'upload') operate = 'uploaded';
 
-                const originPathName = originPathArray && pathsMap(originPathArray);
-                const pathName = pathArray && pathsMap(pathArray);
+              if (['deleted', 'copied'].includes(operate)) {
+                const originPathArray = target && target.split('/');
+                const pathArray = outcome && outcome.split('/');
 
-                let operate = 'copied';
-                if (action === 'delete') operate = 'deleted'
-
-                if (originPathName && pathName) {
-                  return (
-                    <Timeline.Item color="green">
-                      <span>
-                      {operator} {operate} {fileName} from {originPathName} to {pathName} at{' '}
-                      {localTime}
-                      </span>
-                    </Timeline.Item>
-                  );
-                }
+                const originPathName = originPathArray && pathsMap(target);
+                const pathName = pathArray && pathsMap(outcome);
 
                 return (
                   <Timeline.Item color="green">
-                    {operator} {operate} {fileName} at{' '}
+                    <span>
+                    {operator} {operate} {displayName} from {originPathName} to {pathName} at{' '}
                     {localTime}
+                    </span>
                   </Timeline.Item>
                 );
-              } 
+              }
 
               return (
                 <Timeline.Item color="green">
-                  {owner || downloader} {action}ed {fileName} at{' '}
+                  {operator} {operate} {displayName} at{' '}
                   {localTime}
                 </Timeline.Item>
               );

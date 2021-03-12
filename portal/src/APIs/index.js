@@ -70,7 +70,12 @@ import {
   attachManifest,
   importManifestAPI,
   getManifestById,
+  getAuditLogsApi,
   updateFileManifestAPI,
+  getAnnouncementApi,
+  addAnnouncementApi,
+  getUserAnnouncementApi,
+  putUserAnnouncementApi,
 } from './datasetsAPI';
 import {
   getAllUsersAPI,
@@ -197,5 +202,10 @@ export {
   importManifestAPI,
   getFileManifestAttrs,
   getManifestById,
+  getAuditLogsApi,
   updateFileManifestAPI,
+  getAnnouncementApi,
+  addAnnouncementApi,
+  getUserAnnouncementApi,
+  putUserAnnouncementApi,
 };

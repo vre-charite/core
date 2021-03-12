@@ -163,4 +163,5 @@ export {
   invitationAxios,
   devOpServerUrl,
   serverAxiosNoIntercept,
+  kongAPI,
 };

@@ -3,3 +3,143 @@
   // top: 110px;
   z-index: 10;
 }
+
+.upperMenu {
+  :global {
+    background-color: #003262 !important;
+    position: fixed !important;
+    top: 120px;
+    width: 51px;
+    max-width: 51px;
+    min-width: 51px;
+  }
+}
+
+.lowerMenu {
+  :global {
+    background-color: #003262 !important;
+    position: fixed !important;
+    bottom: 20px;
+    width: 51px;
+    max-width: 51px;
+    min-width: 51px;
+  }
+}
+
+.upperMenu {
+  :global {
+    .anticon {
+      color: #f0f0f0;
+    }
+  }
+}
+
+.upperMenu {
+  :global {
+    .ant-menu-item {
+      margin-bottom: 25px !important;
+      left: -14px !important;
+    }
+  }
+}
+
+.lowerMenu {
+  :global {
+    .ant-menu-item {
+      margin-bottom: 25px !important;
+      left: -14px !important;
+    }
+  }
+}
+
+.upperMenu {
+  :global {
+    .ant-menu-item-selected {
+      .anticon {
+        color: #1890ff;
+      }
+    }
+  }
+}
+.upperMenu,
+.lowerMenu {
+  :global {
+    .ant-menu-item {
+      position: relative;
+      .anticon {
+        > img {
+          position: absolute;
+          left: 40px;
+          top: 50%;
+          transform: translate(-50%, -50%);
+        }
+      }
+    }
+  }
+}
+:global {
+  .ant-menu-inline-collapsed {
+    width: 80px !important;
+  }
+}
+
+.annoucementPanel {
+  // left: 50px !important;
+  :global {
+    .ant-popover-content > .ant-popover-arrow {
+      border-left-color: #003262 !important;
+      border-bottom-color: #003262 !important;
+    }
+    .ant-popover-content {
+      width: 345px;
+      color: white;
+    }
+    .ant-popover-inner {
+      background-color: #003262;
+    }
+    .ant-popover-inner-content {
+      padding: 0 16px;
+    }
+    .ant-popover-title {
+      font-size: 14px !important;
+      padding-top: 14px;
+      color: white !important;
+      border-bottom: 0;
+    }
+  }
+}
+.annoucementPanelItem {
+  border-bottom: 0 !important;
+  padding: 20px 0;
+  position: relative;
+  &::after {
+    position: absolute;
+    content: '';
+    left: -14px;
+    bottom: 0px;
+    width: 60%;
+    border-top: 1px solid #c3c6c8;
+    opacity: 0.6;
+  }
+  &:last-child {
+    &::after {
+      display: none;
+    }
+  }
+
+  :global {
+    .ant-list-item-meta-title {
+      color: #c3c6c8;
+      font-size: 14px;
+      line-height: 14px;
+      font-style: italic;
+    }
+    .ant-list-item-meta-description {
+      font-size: 14px;
+      line-height: 16px;
+      color: white;
+      margin-bottom: 2px !important;
+      white-space: pre-wrap !important;
+    }
+  }
+}

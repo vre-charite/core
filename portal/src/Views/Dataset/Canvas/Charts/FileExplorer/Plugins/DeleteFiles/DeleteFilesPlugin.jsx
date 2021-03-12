@@ -9,7 +9,7 @@ import i18n from '../../../../../../../i18n';
 const DeleteFilesPlugin = ({
   tableState,
   selectedRowKeys,
-  setSelectedRowKeys,
+  clearSelection,
   selectedRows,
   setTableState,
   panelKey,
@@ -60,7 +60,7 @@ const DeleteFilesPlugin = ({
         setVisible={setDeleteModalVisible}
         files={deleteFiles}
         eraseSelect={() => {
-          setSelectedRowKeys([]);
+          clearSelection();
         }}
         panelKey={panelKey}
         permission={permission}

@@ -12,7 +12,7 @@ const VFolderFilesDeleteModal = ({
   setVisible,
   files,
   panelKey,
-  setSelectedRowKeys,
+  clearSelection,
 }) => {
   const dispatch = useDispatch();
   const successNum = useSelector((state) => state.successNum);
@@ -29,7 +29,7 @@ const VFolderFilesDeleteModal = ({
     if (vfolder) {
       try {
         await removeFromVirtualFolder(vfolder.id, files);
-        setSelectedRowKeys([]);
+        clearSelection();
       } catch (e) {
         message.error(
           `${i18n.t('errormessages:removeFromVirtualFolder.default.0')}`,

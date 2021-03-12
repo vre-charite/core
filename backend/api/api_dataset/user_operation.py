@@ -16,10 +16,8 @@ from config import ConfigClass
 from services.invitation_services.invitation_manager import SrvInvitationManager
 from services.notifier_services.email_service import SrvEmail
 from services.logger_services.logger_factory_service import SrvLoggerFactory
-from services.user_services.user_email_template import update_role_email_body_generator, invite_user_email_body_generator
 from services.container_services.container_manager import SrvContainerManager
 from models.user_type import map_neo4j_to_frontend
-from emails.user_status_emails import user_disable_email_generator, user_enable_email_generator, user_project_enable_email_generator
 
 
 # init logger
@@ -66,7 +64,6 @@ class users(Resource):
             # Create a user in keycloak
             # TODO: remove admin password in the payload
             url = ConfigClass.KONG_BASE+"portal/admin/users"
-            print(url)
             headers = {
                 'Authorization': access_token
             }
@@ -253,6 +250,16 @@ class user_registry(Resource):
             user = json.loads(res.text)[0]
             uid = user['id']
             _logger.info('Done with adding user node to neo4j')
+            if portal_role == "admin":
+                # Add new platform admin to all groups
+                payload = {
+                    "realm": "vre",
+                    "username": username,
+                }
+                response = requests.post(ConfigClass.AUTH_SERVICE + "admin/users/group/all", json=payload)
+                if response.status_code != 200:
+                    _logger.error('Error adding user to all groups')
+                    return {'result': response.json()}, response.status_code
 
             if container_id and role:
                 # Add relationship in neo4j
@@ -542,9 +549,20 @@ class dataset_user(Resource):
                 admin_email = current_identity["email"]
                 title = "Project %s Notification: New Invitation" % (
                     str(dataset_name))
-                content = invite_user_email_body_generator(
-                    username, admin_name, dataset_name, map_neo4j_to_frontend(role), ConfigClass.INVITATION_URL_LOGIN, admin_email)
-                SrvEmail().send(title, content, [email], "html")
+                SrvEmail().send(
+                    title, 
+                    [email], 
+                    msg_type="html",
+                    template="user_actions/invite.html",
+                    template_kwargs={
+                        "username": username,
+                        "admin_name": admin_name,
+                        "project_name": dataset_name,
+                        "role": map_neo4j_to_frontend(role),
+                        "login_url": ConfigClass.INVITATION_URL_LOGIN,
+                        "admin_email": admin_email,
+                    },
+                )
 
             except Exception as e:
                 _logger.error('email service: {}'.format(str(e)))
@@ -659,9 +677,20 @@ class dataset_user(Resource):
                 admin_email = current_identity["email"]
                 title = "Project %s Notification: Role Modified" % (
                     str(dataset_name))
-                content = update_role_email_body_generator(
-                    username, admin_name, dataset_name, map_neo4j_to_frontend(new_role), ConfigClass.INVITATION_URL_LOGIN, admin_email)
-                SrvEmail().send(title, content, [email], "html")
+                SrvEmail().send(
+                    title, 
+                    [email], 
+                    msg_type="html",
+                    template="role/update.html",
+                    template_kwargs={
+                        "username": username,
+                        "admin_name": admin_name,
+                        "project_name": dataset_name,
+                        "role": map_neo4j_to_frontend(new_role),
+                        "login_url": ConfigClass.INVITATION_URL_LOGIN,
+                        "admin_email": admin_email,
+                    },
+                )
 
             except Exception as e:
                 _logger.error("email service: {}".format(str(e)))
@@ -1005,6 +1034,7 @@ class DatasetUsersQuery(Resource):
                 'end_label': 'Dataset',
                 'end_params': {'id': datasets[0]['id']},
                 'start_params': request.get_json().get('start_params'),
+                'sort_node': 'start',
                 **request.get_json()
             }
             response = neo4j_query_with_pagination(url, payload, partial=True)
@@ -1102,32 +1132,32 @@ class DatasetUserManagement(Resource):
                     json=payload
                 )
             if req_body["status"] == "active":
-                html_msg = user_enable_email_generator(
-                    username,
-                    current_identity["username"],
-                    ConfigClass.EMAIL_ADMIN_CONNECTION
-                )
                 subject = "VRE User enabled"
                 email_sender = SrvEmail()
                 email_result = email_sender.send(
                     subject,
-                    html_msg,
                     [req_body["email"]],
                     msg_type="html",
+                    template="user_actions/enable.html",
+                    template_kwargs={
+                        "username": username,
+                        "admin_name": current_identity["username"],
+                        "admin_email": ConfigClass.EMAIL_ADMIN_CONNECTION,
+                    },
                 )
             else:
-                html_msg = user_disable_email_generator(
-                    username,
-                    current_identity["username"],
-                    ConfigClass.EMAIL_ADMIN_CONNECTION
-                )
                 subject = "VRE User disabled"
                 email_sender = SrvEmail()
                 email_result = email_sender.send(
                     subject,
-                    html_msg,
                     [req_body["email"]],
                     msg_type="html",
+                    template="user_actions/disable.html",
+                    template_kwargs={
+                        "username": username,
+                        "admin_name": current_identity["username"],
+                        "admin_email": ConfigClass.EMAIL_ADMIN_CONNECTION,
+                    },
                 )
             return {'result': json.loads(res.text)}, 200
 
@@ -1197,22 +1227,20 @@ class DatasetUserProjectStatus(Resource):
                 json=payload
             )
 
-            # Send email confirmation
-            html_msg = user_project_enable_email_generator(
-                username,
-                current_identity["username"],
-                project_name,
-                ConfigClass.EMAIL_ADMIN_CONNECTION
-            )
-
             if project_status == "active":
                 subject = f"VRE access restored to {project_name}"
                 email_sender = SrvEmail()
                 email_result = email_sender.send(
                     subject,
-                    html_msg,
                     [user_email],
                     msg_type="html",
+                    template="user_actions/enable.html",
+                    template_kwargs={
+                        "username": username,
+                        "admin_name": current_identity["username"],
+                        "project_name": project_name,
+                        "admin_email": ConfigClass.EMAIL_ADMIN_CONNECTION,
+                    },
                 )
 
             return {'result': 'success'}, 200

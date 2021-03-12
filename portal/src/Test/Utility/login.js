@@ -51,12 +51,9 @@ function login(it, getPage, username, password) {
 async function loginPlain(page, username, password) {
 
   await page.click('#auth_login_btn');
-  const loginBtn = await page.waitForSelector('#auth_login_btn')
-  loginBtn.click();
 
   try {
-    const usernameInput = await page.waitForSelector('input');
-    console.log(usernameInput);
+    const usernameInput = await page.waitForSelector('#username');
   } catch (err) {
     console.log(err)
   }
@@ -82,22 +79,19 @@ async function loginPlain(page, username, password) {
 function logout(it, testTitle, getPage) {
   it(testTitle, async () => {
     const page = getPage();
-    await page.waitForSelector("#header_username");
-    await page.click('#header_username');
-    await page.waitForSelector("#header_logout");
-    await page.click('#header_logout');
-    await page.waitForSelector('.ant-modal-body .ant-btn.ant-btn-primary');
-    await page.click('.ant-modal-body .ant-btn.ant-btn-primary');
-    const url = new URL(await page.url());
-    await expect(url.pathname === '/vre/' || url.pathname === '/').toBeTruthy();
+    await logoutPlain(page);
   });
 }
 
 async function logoutPlain(page) {
-  await page.waitForSelector("#header_username");
-  await page.click('#header_username');
-  await page.waitForSelector("#header_logout");
-  await page.click('#header_logout');
+  const headerUsernameBtn = await page.waitForSelector('#header_username');
+  if (headerUsernameBtn) {
+    await page.$eval("#header_username", ele => { ele.click() })
+  }
+  const headerLogoutBtn = await page.waitForSelector('#header_logout');
+  if (headerLogoutBtn) {
+    await page.$eval("#header_logout", ele => { ele.click() })
+  }
   await page.waitForSelector('.ant-modal-body .ant-btn.ant-btn-primary');
   await page.click('.ant-modal-body .ant-btn.ant-btn-primary');
   const url = new URL(await page.url());

@@ -87,8 +87,8 @@ class APINotification(metaclass=MetaAPI):
             email_service = SrvEmail()
             email_service.send(
                 subject,
-                message_body,
                 emails,
+                content=message_body,
             )
 
             _logger.info('Notification Email Sent')

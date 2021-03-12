@@ -6,7 +6,7 @@ import Copy2CoreModal from './Copy2CoreModal';
 import i18n from '../../../../../../../i18n';
 function Copy2CorePlugin({
   selectedRowKeys,
-  setSelectedRowKeys,
+  clearSelection,
   selectedRows,
   tableState,
   setTableState,
@@ -87,7 +87,7 @@ function Copy2CorePlugin({
         setVisible={setCopyModalVisible}
         files={copyFiles}
         eraseSelect={() => {
-          setSelectedRowKeys([]);
+          clearSelection();
         }}
       />
     </>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { keycloakManager } from '../../Service/keycloak';
+import { tokenTimer } from '../../Service/keycloak';
 
 const getText = (timeRemain, isRefreshed) => {
   if (isRefreshed) {
@@ -17,16 +17,16 @@ const getText = (timeRemain, isRefreshed) => {
 
 function ExpirationNotification({ getIsSessionMax, isRefreshed }) {
   const [timeRemain, setTimeRemain] = useState(
-    keycloakManager.getRefreshRemainTime(),
+    tokenTimer.getRefreshRemainTime(),
   );
   const [isSessionMax, setIsSessionMax] = useState(getIsSessionMax());
   useEffect(() => {
     const func = () => {
       setIsSessionMax(getIsSessionMax());
-      setTimeRemain(keycloakManager.getRefreshRemainTime());
+      setTimeRemain(tokenTimer.getRefreshRemainTime());
     };
     const condition = () => true;
-    keycloakManager.addListener({ func, condition });
+    tokenTimer.addListener({ func, condition });
     // eslint-disable-next-line
   }, []);
   const text = isSessionMax

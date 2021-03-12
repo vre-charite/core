@@ -4,7 +4,8 @@ import contactUsRoutes from './support';
 import accountAssistant from './account';
 import errorPageRoutes from './errorPage';
 import { createBrowserHistory } from 'history';
-const history = createBrowserHistory({basename:'/vre'});
+const basename = '/vre';
+const history = createBrowserHistory({ basename });
 export {
   authedRoutes,
   unAuthedRoutes,
@@ -13,4 +14,5 @@ export {
   accountAssistant,
   errorPageRoutes,
   history,
+  basename,
 };

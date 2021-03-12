@@ -1,14 +1,7 @@
-import React, { useState } from 'react';
-import { Menu, message } from 'antd';
-import {
-  PieChartOutlined,
-  UploadOutlined,
-  TeamOutlined,
-  DesktopOutlined,
-  SettingOutlined,
-  FileTextOutlined,
-  ClusterOutlined,
-} from '@ant-design/icons';
+import React, { useState, Component, useEffect } from 'react';
+import { Menu, message, List } from 'antd';
+import { TeamOutlined, SettingOutlined } from '@ant-design/icons';
+import Icon from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
 import GreenRoomUploader from './GreenRoomUploader';
@@ -16,6 +9,7 @@ import { connect } from 'react-redux';
 import _ from 'lodash';
 import style from './index.module.scss';
 import { useCurrentProject } from '../../../Utility';
+import AnnouncementButton from './AnnouncementButton';
 
 const ToolBar = ({
   location: { pathname },
@@ -24,6 +18,8 @@ const ToolBar = ({
   role,
 }) => {
   const [isShown, toggleModal] = useState(false);
+  const [iconSelected, toggleIcon] = useState(pathname.split('/')[3]);
+
   const adminPermission =
     role === 'admin' ||
     _.some(containersPermission, (item) => {
@@ -32,37 +28,57 @@ const ToolBar = ({
         item.permission === 'admin'
       );
     });
-  const currentProject = useCurrentProject();
-  const showJupyter = ['tvbcloud', 'indoctestproject','retunetest'].includes(currentProject[0]?.code);
+  let currentProject = useCurrentProject();
+  currentProject = currentProject[0];
+  const showJupyter = ['tvbcloud', 'indoctestproject', 'retunetest'].includes(
+    currentProject?.code,
+  );
   const showGuacamole =
-    currentProject[0]?.code === 'tvbcloud' ||
-    currentProject[0]?.code === 'indoctestproject';
+    currentProject?.code === 'tvbcloud' ||
+    currentProject?.code === 'indoctestproject';
+
+  const showSuperset = ['indoctestproject'].includes(currentProject?.code);
+
   return (
     <>
       <Menu
         mode="inline"
         selectedKeys={[pathname.split('/')[3]]}
-        className={style.menu}
+        className={style.upperMenu}
       >
-        <Menu.Item key="canvas">
+        <Menu.Item key="canvas" onClick={() => toggleIcon('canvas')}>
           <Link to="canvas">
-            <PieChartOutlined />
+            {iconSelected === 'canvas' ? (
+              <Icon
+                component={() => (
+                  <img
+                    style={{ width: 15 }}
+                    src={require('../../../Images/Dashboard-selected.svg')}
+                  />
+                )}
+              />
+            ) : (
+              <Icon
+                component={() => (
+                  <img
+                    style={{ width: 15 }}
+                    src={require('../../../Images/Dashboard.svg')}
+                  />
+                )}
+              />
+            )}
             <span>Canvas</span>
           </Link>
         </Menu.Item>
-
         <Menu.Item
-          key="uploader"
-          onClick={() => {
-            toggleModal(true);
-          }}
+          title={null}
+          key="announcement"
+          onClick={() => toggleIcon('')}
         >
-          <UploadOutlined />
-          <span>Upload</span>
+          <AnnouncementButton currentProject={currentProject} />
         </Menu.Item>
-
         {adminPermission && (
-          <Menu.Item key="teams">
+          <Menu.Item key="teams" onClick={() => toggleIcon('')}>
             <Link to="teams">
               <TeamOutlined />
               <span>Members</span>
@@ -70,15 +86,76 @@ const ToolBar = ({
           </Menu.Item>
         )}
 
-        {showGuacamole ? (
-          <Menu.Item key="guacamole">
+        {adminPermission && (
+          <Menu.Item key="settings" onClick={() => toggleIcon('')}>
+            <Link to="settings">
+              <SettingOutlined />
+              <span>Settings</span>
+            </Link>
+          </Menu.Item>
+        )}
+      </Menu>
+
+      <Menu
+        mode="inline"
+        className={style.lowerMenu}
+        selectedKeys={[pathname.split('/')[3]]}
+      >
+        {showSuperset ? (
+          <Menu.Item key="superset">
             <a
-              href={`/workbench/${currentProject[0]?.code}/guacamole/`}
+              href={`/bi/${currentProject?.code}/superset/welcome`}
               //rel="noopener noreferrer"
               // eslint-disable-next-line
               target="_blank"
             >
-              <ClusterOutlined />
+              <Icon
+                component={() => (
+                  <img
+                    style={{ height:10 }}
+                    src={require('../../../Images/SuperSet.svg')}
+                  />
+                )}
+              />
+              <span>Superset</span>
+            </a>
+          </Menu.Item>
+        ) : (
+          <Menu.Item
+            key="superset"
+            onClick={() => {
+              message.info(
+                'This project does not have superset configured yet.',
+              );
+            }}
+          >
+            <Icon
+              component={() => (
+                <img
+                  style={{ height:10 }}
+                  src={require('../../../Images/SuperSet.svg')}
+                />
+              )}
+            />
+            <span>Superset</span>
+          </Menu.Item>
+        )}
+        {showGuacamole ? (
+          <Menu.Item key="guacamole">
+            <a
+              href={`/workbench/${currentProject?.code}/guacamole/`}
+              //rel="noopener noreferrer"
+              // eslint-disable-next-line
+              target="_blank"
+            >
+              <Icon
+                component={() => (
+                  <img
+                    style={{ width: 14 }}
+                    src={require('../../../Images/Guacamole.svg')}
+                  />
+                )}
+              />
               <span>Guacamole</span>
             </a>
           </Menu.Item>
@@ -91,19 +168,33 @@ const ToolBar = ({
               );
             }}
           >
-            <ClusterOutlined />
+            <Icon
+              component={() => (
+                <img
+                  style={{ width: 14 }}
+                  src={require('../../../Images/Guacamole.svg')}
+                />
+              )}
+            />
             <span>Guacamole</span>
           </Menu.Item>
         )}
         {showJupyter ? (
           <Menu.Item key="jupyter">
             <a
-              href={`/workbench/${currentProject[0]?.code}/j/`}
+              href={`/workbench/${currentProject?.code}/j/`}
               //rel="noopener noreferrer"
               // eslint-disable-next-line
               target="_blank"
             >
-              <DesktopOutlined />
+              <Icon
+                component={() => (
+                  <img
+                    style={{ width: 17 }}
+                    src={require('../../../Images/Jupyter.svg')}
+                  />
+                )}
+              />
               <span>Jupyterhub</span>
             </a>
           </Menu.Item>
@@ -116,35 +207,41 @@ const ToolBar = ({
               );
             }}
           >
-            <DesktopOutlined />
+            <Icon
+              component={() => (
+                <img
+                  style={{ width: 17 }}
+                  src={require('../../../Images/Jupyter.svg')}
+                />
+              )}
+            />
             <span>Jupyterhub</span>
           </Menu.Item>
         )}
         <Menu.Item key="xwiki">
           <a
-            href={`/xwiki/bin/view/Main/${currentProject[0]?.code}/`}
+            href={`/xwiki/bin/view/Main/${currentProject?.code}/`}
             //rel="noopener noreferrer"
             // eslint-disable-next-line
             target="_blank"
           >
-            <FileTextOutlined />
+            <Icon
+              component={() => (
+                <img
+                  style={{ width: 18 }}
+                  src={require('../../../Images/XWIKI.svg')}
+                />
+              )}
+            />
             <span>XWiki</span>
           </a>
         </Menu.Item>
-        {adminPermission && (
-          <Menu.Item key="settings">
-            <Link to="settings">
-              <SettingOutlined />
-              <span>Settings</span>
-            </Link>
-          </Menu.Item>
-        )}
       </Menu>
       {showGuacamole ? (
         <iframe
           title="guacamole"
           style={{ display: 'none', position: 'absolute', zIndex: -1 }}
-          src={`/workbench/${currentProject[0]?.code}/guacamole/`}
+          src={`/workbench/${currentProject?.code}/guacamole/`}
         ></iframe>
       ) : null}
       <GreenRoomUploader

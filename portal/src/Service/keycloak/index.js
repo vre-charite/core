@@ -1,2 +1,2 @@
-export {keycloak} from './config';
-export {keycloakManager} from './keycloakManager'
+export { keycloak } from './config';
+export { tokenTimer } from './tokenTimer';

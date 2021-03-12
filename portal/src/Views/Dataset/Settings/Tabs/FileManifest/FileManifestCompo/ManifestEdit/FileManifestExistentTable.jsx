@@ -20,22 +20,6 @@ function FileManifestExistentTable(props) {
     }
     return '';
   }
-  // const deleteAttrConfirm = (
-  //   <Modal
-  //     title="Delete Manifest Attribute"
-  //     visible={deleteAttrModalVisible}
-  //     onOk={async () => {
-  //       await deleteAttrFromManifest(selAttrId);
-  //       await props.loadManifest();
-  //       setDeleteAttrModalVisible(false);
-  //     }}
-  //     onCancel={() => setDeleteAttrModalVisible(false)}
-  //   >
-  //     <p>
-  //       Deleting attribute is unrecoverable, are you sure you want to proceed?
-  //     </p>
-  //   </Modal>
-  // );
   return (
     <>
       <table className={styles.manifest_table}>
@@ -50,18 +34,6 @@ function FileManifestExistentTable(props) {
         </thead>
         <tbody>
           {mItem.attributes.map((item) => {
-            // if (item.id === selAttrId && editMode === 'edit-attr') {
-            //   return (
-            //     <AttrEditBar
-            //       key={'edit-bar-' + item.id}
-            //       manifestID={mItem.id}
-            //       attr={item}
-            //       setEditMode={setEditMode}
-            //       loadManifest={props.loadManifest}
-            //       tableColumns={tableColumns}
-            //     />
-            //   );
-            // }
             return (
               <tr key={mItem.id + '-' + item.id}>
                 <td>{item.name}</td>
@@ -77,32 +49,7 @@ function FileManifestExistentTable(props) {
                 <td>
                   <Checkbox defaultChecked={item.optional} disabled />
                 </td>
-                <td>
-                  {/* <Tooltip title="Edit">
-                    <Button
-                      shape="circle"
-                      icon={<EditOutlined />}
-                      onClick={() => {
-                        setEditMode('edit-attr');
-                        setSelAttrId(item.id);
-                      }}
-                      style={{ border: 0, outline: 0 }}
-                    ></Button>
-                  </Tooltip>
-                  <Tooltip
-                    title="Delete"
-                    onClick={async (e) => {
-                      setSelAttrId(item.id);
-                      setDeleteAttrModalVisible(true);
-                    }}
-                  >
-                    <Button
-                      shape="circle"
-                      icon={<DeleteOutlined />}
-                      style={{ border: 0, outline: 0, marginLeft: 6 }}
-                    ></Button>
-                  </Tooltip> */}
-                </td>
+                <td></td>
               </tr>
             );
           })}
@@ -125,7 +72,8 @@ function FileManifestExistentTable(props) {
                 colSpan={5}
               >
                 <Button
-                  type="link"
+                  className={styles.button}
+                  type="primary"
                   icon={<PlusOutlined />}
                   onClick={(e) => {
                     setEditMode('add');

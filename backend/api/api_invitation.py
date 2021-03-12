@@ -4,7 +4,7 @@ from resources.decorator import check_role
 from config import ConfigClass
 from models.api_response import APIResponse, EAPIResponseCode
 from models.api_meta_class import MetaAPI
-from models.invitation import InvitationForm
+from models.invitation import db, InvitationModel, InvitationForm
 from resources.swagger_modules import create_invitation_request_model, create_invitation_return_example
 from resources.swagger_modules import read_invitation_return_example
 from services.invitation_services.invitation_manager import SrvInvitationManager
@@ -93,7 +93,7 @@ class APIInvitation(metaclass=MetaAPI):
                 invitation_find = invitation_validation[1]
                 error_code = invitation_validation[2]
                 if is_valid:
-                    form_data = json.loads(invitation_find[1])
+                    form_data = json.loads(invitation_find.invitation_detail)
                     invitation_form = InvitationForm(form_data)
                     my_res.set_code(EAPIResponseCode.success)
                     my_res.set_result(invitation_form.to_dict)
@@ -176,15 +176,10 @@ class APIInvitation(metaclass=MetaAPI):
 
                 post_json = request.get_json()
 
-                page = post_json.get('page', None)
-                page_size = post_json.get('page_size', None)
+                page = post_json.get('page', 0)
+                page_size = post_json.get('page_size', 25)
                 order_by = post_json.get('order_by', None)
                 order_type = post_json.get('order_type', None)
-
-                if page == None or page_size == None:
-                    my_res.set_code(EAPIResponseCode.bad_request)
-
-                    return my_res.to_dict, my_res.code
 
                 filters = post_json.get('filters', None)
 
@@ -192,32 +187,20 @@ class APIInvitation(metaclass=MetaAPI):
                 result = []
 
                 for record in records:
-                    detail = json.loads(record[1])
-                    user_info = dict()
-                    user_info['expiry_timestamp'] = record[2].strftime("%Y-%m-%d %H:%M:%S")
-                    user_info['create_timestamp'] = record[3].strftime("%Y-%m-%d %H:%M:%S")
-                    user_info['invited_by'] = record[4]
-
-                    if 'email' in detail:
-                        user_info['email'] = detail['email']
-
-                    if 'role' in detail:
-                        user_info['role'] = detail['role']
-
-                    if 'projectId' in detail:
-                        user_info['projectId'] = detail['projectId']
-
+                    detail = json.loads(record.invitation_detail)#json.loads(record[1])
+                    user_info = { 
+                        'expiry_timestamp': record.expiry_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                        'create_timestamp': record.create_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                        'invited_by': record.invited_by,
+                        **detail
+                    }
                     result.append(user_info)
-                       
-
-                my_res.set_code(EAPIResponseCode.success)
                 my_res.set_result(result)
                 my_res.set_total(count)
                 my_res.set_num_of_pages(math.ceil(count/page_size))
                 my_res.set_page(page)
                 
                 return my_res.to_dict, my_res.code
-
             except Exception as e:
                 print(e)
                 _logger.error('error in pending users' + str(e))

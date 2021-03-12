@@ -24,7 +24,7 @@ function ActivateUser(props) {
             }
             extra={[
               <Button type="primary" key="home">
-                <Link to="/">Back to Home Page</Link>
+                <a href="/vre">Back to Home Page</a>
               </Button>,
             ]}
           />

@@ -104,7 +104,7 @@ const ManifestManagementModal = ({
       {step === 1 ? (
         <>
           <p style={{ color: 'rgba(0,0,0,0.45)' }}>
-            Please choose file manifest for the selected {files.length} files.
+            Please choose file manifest for {files.length} files.
           </p>
           <div>
             <Select
@@ -158,12 +158,12 @@ const ManifestManagementModal = ({
             subTitle={
               batchRes.error.length
                 ? `${files.length} file${
-                    files.length > 1 ? 's have' : 'has'
+                    files.length > 1 ? 's have' : ' has'
                   } been processed with ${batchRes.error.length} error${
                     batchRes.error.length > 1 ? 's' : ''
                   }`
                 : `${files.length} file${
-                    files.length > 1 ? 's have' : 'has'
+                    files.length > 1 ? 's have' : ' has'
                   } been processed`
             }
           />

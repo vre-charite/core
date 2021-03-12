@@ -1,6 +1,7 @@
 import Canvas from '../Views/Dataset/Canvas/Canvas';
 import Teams from '../Views/Dataset/Teams/Teams';
 import Settings from '../Views/Dataset/Settings/Settings';
+import Announcement from '../Views/Dataset/Announcement/Announcement'
 
 const routes = [
   {
@@ -18,6 +19,11 @@ const routes = [
     component: Settings,
     protectedType: 'projectAdmin',
   },
+  {
+    path:'/announcement',
+    component:Announcement,
+    protectedType:'projectMember',
+  }
 ];
 
 export default routes;

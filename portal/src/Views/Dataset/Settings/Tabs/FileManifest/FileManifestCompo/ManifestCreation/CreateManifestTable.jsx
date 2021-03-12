@@ -28,7 +28,7 @@ function CreateManifestTable(props) {
   }
   return (
     <>
-      <table className={styles.manifest_table}>
+      <table className={styles.manifest_table + " " + styles.addManifestTable}>
         <thead>
           <tr>
             <th style={{ width: 180 }}>Attribute Name</th>

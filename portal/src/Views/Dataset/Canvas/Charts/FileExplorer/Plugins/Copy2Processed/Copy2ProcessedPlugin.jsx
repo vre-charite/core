@@ -6,7 +6,7 @@ import Copy2ProcessedModal from './Copy2ProcessedModal';
 import i18n from '../../../../../../../i18n';
 function Copy2Processed({
   selectedRowKeys,
-  setSelectedRowKeys,
+  clearSelection,
   selectedRows,
   setTableState,
 }) {
@@ -50,7 +50,7 @@ function Copy2Processed({
         setVisible={setCopyModalVisible}
         files={copyFiles}
         eraseSelect={() => {
-          setSelectedRowKeys([]);
+          clearSelection();
         }}
       />
     </>

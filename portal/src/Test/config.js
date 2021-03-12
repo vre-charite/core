@@ -1,7 +1,7 @@
-const devServerUrl = 'http://10.3.7.220/';
-const devServerBaseUrl = 'http://10.3.7.220/api/vre/portal';
-const stagingUrl = 'https://vre-staging.indocresearch.org/';
-const stagingServerUrl = 'https://vre-staging.indocresearch.org/portal';
+const devServerUrl = 'http://10.3.7.220/vre/';
+const devServerBaseUrl = 'http://10.3.7.220/vre/api/vre/portal';
+const stagingUrl = 'https://vre-staging.indocresearch.org/vre/';
+const stagingServerUrl = 'https://vre-staging.indocresearch.org/vre/api/vre/portal';
 
 const baseUrl = stagingUrl;
 const serverUrl = stagingServerUrl;

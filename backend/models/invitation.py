@@ -1,3 +1,42 @@
+from app import db
+from config import ConfigClass
+
+
+class InvitationModel(db.Model):
+    __tablename__ = 'user_invitation'
+    __table_args__ = {"schema":ConfigClass.RDS_SCHEMA_DEFAULT}
+    id = db.Column(db.Integer, unique=True, primary_key=True)
+    invitation_code = db.Column(db.String())
+    invitation_detail = db.Column(db.String())
+    expiry_timestamp = db.Column(db.DateTime())
+    create_timestamp = db.Column(db.DateTime())
+    invited_by = db.Column(db.String())
+    email = db.Column(db.String())
+    role = db.Column(db.String())
+    project = db.Column(db.String())
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def to_dict(self):
+        result = {}
+        field_list = [
+            "id",
+            "invitation_code",
+            "invitation_detail",
+            "expiry_timestamp",
+            "create_timestamp",
+            "invited_by",
+            "email",
+            "role",
+            "project",
+        ]
+        for field in field_list:
+            result[field] = getattr(self, field)
+        return result 
+
+
 class InvitationForm:
     def __init__(self, event=None):
         if event:

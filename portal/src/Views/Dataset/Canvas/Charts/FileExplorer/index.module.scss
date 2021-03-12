@@ -11,3 +11,13 @@
     }
   }
 }
+.files_raw_table {
+  :global {
+    tr.manifest-attached {
+      opacity: 0.6;
+      > td {
+        background-color: white !important;
+      }
+    }
+  }
+}

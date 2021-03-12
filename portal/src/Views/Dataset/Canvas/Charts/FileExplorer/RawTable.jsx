@@ -109,7 +109,6 @@ function RawTable(props) {
     (state) => state.project && state.project.tree && state.project.tree.active,
   );
   const deletedFileList = useSelector((state) => state.deletedFileList);
-
   let permission = false;
   if (currentDataset) permission = currentDataset.permission;
 
@@ -177,6 +176,7 @@ function RawTable(props) {
           }
         });
     }
+
     let pipeline = null;
     if (panelKey && panelKey.startsWith('greenroom')) {
       if (panelKey === 'greenroom-processed-dicomEdit') {
@@ -189,7 +189,7 @@ function RawTable(props) {
         pipeline = pipelines['GREEN_RAW'];
       }
     } else if (panelKey && panelKey.startsWith('core')) {
-      pipeline = pipelines['DATA_COPY'];
+      // pipeline = pipelines['DATA_COPY'];
       if (panelKey === 'core-trash') pipeline = pipelines['DATA_DELETE'];
     }
     const filters = {};
@@ -269,7 +269,7 @@ function RawTable(props) {
       dataIndex: 'fileName',
       key: 'fileName',
       sorter: true,
-      width: '25%',
+      width: sidepanel ? '65%' : '25%',
       searchKey: !panelKey.startsWith('vfolder-') ? 'name' : null,
       render: (text, record) => {
         let filename = text;
@@ -278,31 +278,16 @@ function RawTable(props) {
           if (fileArray && fileArray.length)
             filename = fileArray[fileArray.length - 1];
         }
+        let hasPopover = false;
+        let popoverContent = '';
         if (filename && filename.length > 45) {
-          filename = filename.slice(0, 45);
-          filename = `${filename}...`;
-          const content = <span>{text}</span>;
-          return (
-            <div>
-              {record.tags &&
-              record.tags.indexOf(SYSTEM_TAGS['COPIED_TAG']) !== -1 &&
-              tableState === TABLE_STATE.COPY_TO_CORE ? (
-                <Tag color="default">{SYSTEM_TAGS['COPIED_TAG']}</Tag>
-              ) : null}
-              {deletedFileList &&
-              deletedFileList.find(
-                (el) =>
-                  el.fileName === record.fileName &&
-                  el.source === record.name &&
-                  el.status === 'running',
-              ) ? (
-                <Tag color="default">to be deleted</Tag>
-              ) : null}
-              <Popover content={content}>{filename}</Popover>
-            </div>
-          );
+          hasPopover = true;
+          popoverContent = filename;
         }
-
+        if (tableState === TABLE_STATE.MANIFEST_APPLY && record.manifest) {
+          hasPopover = true;
+          popoverContent = filename + ' has an annotate attached';
+        }
         return (
           <div>
             {record.tags &&
@@ -319,7 +304,15 @@ function RawTable(props) {
             ) ? (
               <Tag color="default">to be deleted</Tag>
             ) : null}
-            <span>{filename}</span>
+            {hasPopover ? (
+              <Popover content={<span>{popoverContent}</span>}>
+                {filename && filename.length > 45
+                  ? `${filename.slice(0, 45)}...`
+                  : filename}
+              </Popover>
+            ) : (
+              <span>{filename}</span>
+            )}
           </div>
         );
       },
@@ -393,13 +386,21 @@ function RawTable(props) {
     {
       title: 'Action',
       key: 'action',
-      width: 75,
+      width: '75px',
       render: (text, record) => {
         let file = record.name;
         var folder = file && file.substring(0, file.lastIndexOf('/') + 1);
         var filename =
           file && file.substring(file.lastIndexOf('/') + 1, file.length);
-        let files = [{ file: filename, path: folder }];
+        let files = [
+          {
+            file: filename,
+            path: folder,
+            full_path: record.qualifiedName,
+            geid: record.geid,
+            project_code: currentDataset.code,
+          },
+        ];
 
         const menu = (
           <Menu>
@@ -416,9 +417,18 @@ function RawTable(props) {
                     null,
                     props.appendDownloadListCreator,
                     sessionId,
+                    currentDataset.code,
+                    props.username,
+                    panelKey.startsWith('greenroom') ? 'greenroom' : 'vre-core',
                   )
                     .then((res) => {
-                      dispatch(setSuccessNum(props.successNum + 1));
+                      if (res) {
+                        const url = res;
+                        window.open(url, '_blank');
+                        setTimeout(() => {
+                          dispatch(setSuccessNum(props.successNum + 1));
+                        }, 3000);
+                      }
                     })
                     .catch((err) => {
                       if (err.response) {
@@ -578,15 +588,19 @@ function RawTable(props) {
     selectedRowKeys,
     onChange: onSelectChange,
     getCheckboxProps: (record) => {
-      if (
-        tableState === TABLE_STATE.MANIFEST_APPLY &&
-        ((currentDataset.permission !== 'admin' &&
-          record.owner !== props.username) ||
-          record.manifest !== null)
-      ) {
-        return {
-          disabled: true,
-        };
+      if (tableState === TABLE_STATE.MANIFEST_APPLY) {
+        if (
+          currentDataset.permission !== 'admin' &&
+          record.owner !== props.username
+        ) {
+          return {
+            disabled: true,
+          };
+        } else if (record.manifest !== null && record.manifest.length !== 0) {
+          return {
+            disabled: true,
+          };
+        }
       }
       if (deletedFileList) {
         const isDeleted = deletedFileList.find(
@@ -608,13 +622,12 @@ function RawTable(props) {
   const downloadFiles = () => {
     setLoading(true);
     let files = [];
-    selectedRowKeys.forEach((i) => {
+    selectedRows.forEach((i) => {
       let file = i;
-      var folder = file.substring(0, file.lastIndexOf('/') + 1);
-      var filename = file.substring(file.lastIndexOf('/') + 1, file.length);
       files.push({
-        file: filename,
-        path: folder,
+        geid: file.geid,
+        full_path: file.qualifiedName,
+        project_code: currentDataset.code,
       });
     });
 
@@ -624,10 +637,20 @@ function RawTable(props) {
       setLoading,
       props.appendDownloadListCreator,
       sessionId,
+      currentDataset.code,
+      props.username,
+      panelKey.startsWith('greenroom') ? 'greenroom' : 'vre-core',
     )
       .then((res) => {
-        if (files && files.length === 1)
-          dispatch(setSuccessNum(props.successNum + 1));
+        // if (files && files.length === 1)
+        //   dispatch(setSuccessNum(props.successNum + 1));
+        if (res) {
+          const url = res;
+          window.open(url, '_blank');
+          setTimeout(() => {
+            dispatch(setSuccessNum(props.successNum + 1));
+          }, 3000);
+        }
       })
       .catch((err) => {
         setLoading(false);
@@ -639,7 +662,7 @@ function RawTable(props) {
         }
         return;
       });
-    setSelectedRowKeys([]);
+    clearSelection();
   };
 
   function fetchData() {
@@ -744,6 +767,10 @@ function RawTable(props) {
     document.addEventListener('mousemove', mouseMove, true);
     document.addEventListener('mouseup', stopMove, true);
   }
+  function clearSelection(params) {
+    setSelectedRowKeys([]);
+    setSelectedRows([]);
+  }
 
   /**
    * Set the panel width based on mouse position and width of the file panel
@@ -798,16 +825,7 @@ function RawTable(props) {
             Upload
           </Button>
         )}
-        {props.type === DataSourceType.GREENROOM_RAW && (
-          <ManifestManagementPlugin
-            tableState={tableState}
-            setTableState={setTableState}
-            selectedRowKeys={selectedRowKeys}
-            setSelectedRowKeys={setSelectedRowKeys}
-            selectedRows={selectedRows}
-            panelKey={panelKey}
-          />
-        )}
+
         {!panelKey.includes('trash') && hasSelected ? (
           <Button
             onClick={downloadFiles}
@@ -825,7 +843,7 @@ function RawTable(props) {
             tableState={tableState}
             setTableState={setTableState}
             selectedRowKeys={selectedRowKeys}
-            setSelectedRowKeys={setSelectedRowKeys}
+            clearSelection={clearSelection}
             selectedRows={selectedRows}
             panelKey={panelKey}
           />
@@ -837,7 +855,7 @@ function RawTable(props) {
             tableState={tableState}
             setTableState={setTableState}
             selectedRowKeys={selectedRowKeys}
-            setSelectedRowKeys={setSelectedRowKeys}
+            clearSelection={clearSelection}
             selectedRows={selectedRows}
             panelKey={panelKey}
           />
@@ -848,17 +866,27 @@ function RawTable(props) {
             tableState={tableState}
             setTableState={setTableState}
             selectedRowKeys={selectedRowKeys}
-            setSelectedRowKeys={setSelectedRowKeys}
+            clearSelection={clearSelection}
             selectedRows={selectedRows}
             panelKey={panelKey}
           />
         ) : null}
+        {hasSelected && props.type === DataSourceType.GREENROOM_RAW && (
+          <ManifestManagementPlugin
+            tableState={tableState}
+            setTableState={setTableState}
+            selectedRowKeys={selectedRowKeys}
+            clearSelection={clearSelection}
+            selectedRows={selectedRows}
+            panelKey={panelKey}
+          />
+        )}
         {props.type === DataSourceType.CORE_VIRTUAL_FOLDER && hasSelected ? (
           <VirtualFolderFilesDeletePlugin
             tableState={tableState}
             setTableState={setTableState}
             selectedRowKeys={selectedRowKeys}
-            setSelectedRowKeys={setSelectedRowKeys}
+            clearSelection={clearSelection}
             selectedRows={selectedRows}
             panelKey={panelKey}
           />
@@ -870,7 +898,7 @@ function RawTable(props) {
               tableState={tableState}
               selectedRows={selectedRows}
               selectedRowKeys={selectedRowKeys}
-              setSelectedRowKeys={setSelectedRowKeys}
+              clearSelection={clearSelection}
               setTableState={setTableState}
               panelKey={panelKey}
               permission={permission}
@@ -881,7 +909,7 @@ function RawTable(props) {
             tableState={tableState}
             setTableState={setTableState}
             selectedRowKeys={selectedRowKeys}
-            setSelectedRowKeys={setSelectedRowKeys}
+            clearSelection={clearSelection}
             selectedRows={selectedRows}
             panelKey={panelKey}
             removePanel={removePanel}
@@ -894,7 +922,7 @@ function RawTable(props) {
             <CloseOutlined
               style={{ marginRight: 10 }}
               onClick={(e) => {
-                setSelectedRowKeys([]);
+                clearSelection();
               }}
             />
             <span>
@@ -1056,6 +1084,7 @@ function RawTable(props) {
                 }
               >
                 <FileBasics
+                  panelKey={panelKey}
                   record={currentRecord}
                   pid={props.projectId}
                   refresh={fetchData}

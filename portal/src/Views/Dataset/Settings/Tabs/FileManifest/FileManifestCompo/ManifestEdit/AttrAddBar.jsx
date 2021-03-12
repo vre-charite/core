@@ -117,7 +117,7 @@ function AttrAddBar(props) {
       </td>
       <td>
         <Button
-          style={{ border: 0, outline: 0, padding: 4, marginTop: -4 }}
+          style={{ border: 0, outline: 0, color: "#5B8C00",boxShadow:"none",background:"none" }}
           icon={<CheckOutlined />}
           loading={loading}
           onClick={async (e) => {
@@ -173,10 +173,9 @@ function AttrAddBar(props) {
             props.setEditMode('default');
           }}
         >
-          Add
         </Button>
         <Button
-          style={{ border: 0, outline: 0, padding: 4, marginTop: 4 }}
+        style={{ border: 0, outline: 0, color: "#FF6D72",boxShadow:"none",background:"none"}}
           icon={<CloseOutlined />}
           onClick={() => {
             setAttrName(null);
@@ -186,7 +185,6 @@ function AttrAddBar(props) {
             props.setEditMode('default');
           }}
         >
-          Cancel
         </Button>
       </td>
     </tr>

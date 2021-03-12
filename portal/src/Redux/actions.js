@@ -40,6 +40,7 @@ import {
   SET_IS_RELEASE_NOTE_SHOWN,
   SET_DELETE_LIST,
   SET_UPLOAD_FILE_MANIFEST,
+  UPDATE_DELETE_LIST,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -267,5 +268,10 @@ export const setDeletedFileList = (payload) => ({
 
 export const setUploadFileManifest = (payload) => ({
   type: SET_UPLOAD_FILE_MANIFEST,
+  payload,
+});
+
+export const updateDeletedFileList = (payload) => ({
+  type: UPDATE_DELETE_LIST,
   payload,
 });

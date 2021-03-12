@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UploadOutlined } from '@ant-design/icons';
+import { UploadOutlined,PlusOutlined,DownloadOutlined } from '@ant-design/icons';
 import { Button, Input, Modal, message, Upload, Form } from 'antd';
 import FileManifestItem from './FileManifestCompo/ManifestEdit/FileManifestItem';
 
@@ -108,7 +108,7 @@ function FileManifest() {
           ]}
           label="Manifest Name"
         >
-          <Input style={{ width: 150 }} />
+          <Input style={{ width: 150,borderRadius:6 }} />
         </Form.Item>
         <Form.Item
           name="file"
@@ -160,12 +160,11 @@ function FileManifest() {
             );
           })
         : null}
-      <div style={{ padding: '20px 40px' }}>
+      <div style={{ padding: '20px 13px' }}>
         {!isCreateManifest ? (
           <div style={{ textAlign: 'center' }}>
             <Button
-              type="primary"
-              ghost
+              type="link"
               onClick={(e) => {
                 if (manifestList.length >= 10) {
                   message.error(t("errormessages:importExportManifest.manifestNumberOver.0"));
@@ -173,14 +172,15 @@ function FileManifest() {
                 }
                 setIsCreateManifest(true);
               }}
+              icon={<PlusOutlined />}
             >
               Create New Manifest
             </Button>
             <Button
-              type="primary"
-              ghost
+              type="link"
               style={{ marginLeft: 20 }}
               onClick={(e) => setImportModalVisible(true)}
+              icon={<DownloadOutlined />}
             >
               Import Manifest
             </Button>

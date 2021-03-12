@@ -3,8 +3,24 @@
   box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.05);
   transition: 0.3s;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: hidden;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 9px !important;
+  :global {
+    .ant-card-head {
+      padding: 0 16px !important;
+    }
+    .ant-card-body {
+      flex: 1;
+      max-height: 100%;
+      overflow: auto;
+      margin-bottom: 18px;
+      margin-top: 0px;
+      margin-right: 2px;
+    }
+  }
 }
 .basic:hover {
   box-shadow: 0 6px 9px 0 rgba(0, 0, 0, 0.1);
@@ -56,4 +72,16 @@
 .infocard p {
   font-size: 17px;
   margin-bottom: 0;
+}
+
+.cardTitle {
+  font-size: 14px;
+  color: #003262;
+  font-weight: bold;
+}
+
+.fileStreamTitle {
+  font-size: 14px;
+  color: #003262;
+  font-weight: bold;
 }

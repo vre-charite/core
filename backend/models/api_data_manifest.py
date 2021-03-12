@@ -2,7 +2,7 @@ from enum import Enum
 import datetime
 from flask_sqlalchemy import SQLAlchemy
 from config import ConfigClass
-from app.db import db
+from app import db
 
 
 class TypeEnum(Enum):

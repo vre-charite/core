@@ -12,7 +12,7 @@ const info = {
 const fileStats = {
   type: 'fileStats',
   key: '2',
-  title: 'General Statistics',
+  title: 'File Statistics',
   defaultSize: 'm',
   expandable: false,
   exportable: false,
@@ -30,7 +30,7 @@ const files = {
 const userStats = {
   type: 'userStats',
   key: '3',
-  title: 'File Statistics',
+  title: 'Recent File Stream',
   content: 'hello',
   defaultSize: 'm',
   expandable: false,
@@ -50,17 +50,9 @@ const cardsAttr = {
   initial: [],
   //  vre cards
   //admin: [info, fileStats, files, userStats,superset],
-  admin: [info, fileStats, files, userStats],
-  uploader: [
-    info,
-    {
-      ...userStats,
-      title: 'Contributor Statistics',
-    },
-    files,
-  ],
+  admin: [fileStats, files, userStats],
   contributor: [
-    info,
+    fileStats,
     {
       ...userStats,
       title: 'Contributor Statistics',
@@ -68,7 +60,7 @@ const cardsAttr = {
     files,
   ],
   collaborator: [
-    info,
+    fileStats,
     {
       ...userStats,
       title: 'Collaborator Statistics',

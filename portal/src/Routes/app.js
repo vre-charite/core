@@ -1,16 +1,17 @@
 import Login from '../Views/Login/Auth';
-import Uploader from '../Views/Uploader/Uploader';
+import LandingPageLayout from '../Views/ProjectLandingPage/LandingPageLayout';
 import Dataset from '../Views/Dataset/Dataset';
 import Support from '../Views/Support/Support';
 import ErrorPage from '../Views/ErrorPage/ErrorPage';
+import General404Page from '../Views/GeneralPage/General404Page';
 import SelfRegistration from '../Views/Self-Registration/Self-Registration';
 import AccountAssistant from '../Views/AccountAssistant/AccountAssistant';
-import UserManagement from '../Views/UsersManagement';
-
+import UserManagement from '../Views/AdministratorConsole';
+// render whenever user is authorized
 const authedRoutes = [
   {
     path: '/landing',
-    component: Uploader,
+    component: LandingPageLayout,
     protectedType: 'isLogin',
   },
   {
@@ -30,7 +31,7 @@ const authedRoutes = [
   },
   { path: '/error', component: ErrorPage, protectedType: 'isLogin' },
 ];
-
+// render whenever user is unauthorized
 const unAuthedRoutes = [
   {
     path: '/',
@@ -38,11 +39,6 @@ const unAuthedRoutes = [
     protectedType: 'unLogin',
     exact: true,
   },
-  /*   {
-    path: "/register",
-    component: Register,
-    protectedType: "unLogin",
-  },*/
   {
     path: '/account-assistant',
     component: AccountAssistant,
@@ -53,6 +49,11 @@ const unAuthedRoutes = [
     path: '/self-registration/:invitationHash',
     component: SelfRegistration,
     protectedType: 'unLogin',
+  },
+  {
+    path: '/404',
+    component: General404Page,
+    exact: true,
   },
 ];
 

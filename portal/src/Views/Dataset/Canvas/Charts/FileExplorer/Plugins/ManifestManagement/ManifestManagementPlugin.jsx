@@ -4,29 +4,39 @@ import { TABLE_STATE } from '../../RawTableValues';
 import { Button, message } from 'antd';
 import ManifestManagementModal from './ManifestManagementModal';
 import i18n from '../../../../../../../i18n';
+import { CheckOutlined } from '@ant-design/icons';
 function ManifestManagementPlugin({
   selectedRowKeys,
-  setSelectedRowKeys,
+  clearSelection,
   selectedRows,
   tableState,
   setTableState,
 }) {
   const [manifestModalVisible, setManifestModalVisible] = useState(false);
-  const selFiles = selectedRows
-    .map((v) => {
-      if (!v) return null;
-      return {
-        input_path: v.name,
-        uploader: v.owner,
-        guid: v.guid,
-        geid: v.geid,
-        generate_id:
-          v.generateId && v.generateId !== 'undefined' ? v.generateId : null,
-      };
-    })
-    .filter((v) => !!v);
+  const selFilesAll = selectedRows.map((v) => {
+    if (!v) return null;
+    return {
+      input_path: v.name,
+      uploader: v.owner,
+      guid: v.guid,
+      geid: v.geid,
+      manifest: v.manifest,
+      generate_id:
+        v.generateId && v.generateId !== 'undefined' ? v.generateId : null,
+    };
+  });
+  const selFiles = selFilesAll.filter(
+    (v) => !!v && (!v.manifest || v.manifest.length === 0),
+  );
+  const withManifest = selFilesAll.filter(
+    (v) => !!v && v.manifest && v.manifest.length,
+  );
+  const selText = withManifest.length
+    ? `${selectedRowKeys.length} Selected - ${withManifest.length} Unavailable `
+    : `${selectedRowKeys.length} Selected`;
+
   function attach(e) {
-    if (selectedRowKeys.length === 0) {
+    if (selFiles.length === 0) {
       message.error(
         `${i18n.t('formErrorMessages:attachManifestModal.files.empty')}`,
         3,
@@ -53,39 +63,40 @@ function ManifestManagementPlugin({
         style={{ display: 'inline-block', color: '#1890ff', cursor: 'pointer' }}
         onClick={(e) => {
           setTableState(TABLE_STATE.NORMAL);
-          setSelectedRowKeys([]);
+          clearSelection();
         }}
       >
         <LeftOutlined fill="#1890ff" /> <span>Back</span>
       </div>
       <div style={{ marginLeft: 40, display: 'inline-block' }}>
         <span style={{ marginRight: 40 }}>
-          {selectedRowKeys && selectedRowKeys.length
-            ? `Selected ${selectedRowKeys.length} items`
-            : ''}
+          {selectedRowKeys && selectedRowKeys.length ? selText : ''}
         </span>
-        <Button type="primary" ghost onClick={attach}>
-          Attach Manifest
+        <Button
+          type="primary"
+          onClick={attach}
+          icon={<CheckOutlined />}
+          disabled={selFiles.length === 0}
+        >
+          Confirm
         </Button>
       </div>
     </div>
   );
   return (
     <>
-      {selectedRowKeys.length === 0 ? (
-        <Button
-          type="link"
-          onClick={() => {
-            // fake copy data, will be deleted
-            // deleteCopiedItemFromSel();
-            setTableState(TABLE_STATE.MANIFEST_APPLY);
-          }}
-          icon={<ProfileOutlined />}
-          style={{ marginRight: 8 }}
-        >
-          Manifest Management
-        </Button>
-      ) : null}
+      <Button
+        type="link"
+        onClick={() => {
+          // fake copy data, will be deleted
+          // deleteCopiedItemFromSel();
+          setTableState(TABLE_STATE.MANIFEST_APPLY);
+        }}
+        icon={<ProfileOutlined />}
+        style={{ marginRight: 8 }}
+      >
+        Annotate
+      </Button>
 
       {tableState === TABLE_STATE.MANIFEST_APPLY ? ManifestToolTips : null}
       <ManifestManagementModal
@@ -93,7 +104,7 @@ function ManifestManagementPlugin({
         setVisible={setManifestModalVisible}
         files={selFiles}
         eraseSelect={() => {
-          setSelectedRowKeys([]);
+          clearSelection();
         }}
       />
     </>

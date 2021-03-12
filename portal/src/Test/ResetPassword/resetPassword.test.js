@@ -1,12 +1,17 @@
 const { baseUrl, serverUrl } = require('../config');
 const { reduxLog, screenShot, apiLog } = require('../Utility/log');
 const { catchErrorMessage, checkErrorMessage } = require('../Utility/errorMessage');
-const { login, logout } = require('../Utility/login');
+const { login, logout, loginPlain } = require('../Utility/login');
 const { clearInput } = require('../Utility/inputBox');
 const { inValidTest } = require('./inValidTest');
 const { validTest } = require('./validTest');
-
+const errorMessage = require('../../../public/locales/en/formErrorMessages.json');
+const successMessage = require('../../../public/locales/en/success.json');
+const passwordSuccessMessage = successMessage.resetPassword;
 const _ = require('lodash');
+const passwordFormatError = errorMessage.common.password.valid;
+const sameAsOldPassword = errorMessage.resetPassword.newPassword.valid;
+const twoPasswordNotMatch = errorMessage.common.confirmPassword.valid;
 jest.setTimeout(7 * 60 * 1000);
 
 let page;
@@ -67,15 +72,9 @@ describe('resetPassword', () => {
             screenShotLogger(String(Date.now()))
         })
     });
- /*    login(it, getPage, username, oldPassword);
     it('new password not follow the password pattern', async () => {
-        await page.click('#header_username');
-        await page.waitForSelector('#header_reset_password');
-        await page.click('#header_reset_password');
-        await page.waitForSelector('div.ant-modal-content .ant-modal-title');
-        const title = await page.$eval('div.ant-modal-content .ant-modal-title', div => div.textContent);
-        await expect(title).toMatch('Reset Password');
-
+        await loginPlain(page, username, oldPassword);
+        await openResetModal(page)
         const usernameDom = await page.$eval('#basic_username', input => input.value);
         await expect(usernameDom).toMatch(username);
         await clearInput(page, '#basic_password');
@@ -85,7 +84,7 @@ describe('resetPassword', () => {
 
         await page.waitForSelector('#basic .ant-form-item-explain div');
         const explains = await page.$$eval('#basic .ant-form-item-explain div', divs => divs.map(item => item.textContent));
-        const explain = 'The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;).';
+        const explain = passwordFormatError;
         await expect(_.includes(explains, explain)).toBeTruthy();
 
     });
@@ -97,7 +96,7 @@ describe('resetPassword', () => {
         await page.type('#basic_newPassword2', newPassword + 1);
 
         const explains = await page.$$eval('#basic .ant-form-item-explain div', divs => divs.map(item => item.textContent));
-        const explain = 'The two passwords that you entered do not match!';
+        const explain = twoPasswordNotMatch;
         await expect(_.includes(explains, explain)).toBeTruthy();
     });
 
@@ -108,9 +107,10 @@ describe('resetPassword', () => {
         await page.type('#basic_newPassword2', oldPassword);
 
         const explains = await page.$$eval('#basic .ant-form-item-explain div', divs => divs.map(item => item.textContent));
-        const explain = 'New password can not be the same as the old password';
+        const explain = sameAsOldPassword;
         await expect(_.includes(explains, explain)).toBeTruthy();
     })
+
     it('Reset new password and login back with new password', async () => {
         await clearInput(page, '#basic_password');
         await page.type('#basic_password', oldPassword);
@@ -120,20 +120,14 @@ describe('resetPassword', () => {
         await page.type('#basic_newPassword2', newPassword);
         await page.click('#reset_password_modal_submit');
         await page.waitForResponse(`${serverUrl}/users/password`);
-        const isSuccess = await checkErrorMessage(page, 'Reset password successfully');
+        const isSuccess = await checkErrorMessage(page, passwordSuccessMessage);
         await expect(isSuccess).toBeTruthy();
-        await page.screenshot({path:'C:\\Users\\combo\\projects\\VRE-portal\\portal\\src\\Test\\Log\\resetPassword\\screenShot\\logout.png'})
+        await page.screenshot({ path: 'C:\\Users\\combo\\projects\\VRE-portal\\portal\\src\\Test\\Log\\resetPassword\\screenShot\\logout.png' })
     })
     logout(it, 'logout after submit form', getPage);
     login(it, getPage, username, newPassword);
     it(`change password back`, async () => {
-        await page.click('#header_username');
-        await page.waitForSelector('#header_reset_password');
-        await page.click('#header_reset_password');
-        await page.waitForSelector('div.ant-modal-content .ant-modal-title');
-        const title = await page.$eval('div.ant-modal-content .ant-modal-title', div => div.textContent);
-        await expect(title).toMatch('Reset Password');
-
+        await openResetModal(page);
         const usernameDom = await page.$eval('#basic_username', input => input.value);
         await expect(usernameDom).toMatch(username);
         await clearInput(page, '#basic_password');
@@ -144,19 +138,13 @@ describe('resetPassword', () => {
         await page.type('#basic_newPassword2', oldPassword);
         await page.click('#reset_password_modal_submit');
         await page.waitForResponse(`${serverUrl}/users/password`);
-        const isSuccess = await checkErrorMessage(page, 'Reset password successfully');
+        const isSuccess = await checkErrorMessage(page, passwordSuccessMessage);
         await expect(isSuccess).toBeTruthy();
-    }); */
+    });
     it(`test invalid password`, async () => {
-        await page.waitForSelector('#header_username',{timeout:15*1000});
-        await page.click('#header_username');
-        await page.waitForSelector('#header_reset_password');
-        await page.click('#header_reset_password');
-        await page.waitForSelector('div.ant-modal-content .ant-modal-title');
-        const title = await page.$eval('div.ant-modal-content .ant-modal-title', div => div.textContent);
-        await expect(title).toMatch('Reset Password');
+        await openResetModal(page);
         await inValidTest(page, oldPassword, invalidTestcases);
-        const  cancelBtn = await page.waitForSelector('#reset_password_modal_cancel');
+        const cancelBtn = await page.waitForSelector('#reset_password_modal_cancel');
         cancelBtn.click();
     })
     logout(it, 'logout after testing invalid password', getPage);
@@ -164,3 +152,20 @@ describe('resetPassword', () => {
         await validTest(page, username, oldPassword, validTestcases);
     })
 })
+
+async function openResetModal(page) {
+    const headerUsernameBtn = await page.waitForSelector('#header_username');
+    if (headerUsernameBtn) {
+        await page.$eval("#header_username", ele => { ele.click() })
+    }
+    //await headerUsernameBtn.click();
+    const resetPasswordBtn = await page.waitForSelector('#header_reset_password');
+    if (resetPasswordBtn) {
+        await page.$eval("#header_reset_password", ele => { ele.click() })
+    }
+    //await page.click('#header_reset_password');
+    await page.waitForSelector('div.ant-modal-content .ant-modal-title');
+    const title = await page.$eval('div.ant-modal-content .ant-modal-title', div => div.textContent);
+    await expect(title).toMatch('Reset Password');
+    await page.$$eval('.anticon-eye-invisible', (eles) => { eles.forEach(item => { item.click() }) });
+}

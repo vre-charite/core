@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { StandardLayout } from '../../Components/Layout';
-import FilePanel from '../../Components/Layout/FilePanel';
 import { message } from 'antd';
 import { datasetRoutes as routes } from '../../Routes/index';
 import {
@@ -9,15 +9,49 @@ import {
   Route,
   Redirect,
   useParams,
+  useLocation,
 } from 'react-router-dom';
 import ToolBar from './Components/ToolBar';
-import { getUserOnProjectAPI } from '../../APIs';
+import { getUserOnProjectAPI, getProjectInfoAPI } from '../../APIs';
 import { connect } from 'react-redux';
 import { protectedRoutes } from '../../Utility';
 import roleMap from '../../Utility/project-roles.json';
+import {
+  triggerEvent,
+  setCurrentProjectProfile,
+  setCurrentProjectManifest,
+} from '../../Redux/actions';
 
 import _ from 'lodash';
 function Dataset(props) {
+  const { pathname } = useLocation();
+  const project = useSelector((state) => state.project);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  useEffect(() => {
+    const { params } = props.match;
+    if (params.datasetId) {
+      getProjectInfoAPI(params.datasetId).then((res) => {
+        if (res.status === 200 && res.data && res.data.code === 200) {
+          const currentDataset = res.data.result;
+          dispatch(setCurrentProjectProfile(currentDataset));
+          dispatch(
+            setCurrentProjectManifest({
+              tags: currentDataset && currentDataset.systemTags,
+            }),
+          );
+        }
+      });
+    }
+  }, []);
+  useEffect(() => {
+    if (project.profile) {
+      dispatch(triggerEvent('LOAD_COPY_LIST'));
+      dispatch(triggerEvent('LOAD_DELETED_LIST'));
+    }
+  }, [project.profile]);
   const {
     match: { path, params },
     containersPermission,
@@ -26,7 +60,6 @@ function Dataset(props) {
   const [userListOnDataset, setUserListOnDataset] = useState(null);
 
   const rolesDetail = [];
-
   for (const key in roleMap) {
     rolesDetail.push({
       value: roleMap[key] && roleMap[key].value,
@@ -63,7 +96,7 @@ function Dataset(props) {
     },
   };
   return (
-    <StandardLayout {...config} rightContent={<ToolBar />}>
+    <StandardLayout {...config} leftContent={<ToolBar />}>
       <Switch>
         {routes.map((item) => (
           <Route
@@ -102,7 +135,6 @@ function Dataset(props) {
         ))}
         <Redirect to="/error/404" />
       </Switch>
-      <FilePanel />
     </StandardLayout>
   );
 }

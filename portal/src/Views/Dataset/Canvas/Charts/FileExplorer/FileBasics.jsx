@@ -4,7 +4,7 @@ import FileTags from './FileTags';
 import { getFileSize, timeConvert } from '../../../../../Utility';
 
 function FileBasics(props) {
-  const { record } = props;
+  const { record,panelKey } = props;
   return (
     <div style={{ paddingBottom: '16px' }}>
       {/* <Title level={5}>Basic information</Title> */}
@@ -31,6 +31,7 @@ function FileBasics(props) {
         </Descriptions.Item>
         <Descriptions.Item>
           <FileTags
+            panelKey={panelKey}
             key={record.guid}
             tags={record.tags || []}
             pid={props.pid}

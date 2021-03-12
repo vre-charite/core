@@ -4,11 +4,11 @@ from flask_cors import CORS
 from config import ConfigClass
 from flask_executor import Executor
 from flask_jwt import JWT,  JWTError
+from flask_sqlalchemy import SQLAlchemy
 import jwt as pyjwt
 import importlib
 import json
 from services.logger_services.logger_factory_service import SrvLoggerFactory
-from app.db import db
 
 # from hdfs import InsecureClient
 # from hdfs.ext.kerberos import KerberosClient
@@ -21,11 +21,16 @@ from app.db import db
 # hdfs_client = InsecureClient(ConfigClass.HDFS_DATANODE, user=ConfigClass.HDFS_USER)
 # hdfs_client = KerberosClient(url=ConfigClass.HDFS_DATANODE, proxy=ConfigClass.HDFS_USER)
 
+def create_db(app):
+    db = SQLAlchemy()
+    db.init_app(app)
+    return db
+
 executor = Executor()
 app = Flask(__name__, static_folder="../build/static",
             template_folder="../build")
-
-
+app.config['SQLALCHEMY_DATABASE_URI'] = ConfigClass.SQLALCHEMY_DATABASE_URI
+db = create_db(app)
 
 def create_app(extra_config_settings={}):
     # initialize app and config app
@@ -40,7 +45,6 @@ def create_app(extra_config_settings={}):
 
     # initialize flask executor
     executor.init_app(app)
-    db.init_app(app)
 
     # dynamic add the dataset module by the config we set
     for apis in ConfigClass.api_modules:

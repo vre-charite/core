@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { Card, Button } from 'antd';
+import { Card, Button, Row, Col } from 'antd';
 import styles from './index.module.scss';
 import {
   FullscreenOutlined,
   DownloadOutlined,
   DragOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 
 export default class BasicCard extends Component {
@@ -26,11 +27,36 @@ export default class BasicCard extends Component {
 
   render() {
     const { exportable, expandable, content, title, defaultSize } = this.props;
-
+    const cardTitle = <span className={styles.cardTitle}>{title}</span>;
+    const fileStreamTitle = (
+      <div>
+        <span className={styles.fileStreamTitle}>{title}</span>
+        <span style={{ margin: '0 26px', color: '#595959' }}>|</span>
+        <div
+          style={{ display: 'inline-block', cursor: 'pointer' }}
+          onClick={(e) => {
+            if (content.props && content.props.onExpand) {
+              content.props.onExpand();
+            }
+          }}
+        >
+          <SearchOutlined style={{ color: '#595959' }} />
+          <span style={{ marginLeft: '10px', color: '#595959' }}>
+            Advanced Search
+          </span>
+        </div>
+      </div>
+    );
     return (
       <Card
         className={styles.basic}
-        title={title}
+        title={
+          title === 'Recent File Stream' ||
+          title === 'Contributor Statistics' ||
+          title === 'Collaborator Statistics'
+            ? fileStreamTitle
+            : cardTitle
+        }
         size="small"
         bordered="false"
         extra={

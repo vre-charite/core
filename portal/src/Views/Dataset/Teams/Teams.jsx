@@ -16,7 +16,7 @@ import {
   Divider,
 } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { DownOutlined } from '@ant-design/icons';
+import { DownOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import AddUserModal from './Components/AddUserModal';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
@@ -33,9 +33,11 @@ import {
 } from '../../../Utility';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
 import { withCurrentProject, formatRole } from '../../../Utility';
-import SearchTable from '../../../Components/Table/SearchTable';
+import PlatformUsersTable from '../../../Components/Table/PlatformUsersTable';
 import { withTranslation } from 'react-i18next';
 import InvitationTable from '../../../Components/Table/InvitationTable';
+import CanvasPageHeader from '../Canvas/PageHeader/CanvasPageHeader';
+import styles from './index.module.scss';
 
 const { Content } = Layout;
 const { TabPane } = Tabs;
@@ -349,6 +351,7 @@ class Teams extends Component {
         key: 'name',
         sorter: true,
         searchKey: 'name',
+        width: 200,
       },
       {
         title: 'Email',
@@ -408,7 +411,7 @@ class Teams extends Component {
             record.role !== 'admin'
           )
             isEnable = true;
-            /* eslint-disable */
+          /* eslint-disable */
           return (
             isEnable && (
               <Space>
@@ -434,22 +437,20 @@ class Teams extends Component {
                     </a>
                   </Dropdown>
                 )}
-                <Divider type="vertical" />({/* eslint-disable-next-line */}
-                <a
+                <Divider type="vertical" />
+                <DeleteOutlined
+                  style={{ color: '#ff4d4f' }}
                   onClick={() => {
                     this.confirmModal(record.name, record.permission, 'delete');
                   }}
-                >
-                  Remove
-                </a>
-                )
+                />
               </Space>
             )
           );
         },
       },
     ];
-/* eslint-enable */
+    /* eslint-enable */
     const routes = [
       {
         path: '/landing',
@@ -498,50 +499,29 @@ class Teams extends Component {
     return (
       <>
         <Content className={'content'}>
+          <CanvasPageHeader />
           <Row style={{ paddingBottom: '10px' }}>
             <Col
               span={24}
               style={{
                 paddingTop: '10px',
+                marginTop: 30,
               }}
             >
-              <PageHeader
-                ghost={false}
+              <Card
                 style={{
-                  border: '1px solid rgb(235, 237, 240)',
-                  width: '-webkit-fill-available',
-                  marginTop: '10px',
-                  marginBottom: '25px',
+                  marginBottom: '20px',
+                  borderRadius: 8,
+                  boxShadow: '0px 1px 7px #0000001a',
                 }}
-                title={
-                  <span
-                    style={{
-                      maxWidth: '1000px',
-                      display: 'inline-block',
-                      verticalAlign: 'bottom',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    Project: {projectName}
-                  </span>
-                }
-                subTitle={`Your role is ${role}.`}
-                breadcrumb={{ routes, itemRender }}
-                extra={[
-                  <Button
-                    type="primary"
-                    onClick={this.showAddUserModal}
-                    className="mb-2"
-                  >
-                    Add Member
-                  </Button>,
-                ]}
-              />
-              <Card style={{ marginBottom: '20px' }}>
-                <Tabs onChange={this.callback} type="card">
+              >
+                <Tabs
+                  onChange={this.callback}
+                  style={{ marginTop: -20 }}
+                  className={styles.tab}
+                >
                   <TabPane tab="Members" key="users">
-                    <SearchTable
+                    <PlatformUsersTable
                       dataSource={this.props.userListOnDataset}
                       columns={columns}
                       totalItem={this.state.total}
@@ -565,6 +545,21 @@ class Teams extends Component {
                     />
                   </TabPane>
                 </Tabs>
+                <Button
+                  type="primary"
+                  onClick={this.showAddUserModal}
+                  className="mb-2"
+                  icon={<PlusOutlined />}
+                  style={{
+                    position: 'absolute',
+                    right: 10,
+                    top: 8,
+                    borderRadius: 6,
+                    padding: '0 20px',
+                  }}
+                >
+                  Add Member
+                </Button>
               </Card>
             </Col>
           </Row>

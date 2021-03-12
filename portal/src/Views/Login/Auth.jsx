@@ -4,10 +4,9 @@ import { Button, Modal, notification, Alert } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { instanceOf } from 'prop-types';
 import { withCookies, Cookies } from 'react-cookie';
-import { axios } from '../../APIs/config';
 import styles from './index.module.scss';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
-import { withRouter } from 'react-router-dom';
+import { withRouter, Redirect } from 'react-router-dom';
 import { connect } from 'react-redux';
 import {
   AddDatasetCreator,
@@ -25,10 +24,12 @@ import {
 import { getDatasetsAPI, listAllContainersPermission } from '../../APIs';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import CoookiesDrawer from './CookiesDrawer';
-import { withTranslation } from 'react-i18next';
-import { keycloak } from '../../Service/keycloak';
+import { login as keycloakLogin } from '../../Utility';
 import { version } from '../../../package.json';
-
+import { tokenManager } from '../../Service/tokenManager';
+const { detect } = require('detect-browser');
+const browser = detect();
+const isSafari = browser?.name === 'safari';
 const { confirm } = Modal;
 
 class Auth extends Component {
@@ -131,16 +132,13 @@ class Auth extends Component {
 
     this.setState({ btnLoading: true });
 
-    keycloak
-      .login()
-      .then((res) => {})
-      .catch((err) => {
-        if (err.response) {
-          const errorMessager = new ErrorMessager(namespace.login.auth);
-          errorMessager.triggerMsg(err.response.status);
-          this.setState({ btnLoading: false });
-        }
-      });
+    keycloakLogin().catch((err) => {
+      if (err.response) {
+        const errorMessager = new ErrorMessager(namespace.login.auth);
+        errorMessager.triggerMsg(err.response.status);
+        this.setState({ btnLoading: false });
+      }
+    });
   };
 
   initApis = async (username) => {
@@ -197,6 +195,13 @@ class Auth extends Component {
   };
 
   render() {
+    if (tokenManager.getCookie('sessionId')) {
+      if (isSafari) {
+        window.location.href = '/vre/landing';
+      } else {
+        return <Redirect to="/landing" />;
+      }
+    }
     return (
       <>
         <Alert
@@ -346,22 +351,20 @@ class Auth extends Component {
   }
 }
 
-export default withTranslation('formErrorMessages')(
-  withRouter(
-    withCookies(
-      connect((state) => ({ uploadList: state.uploadList }), {
-        AddDatasetCreator,
-        setUserListCreator,
-        setTagsCreator,
-        setMetadatasCreator,
-        setPersonalDatasetIdCreator,
-        setContainersPermissionCreator,
-        setUserRoleCreator,
-        setRefreshModal,
-        setIsLoginCreator,
-        setUsernameCreator,
-        setIsReleaseNoteShownCreator,
-      })(Auth),
-    ),
+export default withRouter(
+  withCookies(
+    connect((state) => ({ uploadList: state.uploadList }), {
+      AddDatasetCreator,
+      setUserListCreator,
+      setTagsCreator,
+      setMetadatasCreator,
+      setPersonalDatasetIdCreator,
+      setContainersPermissionCreator,
+      setUserRoleCreator,
+      setRefreshModal,
+      setIsLoginCreator,
+      setUsernameCreator,
+      setIsReleaseNoteShownCreator,
+    })(Auth),
   ),
 );

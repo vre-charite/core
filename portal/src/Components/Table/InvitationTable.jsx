@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import SearchTable from './SearchTable';
+import PlatformUsersTable from './PlatformUsersTable';
 import { getInvitationsAPI } from '../../APIs';
 import { timeConvert, partialString } from '../../Utility';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
@@ -26,7 +26,7 @@ function InvitationTable(props) {
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [searchText, setSearchText] = useState([]);
-  const allProjects = useSelector((state) => state.datasetList[0]?.datasetList);
+  const allProjects = useSelector((state) => state.containersPermission);
 
   useEffect(() => {
     if (props.projectId) {
@@ -40,7 +40,7 @@ function InvitationTable(props) {
   useEffect(() => {
     fetchInvitations();
     // eslint-disable-next-line
-  }, [filters]);
+  }, [filters, props.totalInvitations]);
 
   const fetchInvitations = () => {
     getInvitationsAPI(filters)
@@ -70,20 +70,6 @@ function InvitationTable(props) {
       newFilters.pageSize = pagination.pageSize;
     }
 
-    //Sorters
-    if (sorter) {
-      if (sorter.columnKey) {
-        if (sorter.columnKey === 'email') {
-          //This is a comproimsing soution to sort emails.
-          // Might need BE updates later
-          newFilters.orderBy = 'invitation_detail';
-        } else {
-          newFilters.orderBy = sorter.columnKey;
-        }
-      }
-      newFilters.orderType = sorter.order === 'ascend' ? 'asc' : 'desc';
-    }
-
     //Search
     let searchText = [];
 
@@ -107,6 +93,28 @@ function InvitationTable(props) {
       newFilters.filters['invited_by'] = filterParam.invited_by[0];
     } else {
       delete newFilters.filters['invited_by'];
+    }
+
+    //Sorters
+    if (sorter && sorter.order) {
+      if (sorter.columnKey) {
+        if (sorter.columnKey === 'email') {
+          //This is a comproimsing soution to sort emails.
+          // Might need BE updates later
+          newFilters.orderBy = 'invitation_detail';
+        } else {
+          newFilters.orderBy = sorter.columnKey;
+        }
+      }
+      newFilters.orderType = sorter.order === 'ascend' ? 'asc' : 'desc';
+    }
+
+    if (sorter && !sorter.order) {
+      newFilters = {
+        ...newFilters,
+        orderBy: 'create_timestamp',
+        orderType: 'desc',
+      }
     }
 
     setFilters(newFilters);
@@ -193,14 +201,11 @@ function InvitationTable(props) {
       key: 'project',
       width: '10%',
       render: (text) => {
-        const string = _.find(allProjects, (p) => p.id === parseInt(text))?.name || ' ';
+        const string =
+          _.find(allProjects, (p) => p.id === parseInt(text))?.name || 'No Project Assigned ';
 
         if (string.length < 20) {
-          return (
-            <span>
-              {string}
-            </span>
-          );
+          return <span>{string}</span>;
         } else {
           return partialString(string, 20, true);
         }
@@ -209,11 +214,13 @@ function InvitationTable(props) {
   }
   const getExpired = (record) => {
     const current = moment();
-    const isExpired = moment(timeConvert(record.expiryTimestamp, 'datetime')).isBefore(current);
+    const isExpired = moment(
+      timeConvert(record.expiryTimestamp, 'datetime'),
+    ).isBefore(current);
     return isExpired ? 'disabled' : ' ';
   };
   return (
-    <SearchTable
+    <PlatformUsersTable
       columns={invitationColumns}
       onChange={onChange}
       handleReset={handleReset}

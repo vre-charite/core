@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Card, Button, Layout, Result } from 'antd';
 
 import styles from './index.module.scss';
@@ -17,7 +16,7 @@ function ActivateUser(props) {
             subTitle={<>You can now login with the new password.</>}
             extra={[
               <Button type="primary" key="home">
-                <Link to="/">Back to Home Page</Link>
+                <a href="/vre">Back to Home Page</a>
               </Button>,
             ]}
           />

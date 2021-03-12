@@ -495,6 +495,91 @@ function importManifestAPI(manifest) {
   });
 }
 
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1006
+ * startDate: 2021-02-22
+ * endDate:2021-02-22
+ * version: 1614027879010
+ * page: by default 0, return the newest
+ * pageSize: by default 10
+ * order: by default 'desc' by time
+ * @param {{projectCode:string,startDate:string,endDate:string,version:string,page:string,pageSize:string,order:'asc'|'desc'}} param0
+ */
+function getAnnouncementApi({
+  projectCode,
+  startDate,
+  endDate,
+  version,
+  page,
+  pageSize,
+  order,
+}) {
+  return serverAxios({
+    url: `/v1/announcements`,
+    params: {
+      project_code: projectCode,
+      start_date: startDate,
+      end_date: endDate,
+      version,
+      page,
+      page_size: pageSize,
+      order: order || 'desc',
+    },
+  });
+}
+
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1006
+ * @param {{projectCode:string,content:string}} param0
+ */
+function addAnnouncementApi({ projectCode, content }) {
+  return serverAxios({
+    method: 'post',
+    url: `/v1/announcements`,
+    data: {
+      project_code: projectCode,
+      content,
+    },
+  });
+}
+
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1006
+ * get user's announcement information. So that we can know which announcement the user has read.
+ * @param {string} username
+ */
+function getUserAnnouncementApi(username) {
+  return serverAxios({
+    url: `/v1/users/${username}`,
+  });
+}
+
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1006
+ * update the user's announcement information. Add the read announcement id to it.
+ */
+function putUserAnnouncementApi(username, projectCode, announcementId) {
+  return serverAxios({
+    method: 'put',
+    url: `/v1/users/${username}`,
+    data: { [`announcement_${projectCode}`]: announcementId },
+  });
+}
+
+/**
+ * @param {{projectId:string,query:object}} param0
+ */
+function getAuditLogsApi(projectId, paginationParams, query) {
+  return serverAxios({
+    method: 'get',
+    url: `/v1/audit-logs/${projectId}`,
+    params: {
+      ...paginationParams,
+      query,
+    },
+  });
+}
+
 export {
   getDatasetsAPI,
   createProjectAPI,
@@ -535,5 +620,10 @@ export {
   attachManifest,
   importManifestAPI,
   getManifestById,
+  addAnnouncementApi,
+  getAuditLogsApi,
   updateFileManifestAPI,
+  getAnnouncementApi,
+  getUserAnnouncementApi,
+  putUserAnnouncementApi,
 };

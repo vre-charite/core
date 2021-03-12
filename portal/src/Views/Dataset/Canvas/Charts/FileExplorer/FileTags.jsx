@@ -203,7 +203,7 @@ class FileTags extends Component {
                 onPressEnter={this.handleInputConfirm}
               />
             )}
-            {!inputVisible && (
+            {!inputVisible && (this.props.panelKey && !this.props.panelKey.includes("trash")) && (
               <Tag onClick={this.showInput} className="site-tag-plus">
                 <PlusOutlined /> New Tag
               </Tag>
@@ -221,7 +221,7 @@ class FileTags extends Component {
                 {tag}
               </Tag>
             ))}
-            {tags.length !== 0 && (
+            {tags.length !== 0 &&  (
               <Button
                 type="link"
                 style={{ padding: '0px' }}
@@ -255,7 +255,7 @@ class FileTags extends Component {
                 {tag}
               </Tag>
             ))}
-            {tags.length !== 0 && (
+            {tags.length !== 0 && (this.props.panelKey && !this.props.panelKey.includes("trash")) && (
               <Button
                 type="link"
                 style={{ padding: '0px' }}

@@ -34,6 +34,8 @@ class ConfigClass(object):
     # CATALOGUING_SERVICE = "http://cataloguing:5064/v1/"
     # DATA_UTILITY_SERVICE = "http://10.3.7.239:5063/v1/"
 
+    PROVENANCE_SERVICE = "http://provenance.utility:5077/v1/"
+
 
     # KONG API Gateway
     KONG_BASE = "http://kong-proxy.utility:8000/vre/"
@@ -42,6 +44,7 @@ class ConfigClass(object):
     JWT_AUTH_URL_RULE = None
 
     # Email Notify Service
+    NOTIFY_SERVICE = "http://notification.utility:5065"
     EMAIL_SERVICE = "http://notification.utility:5065/v1/email"
     # EMAIL_SERVICE = "http://10.3.9.240:5065/v1/email"
     EMAIL_DEFAULT_NOTIFIER = "notification@vre"

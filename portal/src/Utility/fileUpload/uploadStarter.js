@@ -29,6 +29,7 @@ const uploadStarter = (data, q) => {
       projectName: data.projectName,
       generateID: data.gid ? data.gid : null,
       projectCode: data.projectCode,
+      createdTime: Date.now(),
     };
   });
   appendUploadListDispatcher(fileActions);
@@ -42,6 +43,7 @@ const uploadStarter = (data, q) => {
       projectCode: data.projectCode,
       tags: data.tags,
       manifest: data.manifest,
+      createdTime: Date.now(),
     })),
   );
   q.error((err, task) => {

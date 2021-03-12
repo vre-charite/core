@@ -8,6 +8,7 @@ import {
 import { useCurrentProject } from '../../../../../../../Utility';
 import { validateManifestName } from '../../Utils/FormatValidators';
 import i18n from '../../../../../../../i18n';
+import styles from '../../../../index.module.scss'
 function CreateManifest(props) {
   const [newManifestName, setNewManifestName] = useState('');
   const [currentDataset] = useCurrentProject();
@@ -34,7 +35,7 @@ function CreateManifest(props) {
             Manifest Name
           </span>
           <Input
-            style={{ width: 150 }}
+            style={{ width: 150,borderRadius:6 }}
             value={newManifestName}
             onChange={(e) => {
               setNewManifestName(e.target.value);
@@ -69,6 +70,7 @@ function CreateManifest(props) {
         {createdStep === 1 ? (
           <Button
             type="primary"
+            className={styles.button}
             onClick={(e) => {
               const { valid, err } = validateManifestName(
                 newManifestName,

@@ -99,7 +99,7 @@ function Login() {
                 Submit
               </Button>
               <Button disabled={loading}>
-                <Link to="/">Back to Home Page</Link>
+                <a href="/vre">Back to Home Page</a>
               </Button>
             </Form.Item>
           </Form>

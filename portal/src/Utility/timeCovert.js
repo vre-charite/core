@@ -3,14 +3,15 @@ import moment from 'moment';
 const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const convertUTCDateToLocalDate = (time) => {
-  const date = new Date(time);
-  const a = date.getTime();
-  const b = date.getTimezoneOffset() * 60 * 1000;
+    const date = new Date(time);
+    const a = date.getTime();
+    const b = date.getTimezoneOffset() * 60 * 1000;
 
-  const c = new Date(a - b);
+    const c = new Date(a - b);
 
-  return c;
+    return c;
 };
+
 
 const timeConvert = (time, type) => {
   time = time && time.replace(/ /g,"T");

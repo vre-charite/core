@@ -2,18 +2,16 @@ import React, { useEffect } from 'react';
 import { Layout } from 'antd';
 import AppHeader from './Header';
 import Footer from './Footer';
-
-import RightSlider from './RightSlider';
+import LeftSider from './LeftSider';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import {} from '../../Utility';
 
 const { Content } = Layout;
 function StandardLayout(props) {
   const {
     observationVars = [],
     initFunc = () => {},
-    rightContent,
+    leftContent,
     children,
   } = props;
 
@@ -27,11 +25,11 @@ function StandardLayout(props) {
       <AppHeader />
       <Content>
         <Layout>
-          <Layout>
+          <Layout style={{ marginLeft: '50px' }}>
             {children}
             <Footer />
           </Layout>
-          {rightContent && <RightSlider>{rightContent}</RightSlider>}
+          {leftContent && <LeftSider>{leftContent}</LeftSider>}
         </Layout>
       </Content>
     </Layout>

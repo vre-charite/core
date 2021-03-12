@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { List } from 'antd';
 import {
   MailOutlined,
@@ -11,7 +10,6 @@ import {
 import { Link } from 'react-router-dom';
 import FileExplorer from './Charts/FileExplorer/FileExplorer';
 import Description from './Charts/Description/Description';
-import Info from './Cards/Info';
 import FileStats from './Cards/FileStats';
 import UserStats from './Cards/UserStats';
 import FileStatModal from '../Canvas/Modals/FileStatModal';
@@ -23,14 +21,11 @@ const getcard = (card, data, actions, state, handleExpand) => {
     case 'text':
       res = <Description content={card.content} />;
       break;
-    case 'info':
-      res = <Info />;
-      break;
     case 'fileStats':
-      res = <FileStats />;
+      res = <FileStats projectRole={state.currentRole} />;
       break;
     case 'superset':
-      res = <Superset />
+      res = <Superset />;
       break;
     case 'userStats':
       const onExpand = () =>

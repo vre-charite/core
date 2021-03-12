@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   EditOutlined,
   DeleteOutlined,
-  DownloadOutlined,
+  DownloadOutlined,SaveOutlined,RedoOutlined,ExportOutlined
 } from '@ant-design/icons';
 import { Button, Input, Modal, message } from 'antd';
 import { useCurrentProject } from '../../../../../../../Utility';
@@ -10,6 +10,7 @@ import { deleteManifest, updateManifest } from '../../../../../../../APIs';
 import FileManifestExistentTable from './FileManifestExistentTable';
 import { validateManifestName } from '../../Utils/FormatValidators';
 import i18n from '../../../../../../../i18n';
+import styles from '../../../../index.module.scss';
 function FileManifestItem(props) {
   const [renameManifest, setRenameManifest] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -65,16 +66,12 @@ function FileManifestItem(props) {
   );
 
   return (
-    <div
-      key={mItem.id}
-      style={{ padding: 40, borderBottom: '5px solid #f0f2f5' }}
-    >
+    <div key={mItem.id} className={styles.manifestList}>
       {renameManifest ? (
         <>
           <Input
-            width={200}
             value={renameStr}
-            style={{ width: 200, display: 'inline-block' }}
+            style={{ width:145, display: 'inline-block',marginLeft:28 }}
             onChange={(e) => {
               setRenameStr(e.target.value);
             }}
@@ -82,6 +79,7 @@ function FileManifestItem(props) {
           <div style={{ display: 'inline-block' }}>
             <Button
               style={{ marginLeft: 60 }}
+              
               type="primary"
               onClick={async (e) => {
                 const { valid, err } = validateManifestName(
@@ -102,9 +100,11 @@ function FileManifestItem(props) {
                 setLoadingRename(false);
                 setRenameManifest(false);
               }}
+              className={styles.button}
               loading={loadingRename}
+              icon={<SaveOutlined />}
             >
-              Rename
+               Save
             </Button>
             <Button
               type="link"
@@ -118,19 +118,16 @@ function FileManifestItem(props) {
         </>
       ) : (
         <>
-          <b>{mItem.name}</b>
+          <b style={{marginLeft:24}}>{mItem.name}</b>
           <div
             style={{
               display: 'inline-block',
               marginLeft: 20,
             }}
           >
-            {/* <Button type="link" icon={<ExportOutlined />} onClick={(e) => {}}>
-            Export To Template
-          </Button> */}
             <Button
               type="link"
-              icon={<EditOutlined />}
+              icon={<RedoOutlined />}
               style={{ color: 'rgba(0,0,0,0.65)' }}
               onClick={(e) => {
                 setRenameManifest(true);
@@ -153,7 +150,7 @@ function FileManifestItem(props) {
       )}
       <Button
         type="link"
-        icon={<DownloadOutlined />}
+        icon={<ExportOutlined />}
         style={{ color: 'rgba(0,0,0,0.65)' }}
         onClick={(e) => {
           exportJson();

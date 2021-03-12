@@ -60,11 +60,6 @@ export default function (props) {
 
       let label = null;
 
-      // let createdTime =
-      //   attributes &&
-      //   attributes.createTime &&
-      //   moment(attributes.createTime * 1000).format('YYYY-MM-DD HH:mm:ss');
-
       // hide time for file node
       let createdTime = null;
 
@@ -75,13 +70,13 @@ export default function (props) {
       let fileType = textArr && pathNameMap(textArr);
 
       let isCurrentNode = attributes.name === record.name;
-      let pipelineImg = null;
+      let pipelineImg = '/vre/operation.svg';
 
       if (nodeInfo.typeName === 'Process') {
         textArr = displayText.split(':');
         label = textArr && textArr.length > 1 && textArr[1];
 
-        if (label === 'dicom_edit') pipelineImg = '/vre//path.svg';
+        if (label === 'dicom_edit') pipelineImg = '/vre/path.svg';
         if (label === 'data_transfer') pipelineImg = '/vre/copy2.svg';
         if (label === 'data_delete') pipelineImg = '/vre/delete2.svg';
 

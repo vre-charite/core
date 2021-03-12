@@ -7,7 +7,7 @@ function VirtualFolderFilesDeletePlugin({
   selectedRowKeys,
   selectedRows,
   panelKey,
-  setSelectedRowKeys,
+  clearSelection,
 }) {
   const [modalVisible, setModalVisible] = useState(false);
   const files = selectedRows.map((v) => v.geid);
@@ -29,7 +29,7 @@ function VirtualFolderFilesDeletePlugin({
         setVisible={setModalVisible}
         files={files}
         panelKey={panelKey}
-        setSelectedRowKeys={setSelectedRowKeys}
+        clearSelection={clearSelection}
       />
     </>
   );

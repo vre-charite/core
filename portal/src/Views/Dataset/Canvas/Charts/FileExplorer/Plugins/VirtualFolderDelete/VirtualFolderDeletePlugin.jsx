@@ -5,7 +5,7 @@ import VFolderDeleteModal from './VFolderDeleteModal';
 function VirtualFolderDeletePlugin({
   selectedRows,
   panelKey,
-  setSelectedRowKeys,
+  clearSelection,
   removePanel,
 }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -27,7 +27,7 @@ function VirtualFolderDeletePlugin({
         files={files}
         panelKey={panelKey}
         removePanel={removePanel}
-        setSelectedRowKeys={setSelectedRowKeys}
+        clearSelection={clearSelection}
       />
     </>
   );

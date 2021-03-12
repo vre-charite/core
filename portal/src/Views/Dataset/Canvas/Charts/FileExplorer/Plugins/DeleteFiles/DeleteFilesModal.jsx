@@ -59,10 +59,13 @@ const DeleteFilesModal = ({
       );
 
       if (!isExist) {
-        file.status = 'pending';
+        file.status = 'running';
         file.projectCode = projectCode;
         file.panelKey = panelKey;
-        file.input_file = file.source;
+        file.source = file.input_path;
+        file.updateTimestamp = `${Date.now()}`;
+        file.createdTime = Date.now();
+        delete file.input_path
         allFiles.push(file);
       }
 

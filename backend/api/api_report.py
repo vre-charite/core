@@ -69,8 +69,7 @@ class APIReport(metaclass=MetaAPI):
 
             # send email to uploader
             title = '%s - Your upload report is ready!' % (receiver_name)
-            email_mgr.send(title, report_form,
-                           [receiver_email], "html")
+            email_mgr.send(title, [receiver_email], msg_type="html", content=report_form)
             my_res.set_result('[SUCCEED] Email Upload Report Sent')
             _logger.info('Invitation Saved, Email Sent')
             my_res.set_code(EAPIResponseCode.success)

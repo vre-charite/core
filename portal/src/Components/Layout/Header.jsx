@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Layout, Menu, Button, Modal, Alert } from 'antd';
+import styles from './index.module.scss';
 import {
   ContainerOutlined,
   UserOutlined,
@@ -19,6 +20,7 @@ import ResetPasswordModal from '../Modals/ResetPasswordModal';
 import SupportDrawer from '../Tools/SupportDrawer';
 import { UploadQueueContext } from '../../Context';
 import { logout } from '../../Utility';
+import FilePanel from './FilePanel/FilePanel';
 
 const { confirm } = Modal;
 const { Header } = Layout;
@@ -37,12 +39,25 @@ class AppHeader extends Component {
       showNotifications: [],
       drawer: false,
       selectedKeys: [],
+      projectId: '',
+      projectRole: '',
+      projectCode: '',
     };
   }
 
   componentDidMount() {
     //Update header
     const { params, path } = this.props.match;
+    if (params.datasetId) {
+      const projectRole = this.props.containersPermission.filter(
+        (el) => el.id == params.datasetId,
+      )[0].permission;
+      const projectCode = this.props.containersPermission.filter(
+        (el) => el.id == params.datasetId,
+      )[0].code;
+      this.setState({ projectRole, projectCode });
+    }
+    this.setState({ projectId: params.datasetId });
     if (path === '/landing' || params?.datasetId) {
       this.updatedSelectedKeys('clear');
       this.updatedSelectedKeys('add', 'uploader');
@@ -157,26 +172,29 @@ class AppHeader extends Component {
 
   render() {
     const username = this.props.username;
-
     return (
       <Header
-        className="header"
+        className={styles.siteHeader}
         style={{
           background: 'white',
           boxShadow: '0 0 14px 1px rgba(0, 0, 0, 0.1)',
+          paddingRight: 0,
           position: 'sticky',
           top: '0',
-          zIndex: '100',
+          zIndex: 100,
           width: '100%',
           height: '100%',
         }}
+        id="global_site_header"
       >
-        <Alert
-          message="This release of the VRE is exclusively for testing purposes. The upload of files containing clinical and/or research data of any type is strictly forbidden. By proceeding, you are agreeing to these terms."
-          type="warning"
-          showIcon
-          style={{ margin: '0px -50px' }}
-        />
+        <div style={{ marginLeft: -50 }}>
+          <Alert
+            message="This release of the VRE is exclusively for testing purposes. The upload of files containing clinical and/or research data of any type is strictly forbidden. By proceeding, you are agreeing to these terms."
+            type="warning"
+            showIcon
+            style={{ fontSize: '12px' }}
+          />
+        </div>
         <Menu
           mode="horizontal"
           getPopupContainer={(node) => node.parentNode}
@@ -192,11 +210,14 @@ class AppHeader extends Component {
           }}
           selectedKeys={this.state.selectedKeys}
         >
-          <Menu.Item key="logo" style={{ marginRight: '27px' }}>
+          <Menu.Item
+            key="logo"
+            style={{ marginRight: '27px', borderBottom: 0 }}
+          >
             <Link to="/">
               <img
                 src={require('../../Images/vre-logo.png')}
-                style={{ height: '40px', marginLeft: -30 }}
+                style={{ height: '40px', marginLeft: -45 }}
                 alt="indoc-icon"
               />
             </Link>
@@ -240,7 +261,6 @@ class AppHeader extends Component {
               </Button>
             </Menu.Item>
           </SubMenu>
-
           <Menu.Item
             key="support"
             style={{ float: 'right' }}
@@ -248,6 +268,15 @@ class AppHeader extends Component {
           >
             Support
           </Menu.Item>
+          {this.props.match.params.datasetId && (
+            <Menu.Item style={{ float: 'right', padding: 0 }}>
+              <FilePanel
+                className={styles.filePanel}
+                projectRole={this.state.projectRole}
+                projectCode={this.state.projectCode}
+              />
+            </Menu.Item>
+          )}
         </Menu>
         <ResetPasswordModal
           visible={this.state.modalVisible}
@@ -272,6 +301,7 @@ export default connect(
     uploadIndicator: state.newUploadIndicator,
     isLogin: state.isLogin,
     username: state.username,
+    containersPermission: state.containersPermission,
   }),
   {
     cleanDatasetCreator,

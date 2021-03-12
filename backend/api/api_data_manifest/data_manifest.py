@@ -443,6 +443,8 @@ class APIDataManifest(metaclass=MetaAPI):
                     return api_response.to_dict, api_response.code
                 if attr.type.value == "multiple_choice":
                     if not data[attr.name] in attr.value.split(","):
+                        if not data[attr.name] and attr.optional:
+                            continue
                         api_response.set_result("Invalid attribute value")
                         api_response.set_code(EAPIResponseCode.bad_request)
                         return api_response.to_dict, api_response.code

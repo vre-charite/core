@@ -1,18 +1,24 @@
 import React, { Component } from 'react';
-import { Row, Spin, Col, Modal, Layout, Button, PageHeader } from 'antd';
+import { Row, Spin, Col, Modal, Layout } from 'antd';
 import { withRouter, Link } from 'react-router-dom';
-
 import BasicCard from '../../../Components/Cards/BasicCard';
 import getCard from './getCard';
 import fakeLayout from './fakeLayout';
 import DragArea from './DragArea/DragArea';
+import CanvasPageHeader from './PageHeader/CanvasPageHeader';
 import _ from 'lodash';
 import { connect } from 'react-redux';
-import { AddDatasetCreator, setCurrentProjectProfile } from '../../../Redux/actions';
-import { getChildrenDataset, getProjectInfoAPI } from '../../../APIs';
+import {
+  AddDatasetCreator,
+  setCurrentProjectProfile,
+} from '../../../Redux/actions';
+import {
+  getChildrenDataset,
+  getProjectInfoAPI,
+  getUsersOnDatasetAPI,
+} from '../../../APIs';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
 import { withCurrentProject } from '../../../Utility';
-import userRoles from '../../../Utility/project-roles.json';
 
 const { Content } = Layout;
 
@@ -21,40 +27,35 @@ const defaultLayout = {
   //Admin panel
   admin: {
     lg: [
-      { i: '0', x: 0, y: 0, w: 12, h: 4 },
-      { i: '2', x: 12, y: 0, w: 3, h: 4 },
-      { i: '3', x: 15, y: 0, w: 9, h: 4 },
-      { i: '1', x: 0, y: 7, w: 24, h: 8 },
-      
+      // { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '2', x: 0, y: 0, w: 8, h: 4 },
+      { i: '3', x: 8, y: 0, w: 16, h: 4 },
+      { i: '1', x: 0, y: 7, w: 24, h: 9.5 },
+    ],
+    md: [
+      { i: '2', x: 0, y: 0, w: 10, h: 4 },
+      { i: '3', x: 10, y: 0, w: 14, h: 4 },
+      { i: '1', x: 0, y: 7, w: 24, h: 9.5 },
     ],
     sm: [
-      { i: '0', x: 0, y: 0, w: 12, h: 4 },
-      { i: '2', x: 0, y: 4, w: 3, h: 4 },
-      { i: '3', x: 3, y: 4, w: 9, h: 4 },
-      { i: '1', x: 0, y: 8, w: 24, h: 8 },
-      
-    ],
-  },
-  //Uploader panel
-  uploader: {
-    lg: [
-      { i: '0', x: 0, y: 0, w: 12, h: 4 },
-      { i: '3', x: 15, y: 0, w: 12, h: 4 },
-      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+      // { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '2', x: 0, y: 4, w: 24, h: 2 },
+      { i: '3', x: 0, y: 4, w: 24, h: 4 },
+      { i: '1', x: 0, y: 8, w: 24, h: 9.5 },
     ],
   },
   contributor: {
     lg: [
-      { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '2', x: 0, y: 0, w: 12, h: 4 },
       { i: '3', x: 15, y: 0, w: 12, h: 4 },
-      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+      { i: '1', x: 0, y: 7, w: 24, h: 9.5 },
     ],
   },
   collaborator: {
     lg: [
-      { i: '0', x: 0, y: 0, w: 12, h: 4 },
+      { i: '2', x: 0, y: 0, w: 12, h: 4 },
       { i: '3', x: 15, y: 0, w: 12, h: 4 },
-      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+      { i: '1', x: 0, y: 7, w: 24, h: 9.5 },
     ],
   },
   //Member panel
@@ -62,7 +63,7 @@ const defaultLayout = {
     lg: [
       { i: '0', x: 0, y: 0, w: 12, h: 4 },
       { i: '3', x: 15, y: 0, w: 12, h: 4 },
-      { i: '1', x: 0, y: 7, w: 24, h: 7.5 },
+      { i: '1', x: 0, y: 7, w: 24, h: 9.5 },
     ],
   },
 };
@@ -71,7 +72,6 @@ class Canvas extends Component {
   constructor(props) {
     super(props);
     const datasetId = this.findStudyId();
-
     this.state = {
       children: [],
       currentDataset: datasetId,
@@ -90,7 +90,10 @@ class Canvas extends Component {
       roleIndex: 0, //decides which canvas to display
       uploader: false,
       currentRole: '',
-      datasetName: '',
+      currentProject: '',
+      dataSetId: '',
+      projectUsersInfo: '',
+      pageHeaderExpand: false,
       modalWidth: '95vw',
       currentUser: null,
     };
@@ -101,52 +104,51 @@ class Canvas extends Component {
     return urlArr[urlArr.length - 2];
   }
   componentDidMount() {
-    // this.init();
     this.setState({ currentUser: this.props.username });
-    this.fetchDatasetName();
+    this.fetchDatasetInfo();
     this.updatePermision();
 
-    getProjectInfoAPI(this.props.datasetId)
-      .then((res) => {
-        if (res.status === 200 && res.data && res.data.code === 200) {
-          const currentDataset = res.data.result;
-          this.props.setCurrentProjectProfile(currentDataset);
-        }
-      })
+    // getProjectInfoAPI(this.props.datasetId).then((res) => {
+    //   if (res.status === 200 && res.data && res.data.code === 200) {
+    //     const profile = res.data.result;
+    //     this.props.setCurrentProjectProfile(profile);
+    //   }
+    // });
 
     window.setTimeout(() => {
       window.dispatchEvent(new Event('resize'));
     }, 0);
   }
 
-  init = () => {
-    getChildrenDataset(this.props.datasetId)
-      .then((res) => {
-        this.setState({ children: res.data.result.children });
-      })
-      .catch((err) => {
-        if (err.response) {
-          const errorMessager = new ErrorMessager(
-            namespace.dataset.files.getChildrenDataset,
-          );
-          errorMessager.triggerMsg(err.response.status);
-        }
-        return;
-      });
+  getProjectUsersInfo = async () => {
+    const usersInfo = await getUsersOnDatasetAPI(this.state.dataSetId);
+    if (usersInfo && usersInfo.data && usersInfo.data.result) {
+      this.setState({ projectUsersInfo: usersInfo.data.result });
+    }
   };
 
   componentDidUpdate(prevProps, prevState) {
     let { containersPermission } = this.props;
     if (prevProps.containersPermission !== containersPermission) {
       this.updatePermision();
-      this.fetchDatasetName();
+      this.fetchDatasetInfo();
     }
   }
 
-  fetchDatasetName = () => {
+  fetchDatasetInfo = () => {
     const currentProject = this.props.currentProject;
     if (currentProject) {
-      this.setState({ datasetName: currentProject.name });
+      this.setState(
+        {
+          currentProject,
+          dataSetId: currentProject.id,
+        },
+        () => {
+          if (this.state.currentRole === 'admin') {
+            this.getProjectUsersInfo();
+          }
+        },
+      );
     }
   };
 
@@ -266,7 +268,6 @@ class Canvas extends Component {
     this.setState((state) => {
       return {
         layout: newLayout,
-        // updateCount: state.updateCount + 1,
       };
     });
   };
@@ -307,7 +308,6 @@ class Canvas extends Component {
 
     this.setState((state) => {
       return {
-        // updateCount: state.updateCount + 1,
         cardTypes,
         layout,
       };
@@ -315,11 +315,9 @@ class Canvas extends Component {
   };
 
   showUploaderModal = () => {
-    this.setState(
-      {
-        uploader: true,
-      }
-    );
+    this.setState({
+      uploader: true,
+    });
   };
 
   handleCancelUploader = () => {
@@ -327,6 +325,8 @@ class Canvas extends Component {
   };
 
   render() {
+    let cardContents;
+    let tags = [];
     const {
       data,
       filter,
@@ -335,8 +335,16 @@ class Canvas extends Component {
       modalTitle,
       content,
       cardTypes,
+      projectUsersInfo,
+      currentProject,
+      currentRole,
+      layout,
     } = this.state;
-    let tags = [];
+
+    if (cardTypes[currentRole]) {
+      cardContents = cardTypes[currentRole].filter((el) => el.type !== 'info');
+    }
+
     Object.keys(filter).forEach((key) => {
       let items = filter[key];
       items.forEach((i) =>
@@ -354,7 +362,7 @@ class Canvas extends Component {
       },
       {
         path: 'first',
-        breadcrumbName: this.state.datasetName,
+        breadcrumbName: this.state.dataSetName,
       },
     ];
 
@@ -378,72 +386,25 @@ class Canvas extends Component {
       );
     }
 
-    let currentRole = this.state.currentRole;
-
-    if (currentRole === 'admin') {
-      if (this.props.role === 'admin') {
-        currentRole = 'Platform Administrator';
-      } else {
-        currentRole = 'Project Administrator';
-      }
-    } else {
-      currentRole =
-        userRoles && userRoles[currentRole] && userRoles[currentRole]['label'];
-    }
-
     return (
       <>
         {loading ? (
           <Spin />
         ) : (
           <>
-            <Content className="content">
+            <Content className="content" style={{ letterSpacing: '0.4px' }}>
               <Row style={{ paddingBottom: '10px' }}>
-                <Col
-                  span={24}
-                  style={{
-                    paddingTop: '10px',
-                  }}
-                >
-                  <Row>
-                    <PageHeader
-                      ghost={false}
-                      style={{
-                        border: '1px solid rgb(235, 237, 240)',
-                        width: '100%',
-                        marginTop: '10px',
-                      }}
-                      title={
-                        <span
-                          style={{
-                            maxWidth: '1000px',
-                            display: 'inline-block',
-                            verticalAlign: 'bottom',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          Project: {this.state.datasetName}
-                        </span>
-                      }
-                      subTitle={`Your role is ${currentRole}.`}
-                      extra={[
-                        <Button type="" onClick={this.handleResetLayout}>
-                          Reset Layout
-                        </Button>,
-                      ]}
-                      breadcrumb={{ routes, itemRender }}
-                    />
-                  </Row>
+                <Col span={24}>
+                  <CanvasPageHeader />
                   <DragArea
                     key={this.state.updateCount}
                     onLayoutChange={this.onLayoutChange}
-                    layout={this.state.layout[this.state.currentRole]}
+                    layout={this.state.layout[currentRole]}
                     handleSaveLayout={this.handleSaveLayout}
                     handleResetLayout={this.handleResetLayout}
                   >
-                    {cardTypes[this.state.currentRole] &&
-                      cardTypes[this.state.currentRole].map((card) => {
+                    {cardContents &&
+                      cardContents.map((card) => {
                         return (
                           <div key={card.key}>
                             <BasicCard
@@ -462,7 +423,7 @@ class Canvas extends Component {
                               )}
                               datasetId={this.state.currentDataset}
                               currentUser={this.props.username}
-                              isAdmin={this.state.currentRole === 'admin'}
+                              isAdmin={currentRole === 'admin'}
                             />
                           </div>
                         );

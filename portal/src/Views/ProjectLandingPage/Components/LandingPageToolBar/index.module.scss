@@ -1,0 +1,24 @@
+.menu {
+  position: 'fixed';
+  background-color: #003262;
+}
+
+.menu {
+  :global {
+    .ant-menu-item {
+      .anticon {
+        color: #f0f0f0;
+      }
+    }
+  }
+}
+
+.menu {
+  :global {
+    .ant-menu-item-selected {
+      .anticon {
+        color: #1890ff;
+      }
+    }
+  }
+}

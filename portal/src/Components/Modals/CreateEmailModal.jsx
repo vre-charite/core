@@ -14,7 +14,7 @@ import { trimString } from '../../Utility';
 import _ from 'lodash';
 const { Option } = Select;
 let lastFetchId = 0;
-function CreateEmailModal({ visible, setVisble }) {
+function CreateEmailModal({ visible, setOpenModal, setCloseModal }) {
   const { TextArea } = Input;
   const [sentEmail, setSentEmail] = useState(false);
   const [sentBtnLoading, setSentBtnLoading] = useState(false);
@@ -51,7 +51,7 @@ function CreateEmailModal({ visible, setVisble }) {
   }
   function cancel() {
     setSentBtnLoading(false);
-    setVisble(false);
+    setCloseModal();
     setSelectedUsers([]);
     setTimeout(() => {
       setSentEmail(false);
@@ -80,6 +80,7 @@ function CreateEmailModal({ visible, setVisble }) {
   const handleChange = (value) => {
     setSelectedUsers(value);
   };
+
   return (
     <Modal
       visible={visible}
