@@ -1,7 +1,6 @@
 import React, { useState, Component, useEffect } from 'react';
 import { Menu, message, List } from 'antd';
 import { TeamOutlined, SettingOutlined } from '@ant-design/icons';
-import Icon from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
 import GreenRoomUploader from './GreenRoomUploader';
@@ -49,23 +48,19 @@ const ToolBar = ({
         <Menu.Item key="canvas" onClick={() => toggleIcon('canvas')}>
           <Link to="canvas">
             {iconSelected === 'canvas' ? (
-              <Icon
-                component={() => (
-                  <img
-                    style={{ width: 15 }}
-                    src={require('../../../Images/Dashboard-selected.svg')}
-                  />
-                )}
-              />
+              <span role="img" class="anticon">
+                <img
+                  style={{ width: 15 }}
+                  src={require('../../../Images/Dashboard-selected.svg')}
+                />
+              </span>
             ) : (
-              <Icon
-                component={() => (
-                  <img
-                    style={{ width: 15 }}
-                    src={require('../../../Images/Dashboard.svg')}
-                  />
-                )}
-              />
+              <span role="img" class="anticon">
+                <img
+                  style={{ width: 15 }}
+                  src={require('../../../Images/Dashboard.svg')}
+                />
+              </span>
             )}
             <span>Canvas</span>
           </Link>
@@ -109,14 +104,12 @@ const ToolBar = ({
               // eslint-disable-next-line
               target="_blank"
             >
-              <Icon
-                component={() => (
-                  <img
-                    style={{ height:10 }}
-                    src={require('../../../Images/SuperSet.svg')}
-                  />
-                )}
-              />
+              <span role="img" class="anticon">
+                <img
+                  style={{ height: 10 }}
+                  src={require('../../../Images/SuperSet.svg')}
+                />
+              </span>
               <span>Superset</span>
             </a>
           </Menu.Item>
@@ -129,14 +122,12 @@ const ToolBar = ({
               );
             }}
           >
-            <Icon
-              component={() => (
-                <img
-                  style={{ height:10 }}
-                  src={require('../../../Images/SuperSet.svg')}
-                />
-              )}
-            />
+            <span role="img" class="anticon">
+              <img
+                style={{ height: 10 }}
+                src={require('../../../Images/SuperSet.svg')}
+              />
+            </span>
             <span>Superset</span>
           </Menu.Item>
         )}
@@ -148,14 +139,12 @@ const ToolBar = ({
               // eslint-disable-next-line
               target="_blank"
             >
-              <Icon
-                component={() => (
-                  <img
-                    style={{ width: 14 }}
-                    src={require('../../../Images/Guacamole.svg')}
-                  />
-                )}
-              />
+              <span role="img" class="anticon">
+                <img
+                  style={{ width: 14 }}
+                  src={require('../../../Images/Guacamole.svg')}
+                />
+              </span>
               <span>Guacamole</span>
             </a>
           </Menu.Item>
@@ -168,14 +157,12 @@ const ToolBar = ({
               );
             }}
           >
-            <Icon
-              component={() => (
-                <img
-                  style={{ width: 14 }}
-                  src={require('../../../Images/Guacamole.svg')}
-                />
-              )}
-            />
+            <span role="img" class="anticon">
+              <img
+                style={{ width: 14 }}
+                src={require('../../../Images/Guacamole.svg')}
+              />
+            </span>
             <span>Guacamole</span>
           </Menu.Item>
         )}
@@ -187,14 +174,12 @@ const ToolBar = ({
               // eslint-disable-next-line
               target="_blank"
             >
-              <Icon
-                component={() => (
-                  <img
-                    style={{ width: 17 }}
-                    src={require('../../../Images/Jupyter.svg')}
-                  />
-                )}
-              />
+              <span role="img" class="anticon">
+                <img
+                  style={{ width: 17 }}
+                  src={require('../../../Images/Jupyter.svg')}
+                />
+              </span>
               <span>Jupyterhub</span>
             </a>
           </Menu.Item>
@@ -207,14 +192,12 @@ const ToolBar = ({
               );
             }}
           >
-            <Icon
-              component={() => (
-                <img
-                  style={{ width: 17 }}
-                  src={require('../../../Images/Jupyter.svg')}
-                />
-              )}
-            />
+            <span role="img" class="anticon">
+              <img
+                style={{ width: 17 }}
+                src={require('../../../Images/Jupyter.svg')}
+              />
+            </span>
             <span>Jupyterhub</span>
           </Menu.Item>
         )}
@@ -225,14 +208,12 @@ const ToolBar = ({
             // eslint-disable-next-line
             target="_blank"
           >
-            <Icon
-              component={() => (
-                <img
-                  style={{ width: 18 }}
-                  src={require('../../../Images/XWIKI.svg')}
-                />
-              )}
-            />
+            <span role="img" class="anticon">
+              <img
+                style={{ width: 18 }}
+                src={require('../../../Images/XWIKI.svg')}
+              />
+            </span>
             <span>XWiki</span>
           </a>
         </Menu.Item>
