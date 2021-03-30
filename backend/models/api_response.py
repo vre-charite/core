@@ -8,6 +8,7 @@ class EAPIResponseCode(Enum):
     not_found = 404
     forbidden = 403
     unauthorized = 401
+    conflict = 409
     
 
 class APIResponse:

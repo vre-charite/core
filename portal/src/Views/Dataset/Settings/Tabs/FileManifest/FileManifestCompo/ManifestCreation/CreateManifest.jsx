@@ -8,7 +8,7 @@ import {
 import { useCurrentProject } from '../../../../../../../Utility';
 import { validateManifestName } from '../../Utils/FormatValidators';
 import i18n from '../../../../../../../i18n';
-import styles from '../../../../index.module.scss'
+import styles from '../../../../index.module.scss';
 function CreateManifest(props) {
   const [newManifestName, setNewManifestName] = useState('');
   const [currentDataset] = useCurrentProject();
@@ -32,10 +32,10 @@ function CreateManifest(props) {
               fontWeight: 'bold',
             }}
           >
-            Manifest Name
+            Attribute Template Name
           </span>
           <Input
-            style={{ width: 150,borderRadius:6 }}
+            style={{ width: 150, borderRadius: 6 }}
             value={newManifestName}
             onChange={(e) => {
               setNewManifestName(e.target.value);
@@ -55,7 +55,7 @@ function CreateManifest(props) {
               textAlign: 'center',
             }}
           >
-            Define Attributes For Manifest
+            Define Attributes For Template
           </h4>
           <CreateManifestTable
             editMode={editMode}

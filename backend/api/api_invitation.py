@@ -51,20 +51,48 @@ class APIInvitation(metaclass=MetaAPI):
             post_json = request.get_json()
 
             _logger.info("Start Creating Invitation: {}".format(post_json))
+            if not post_json.get("email"):
+                my_res.set_result('missing required field email')
+                my_res.set_code(EAPIResponseCode.bad_request)
+                return my_res.to_dict, my_res.code
+
             invitation_form = InvitationForm(post_json)
             if not invitation_form.project_id:
+                # Only platform admin can invite with a project
+                if current_identity["role"] != "admin":
+                    my_res.set_code(EAPIResponseCode.forbidden)
+                    my_res.set_error_msg('Permission denied')
+                    return my_res.to_dict, my_res.code
+
                 res = requests.post(
                     url=ConfigClass.NEO4J_SERVICE + "nodes/User/query",
-                    headers={"Authorization": access_token},
                     json={"email": invitation_form.email}
                 )
                 result = json.loads(res.text)
-                print(result)
                 if result:
                     my_res.set_result('[ERROR] User already exists in platform')
                     _logger.info('User already exists in platform')
                     my_res.set_code(EAPIResponseCode.bad_request)
                     return my_res.to_dict, my_res.code
+            else:
+                if current_identity["role"] != "admin":
+                    params = {
+                        "start_id": current_identity["user_id"],
+                        "end_id": invitation_form.project_id 
+                    }
+                    res = requests.get(ConfigClass.NEO4J_SERVICE + "relations", params=params)
+                    relations = json.loads(res.text)
+                    if not relations:
+                        my_res.set_code(EAPIResponseCode.forbidden)
+                        my_res.set_error_msg('Permission denied')
+                        return my_res.to_dict, my_res.code
+                    role = relations[0]["r"]["type"]
+                    # Check project permissions
+                    if role != "admin":
+                        my_res.set_code(EAPIResponseCode.forbidden)
+                        my_res.set_error_msg('Permission denied')
+                        return my_res.to_dict, my_res.code
+
             # init invitation managemer
             invitation_mgr = SrvInvitationManager()
             # save invitation
@@ -182,12 +210,31 @@ class APIInvitation(metaclass=MetaAPI):
                 order_type = post_json.get('order_type', None)
 
                 filters = post_json.get('filters', None)
+                project_id = filters.get("project_id")
+
+                if current_identity["role"] != "admin":
+                    params = {
+                        "start_id": current_identity["user_id"],
+                        "end_id": project_id
+                    }
+                    res = requests.get(ConfigClass.NEO4J_SERVICE + "relations", params=params)
+                    relations = json.loads(res.text)
+                    if not relations:
+                        my_res.set_code(EAPIResponseCode.forbidden)
+                        my_res.set_error_msg('Permission denied')
+                        return my_res.to_dict, my_res.code
+                    role = relations[0]["r"]["type"]
+                    # Only project admin or platform admin can access this API
+                    if role != "admin":
+                        my_res.set_code(EAPIResponseCode.forbidden)
+                        my_res.set_error_msg('Permission denied')
+                        return my_res.to_dict, my_res.code
 
                 records, count = invitation_mgr.get_invitations(page, page_size, filters, order_by, order_type)
                 result = []
 
                 for record in records:
-                    detail = json.loads(record.invitation_detail)#json.loads(record[1])
+                    detail = json.loads(record.invitation_detail)
                     user_info = { 
                         'expiry_timestamp': record.expiry_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                         'create_timestamp': record.create_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
@@ -202,7 +249,6 @@ class APIInvitation(metaclass=MetaAPI):
                 
                 return my_res.to_dict, my_res.code
             except Exception as e:
-                print(e)
                 _logger.error('error in pending users' + str(e))
                 my_res.set_code(EAPIResponseCode.internal_error)
                 my_res.set_error_msg('Internal Error' + str(e))

@@ -55,6 +55,7 @@ const userManagement = {
   getPortalUsers: 'userManagement.getPortalUsers',
   updateUserStatusAPI: 'userManagement.updateUserStatusAPI',
   getInvitationsAPI: 'userManagement.getInvitationsAPI',
+  getServiceRequestAPI: 'userManagement.getServiceRequestAPI'
 };
 
 export default {

@@ -1,14 +1,20 @@
 {
   "versions": [
     {
-      "version":"1.1.0",
-      "date":"15.03.2021",
-      "note":"<h3>What's new</h3><ul> <li> Major changes to UI/UX styling on Project Canvas and all other portal pages.</li> <li> Project Announcement feature implemented to support project-based announcement publishing and notification. </li> <li> Command Line Tool updated to support customized file tag attaching and data lineage creation during uploading. </li> <li> Apache Superset, an open sourced BI tool, was deployed into VRE projects with the single sign-on integration. </li></ul><h3>Bug Fixes</h3><ul> <li> Removed flashing error messages occurring during URL loading in portal Home Page. </li> <li> Fixed missing project invitation information bug in Administrators Console. </li> <li>Fixed UI layout bug occurring in File Explorer when accessing the Portal with Firefox.</li></ul><h3>Improvements</h3><ul> <li> Improved the stability of large file upload and download. </li> <li>Improved the searchability of audit logs</li></ul>"
+      "version": "1.1.1",
+      "date": "31.03.2021",
+      "note": "<h3>What's new</h3> <ul> <li>Users can now upload data in a folder structure and view folder contents in the File Explorer.</li> <li>Project Service Request feature implemented to support Project-based services access requests and notifications.</li> <li>Development for back-end storage of file metadata to support advanced File Query feature.</li> </ul> <h3>Bug Fixes</h3> <ul> <li>Fixed bug causing files to display incorrectly when switching between folders in the File Explorer. </li> </ul> <h3>Improvements</h3> <ul> <li>Updated Portal terminology from File Manifest to File Attribute.</li> <li>Improved display responsivity in tables during Portal window re-sizing.</li>  </ul>"
+    },
+
+    {
+      "version": "1.1.0",
+      "date": "15.03.2021",
+      "note": "<h3>What's new</h3> <ul> <li>Major changes to UI/UX styling on Project Canvas and all other Portal pages.</li> <li>Project Announcement feature implemented to support Project-based announcement publishing and notification.</li> <li>Command Line Tool updated to support customized file tag attaching and data lineage creation during uploading.</li> <li>Apache Superset, an external service configured on the Project level, was deployed with Single Sign-On integration.</li> </ul> <h3>Bug Fixes</h3> <ul> <li>Removed flashing error messages occurring during URL loading in Portal Home Page. </li> <li>Fixed bug causing missing Project invitation information in Administrators Console.</li> <li>Fixed UI layout bug occurring in File Explorer when accessing the Portal with Firefox.</li> <li>Improved the stability of large file downloading.</li> </ul>"
     },
     {
       "version": "1.0.0",
       "date": "15.02.2021",
-      "note": "<h3>What’s new</h3> <ul> <li>Data deletion protocol implemented for deleting data into Trash Bin under each zone.</li><li>A Project-based File Manifest for describing and categorizing data can now be created and configured by Administrators.</li><li>File Manifest can be attached by the file uploader or their Project Administrator to data uploaded into the Green Room.</li><li>External open-source services of XWiki and Guacamole are deployed and configured with VRE Portal for documentation management and workbench initiation.</li><li>Contents Previewer implemented to allow users to view file structures inside ZIP files within the File Explorer.</li></ul> <h3>Bug Fixes</h3> <ul> <li> Email notifications now can be sent by Platform Administrators to specific platform users from the Administrators Console.</li><li>Portal release notes are now available in the Portal page footer.</li> <li>Fixed audit logs bug that was displaying incorrect file activities time.</li> </ul>"
+      "note": "<h3>What’s new</h3> <ul> <li>Data deletion protocol implemented for moving data into zone-specific Trash Bins.</li><li>A Project File Manifest Template creation and file attachment feature for describing and categorizing data can now be created and configured by Administrators.</li><li>A File Manifest can be attached by file uploaders or Project Administrator in the Green Room.</li><li>External open-source services of XWiki and Guacamole were deployed and configured with VRE Portal for documentation management and workbench initiation.</li><li>Content Previewer feature now allows users to view file structures inside ZIP files within the File Explorer.</li></ul> <h3>Bug Fixes</h3> <ul> <li> Email notifications now can be sent by Platform Administrators to specific platform users from the Administrators Console.</li><li>Portal release notes are now available in the Portal page footer.</li> <li>Fixed audit logs bug that was displaying incorrect file activities time.</li> </ul>"
     },
     {
       "version": "0.3.0",
@@ -18,7 +24,7 @@
     {
       "version": "0.2.0",
       "date": "30.11.2020",
-      "note": "<h3>What's new</h3><ul><li>Enhanced file tagging &amp; annotation</li><li>Data lineage graph</li><li>Search project attributes</li><li>Platform Administrators user management console, Search Panel and Properties Side Panel</li><li>Updated URL to include “/vre”extension</li><li>Revised content for clarity and flow.</li></ul>"
+      "note": "<h3>What's new</h3><ul><li>Enhanced file tagging &amp; annotation</li><li>Data lineage graph</li><li>Search Project attributes</li><li>Platform Administrators user management console, Search Panel and Properties Side Panel</li><li>Updated URL to include “/vre”extension</li><li>Revised content for clarity and flow.</li></ul>"
     },
     {
       "version": "0.1.0",

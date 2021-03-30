@@ -248,7 +248,7 @@ class Auth extends Component {
                       rel="noreferrer noopener"
                     >
                       <img
-                        src={require('../../Images/logo-bih-alt.png')}
+                        src={require('../../Images/logo-bih-website-login.svg')}
                         className={styles.icon}
                         alt="icon"
                       />

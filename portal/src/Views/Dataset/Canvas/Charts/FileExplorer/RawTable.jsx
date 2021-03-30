@@ -10,6 +10,8 @@ import {
   Menu,
   Dropdown,
   Popover,
+  Tooltip as Tip,
+  Breadcrumb,
 } from 'antd';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
@@ -21,10 +23,16 @@ import {
   CloseOutlined,
   FullscreenOutlined,
   PauseOutlined,
+  FileOutlined,
+  FolderOutlined,
+  LeftOutlined,
 } from '@ant-design/icons';
 
 import { ErrorMessager, namespace } from '../../../../../ErrorMessages';
-import { appendDownloadListCreator } from '../../../../../Redux/actions';
+import {
+  appendDownloadListCreator,
+  setFolderRouting,
+} from '../../../../../Redux/actions';
 import {
   downloadFilesAPI,
   getFilesByTypeAPI,
@@ -33,6 +41,7 @@ import {
   listAllfilesVfolder,
   getZipContentAPI,
   getFileManifestAttrs,
+  getFilesByFolderAPI,
 } from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
 import FilesTable from './FilesTable';
@@ -42,6 +51,7 @@ import {
   getFileSize,
   timeConvert,
   pathsMap,
+  useCurrentProject,
 } from '../../../../../Utility';
 import { setSuccessNum } from '../../../../../Redux/actions';
 import LineageGraph from './LineageGraph';
@@ -60,6 +70,8 @@ import ManifestManagementPlugin from './Plugins/ManifestManagement/ManifestManag
 import { pipelines } from '../../../../../Utility/pipelines';
 import { tokenManager } from '../../../../../Service/tokenManager';
 import FileManifest from './FileManifest';
+import Tooltip from '@antv/g6/lib/plugins/tooltip';
+import { registerBehavior } from '@antv/g6';
 const { Panel } = Collapse;
 const { Option } = Select;
 const { Paragraph, Title } = Typography;
@@ -69,14 +81,11 @@ function RawTable(props) {
   const { panelKey, folderId, removePanel } = props;
   const dispatch = useDispatch();
   const ref = React.useRef(null);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [selectedRows, setSelectedRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageSize] = useState(10);
   const [page] = useState(0);
-  const [totalItem, setTotalItem] = useState(0);
   const [groupDownloadStatus] = useState({});
-  let [rawFiles, setRawFiles] = useState([]);
+  let [rawFiles, setRawFiles] = useState({ data: [], total: 0 });
   const [reFreshing, setRefreshing] = useState(false);
   const [searchText] = useState([]);
   const [searchInput] = useState({});
@@ -97,6 +106,7 @@ function RawTable(props) {
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
 
   const [tableWidth, setTableWidth] = useState('90%');
+  const [tableLoading, setTableLoading] = useState(false);
   const [detailsPanelWidth, setDetailsPanelWidth] = useState(300);
   const [tableState, setTableState] = useState(TABLE_STATE.NORMAL);
   // const [keyCopied, setKeyCopied] = useState([]);
@@ -108,17 +118,129 @@ function RawTable(props) {
   const projectActivePanel = useSelector(
     (state) => state.project && state.project.tree && state.project.tree.active,
   );
+  const [selectedRows, setSelectedFiles] = useState([]);
+  const [selectedRowKeys, setSelectedFilesKeys] = useState([]);
+  const folderRouting = useSelector(
+    (state) => state.fileExplorer && state.fileExplorer.folderRouting,
+  );
+  const currentRouting = folderRouting[panelKey]
+    ? folderRouting[panelKey].filter(
+        (r) => typeof r.folderLevel !== 'undefined',
+      )
+    : folderRouting[panelKey];
   const deletedFileList = useSelector((state) => state.deletedFileList);
+  const copyEvent = useSelector((state) => state.events.LOAD_COPY_LIST);
   let permission = false;
   if (currentDataset) permission = currentDataset.permission;
-
   const updateFileManifest = (record, manifestIndex) => {
-    const index = _.findIndex(rawFiles, (item) => item.key === record.key);
-    rawFiles[index].manifest[manifestIndex].value =
+    const index = _.findIndex(rawFiles.data, (item) => item.key === record.key);
+    rawFiles.data[index].manifest[manifestIndex].value =
       record.manifest[manifestIndex].value;
-    setRawFiles([...rawFiles]);
+    setRawFiles({ ...rawFiles, data: [...rawFiles.data] });
   };
 
+  const reqFilesByFolderAPI = async (
+    geid,
+    pageSize,
+    page,
+    sortColumn,
+    order,
+    projectActivePanel,
+    filters,
+  ) => {
+    const res = await getFilesByFolderAPI(
+      geid,
+      pageSize,
+      page,
+      sortColumn,
+      order,
+      projectActivePanel,
+      filters,
+    );
+    const total = res.data?.result?.approximateCount;
+    const result = res.data?.result?.entities;
+    const files = result.map((item) => {
+      return {
+        ...item.attributes,
+        tags: item.labels,
+        guid: item.guid,
+        geid: item.geid,
+        key: item.attributes.name,
+        typeName: item.typeName,
+        manifest: item.manifest,
+      };
+    });
+    setRawFiles({
+      data: files,
+      total: total,
+    });
+    const folderRoutingTemp = folderRouting || {};
+    folderRoutingTemp[panelKey] = res.data?.result?.routing;
+    dispatch(setFolderRouting(folderRoutingTemp));
+  };
+  const loadFolderFiles = async (geid) => {
+    const filters = {};
+
+    if (searchText.length > 0) {
+      for (const item of searchText) {
+        filters[item.key] = item.value;
+      }
+    }
+    filters['tags'] = value;
+
+    setTableLoading(true);
+    await reqFilesByFolderAPI(
+      geid,
+      pageSize,
+      page,
+      sortColumn,
+      order,
+      projectActivePanel,
+      filters,
+    );
+    setTableLoading(false);
+  };
+  function getFilesAndUpdate(
+    containerId,
+    pageSize,
+    page,
+    panelKey,
+    column,
+    text,
+    order,
+    tags,
+  ) {
+    if (currentRouting && currentRouting.length) {
+      const geid = currentRouting[currentRouting.length - 1].globalEntityId;
+      const filters = {};
+      if (text.length > 0) {
+        for (const item of text) {
+          filters[item.key] = item.value;
+        }
+      }
+      filters['tags'] = tags;
+      reqFilesByFolderAPI(
+        geid,
+        pageSize,
+        page,
+        column,
+        order,
+        panelKey,
+        filters,
+      );
+    } else {
+      getRawFilesAndUpdateUI(
+        containerId,
+        pageSize,
+        page,
+        panelKey,
+        column,
+        text,
+        order,
+        tags,
+      );
+    }
+  }
   function getRawFilesAndUpdateUI(
     containerId,
     pageSize,
@@ -143,6 +265,7 @@ function RawTable(props) {
               key: item.attributes.name,
               typeName: item.typeName,
               manifest: item.manifest,
+              nodeLabel: [],
             };
           });
           if (Object.keys(currentRecord)?.length > 0) {
@@ -155,8 +278,11 @@ function RawTable(props) {
               setCurrentRecord(record[0]);
             }
           }
-          setRawFiles(files);
-          setTotalItem(total);
+          setRawFiles({
+            data: files,
+            total: total,
+          });
+
           setRefreshing(false);
         })
         .catch((err) => {
@@ -241,8 +367,13 @@ function RawTable(props) {
             setCurrentRecord(record[0]);
           }
         }
-        setRawFiles(files);
-        setTotalItem(approximateCount);
+        setRawFiles({
+          data: files,
+          total: approximateCount,
+        });
+        const folderRoutingTemp = folderRouting || {};
+        folderRoutingTemp[panelKey] = null;
+        dispatch(setFolderRouting(folderRoutingTemp));
         setRefreshing(false);
       })
       .catch((err) => {
@@ -264,6 +395,19 @@ function RawTable(props) {
   }
 
   let columns = [
+    {
+      title: '',
+      dataIndex: 'nodeLabel',
+      key: 'nodeLabel',
+      width: 25,
+      render: (text, record) => {
+        if (record.nodeLabel.indexOf('Folder') !== -1) {
+          return <FolderOutlined />;
+        } else {
+          return <FileOutlined />;
+        }
+      },
+    },
     {
       title: 'Name',
       dataIndex: 'fileName',
@@ -289,7 +433,18 @@ function RawTable(props) {
           popoverContent = filename + ' has an annotate attached';
         }
         return (
-          <div>
+          <div
+            style={{
+              cursor:
+                record.nodeLabel.indexOf('Folder') !== -1
+                  ? 'pointer'
+                  : 'default',
+            }}
+            onClick={(e) => {
+              record.nodeLabel.indexOf('Folder') !== -1 &&
+                loadFolderFiles(record.geid);
+            }}
+          >
             {record.tags &&
             record.tags.indexOf(SYSTEM_TAGS['COPIED_TAG']) !== -1 &&
             tableState === TABLE_STATE.COPY_TO_CORE ? (
@@ -336,8 +491,8 @@ function RawTable(props) {
           : 'owner',
       ellipsis: true,
     },
-    props.currentDataset &&
-    props.currentDataset.code === 'generate' &&
+    currentDataset &&
+    currentDataset.code === 'generate' &&
     !panelKey.includes('trash') &&
     !panelKey.startsWith('vfolder-')
       ? {
@@ -374,7 +529,7 @@ function RawTable(props) {
       key: 'fileSize',
       render: (text, record) => {
         if ([undefined, null].includes(record.fileSize)) {
-          return 'N/A';
+          return '';
         }
         return getFileSize(text);
       },
@@ -499,9 +654,6 @@ function RawTable(props) {
     columns = columns.filter((v) => v.key === 'fileName' || v.key === 'action');
   }
   useEffect(() => {
-    const data = props.rawData;
-    setRawFiles(data);
-    setTotalItem(props.totalItem);
     setPageLoading(false);
   }, [
     page,
@@ -509,17 +661,20 @@ function RawTable(props) {
     searchInput,
     props.projectId,
     props.rawData,
-    props.totalItem,
     // props.successNum,
   ]);
 
   useEffect(() => {
-    if (panelKey === projectActivePanel) {
+    if (panelKey === projectActivePanel && !tableLoading) {
       fetchData();
     }
     // eslint-disable-next-line
   }, [props.successNum]);
 
+  /*   //when the copy succeed reload the page
+  useEffect(()=>{
+
+  },[copyEvent]); */
   useEffect(() => {
     listProjectTagsAPI(props.projectId, null, null, 10).then((res) => {
       setTagList(res.data.result);
@@ -527,22 +682,24 @@ function RawTable(props) {
   }, [props.projectId]);
 
   const onSelectChange = (selectedRowKeys, selectedRowsNew) => {
-    setSelectedRowKeys(selectedRowKeys);
+    setSelectedFilesKeys(selectedRowKeys);
     let tmpSelectedRows = selectedRows
       .concat(selectedRowsNew)
       .filter((item) => item !== undefined);
     let totalSelectedRows = selectedRowKeys.map(
       (key) => tmpSelectedRows.filter((item) => item.key === key)[0],
     );
-    setSelectedRows(totalSelectedRows);
+    setSelectedFiles(totalSelectedRows);
   };
 
   async function onPanelChange(keys) {}
 
   async function openFileSider(record) {
-    setSidepanel(true);
     setCurrentRecord(record);
-    await updateLineage(record, 'INPUT');
+    setSidepanel(true);
+    if (record.nodeLabel.indexOf('Folder') === -1) {
+      await updateLineage(record, 'INPUT');
+    }
   }
 
   async function updateLineage(record, direction) {
@@ -553,7 +710,6 @@ function RawTable(props) {
     const lineageData = res.data && res.data.result;
 
     const entities = lineageData && lineageData.guidEntityMap;
-
     for (const key in entities) {
       const entity = entities[key];
       const pathArray =
@@ -563,13 +719,13 @@ function RawTable(props) {
       const space = pathsMap(pathArray);
       if (entity && space === 'Green Room/Raw') {
         const data = [];
-        data.push(entity.attributes && entity.attributes.name);
+        data.push(entity.attributes.globalEntityId);
         const manifestRes = await getFileManifestAttrs(data, true);
 
         if (manifestRes.status === 200) {
           entity.fileManifests =
             manifestRes.data.result &&
-            manifestRes.data.result[entity.attributes.name];
+            manifestRes.data.result[entity.attributes.globalEntityId];
         }
       }
     }
@@ -601,6 +757,15 @@ function RawTable(props) {
             disabled: true,
           };
         }
+      }
+      if (
+        record &&
+        record.nodeLabel &&
+        record.nodeLabel.indexOf('Folder') !== -1
+      ) {
+        return {
+          disabled: true,
+        };
       }
       if (deletedFileList) {
         const isDeleted = deletedFileList.find(
@@ -665,20 +830,35 @@ function RawTable(props) {
     clearSelection();
   };
 
-  function fetchData() {
-    setRefreshing(true);
-    getRawFilesAndUpdateUI(
-      props.projectId,
-      pageSize,
-      page,
-      panelKey,
-      sortColumn,
-      searchText,
-      order,
-      value,
-    );
-
-    setTableKey(tableKey + 1);
+  async function fetchData() {
+    if (currentRouting && currentRouting.length) {
+      const leveledRoutes = currentRouting.sort((a, b) => {
+        return a.folderLevel - b.folderLevel;
+      });
+      const routeToGo = leveledRoutes.pop();
+      if (routeToGo) {
+        setRefreshing(true);
+        await loadFolderFiles(routeToGo.globalEntityId);
+        setRefreshing(false);
+        //Reset sorting and search
+        setTableKey(tableKey + 1);
+      }
+    } else {
+      setRefreshing(true);
+      setTableLoading(true);
+      getRawFilesAndUpdateUI(
+        props.projectId,
+        pageSize,
+        page,
+        panelKey,
+        sortColumn,
+        searchText,
+        order,
+        value,
+      );
+      setTableLoading(false);
+      setTableKey(tableKey + 1);
+    }
   }
   const hasSelected = selectedRowKeys.length > 0;
   let lastFetchId = 0;
@@ -743,12 +923,15 @@ function RawTable(props) {
   const onFold = (key) => {
     const data = [];
 
-    for (let el of rawFiles) {
+    for (let el of rawFiles.data) {
       if (el.key === key) el = { ...el, lineage: {} };
 
       data.push(el);
     }
-    setRawFiles(data);
+    setRawFiles({
+      ...rawFiles,
+      data: data,
+    });
   };
 
   function handleOk(e) {
@@ -767,9 +950,8 @@ function RawTable(props) {
     document.addEventListener('mousemove', mouseMove, true);
     document.addEventListener('mouseup', stopMove, true);
   }
-  function clearSelection(params) {
-    setSelectedRowKeys([]);
-    setSelectedRows([]);
+  function clearSelection() {
+    clearFilesSelection();
   }
 
   /**
@@ -796,12 +978,112 @@ function RawTable(props) {
     document.removeEventListener('mouseup', stopMove, true);
   }
 
+  useEffect(() => {
+    const debounce = _.debounce(
+      () => {
+        setTableWidth('90%');
+        setDetailsPanelWidth(300);
+      },
+      1000,
+      { leading: false },
+    );
+    window.addEventListener('resize', debounce);
+
+    return () => window.removeEventListener('resize', debounce);
+  }, []);
+
+  function clearFilesSelection() {
+    setSelectedFiles([]);
+    setSelectedFilesKeys([]);
+  }
+  async function goBack() {
+    const leveledRoutes = currentRouting.sort((a, b) => {
+      return a.folderLevel - b.folderLevel;
+    });
+    clearFilesSelection();
+    const routeToGo = leveledRoutes[leveledRoutes.length - 2];
+    if (routeToGo) {
+      loadFolderFiles(routeToGo.globalEntityId);
+    } else {
+      setTableLoading(true);
+      const folderRoutingTemp = folderRouting || {};
+      folderRoutingTemp[panelKey] = null;
+      dispatch(setFolderRouting(folderRoutingTemp));
+      await getRawFilesAndUpdateUI(
+        props.projectId,
+        pageSize,
+        page,
+        panelKey,
+        sortColumn,
+        searchText,
+        order,
+        value,
+      );
+      setTableKey(tableKey + 1);
+      setTableLoading(false);
+    }
+  }
+  const orderRouting =
+    currentRouting &&
+    currentRouting.sort((a, b) => {
+      return a.folderLevel - b.folderLevel;
+    });
   const ToolTipsAndTable = (
-    <>
+    <div style={{ position: 'relative' }}>
       <div
         style={{ marginBottom: 36, marginTop: 20, position: 'relative' }}
         className={styles.file_explore_actions}
       >
+        {currentRouting ? (
+          <>
+            <LeftOutlined onClick={goBack} />
+            <div
+              style={{
+                marginLeft: 10,
+                marginRight: 20,
+                display: 'inline-block',
+              }}
+            >
+              {currentRouting.length > 4 ? (
+                <span style={{ color: 'rgba(0, 0, 0, 0.45)' }}>... {'>'} </span>
+              ) : null}
+              <Breadcrumb
+                separator=">"
+                style={{ maxWidth: 500, display: 'inline-block' }}
+              >
+                {orderRouting.slice(-3).map((v) => {
+                  return (
+                    <Breadcrumb.Item
+                      style={
+                        v.globalEntityId ===
+                        orderRouting[orderRouting.length - 1].globalEntityId
+                          ? null
+                          : { cursor: 'pointer' }
+                      }
+                      onClick={() => {
+                        if (
+                          v.globalEntityId ===
+                          orderRouting[orderRouting.length - 1].globalEntityId
+                        ) {
+                          return;
+                        }
+                        clearFilesSelection();
+                        loadFolderFiles(v.globalEntityId);
+                      }}
+                    >
+                      {v.name.length > 23 ? (
+                        <Tip title={v.name}>{v.name.slice(0, 20) + '...'}</Tip>
+                      ) : (
+                        v.name
+                      )}
+                    </Breadcrumb.Item>
+                  );
+                })}
+              </Breadcrumb>
+            </div>
+          </>
+        ) : null}
+
         {!hasSelected && (
           <Button
             onClick={() => {
@@ -814,7 +1096,9 @@ function RawTable(props) {
             Refresh
           </Button>
         )}
-        {!hasSelected && props.type === DataSourceType.GREENROOM_RAW && (
+        {!hasSelected &&
+        props.type === DataSourceType.GREENROOM_RAW &&
+        !currentRouting ? (
           <Button
             id="raw_table_upload"
             type="link"
@@ -824,8 +1108,7 @@ function RawTable(props) {
           >
             Upload
           </Button>
-        )}
-
+        ) : null}
         {!panelKey.includes('trash') && hasSelected ? (
           <Button
             onClick={downloadFiles}
@@ -838,7 +1121,8 @@ function RawTable(props) {
           </Button>
         ) : null}
         {props.type === DataSourceType.GREENROOM_PROCESSED &&
-        permission === 'admin' ? (
+        permission === 'admin' &&
+        !currentRouting ? (
           <Copy2CorePlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -850,6 +1134,7 @@ function RawTable(props) {
         ) : null}
         {props.type === DataSourceType.GREENROOM_RAW &&
         permission === 'admin' &&
+        !currentRouting &&
         hasSelected ? (
           <Copy2ProcessedPlugin
             tableState={tableState}
@@ -861,7 +1146,9 @@ function RawTable(props) {
           />
         ) : null}
         {props.type === DataSourceType.CORE_PROCESSED ||
-        (props.type === DataSourceType.CORE_RAW && hasSelected) ? (
+        (props.type === DataSourceType.CORE_RAW &&
+          !currentRouting &&
+          hasSelected) ? (
           <VirtualFolderPlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -871,7 +1158,9 @@ function RawTable(props) {
             panelKey={panelKey}
           />
         ) : null}
-        {hasSelected && props.type === DataSourceType.GREENROOM_RAW && (
+        {hasSelected &&
+        props.type === DataSourceType.GREENROOM_RAW &&
+        !currentRouting ? (
           <ManifestManagementPlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -880,8 +1169,10 @@ function RawTable(props) {
             selectedRows={selectedRows}
             panelKey={panelKey}
           />
-        )}
-        {props.type === DataSourceType.CORE_VIRTUAL_FOLDER && hasSelected ? (
+        ) : null}
+        {props.type === DataSourceType.CORE_VIRTUAL_FOLDER &&
+        !currentRouting &&
+        hasSelected ? (
           <VirtualFolderFilesDeletePlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -892,6 +1183,7 @@ function RawTable(props) {
           />
         ) : null}
         {props.type !== DataSourceType.CORE_VIRTUAL_FOLDER &&
+          !currentRouting &&
           !panelKey.includes('trash') &&
           hasSelected && (
             <DeleteFilesPlugin
@@ -904,7 +1196,9 @@ function RawTable(props) {
               permission={permission}
             />
           )}
-        {props.type === DataSourceType.CORE_VIRTUAL_FOLDER && !hasSelected ? (
+        {props.type === DataSourceType.CORE_VIRTUAL_FOLDER &&
+        !currentRouting &&
+        !hasSelected ? (
           <VirtualFolderDeletePlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -934,9 +1228,10 @@ function RawTable(props) {
 
       <FilesTable
         columns={columns}
-        dataSource={rawFiles}
-        totalItem={totalItem}
-        updateTable={getRawFilesAndUpdateUI}
+        dataSource={rawFiles.data}
+        currentRouting={currentRouting}
+        totalItem={rawFiles.total}
+        updateTable={getFilesAndUpdate}
         projectId={props.projectId}
         rowSelection={rowSelection}
         tableKey={tableKey}
@@ -948,7 +1243,19 @@ function RawTable(props) {
         selectedRecord={currentRecord}
         tableState={tableState}
       />
-    </>
+      {tableLoading ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(255,255,255,0.2)',
+          }}
+        ></div>
+      ) : null}
+    </div>
   );
 
   return (
@@ -1090,52 +1397,57 @@ function RawTable(props) {
                   refresh={fetchData}
                 />
               </Panel>
-              {props.type === DataSourceType.GREENROOM_RAW && (
-                <Panel header="Manifest Attributes" key="Manifest">
+              {props.type === DataSourceType.GREENROOM_RAW &&
+              !currentRouting &&
+              currentRecord.nodeLabel.indexOf('Folder') === -1 ? (
+                <Panel header="File Attributes" key="Manifest">
                   <FileManifest
                     updateFileManifest={updateFileManifest}
                     permission={permission}
                     currentRecord={currentRecord}
                   />
                 </Panel>
-              )}
-              <Panel
-                header={
-                  <span
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      width: '80%',
-                      whiteSpace: 'nowrap',
-                      display: 'inline-block',
-                    }}
-                  >
-                    Data Lineage Graph
-                  </span>
-                }
-                key="2"
-                extra={
-                  <Button
-                    type="link"
-                    onClick={(event) => {
-                      // If you don't want click extra trigger collapse, you can prevent this:
-                      updateLineage(currentRecord, 'INPUT');
-                      setLineageModalVisible(true);
-                      event.stopPropagation();
-                    }}
-                    style={{ padding: 0, height: 'auto' }}
-                  >
-                    <FullscreenOutlined />
-                  </Button>
-                }
-                style={{ position: 'relative' }}
-              >
-                <LineageGraph
-                  type={props.type}
-                  record={currentRecord}
-                  width={detailsPanelWidth - 70}
-                />
-              </Panel>
+              ) : null}
+              {!currentRouting &&
+              currentRecord.nodeLabel.indexOf('Folder') === -1 ? (
+                <Panel
+                  header={
+                    <span
+                      style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        width: '80%',
+                        whiteSpace: 'nowrap',
+                        display: 'inline-block',
+                      }}
+                    >
+                      Data Lineage Graph
+                    </span>
+                  }
+                  key="2"
+                  extra={
+                    <Button
+                      type="link"
+                      onClick={(event) => {
+                        // If you don't want click extra trigger collapse, you can prevent this:
+                        updateLineage(currentRecord, 'INPUT');
+                        setLineageModalVisible(true);
+                        event.stopPropagation();
+                      }}
+                      style={{ padding: 0, height: 'auto' }}
+                    >
+                      <FullscreenOutlined />
+                    </Button>
+                  }
+                  style={{ position: 'relative' }}
+                >
+                  <LineageGraph
+                    type={props.type}
+                    record={currentRecord}
+                    width={detailsPanelWidth - 70}
+                  />
+                </Panel>
+              ) : null}
             </Collapse>
           </div>
         </div>

@@ -69,7 +69,7 @@ const ManifestManagementModal = ({
       try {
         const res = await attachManifest(
           selManifest.id,
-          files.map((v) => v.input_path),
+          files.map((v) => v.geid),
           attrForm,
         );
         setBatchRes(res.data.result);
@@ -90,7 +90,7 @@ const ManifestManagementModal = ({
 
   return (
     <Modal
-      title="Attach File Manifest"
+      title="Attach Attribute Template"
       visible={visible}
       width={400}
       onOk={handleOk}
@@ -104,7 +104,7 @@ const ManifestManagementModal = ({
       {step === 1 ? (
         <>
           <p style={{ color: 'rgba(0,0,0,0.45)' }}>
-            Please choose file manifest for {files.length} files.
+            Please choose Attribute Template for {files.length} files.
           </p>
           <div>
             <Select
@@ -136,7 +136,7 @@ const ManifestManagementModal = ({
               marginBottom: 20,
             }}
           >
-            Please set the attributes value for selected manifest
+            Please set the attributes value for selected template
           </p>
           {selManifest && (
             <div style={{ maxHeight: 195, overflowY: 'scroll' }}>

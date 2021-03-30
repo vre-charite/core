@@ -5,6 +5,12 @@ from flask_jwt import current_identity
 from models.api_data_manifest import DataAttributeModel, DataManifestModel, TypeEnum, db
 import re
 
+def get_file_node_bygeid(geid):
+    post_data = {"global_entity_id": geid}
+    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/File/query", json=post_data)
+    if not response.json():
+        return None
+    return response.json()[0] 
 
 def get_file_node(full_path):
     post_data = {"full_path": full_path}

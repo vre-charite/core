@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import PlatformUsersTable from './PlatformUsersTable';
+import TableWrapper from './TableWrapper';
 import { getInvitationsAPI } from '../../APIs';
 import { timeConvert, partialString } from '../../Utility';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
@@ -220,7 +220,7 @@ function InvitationTable(props) {
     return isExpired ? 'disabled' : ' ';
   };
   return (
-    <PlatformUsersTable
+    <TableWrapper
       columns={invitationColumns}
       onChange={onChange}
       handleReset={handleReset}

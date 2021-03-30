@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import {
   EditOutlined,
   DeleteOutlined,
-  DownloadOutlined,SaveOutlined,RedoOutlined,ExportOutlined
+  DownloadOutlined,
+  SaveOutlined,
+  RedoOutlined,
+  ExportOutlined,
 } from '@ant-design/icons';
 import { Button, Input, Modal, message } from 'antd';
 import { useCurrentProject } from '../../../../../../../Utility';
@@ -43,7 +46,7 @@ function FileManifestItem(props) {
 
   const deleteConfirm = (
     <Modal
-      title="Delete Manifest"
+      title="Delete Attribute Template"
       visible={deleteModalVisible}
       onOk={async () => {
         try {
@@ -60,7 +63,8 @@ function FileManifestItem(props) {
       onCancel={() => setDeleteModalVisible(false)}
     >
       <p>
-        Deleting manifest is unrecoverable, are you sure you want to proceed?
+        Deleting attribute template is unrecoverable, are you sure you want to
+        proceed?
       </p>
     </Modal>
   );
@@ -71,7 +75,7 @@ function FileManifestItem(props) {
         <>
           <Input
             value={renameStr}
-            style={{ width:145, display: 'inline-block',marginLeft:28 }}
+            style={{ width: 145, display: 'inline-block', marginLeft: 28 }}
             onChange={(e) => {
               setRenameStr(e.target.value);
             }}
@@ -79,7 +83,6 @@ function FileManifestItem(props) {
           <div style={{ display: 'inline-block' }}>
             <Button
               style={{ marginLeft: 60 }}
-              
               type="primary"
               onClick={async (e) => {
                 const { valid, err } = validateManifestName(
@@ -104,7 +107,7 @@ function FileManifestItem(props) {
               loading={loadingRename}
               icon={<SaveOutlined />}
             >
-               Save
+              Save
             </Button>
             <Button
               type="link"
@@ -118,7 +121,7 @@ function FileManifestItem(props) {
         </>
       ) : (
         <>
-          <b style={{marginLeft:24}}>{mItem.name}</b>
+          <b style={{ marginLeft: 24 }}>{mItem.name}</b>
           <div
             style={{
               display: 'inline-block',

@@ -67,7 +67,7 @@ function FileManifest({ currentRecord, permission, updateFileManifest }) {
     newAttr.forEach((item) => {
       attrObj[item.name] = item.value;
     });
-    updateFileManifestAPI(currentRecord.name, attrObj)
+    updateFileManifestAPI(currentRecord.geid, attrObj)
       .then((res) => {
         currentRecord.manifest = newAttr;
         updateFileManifest(currentRecord, attrIndex);

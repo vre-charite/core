@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Redirect, Switch, Route } from 'react-router-dom';
 import {
-  Card,
   PageHeader,
   Layout,
   Button,
@@ -12,7 +11,7 @@ import {
   message,
   Tabs,
   Modal,
-  Space,
+  Badge,
   Checkbox,
 } from 'antd';
 import _ from 'lodash';
@@ -27,17 +26,19 @@ import {
   UndoOutlined,
 } from '@ant-design/icons';
 import { StandardLayout } from '../../Components/Layout';
-import PlatformUsersTable from '../../Components/Table/PlatformUsersTable';
+import PlatformUsersTable from '../../Components/Table/TableWrapper';
 import {
   getPortalUsers,
   inviteUserApi,
   updateUserStatusAPI,
   getInvitationsAPI,
 } from '../../APIs';
+import { setServiceRequestRedDot } from '../../Redux/actions';
 import InviteUserModal from './Components/InviteUserModal';
 import { timeConvert, partialString } from '../../Utility';
 import ScalableDetails from './Components/ScalableDetails';
 import InvitationsTable from '../../Components/Table/InvitationTable';
+import RequestTable from '../../Components/Table/requestTable';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import CreateEmailModal from '../../Components/Modals/CreateEmailModal';
 import styles from './index.module.scss';
@@ -60,8 +61,8 @@ class UserManagement extends Component {
       sortColumn: 'createTime',
       modalVisible: false,
       adminView: true,
-      tableWidth: '90%',
-      panelWidth: 600,
+      tableWidth: '70%',
+      panelWidth: 650,
       currentRecord: null,
       filters: {
         page: 0,
@@ -77,12 +78,34 @@ class UserManagement extends Component {
       isAdminOnly: false,
       openCreateEmailModal: false,
       totalInvitations: '',
+      tabPaneKey: '',
+      debounce: _.debounce(
+        () => {
+          this.setState({
+            tableWidth: '70%',
+            panelWidth: 650,
+          });
+        },
+        1000,
+        { leading: false },
+      ),
     };
     this.myRef = React.createRef();
   }
 
   componentDidMount() {
     this.fetchUsers();
+    window.addEventListener(
+      'resize',
+      this.state.debounce
+    );
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener(
+      'resize',
+      this.state.debounce
+    );
   }
 
   setOpenCreateEmailModal = () => {
@@ -218,7 +241,7 @@ class UserManagement extends Component {
   };
 
   fetchInvitationUsers = async () => {
-    const res = await getInvitationsAPI();
+    const res = await getInvitationsAPI({filters: {}});
     this.setState({ totalInvitations: res.data.total });
   };
 
@@ -228,6 +251,21 @@ class UserManagement extends Component {
         sidePanel: !prev.sidePanel,
       };
     });
+  };
+
+  onWindowResize = () => {
+    const debounce = _.debounce(
+      () => {
+        this.setState({
+          tableWidth: '70%',
+          panelWidth: 650,
+        });
+      },
+      1000,
+      { leading: false },
+    );
+
+    return debounce;
   };
 
   mouseDown = (e) => {
@@ -244,7 +282,7 @@ class UserManagement extends Component {
     const mouseX = e.clientX;
     const parentX = this.myRef.current.getClientRects()[0].x;
     const parentWidth = this.myRef.current.getClientRects()[0].width;
-    const delta = mouseX - parentX;
+    const delta = mouseX - parentX; //delta is the current table width
     const maxPanelwidth = 700;
     const panelWidth =
       parentWidth - delta > maxPanelwidth ? maxPanelwidth : parentWidth - delta;
@@ -280,7 +318,6 @@ class UserManagement extends Component {
           namespace.userManagement.updateUserStatusAPI,
         );
         errorMessager.triggerMsg(err.response.status);
-        console.error(err);
       });
   };
 
@@ -303,8 +340,8 @@ class UserManagement extends Component {
     });
   };
 
-  callback = (key) => {
-    console.log(key);
+  setTabPaneKey = (key) => {
+    this.setState({tabPaneKey: key})
   };
 
   handleMenuClick = (e, type) => {
@@ -370,10 +407,10 @@ class UserManagement extends Component {
   };
 
   render() {
-    const { sidePanel, tableWidth, panelWidth, currentRecord } = this.state;
-    const { username } = this.props;
+    const { sidePanel, tableWidth, panelWidth, currentRecord, tabPaneKey } = this.state;
+    const { username, showRedDot } = this.props;
 
-    const columns = [
+    let columns = [
       {
         title: 'Account',
         dataIndex: 'name',
@@ -473,6 +510,10 @@ class UserManagement extends Component {
       },
     ];
 
+    if (sidePanel) {
+      columns = columns.filter((v) => v.key === 'name' || v.key === 'action');
+    }
+
     const statusMenu = (
       <Menu onClick={(e) => this.handleMenuClick(e, 'status')}>
         <Menu.Item key="all-status">All</Menu.Item>
@@ -559,6 +600,18 @@ class UserManagement extends Component {
       </div>
     );
 
+    const titleWithRedDot = (
+      <div className={styles.red_dot}>
+        Resource Request <Badge status='error'/>
+      </div>
+    );
+
+    const titleWithoutRedDot = (
+      <div>
+        Resource Request
+      </div>
+    );
+
     return (
       <StandardLayout className={styles.layout}>
         <Switch>
@@ -612,8 +665,8 @@ class UserManagement extends Component {
                       <Tabs
                         className={styles.tab}
                         style={{ borderRadius: '0px 0px 6px 6px' }}
-                        onChange={this.callback}
-                        tabBarExtraContent={extraContent}
+                        onChange={this.setTabPaneKey}
+                        tabBarExtraContent={tabPaneKey === 'Resource_Request' ? null : extraContent}
                       >
                         <TabPane tab="Platform Users" key="users">
                           <div
@@ -630,7 +683,6 @@ class UserManagement extends Component {
                             >
                               {searchPanel}
                               <PlatformUsersTable
-                                className={styles.table}
                                 columns={columns}
                                 onChange={this.onChange}
                                 handleReset={this.handleReset}
@@ -672,6 +724,9 @@ class UserManagement extends Component {
                             totalInvitations={this.state.totalInvitations}
                           />
                         </TabPane>
+                        <TabPane tab={showRedDot ? titleWithRedDot : titleWithoutRedDot} key="Resource_Request">
+                           <RequestTable/>
+                        </TabPane>
                       </Tabs>
                     </div>
                   </Col>
@@ -696,6 +751,7 @@ class UserManagement extends Component {
 export default connect(
   (state) => ({
     username: state.username,
+    showRedDot: state.serviceRequestRedDot.showRedDot,
   }),
-  null,
+  { setServiceRequestRedDot },
 )(UserManagement);

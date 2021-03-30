@@ -256,6 +256,7 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
               type="primary"
               htmlType="submit"
               style={{ float: 'right' }}
+              disabled={sentBtnLoading}
               onClick={() => setOpenCreatePanel(false)}
             >
               Cancel

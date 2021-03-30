@@ -53,18 +53,18 @@ function FileStats(props) {
         setProcessedCount(res.data.result['processFileCount']);
       });
 
-      projectFileCountToday(datasetId).then((res) => {
-        let uploadLog = [];
-        let downloadLog = [];
+      // projectFileCountToday(datasetId).then((res) => {
+      //   let uploadLog = [];
+      //   let downloadLog = [];
 
-        if (res.data.result['recentUpload']) {
-          uploadLog = res.data.result['recentUpload'].filter((el) => {
-            return checkTimeForToday(el.attributes.createTime);
-          });
-        }
+      //   if (res.data.result['recentUpload']) {
+      //     uploadLog = res.data.result['recentUpload'].filter((el) => {
+      //       return checkTimeForToday(el.attributes.createTime);
+      //     });
+      //   }
 
-        setUploadCount(uploadLog.length);
-      });
+      //   setUploadCount(uploadLog.length);
+      // });
       fileAuditLogsAPI({
         page_size: 50,
         page: 0,
@@ -94,6 +94,22 @@ function FileStats(props) {
         if (res.status === 200 && res.data) {
           const { total } = res.data;
           setDownloadCount(total);
+        }
+      });
+
+      fileAuditLogsAPI({
+        page_size: 50,
+        page: 0,
+        operation_type: 'data_upload',
+        project_code: currentDataset && currentDataset.code,
+        operator: props.projectRole === 'admin' ? null : props.username,
+        container_id: datasetId,
+        start_date: moment().startOf('day').unix(),
+        end_date: moment().endOf('day').unix(),
+      }).then((res) => {
+        if (res.status === 200 && res.data) {
+          const { total } = res.data;
+          setUploadCount(total);
         }
       });
     }

@@ -256,3 +256,110 @@
     }
   }
 }
+
+.user_management {
+  :global {
+    .ant-badge {
+      .ant-badge-status-error {
+        top: 37px;
+        right: 130px;
+        height: 8px;
+        width: 8px;
+      }
+    }
+  }
+}
+
+
+.tab {
+  :global {
+    .ant-tabs-content {
+      .ant-tabs-tabpane {
+        .ant-list {
+          .ant-spin-nested-loading {
+            .ant-spin-container {
+              .ant-list-empty-text {
+                .ant-empty {
+                  p {
+                    display: none;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.uploaded_list {
+  :global {
+    .ant-spin-nested-loading {
+      .ant-spin-container {
+        .ant-list-empty-text {
+          .ant-empty::after {
+            content: 'Files you upload during this session will appear here.';
+          }
+        }
+      }
+    }
+  }
+}
+
+.progress_list {
+  :global {
+    .ant-spin-nested-loading {
+      .ant-spin-container {
+        .ant-list-empty-text {
+          .ant-empty::after {
+            content: 'There are no files currently processing.';
+          }
+        }
+      }
+    }
+  }
+}
+
+.downloaded_list {
+  :global {
+    .ant-spin-nested-loading {
+      .ant-spin-container {
+        .ant-list-empty-text {
+          .ant-empty::after {
+            content: 'Files you download during this session will appear here.';
+          }
+        }
+      }
+    }
+  }
+}
+
+.approved_list {
+  :global {
+    .ant-spin-nested-loading {
+      .ant-spin-container {
+        .ant-list-empty-text {
+          .ant-empty::after {
+            content: 'Files you copy during this session will appear here.';
+          }
+        }
+      }
+    }
+  }
+}
+
+.deleted_list {
+  :global {
+    .ant-spin-nested-loading {
+      .ant-spin-container {
+        .ant-list-empty-text {
+          .ant-empty::after {
+            content: 'Files you delete during this session will appear here.';
+          }
+        }
+      }
+    }
+  }
+}
+

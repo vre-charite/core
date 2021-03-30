@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import {
   Modal,
   Button,
@@ -8,8 +8,16 @@ import {
   Upload,
   Spin,
   message,
+  Dropdown,
+  Menu,
 } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import {
+  FolderOutlined,
+  DownloadOutlined,
+  FileImageOutlined,
+  DownOutlined,
+  CloudUploadOutlined,
+} from '@ant-design/icons';
 import { uploadStarter, useCurrentProject } from '../../../Utility';
 import { withRouter } from 'react-router-dom';
 import { connect, useSelector } from 'react-redux';
@@ -25,6 +33,8 @@ import { validateTag } from '../../../Utility';
 import { useTranslation } from 'react-i18next';
 import UploaderManifest from './UploaderManifest';
 import { validateForm } from '../../../Components/Form/Manifest/FormValidate';
+import styles from './index.module.scss';
+import { UploadFolder } from '../../../Components/Input';
 const { Option } = Select;
 
 const GreenRoomUploader = ({
@@ -46,6 +56,10 @@ const GreenRoomUploader = ({
   const [manifestList, setManifestList] = useState([]);
   const [attrForm, setAttrForm] = useState({});
   const [selManifest, setSelManifest] = useState(null);
+  const folderRef = useRef(null);
+  const fileRef = useRef(null);
+  const [isFiles, setIsFiles] = useState(false);
+  const isGenerate = currentDataset?.code === 'generate';
   useEffect(() => {
     async function loadManifest() {
       const manifests = await getProjectManifestList(currentDataset.code);
@@ -61,7 +75,7 @@ const GreenRoomUploader = ({
   );
 
   const handleOk = () => {
-    if (selManifest) {
+    if (selManifest&&isFiles) {
       const { valid, err } = validateForm(attrForm, selManifest);
       if (!valid) {
         message.error(err);
@@ -73,12 +87,18 @@ const GreenRoomUploader = ({
       .validateFields()
       .then((values) => {
         setIsloading(true);
+        let jobType = values.file ? 'AS_FILE' : 'AS_FOLDER';
+        const fileList = values.file
+          ? values.file.fileList
+          : values.folder.fileList;
         const data = Object.assign({}, values, {
-          name: values.file.file.name,
-          file_type: values.file.file.type,
+          /*           name: values.file.file.name,
+          file_type: values.file.file.type, */
           uploader: username,
           projectName: currentDataset.name,
           projectCode: currentDataset.code,
+          fileList,
+          jobType,
           manifest: selManifest
             ? {
                 id: selManifest.id,
@@ -89,10 +109,12 @@ const GreenRoomUploader = ({
         uploadStarter(data, q);
         setSelManifest(null);
         form.resetFields();
+        setIsFiles(false);
         cancel();
         setIsloading(false);
       })
-      .catch((info) => {
+      .catch((err) => {
+        console.log(err);
         setIsloading(false);
       });
   };
@@ -103,62 +125,32 @@ const GreenRoomUploader = ({
     },
   };
 
-  // let lastFetchId = 0;
-  // const fetchTags = (value) => {
-  //   value = value.toLowerCase();
-  //   lastFetchId += 1;
-  //   const fetchId = lastFetchId;
-  //   setData([]);
-  //   setFetching(true);
-  //   listProjectTagsAPI(datasetId, true, value, 3).then((res) => {
-  //     if (fetchId !== lastFetchId) {
-  //       // for fetch callback order
-  //       return;
-  //     }
-  //     const data = res.data.result.map((i) => ({
-  //       text: i.name,
-  //       value: i.name,
-  //     }));
-  //     setData(data);
-  //     setFetching(false);
-  //   });
-  // };
-
-  // const handleChange = (value) => {
-  //   if (value.length !== 0) {
-  //     value = value.map((i) => i.toLowerCase());
-  //     let newTag = value.pop();
-  //     let index = value.indexOf(newTag);
-  //     if (index > -1) {
-  //       value.splice(index, 1);
-  //     } else {
-  //       value.push(newTag);
-  //     }
-  //   }
-  //   setValue(value);
-  //   setData([]);
-  //   setFetching(false);
-  //   form.setFieldsValue({ tags: value });
-  // };
-
-  // function tagRender(props) {
-  //   const { label, closable, onClose } = props;
-
-  //   return (
-  //     <Tag
-  //       color="blue"
-  //       closable={closable}
-  //       onClose={onClose}
-  //       style={{ marginRight: 3, display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 465 }}
-  //     >
-  //       <span
-  //         style={{ position: 'relative', display: 'flex', maxWidth: '95%', padding: '0px 4px 0px 8px' }}
-  //       >
-  //         {label.toLowerCase()}
-  //       </span>
-  //     </Tag>
-  //   );
-  // }
+  const menu = (
+    <Menu>
+      <Menu.Item className={styles.uploadDropDown} key="1">
+        <Button
+          onClick={() => {
+            fileRef.current.click();
+          }}
+        >
+          <FileImageOutlined />
+          Select Files
+        </Button>
+      </Menu.Item>
+      <Menu.Item className={styles.uploadDropDown} key="2">
+        <Button
+          onClick={() => {
+            folderRef.current.click();
+          }}
+          id="form_in_modal_select_file"
+          disabled={isGenerate}
+        >
+          <FolderOutlined />
+          Select Folder
+        </Button>
+      </Menu.Item>
+    </Menu>
+  );
 
   return (
     <div>
@@ -173,25 +165,30 @@ const GreenRoomUploader = ({
           setSelManifest(null);
           form.resetFields();
         }}
+        className={styles.uploadModal}
         footer={[
           <Button
+            className={styles.cancelButton}
             key="back"
             onClick={() => {
               cancel();
               setSelManifest(null);
               form.resetFields();
             }}
+            type="link"
           >
-            Close
+            Cancel
           </Button>,
           <Button
+            className={styles.uploadButton}
             id="file_upload_submit_btn"
             key="submit"
             type="primary"
             loading={isLoading}
             onClick={handleOk}
+            icon={<CloudUploadOutlined />}
           >
-            Submit
+            Upload
           </Button>,
         ]}
       >
@@ -202,6 +199,7 @@ const GreenRoomUploader = ({
           initialValues={{
             modifier: 'public',
           }}
+          className={styles.uploadFormItem}
         >
           <Form.Item
             name="dataset"
@@ -221,6 +219,7 @@ const GreenRoomUploader = ({
               }}
               //disabled={datasetId !== undefined}
               style={{ width: '100%' }}
+              className={styles.inputBorder}
             >
               {containersPermission &&
                 containersPermission.map((item) => (
@@ -249,6 +248,7 @@ const GreenRoomUploader = ({
                   hasFeedback
                 >
                   <Input
+                    className={styles.inputBorder}
                     onCopy={(e) => {
                       e.preventDefault();
                     }}
@@ -288,6 +288,7 @@ const GreenRoomUploader = ({
                 ]}
               >
                 <Input
+                  className={styles.inputBorder}
                   onCopy={(e) => {
                     e.preventDefault();
                   }}
@@ -302,105 +303,155 @@ const GreenRoomUploader = ({
             </>
           ) : null}
 
-          <Form.Item
-            name="tags"
-            label="File Tags"
-            rules={[
-              ({ getFieldValue }) => ({
-                validator(rule, value) {
-                  if (!value) {
-                    return Promise.resolve();
-                  }
-                  if (value.length > 10) {
-                    return Promise.reject(
-                      t('formErrorMessages:project.upload.tags.limit'),
-                    );
-                  }
-                  const systemTags = project.manifest.tags;
-                  let i;
-                  for (i of value) {
-                    if (systemTags.indexOf(i) !== -1) {
-                      return Promise.reject(
-                        t('formErrorMessages:project.upload.tags.systemtags'),
-                      );
-                    }
-                    if (!validateTag(i)) {
-                      return Promise.reject(
-                        t('formErrorMessages:project.upload.tags.valid'),
-                      );
-                    }
-                  }
-                  value = value.map((i) => i.toLowerCase());
-
-                  value = [...new Set(value)];
-
-                  setValue(value);
-                  setData([]);
-                  setFetching(false);
-                  form.setFieldsValue({ tags: value });
-
-                  return Promise.resolve();
-                },
-              }),
-            ]}
-          >
-            <Select
-              mode="tags"
-              // tagRender={tagRender}
-              value={value}
-              notFoundContent={fetching ? <Spin size="small" /> : null}
-              // onSearch={fetchTags}
-              // onChange={handleChange}
-              getPopupContainer={(triggerNode) => triggerNode.parentNode}
-              style={{ width: '100%' }}
-              rendervalue={(selected) => selected.map((el) => el.toLowerCase())}
-              placeholder="Add tags"
-            >
-              {data.map((d) => (
-                <Option key={d.value}>{d.text.toLowerCase()}</Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            rules={[
-              // {
-              //   required: true,
-              //   message: t('formErrorMessages:project.upload.file.empty'),
-              // },
-              ({ getFieldValue }) => ({
-                validator(rule, value) {
-                  const fileList = value && value.fileList;
-                  if (!fileList || (fileList && fileList.length === 0)) {
-                    return Promise.reject(
-                      t('formErrorMessages:project.upload.file.empty'),
-                    );
-                  } else if (
-                    fileList &&
-                    fileList.length ===
-                      _.uniqBy(fileList, (item) => item.name).length
-                  ) {
-                    return Promise.resolve();
-                  } else {
-                    return Promise.reject(
-                      t('formErrorMessages:project.upload.file.valid'),
-                    );
-                  }
-                },
-              }),
-            ]}
-            name="file"
-            label="Upload file"
-          >
-            <Upload multiple {...props}>
-              <Button id="form_in_modal_select_file">
-                <UploadOutlined />
-                Select Files
+          <Form.Item label="Upload Files">
+            <Dropdown overlay={menu}>
+              <Button className={styles.uploadSelector}>
+                <DownloadOutlined /> Select <DownOutlined />
               </Button>
-            </Upload>
+            </Dropdown>
+            <Form.Item
+              noStyle
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(rule, value) {
+                    const fileList = value && value.fileList;
+                    if (!fileList) {
+                      return Promise.resolve();
+                    }
+                    if (!fileList.length) {
+                      return Promise.resolve();
+                    }
+                    if (
+                      fileList.length ===
+                      _.uniqBy(fileList, (item) => item.name).length
+                    ) {
+                      return Promise.resolve();
+                    } else {
+                      return Promise.reject(
+                        t('formErrorMessages:project.upload.file.valid'),
+                      );
+                    }
+                  },
+                }),
+              ]}
+              name="file"
+            >
+              <Upload
+                onChange={(value) => {
+                  form.resetFields(['folder']);
+                  console.log(
+                    value?.fileList?.length,
+                    'value?.fileList?.length',
+                  );
+                  setIsFiles(Boolean(value?.fileList?.length));
+                }}
+                multiple
+                {...props}
+              >
+                <Button ref={fileRef}></Button>
+              </Upload>
+            </Form.Item>
+
+            <Form.Item
+              noStyle
+              name="folder"
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(rule, value) {
+                    const fileFormItem = getFieldValue('file');
+                    const fileList = value && value.fileList;
+                    if (!(fileFormItem?.fileList?.length || fileList?.length)) {
+                      return Promise.reject(
+                        t('formErrorMessages:project.upload.file.empty'),
+                      );
+                    } else {
+                      return Promise.resolve();
+                    }
+                  },
+                }),
+              ]}
+            >
+              <UploadFolder
+                onChange={(value) => {
+                  form.resetFields(['file']);
+                  if (value) {
+                    setIsFiles(false);
+                  }
+                }}
+                multiple
+                {...props}
+                directory
+              >
+                <Button style={{ display: 'none' }} ref={folderRef}></Button>
+              </UploadFolder>
+            </Form.Item>
           </Form.Item>
+          {isFiles && (
+            <Form.Item
+              name="tags"
+              label="File Tags"
+              rules={[
+                ({ getFieldValue }) => ({
+                  validator(rule, value) {
+                    if (!value) {
+                      return Promise.resolve();
+                    }
+                    if (value.length > 10) {
+                      return Promise.reject(
+                        t('formErrorMessages:project.upload.tags.limit'),
+                      );
+                    }
+                    const systemTags = project.manifest.tags;
+                    let i;
+                    for (i of value) {
+                      if (systemTags.indexOf(i) !== -1) {
+                        return Promise.reject(
+                          t('formErrorMessages:project.upload.tags.systemtags'),
+                        );
+                      }
+                      if (!validateTag(i)) {
+                        return Promise.reject(
+                          t('formErrorMessages:project.upload.tags.valid'),
+                        );
+                      }
+                    }
+                    value = value.map((i) => i.toLowerCase());
+
+                    value = [...new Set(value)];
+
+                    setValue(value);
+                    setData([]);
+                    setFetching(false);
+                    form.setFieldsValue({ tags: value });
+
+                    return Promise.resolve();
+                  },
+                }),
+              ]}
+            >
+              <Select
+                className={styles.inputBorder}
+                mode="tags"
+                // tagRender={tagRender}
+                value={value}
+                notFoundContent={fetching ? <Spin size="small" /> : null}
+                // onSearch={fetchTags}
+                // onChange={handleChange}
+                getPopupContainer={(triggerNode) => triggerNode.parentNode}
+                style={{ width: '100%' }}
+                rendervalue={(selected) =>
+                  selected.map((el) => el.toLowerCase())
+                }
+                placeholder="Add tags"
+              >
+                {data.map((d) => (
+                  <Option key={d.value}>{d.text.toLowerCase()}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
         </Form>
-        {manifestList && manifestList.length ? (
+        {isFiles && manifestList && manifestList.length ? (
           <UploaderManifest
             selManifest={selManifest}
             setSelManifest={setSelManifest}

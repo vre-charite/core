@@ -25,6 +25,8 @@ import isKeycloakReady from './isKeycloakReady';
 import isReleaseNoteShown from './isReleaseNoteShown';
 import deletedFileList from './deletedFileList';
 import uploadFileManifest from './uploadFileManifest';
+import fileExplorer from './fileExplorer';
+import serviceRequestRedDot from './serviceRequest';
 // export default combineReducers({
 //   datasetList,
 //   userList,
@@ -62,6 +64,8 @@ const appReducer = combineReducers({
   isReleaseNoteShown,
   deletedFileList,
   uploadFileManifest,
+  fileExplorer,
+  serviceRequestRedDot,
 });
 
 const rootReducer = (state, action) => {

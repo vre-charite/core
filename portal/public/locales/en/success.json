@@ -20,7 +20,7 @@
     "inviteUser": ["Invitation has been sent to"]
   },
   "importManifestAPI": {
-    "default": ["Manifest imported"]
+    "default": ["Attribute template has been imported"]
   },
   "fileOperations": {
     "delete": "Files deleted successfully"
@@ -30,5 +30,12 @@
     "removeFiles": "Files have been removed successfully",
     "addFilesDuplicate": "Files added successfully with existing files skipped",
     "addFiles": "Files have been added successfully"
+  },
+  "contactUs": {
+    "text": [
+      "Thank you for submitting a request!",
+      " VRE Support Team has received your request and will respond through the email address associated with your VRE user account shortly​."
+    ],
+    "button": "Submit another request"
   }
 }

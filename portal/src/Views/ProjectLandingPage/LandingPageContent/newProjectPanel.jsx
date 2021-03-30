@@ -260,7 +260,7 @@ function NewProjectPanel({
               Visibility
             </p>
             <p style={{ color: '#818181', fontSize: '12px' }}>
-              Not discoverable by all platform users
+              {discoverable ? ('Discoverable by all platform users') : ('Not discoverable by all platform users')} 
             </p>
           </div>
         </div>

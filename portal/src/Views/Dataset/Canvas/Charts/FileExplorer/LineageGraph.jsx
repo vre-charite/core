@@ -179,7 +179,7 @@ export default function (props) {
           ${
             e.item.getModel().fileManifests.length
               ? `
-            <li> Manifest:
+            <li> File Attributes:
               <ul>
                ${e.item.getModel().fileManifests}
               </ul>

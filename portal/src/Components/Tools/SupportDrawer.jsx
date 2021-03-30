@@ -176,7 +176,7 @@ function SupportDrawer(props) {
       <Button type="primary" ghost>
         <a
           href="/xwiki/bin/view/user_guide"
-          target="_self"
+          target="_blank"
         >
           {t('download_guide_button_text')}
         </a>

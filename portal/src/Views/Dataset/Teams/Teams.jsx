@@ -33,7 +33,7 @@ import {
 } from '../../../Utility';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
 import { withCurrentProject, formatRole } from '../../../Utility';
-import PlatformUsersTable from '../../../Components/Table/PlatformUsersTable';
+import MembersTable from '../../../Components/Table/TableWrapper';
 import { withTranslation } from 'react-i18next';
 import InvitationTable from '../../../Components/Table/InvitationTable';
 import CanvasPageHeader from '../Canvas/PageHeader/CanvasPageHeader';
@@ -521,7 +521,7 @@ class Teams extends Component {
                   className={styles.tab}
                 >
                   <TabPane tab="Members" key="users">
-                    <PlatformUsersTable
+                    <MembersTable
                       dataSource={this.props.userListOnDataset}
                       columns={columns}
                       totalItem={this.state.total}

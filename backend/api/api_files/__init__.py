@@ -2,7 +2,9 @@ from .upload_ops import CheckUploadStateRestful, CheckUploadStatusRestful, PreUp
 from .folder_ops import Folders
 from .vfolder_ops import VirtualFolderFiles, VirtualFolder, VirtualFolderInfo
 from .file_ops import FileExistCheck, FileDownloadLog, FilePreDownload, FileInfo, ProcessedFile, TotalFileCount, DailyFileCount, FileTransfer, FileActionLogs, FileDeletion
-from .file_ops_v2 import FileInfoV2, FileTags
+from .file_ops_v2 import TotalFileCountV2, FileInfoV2, FileTags
+from .file_ops_v3 import FileInfoV3, FolderInfoV3
+from .folder_entity import FolderEntity, FoldersEntity
 from flask_restx import Api, Resource, fields, Namespace
 from config import ConfigClass
 
@@ -22,6 +24,9 @@ nfs_entity_ns.add_resource(FileExistCheck, '/containers/<container_id>/files/exi
 nfs_entity_ns.add_resource(FileTransfer, '/transfer')
 nfs_entity_ns.add_resource(FileActionLogs, '/actions/logs')
 nfs_entity_ns.add_resource(FileDeletion, '/actions')
+nfs_entity_ns.add_resource(FoldersEntity, '/entity/folders')
+nfs_entity_ns.add_resource(FolderEntity, '/entity/folder/<geid>')
+
 
 nfs_entity_ns_v2 = Namespace(
     'NFS Data Operation Version 2', description='Operation on NFS', path='/v2/files'
@@ -29,6 +34,7 @@ nfs_entity_ns_v2 = Namespace(
 
 nfs_entity_ns_v2.add_resource(FileInfoV2, '/containers/<dataset_id>/files/meta')
 nfs_entity_ns_v2.add_resource(FileTags, '/containers/<dataset_id>/files/tags')
+nfs_entity_ns_v2.add_resource(TotalFileCountV2, '/containers/<dataset_id>/files/count')
 
 nfs_upload_ns = Namespace(
     'NFS Data Upload', description='Upload on NFS', path='/v1/upload')
@@ -47,3 +53,10 @@ nfs_vfolder_ns = Namespace(
 nfs_vfolder_ns.add_resource(VirtualFolderFiles, '/<folderId>/files')
 nfs_vfolder_ns.add_resource(VirtualFolder, '/')
 nfs_vfolder_ns.add_resource(VirtualFolderInfo, '/<folderId>')
+
+
+nfs_entity_ns_v3 = Namespace(
+    'File Query v3', description='File Meta Query', path='/v3/files'
+)
+nfs_entity_ns_v3.add_resource(FileInfoV3, '/containers/<dataset_id>/files/meta')
+nfs_entity_ns_v3.add_resource(FolderInfoV3, '/containers/<dataset_id>/folder/<folder_geid>/meta')

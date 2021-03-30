@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UploadOutlined,PlusOutlined,DownloadOutlined } from '@ant-design/icons';
+import {
+  UploadOutlined,
+  PlusOutlined,
+  DownloadOutlined,
+} from '@ant-design/icons';
 import { Button, Input, Modal, message, Upload, Form } from 'antd';
 import FileManifestItem from './FileManifestCompo/ManifestEdit/FileManifestItem';
 
@@ -9,10 +13,11 @@ import { useCurrentProject } from '../../../../../Utility';
 import _ from 'lodash';
 import { useTranslation } from 'react-i18next';
 function FileManifest() {
-  const { t } = useTranslation(["errormessages","success"])
+  const { t } = useTranslation(['errormessages', 'success']);
   const [isCreateManifest, setIsCreateManifest] = useState(false);
   const [importModalVisible, setImportModalVisible] = useState(false);
   const [manifestList, setManifestList] = useState([]);
+  const [btnLoading, setBtnLoading] = useState(false);
   const [currentDataset = {}] = useCurrentProject();
   const [form] = Form.useForm();
   const loadManifest = useCallback(async () => {
@@ -26,9 +31,13 @@ function FileManifest() {
   }, [loadManifest]);
   const importModal = (
     <Modal
-      title="Import Manifest"
+      title="Import Attribute Template"
       visible={importModalVisible}
       onOk={() => {
+        if (btnLoading) {
+          return;
+        }
+        setBtnLoading(true);
         form
           .validateFields()
           .then((res) => {
@@ -41,11 +50,15 @@ function FileManifest() {
               try {
                 json = JSON.parse(reader.result);
               } catch (err) {
-                message.error(t("errormessages:importExportManifest.parseJsonFailed.0"));
+                setBtnLoading(false);
+                message.error(
+                  t('errormessages:importExportManifest.parseJsonFailed.0'),
+                );
                 return;
               }
-              const { result, message: errorMessage } = validateJson(json,t);
+              const { result, message: errorMessage } = validateJson(json, t);
               if (!result) {
+                setBtnLoading(false);
                 message.error(errorMessage);
                 return;
               }
@@ -57,20 +70,26 @@ function FileManifest() {
                 .then((res) => {
                   setImportModalVisible(false);
                   form.resetFields();
-                  message.success(t("success:importManifestAPI.default.0"));
+                  message.success(t('success:importManifestAPI.default.0'));
                   loadManifest();
+                  setBtnLoading(false);
                 })
                 .catch((err) => {
-                  message.error(t("errormessages:importManifestAPI.default.0"));
+                  message.error(t('errormessages:importManifestAPI.default.0'));
+                  setBtnLoading(false);
                 });
             };
 
             reader.onerror = function () {
-              message.error(t("errormessages:importExportManifest.fileTypeError.0"));
+              message.error(
+                t('errormessages:importExportManifest.fileTypeError.0'),
+              );
+              setBtnLoading(false);
             };
           })
           .catch((err) => {
             console.log(err);
+            setBtnLoading(false);
           });
       }}
       onCancel={() => {
@@ -82,10 +101,10 @@ function FileManifest() {
         <Form.Item
           name="manifestName"
           rules={[
-            { required: true, message: 'Manifest name is required' },
+            { required: true, message: 'Attribute template name is required' },
             {
               pattern: /^[^\\/:?*<>|"']+$/,
-              message: `manifest name should not includes  \\ / : ? * < > | " ' `,
+              message: `Attribute template name should not includes  \\ / : ? * < > | " ' `,
             },
             {
               validator(rule, value) {
@@ -100,15 +119,15 @@ function FileManifest() {
                   return Promise.resolve();
                 } else {
                   return Promise.reject(
-                    'The manifest name length should between 1-32 characters',
+                    'Attribute template name length should between 1-32 characters',
                   );
                 }
               },
             },
           ]}
-          label="Manifest Name"
+          label="Attribute Template Name"
         >
-          <Input style={{ width: 150,borderRadius:6 }} />
+          <Input style={{ width: 150, borderRadius: 6 }} />
         </Form.Item>
         <Form.Item
           name="file"
@@ -167,14 +186,18 @@ function FileManifest() {
               type="link"
               onClick={(e) => {
                 if (manifestList.length >= 10) {
-                  message.error(t("errormessages:importExportManifest.manifestNumberOver.0"));
+                  message.error(
+                    t(
+                      'errormessages:importExportManifest.manifestNumberOver.0',
+                    ),
+                  );
                   return;
                 }
                 setIsCreateManifest(true);
               }}
               icon={<PlusOutlined />}
             >
-              Create New Manifest
+              Create New Attribute Template
             </Button>
             <Button
               type="link"
@@ -182,7 +205,7 @@ function FileManifest() {
               onClick={(e) => setImportModalVisible(true)}
               icon={<DownloadOutlined />}
             >
-              Import Manifest
+              Import Attribute Template
             </Button>
           </div>
         ) : null}
@@ -199,17 +222,17 @@ function FileManifest() {
   );
 }
 
-const validateJson = (json,t) => {
+const validateJson = (json, t) => {
   if (!_.has(json, ['attributes'])) {
     return {
       result: false,
-      message: t("errormessages:importExportManifest.attributesMissing.0"),
+      message: t('errormessages:importExportManifest.attributesMissing.0'),
     };
   }
   if (!_.isArray(json.attributes)) {
     return {
       result: false,
-      message: t("errormessages:importExportManifest.attributesNotArray.0") ,
+      message: t('errormessages:importExportManifest.attributesNotArray.0'),
     };
   }
 
@@ -221,7 +244,9 @@ const validateJson = (json,t) => {
       if (!item.hasOwnProperty(key)) {
         res = {
           result: false,
-          message: `${key} ${t("errormessages:importExportManifest.propertyMissing.0")} ${i}${t("errormessages:importExportManifest.propertyMissing.0")}`,
+          message: `${key} ${t(
+            'errormessages:importExportManifest.propertyMissing.0',
+          )} ${i}${t('errormessages:importExportManifest.propertyMissing.0')}`,
         };
       }
     });
@@ -231,37 +256,49 @@ const validateJson = (json,t) => {
     if (typeof item['name'] !== 'string') {
       return {
         result: false,
-        message: `${t("errormessages:importExportManifest.nameNotString.0")} ${i}${t("errormessages:importExportManifest.nameNotString.1")}`,
+        message: `${t(
+          'errormessages:importExportManifest.nameNotString.0',
+        )} ${i}${t('errormessages:importExportManifest.nameNotString.1')}`,
       };
     }
     if (item['name'].length < 1 || item['name'].length > 32) {
       return {
         result: false,
-        message: `${t("errormessages:importExportManifest.nameLength.0")} ${i}${t("errormessages:importExportManifest.nameLength.1")}`,
+        message: `${t(
+          'errormessages:importExportManifest.nameLength.0',
+        )} ${i}${t('errormessages:importExportManifest.nameLength.1')}`,
       };
     }
     if (!item['name'].match(/^[A-Za-z0-9]+$/)) {
       return {
         result: false,
-        message: `${t("errormessages:importExportManifest.nameFormat.0")} ${i}${t("errormessages:importExportManifest.nameFormat.1")}`,
+        message: `${t(
+          'errormessages:importExportManifest.nameFormat.0',
+        )} ${i}${t('errormessages:importExportManifest.nameFormat.1')}`,
       };
     }
     if (typeof item['optional'] !== 'boolean') {
       return {
         result: false,
-        message: `${t("errormessages:importExportManifest.optionalNotBoolean.0")} ${i}${t("errormessages:importExportManifest.optionalNotBoolean.1")}`,
+        message: `${t(
+          'errormessages:importExportManifest.optionalNotBoolean.0',
+        )} ${i}${t('errormessages:importExportManifest.optionalNotBoolean.1')}`,
       };
     }
     if (item['type'] !== 'multiple_choice' && item['type'] !== 'text') {
       return {
         result: false,
-        message: `${t("errormessages:importExportManifest.typeFormat.0")} ${i}${t("errormessages:importExportManifest.typeFormat.1")}`,
+        message: `${t(
+          'errormessages:importExportManifest.typeFormat.0',
+        )} ${i}${t('errormessages:importExportManifest.typeFormat.1')}`,
       };
     }
     if (item['type'] === 'text' && item['value'] !== null) {
       return {
         result: false,
-        message: `${t("errormessages:importExportManifest.valueNullText.0")} ${i}${t("errormessages:importExportManifest.valueNullText.1")}`,
+        message: `${t(
+          'errormessages:importExportManifest.valueNullText.0',
+        )} ${i}${t('errormessages:importExportManifest.valueNullText.1')}`,
       };
     }
     if (item['type'] === 'multiple_choice') {
@@ -269,7 +306,9 @@ const validateJson = (json,t) => {
       if (typeof value !== 'string') {
         return {
           result: false,
-          message: `${t("errormessages:importExportManifest.valueString.0")} ${i}${t("errormessages:importExportManifest.valueString.1")}`,
+          message: `${t(
+            'errormessages:importExportManifest.valueString.0',
+          )} ${i}${t('errormessages:importExportManifest.valueString.1')}`,
         };
       }
       const valueArr = value.split(',');
@@ -277,13 +316,17 @@ const validateJson = (json,t) => {
         if (valueArr[j].length < 1 || valueArr[j].length > 32) {
           return {
             result: false,
-            message: `${t("errormessages:importExportManifest.choiceLength.0")} ${i}${t("errormessages:importExportManifest.choiceLength.1")}`,
+            message: `${t(
+              'errormessages:importExportManifest.choiceLength.0',
+            )} ${i}${t('errormessages:importExportManifest.choiceLength.1')}`,
           };
         }
         if (!valueArr[j].match(/^[A-Za-z0-9-_!%&/()=?*+#.;]+$/)) {
           return {
             result: false,
-            message: `${t("errormessages:importExportManifest.choiceFormat.0")} ${i}${t("errormessages:importExportManifest.choiceFormat.1")}`,
+            message: `${t(
+              'errormessages:importExportManifest.choiceFormat.0',
+            )} ${i}${t('errormessages:importExportManifest.choiceFormat.1')}`,
           };
         }
       }
@@ -291,10 +334,10 @@ const validateJson = (json,t) => {
   }
 
   const names = json.attributes.map((item) => item.name);
-  if (((new Set(names))).size !== names.length) {
+  if (new Set(names).size !== names.length) {
     return {
       result: false,
-      message: `${t("errormessages:importExportManifest.uniqueName.0")}`,
+      message: `${t('errormessages:importExportManifest.uniqueName.0')}`,
     };
   }
   return { result: true, message: '' };

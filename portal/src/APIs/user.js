@@ -186,6 +186,41 @@ function getInvitationsAPI(params) {
   });
 }
 
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1200
+ * List or query on all resource requests.
+ */
+ function getResourceRequestsAPI(params) {
+  return axios({
+    url: `/v1/resource-requests/query`,
+    method: 'POST',
+    data: objectKeysToSnakeCase(params),
+  })
+}
+
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1200
+ * Create new resource request
+ */
+function createResourceRequestAPI(params) {
+  return axios({
+    url: `/v1/resource-requests`,
+    method: 'POST',
+    data: objectKeysToSnakeCase(params),
+  })
+}
+
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1200
+ * Mark a request as completed
+ */
+ function approveResourceRequestAPI(requestId) {
+  return axios({
+    url: `/v1/resource-request/${requestId}/complete`,
+    method: 'PUT',
+  })
+}
+
 export {
   getAllUsersAPI,
   createUserAPI,
@@ -204,4 +239,7 @@ export {
   getUserProjectListAPI,
   updateUserStatusAPI,
   getInvitationsAPI,
+  getResourceRequestsAPI,
+  createResourceRequestAPI,
+  approveResourceRequestAPI,
 };

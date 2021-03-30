@@ -342,15 +342,15 @@ function getManifestById(manifestId) {
 /**
  * update the manifest attribute for a specified file
  * https://indocconsortium.atlassian.net/browse/VRE-947
- * @param {string} filePath
+ * @param {string} geid file's geid
  * @param {object} attributes all the attributes {name:value}
  */
-function updateFileManifestAPI(filePath, attributes) {
+function updateFileManifestAPI(geid, attributes) {
   return serverAxios({
     url: `/v1/file/manifest`,
     method: 'PUT',
     data: {
-      file_path: filePath,
+      global_entity_id: geid,
       ...attributes,
     },
   });
@@ -450,18 +450,19 @@ function addNewAttrsToManifest(attrsParams) {
     data: refinedAttrs,
   });
 }
-function attachManifest(manifestId, files, attributes) {
-  const refinedArr = files.map((file_path) => {
+
+function attachManifest(manifestId, geids, attributes) {
+  const data = geids.map((geid) => {
     return {
       manifest_id: manifestId,
-      file_path: file_path,
+      global_entity_id: geid,
       attributes: attributes,
     };
   });
   return serverAxios({
     url: `/v1/file/manifest/attach`,
     method: 'POST',
-    data: refinedArr,
+    data: data,
   });
 }
 

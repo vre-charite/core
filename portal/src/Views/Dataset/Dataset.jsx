@@ -20,6 +20,8 @@ import {
   triggerEvent,
   setCurrentProjectProfile,
   setCurrentProjectManifest,
+  setFolderRouting,
+  clearCurrentProject,
 } from '../../Redux/actions';
 
 import _ from 'lodash';
@@ -33,6 +35,7 @@ function Dataset(props) {
   useEffect(() => {
     const { params } = props.match;
     if (params.datasetId) {
+      dispatch(clearCurrentProject());
       getProjectInfoAPI(params.datasetId).then((res) => {
         if (res.status === 200 && res.data && res.data.code === 200) {
           const currentDataset = res.data.result;
@@ -45,6 +48,7 @@ function Dataset(props) {
         }
       });
     }
+    dispatch(setFolderRouting({}));
   }, []);
   useEffect(() => {
     if (project.profile) {

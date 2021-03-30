@@ -122,7 +122,25 @@ const MyCustomAdapter = {
     }
   },
 };
-
+// detect token when tab is resume
+// The reason is local & dev will not logout together
+// the token updating will cause keycloak refresh and then logout
+document.addEventListener('visibilitychange', (event) => {
+  if (document.visibilityState == 'visible') {
+    keycloak
+      .updateToken(-1)
+      .then(function (refreshed) {
+        if (refreshed) {
+          console.log('Token was successfully refreshed');
+        } else {
+          console.log('Token is still valid');
+        }
+      })
+      .catch(function () {
+        console.log('Failed to refresh the token, or the session has expired');
+      });
+  }
+});
 const initOptions =
   browser?.name === 'safari'
     ? {}
@@ -337,7 +355,6 @@ function KeyCloakMiddleware() {
                     exact={item.exact || false}
                     render={(props) => {
                       // only if keycloak ready, app will be rendered
-                      // debugger;
                       if (isKeycloakReady) {
                         return <App />;
                       } else {

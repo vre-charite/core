@@ -24,7 +24,7 @@ const { Title, Paragraph } = Typography;
 
 function ContactUsForm(props) {
   const [form] = Form.useForm();
-  const { t } = useTranslation(['tooltips', 'formErrorMessages']);
+  const { t } = useTranslation(['tooltips', 'formErrorMessages', 'success']);
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -86,17 +86,15 @@ function ContactUsForm(props) {
           subTitle={
             <>
               <p>
-                Thank you for contacting us.
+                {i18n.t('success:contactUs.text.0')}
                 <br />
-                Your request will be reviewed by a member of the VRE support
-                team and you will receive a reply shortly through the email
-                address associated with your VRE user account.​
+                {i18n.t('success:contactUs.text.1')}
               </p>
             </>
           }
           extra={[
             <Button type="primary" key="console" onClick={resetSubmission}>
-              OK!
+              {i18n.t('success:contactUs.button')}
             </Button>,
           ]}
         />

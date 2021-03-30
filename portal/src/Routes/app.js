@@ -1,12 +1,11 @@
 import Login from '../Views/Login/Auth';
 import LandingPageLayout from '../Views/ProjectLandingPage/LandingPageLayout';
 import Dataset from '../Views/Dataset/Dataset';
-import Support from '../Views/Support/Support';
 import ErrorPage from '../Views/ErrorPage/ErrorPage';
 import General404Page from '../Views/GeneralPage/General404Page';
 import SelfRegistration from '../Views/Self-Registration/Self-Registration';
 import AccountAssistant from '../Views/AccountAssistant/AccountAssistant';
-import UserManagement from '../Views/AdministratorConsole';
+import UserManagement from '../Views/UserManagement';
 // render whenever user is authorized
 const authedRoutes = [
   {
@@ -17,11 +16,6 @@ const authedRoutes = [
   {
     path: '/project/:datasetId',
     component: Dataset,
-    protectedType: 'isLogin',
-  },
-  {
-    path: '/support',
-    component: Support,
     protectedType: 'isLogin',
   },
   {

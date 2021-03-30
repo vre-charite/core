@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  Tooltip,
-  List,
-  Progress,
-  Badge,
-  Popover,
-  Card,
-  Tabs,
-  Menu,
-} from 'antd';
+import { Tooltip, List, Progress, Badge, Popover, Card, Tabs } from 'antd';
 import Icon from '@ant-design/icons';
 import {
   ProfileOutlined,
@@ -72,7 +63,9 @@ function FilePanel(props) {
   let deletedFileList = useSelector((state) => state.deletedFileList);
 
   const projectCode = props.projectCode;
-  const uploadList = uploadListGlobal.filter((el) => el.projectCode === projectCode);
+  const uploadList = uploadListGlobal.filter(
+    (el) => el.projectCode === projectCode,
+  );
 
   deletedFileList = deletedFileList.filter(
     (el) => el.projectCode === projectCode,
@@ -92,8 +85,8 @@ function FilePanel(props) {
         return {
           ...el,
           createdTime: Date.now(),
-        }
-      })
+        };
+      });
       dispatch(updateCopy2CoreList(result));
       if (res.data.result.length) {
         if (
@@ -295,7 +288,7 @@ function FilePanel(props) {
     cleanDownloadList();
   };
 
-  let uploadHeader = 'No file is uploaded';
+  let uploadHeader = `You haven't uploaded any files yet!`;
 
   const waitingUploadList = uploadList.filter((el) => el.status === 'waiting');
   const uploadingList = uploadList.filter((el) => el.status === 'uploading');
@@ -304,12 +297,12 @@ function FilePanel(props) {
   if (uploadList.length > 0) {
     uploadHeader = `${uploadList.length - waitingUploadList.length}/${
       uploadList.length
-    } files are uploading`;
+    } files are uploading.`;
 
     if (uploadList.length === 1) {
       uploadHeader = `${uploadList.length - waitingUploadList.length}/${
         uploadList.length
-      } file is uploading`;
+      } file is uploading.`;
     }
   }
 
@@ -329,21 +322,21 @@ function FilePanel(props) {
       if (uploadList.length - successList.length > 1) {
         uploadHeader = `${
           uploadList.length - successList.length
-        } files are being uploaded`;
+        } files are being uploaded.`;
 
         if (failedList.length > 0)
           uploadHeader = `${
             uploadList.length - successList.length - failedList.length
-          } files are being uploaded - ${failedList.length} files failed`;
+          } files are being uploaded. ${failedList.length} files failed.`;
       } else {
         uploadHeader = `${
           uploadList.length - successList.length
-        } file is being uploaded`;
+        } file is being uploaded.`;
 
         if (failedList.length > 0)
           uploadHeader = `${
             uploadList.length - successList.length - failedList.length
-          } file is being uploaded - ${failedList.length} files failed`;
+          } file is being uploaded. ${failedList.length} files failed.`;
       }
     }
 
@@ -353,18 +346,18 @@ function FilePanel(props) {
       successList.length &&
       failedList.length + successList.length === uploadList.length
     ) {
-      let suceessLetters = `${successList.length} files uploaded successfully. `;
-      let failLetters = `${failedList.length} files failed`;
+      let suceessLetters = `${successList.length} files uploaded successfully.`;
+      let failLetters = `${failedList.length} files failed.`;
 
       if (successList.length === 1)
-        suceessLetters = `${successList.length} file uploaded successfully. `;
+        suceessLetters = `${successList.length} file uploaded successfully.`;
       if (failedList.length === 1)
         failLetters = `${failedList.length} file failed.`;
       uploadHeader = `${suceessLetters}${failLetters}`;
     }
   }
 
-  let downloadHeader = 'No file is downloaded';
+  let downloadHeader = `You haven't downloaded any files yet!`;
   const processDownloadList = downloadList.filter(
     (el) => el.status === 'pending',
   );
@@ -373,21 +366,21 @@ function FilePanel(props) {
   );
 
   if (processDownloadList && processDownloadList.length > 0)
-    downloadHeader = `${processDownloadList.length} file is being downloaded`;
+    downloadHeader = `${processDownloadList.length} file is being downloaded.`;
   if (processDownloadList && processDownloadList.length > 1)
-    downloadHeader = `${processDownloadList.length} files are being downloaded`;
+    downloadHeader = `${processDownloadList.length} files are being downloaded.`;
 
   if (successDownloadList && successDownloadList.length > 0)
-    downloadHeader = `${successDownloadList.length} file downloaded successfully`;
+    downloadHeader = `${successDownloadList.length} file downloaded successfully.`;
   if (successDownloadList && successDownloadList.length > 1)
-    downloadHeader = `${successDownloadList.length} files downloaded successfully`;
+    downloadHeader = `${successDownloadList.length} files downloaded successfully.`;
 
   if (processDownloadList.length && successDownloadList.length) {
     downloadHeader = `${processDownloadList.length} ${
       processDownloadList.length === 1 ? 'file is' : 'files are'
-    } being downloaded. ${successDownloadList.length}  ${
+    } being downloaded ${successDownloadList.length}  ${
       successDownloadList.length === 1 ? 'file is' : 'files are'
-    } downloaded successfully`;
+    } downloaded successfully.`;
   }
   // eslint-disable-next-line
   let defaultKey = ['upload'];
@@ -491,8 +484,11 @@ function FilePanel(props) {
     if (item.status === 'waiting' && tabName === 'progress') {
       return (
         <span>
-          <CloudUploadOutlined className={styles.icons} />
-          {item.fileName} {'-'}{' '}
+          <Tooltip title="file upload">
+            <CloudUploadOutlined className={styles.icons} />
+          </Tooltip>
+          {item.fileName}
+          {` / ${item.projectCode}`} {'-'}{' '}
           <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>Waiting</span>
         </span>
       );
@@ -500,8 +496,11 @@ function FilePanel(props) {
       if (item.action === 'data_transfer') {
         return (
           <span>
-            <CopyOutlined className={styles.icons} />
-            {copyFileName} {'-'}{' '}
+            <Tooltip title="file copy">
+              <CopyOutlined className={styles.icons} />
+            </Tooltip>
+            {copyFileName}
+            {` / ${item.projectCode}`} {'-'}{' '}
             <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
               Waiting
             </span>
@@ -510,7 +509,9 @@ function FilePanel(props) {
       } else if (item.action === 'data_delete') {
         return (
           <span>
-            <RestOutlined className={styles.icons} />
+            <Tooltip title="file delete">
+              <RestOutlined className={styles.icons} />
+            </Tooltip>
             {item.fileName} {'-'}{' '}
             <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
               Waiting
@@ -522,10 +523,27 @@ function FilePanel(props) {
       if (item.action === 'data_download') {
         return (
           <span>
-            <DownloadOutlined style={{ marginRight: '2%' }} />
-            {item.filename} {'-'}{' '}
+            <Tooltip title="file download">
+              <DownloadOutlined style={{ marginRight: '2%' }} />
+            </Tooltip>
+            {item.filename} {'-'}
+            {` / ${item.projectCode}`}
             <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
               Waiting
+            </span>
+          </span>
+        );
+      } else if (item.action === 'data_upload') {
+        return (
+          <span>
+            <Tooltip title="file upload">
+              <CloudUploadOutlined style={{ marginRight: '2%' }} />
+            </Tooltip>
+            {item.fileName}
+            {` / ${item.projectCode}`}
+            {'-'}{' '}
+            <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
+              pending
             </span>
           </span>
         );
@@ -533,16 +551,22 @@ function FilePanel(props) {
     } else if (item.status === 'uploading' && tabName === 'progress') {
       return (
         <span>
-          <CloudUploadOutlined className={styles.icons} />
+          <Tooltip title="file upload">
+            <CloudUploadOutlined className={styles.icons} />
+          </Tooltip>
           {item.fileName}
+          {` / ${item.projectCode}`}
         </span>
       );
     } else if (item.status === 'error' && tabName === 'progress') {
       if (item.action === 'data_upload') {
         return (
           <span style={{ color: '#FF6D72' }}>
-            <CloudUploadOutlined style={{ marginRight: '2%' }} />
-            {item.fileName} {'-'}{' '}
+            <Tooltip title="file upload">
+              <CloudUploadOutlined style={{ marginRight: '2%' }} />
+            </Tooltip>
+            {item.fileName}
+            {` / ${item.projectCode}`} {'-'}{' '}
             <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
@@ -550,8 +574,11 @@ function FilePanel(props) {
       if (item.action === 'data_download') {
         return (
           <span style={{ color: '#FF6D72' }}>
-            <DownloadOutlined style={{ marginRight: '2%' }} />
-            {item.filename} {'-'}{' '}
+            <Tooltip title="file download">
+              <DownloadOutlined style={{ marginRight: '2%' }} />
+            </Tooltip>
+            {item.filename}
+            {` / ${item.projectCode}`} {'-'}{' '}
             <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
@@ -559,8 +586,11 @@ function FilePanel(props) {
       if (item.action === 'data_transfer') {
         return (
           <span style={{ color: '#FF6D72' }}>
-            <CopyOutlined style={{ marginRight: '2%' }} />
-            {copyFileName} {'-'}{' '}
+            <Tooltip title="file copy">
+              <CopyOutlined style={{ marginRight: '2%' }} />
+            </Tooltip>
+            {copyFileName}
+            {` / ${item.projectCode}`} {'-'}{' '}
             <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
@@ -568,9 +598,11 @@ function FilePanel(props) {
       if (item.action === 'data_delete') {
         return (
           <span style={{ color: '#FF6D72' }}>
-            <RestOutlined style={{ marginRight: '2%' }} />
-            {item.fileName} {'-'}{' '}
-            <span style={{ fontStyle: 'Italic' }}>Failed</span>
+            <Tooltip title="file delete">
+              <RestOutlined style={{ marginRight: '2%' }} />
+            </Tooltip>
+            {item.fileName} {` / ${item.projectCode}`}
+            {'-'} <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
       }
@@ -587,7 +619,10 @@ function FilePanel(props) {
               />
             )}
           />
-          <span className={styles.fileName}>{item.fileName}</span>
+          <span className={styles.fileName}>
+            {item.fileName}
+            {` / ${item.projectCode}`}
+          </span>
         </span>
       );
     } else if (item.status === 'success' && tabName === 'download') {
@@ -629,7 +664,11 @@ function FilePanel(props) {
     } else if (item.status === 'succeed' && tabName === 'trashBin') {
       return (
         <span>
-          {<RestOutlined className={styles.icons} />}
+          {
+            <Tooltip title="file delete">
+              <RestOutlined className={styles.icons} />
+            </Tooltip>
+          }
           <span className={styles.fileName}>{item.fileName}</span>
         </span>
       );
@@ -640,9 +679,9 @@ function FilePanel(props) {
 
   let inProgressList;
   const approvedList = copy2CoreList
-    .map((el) => ({ ...el, copyTag: 'Copied to core' }))
+    .map((el) => ({ ...el, copyTag: 'Copied to Core' }))
     .concat(
-      core2Processed.map((el) => ({ ...el, copyTag: 'Copied to processed' })),
+      core2Processed.map((el) => ({ ...el, copyTag: 'Copied to Processed' })),
     );
   const allFileList = [
     ...uploadList.map((el) => ({ ...el, action: 'data_upload' })),
@@ -682,8 +721,18 @@ function FilePanel(props) {
     }
   };
 
+  let uploadSuccessNum = uploadList.filter((el) => el.status === 'success')
+    .length;
+  let uploadFailureNum = uploadList.filter((el) => el.status === 'error')
+    .length;
   let approvedSuccessNum = approvedList.filter((el) => el.status === 'succeed')
     .length;
+  let approvedToCoreNum = approvedList.filter(
+    (el) => el.status === 'succeed' && el.copyTag === 'Copied to Core',
+  ).length;
+  let approvedToProcessedNum = approvedList.filter(
+    (el) => el.status === 'succeed' && el.copyTag === 'Copied to Processed',
+  ).length;
   let approvedFailureNum = approvedList.filter((el) => el.status === 'error')
     .length;
   let deletedSuccessNum = deletedFileList.filter(
@@ -692,28 +741,44 @@ function FilePanel(props) {
   let deleteFailureNum = deletedFileList.filter((el) => el.status === 'error')
     .length;
 
+  const uploadSuccessTitle =
+    uploadSuccessNum > 0
+      ? `${uploadSuccessNum} ${
+          uploadSuccessNum > 1 ? `files` : `file`
+        } uploaded sucessfully. ${uploadFailureNum} ${
+          uploadFailureNum !== 1 ? `files` : `files`
+        } failed. ${uploadList.length - uploadSuccessNum - uploadFailureNum} ${
+          uploadList.length - uploadSuccessNum - uploadFailureNum > 1
+            ? `files`
+            : `file`
+        } in progress.`
+      : `You haven't uploaded any files yet!`;
+
   const approvedTitle =
     approvedSuccessNum > 0
-      ? `${approvedSuccessNum} ${
-          approvedSuccessNum > 1 ? `files` : `file`
-        } approved - ${approvedFailureNum} ${
-          approvedFailureNum > 1 ? `files` : `file`
-        } failed`
-      : 'No file is approved';
+      ? `${approvedToCoreNum} ${
+          approvedToCoreNum > 1 ? `files` : `file`
+        } copied to core. ${approvedToProcessedNum} ${
+          approvedToProcessedNum > 1 ? `files` : `file`
+        } copied to processed. ${approvedFailureNum} ${
+          approvedFailureNum !== 1 ? `files` : `file`
+        } failed.`
+      : `You haven't approved to copy any files to the Core yet!`;
 
   const deletedTitle =
     deletedSuccessNum > 0
       ? `${deletedSuccessNum} ${
           deletedSuccessNum > 1 ? `files` : `file`
-        } deleted - ${deleteFailureNum} ${
-          deleteFailureNum > 1 ? `files` : `file`
-        } failed`
-      : 'No file is deleted';
+        } deleted. ${deleteFailureNum} ${
+          deleteFailureNum !== 1 ? `files` : `file`
+        } failed.`
+      : `You haven't deleted any files yet!`;
   const content = (
     <Card className={styles.panelCard} title={title}>
       <Tabs className={styles.tab} tabPosition={'left'} tabBarGutter={1}>
         <TabPane tab={tabTitle('progress')} key="inProgress">
           <List
+            className={styles.progress_list}
             size="small"
             dataSource={inProgressList}
             split={false}
@@ -751,8 +816,11 @@ function FilePanel(props) {
         </TabPane>
         <TabPane tab={tabTitle('upload')} key="uploaded">
           <List
+            className={styles.uploaded_list}
             size="small"
-            header={<span className={styles.listHeader}>{uploadHeader}</span>}
+            header={
+              <span className={styles.listHeader}>{uploadSuccessTitle}</span>
+            }
             dataSource={uploadSuccessList}
             split={false}
             renderItem={(item) => (
@@ -764,6 +832,7 @@ function FilePanel(props) {
         </TabPane>
         <TabPane tab={tabTitle('download')} key="downloaded">
           <List
+            className={styles.downloaded_list}
             size="small"
             header={<span className={styles.listHeader}>{downloadHeader}</span>}
             split={false}
@@ -778,6 +847,7 @@ function FilePanel(props) {
         {props.projectRole === 'admin' && (
           <TabPane tab={tabTitle('approved')} key="approved">
             <List
+              className={styles.approved_list}
               size="small"
               header={
                 <span className={styles.listHeader}>{approvedTitle}</span>
@@ -794,6 +864,7 @@ function FilePanel(props) {
         )}
         <TabPane tab={tabTitle('trashBin')} key="deleted">
           <List
+            className={styles.deleted_list}
             size="small"
             header={<span className={styles.listHeader}>{deletedTitle}</span>}
             split={false}

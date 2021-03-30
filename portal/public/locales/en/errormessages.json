@@ -147,6 +147,7 @@
     ]
   },
   "downloadFilesAPI": {
+    "400": ["Folder is empty"],
     "403": ["You do not have permission to download files from this project."],
     "500": [
       "Something went wrong while trying to download files, please try again later. Error code: 500"
@@ -162,14 +163,13 @@
     ]
   },
   "preUpload": {
-    "403": ["Sorry,", "cannot be uploaded."],
+    "403": ["Sorry, you have no permission to upload the file(s)."],
     "409": [
-      "A file by the name of",
-      "already exists in the project, please choose a different name for your file before uploading."
+      "A file/folder by the name of",
+      "already exists in the project, please rename your file before uploading."
     ],
     "500": [
-      "Something went wrong while trying to upload the file",
-      "please try again later. Error Code: 500"
+      "Something went wrong while trying to upload the file. please try again later. Error Code: 500"
     ],
     "default": [
       "Something went wrong while trying to upload your file, please try again later."
@@ -333,10 +333,10 @@
     "lengthExceed":["Text cannot be longer than 100 characters"]
   },
   "updateFileManifestAPI":{
-    "default":["Failed to update the manifest"]
+    "default":["Failed to update the attribute template"]
   },
   "importExportManifest":{
-    "manifestNumberOver":["The number of manifests is over limit"],
+    "manifestNumberOver":["The number of attribute templates is over limit"],
     "parseJsonFailed":["Failed to parse the json file"],
     "fileTypeError":["Incorrect File format"],
     "attributesMissing":["The json should have a \"attributes\" property"],
@@ -354,20 +354,20 @@
     "uniqueName":["The \"name\" property should be unique"]
   },
   "importManifestAPI":{
-    "default":["Failed to upload the manifest"]
+    "default":["Failed to upload the attribute template"]
   },
   "fileOperations": {
-    "delete": "Error occured when delete files",
+    "deleteErr": "Error occured when delete files",
     "noFileToDelete": "Please select files to delete."
   },
   "copyFiles": {
     "default": ["Network error, please try again later"]
   },
   "attachManifest": {
-    "default": ["Failed to attach manifest, please try again later"]
+    "default": ["Failed to attach attribute template, please try again later"]
   },
   "deleteManifest": {
-    "500": ["Manifest has already been attached to files. Please do not delete it"]
+    "500": ["Attribute template has already been attached to files. Please do not delete it"]
   },
   "deleteVirtualFolder":{
     "default": ["Failed to delete collection. Please try again later"]

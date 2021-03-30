@@ -239,7 +239,7 @@ function Settings(props) {
                 />
               </div>
             </TabPane>
-            <TabPane tab="File Manifests" key="file_manifest">
+            <TabPane tab="File Attributes" key="file_manifest">
               <div style={{ backgroundColor: 'white' }}>
                 <FileManifest />
               </div>

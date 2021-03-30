@@ -127,6 +127,8 @@ class datasets(Resource):
                 if len(post_data.get("icon")) > ConfigClass.ICON_SIZE_LIMIT:
                     return {'result': 'icon too large'}, 413
 
+            post_data["global_entity_id"] = fetch_geid("dataset")
+
             result = requests.post(ConfigClass.NEO4J_SERVICE+"nodes/Dataset",
                                    json=post_data)
 

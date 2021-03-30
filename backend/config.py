@@ -3,6 +3,7 @@ import os
 
 
 class ConfigClass(object):
+    env = os.environ.get('env')
     # flask
     PROPAGATE_EXCEPTIONS = True
 
@@ -18,13 +19,26 @@ class ConfigClass(object):
     USERNAME_REGEX = "^[a-z\d]{6,20}$"
 
     # Micro services on server(used for testing)
-    NEO4J_SERVICE = "http://neo4j.utility:5062/v1/neo4j/"
     FILEINFO_SERVICE = "http://entityinfo.utility:5066/v1/"
+    FILEINFO_HOST = "http://entityinfo.utility:5066"
     DATA_SERVICE = "http://dataops-gr.greenroom:5063/v1/"
     DATA_SERVICE_V2 = "http://dataops-gr.greenroom:5063/v2/"
-    AUTH_SERVICE = "http://auth.utility:5061/v1/"
     CATALOGUING_SERVICE = "http://cataloguing:5064/v1/"
     DATA_UTILITY_SERVICE = "http://dataops-ut.utility:5063/v1/"
+    NEO4J_SERVICE_V2 = "http://neo4j.utility:5062/v2/neo4j/"
+    
+    if env == "test":
+        AUTH_SERVICE = "http://10.3.7.217:5061/v1/"
+        NEO4J_SERVICE = "http://10.3.7.216:5062/v1/neo4j/"
+        NEO4J_SERVICE_V2 = "http://10.3.7.216:5062/v2/neo4j/"
+        UTILITY_SERVICE = "http://10.3.7.222:5062"
+        FILEINFO_HOST = "http://10.3.7.228:5066"
+        FILEINFO_SERVICE = "http://10.3.7.228:5066/v1/"
+    else:
+        AUTH_SERVICE = "http://auth.utility:5061/v1/"
+        NEO4J_SERVICE = "http://neo4j.utility:5062/v1/neo4j/"
+        UTILITY_SERVICE = "http://common.utility:5062"
+
 
     # NEO4J_SERVICE = "http://10.3.7.216:5062/v1/neo4j/"
     # NEO4j_SERVICE_V2 = "http://10.3.7.216:5062/v2/neo4j/"
@@ -60,17 +74,26 @@ class ConfigClass(object):
         INVITATION_URL_PREFIX = "https://vre.charite.de/vre/self-registration"
         INVITATION_EXPIRY_DAYS = 14
         INVITATION_URL_LOGIN = 'https://vre.charite.de/vre/'
+        VRE_DOMAIN = "https://vre.charite.de"
+        RESOURCE_REQUEST_ADMIN = "admin"
     elif env == "staging":
         INVITATION_URL_PREFIX = "https://vre-staging.indocresearch.org/vre/self-registration"
         INVITATION_EXPIRY_DAYS = 14
         INVITATION_URL_LOGIN = 'https://vre-staging.indocresearch.org/vre/'
+        VRE_DOMAIN = "https://vre-staging.indocresearch.org"
+        RESOURCE_REQUEST_ADMIN = "admin"
     else:
         INVITATION_URL_PREFIX = "http://10.3.7.220/vre/self-registration"
         INVITATION_EXPIRY_DAYS = 14
         INVITATION_URL_LOGIN = 'http://10.3.7.220/vre/'
+        VRE_DOMAIN = "http://10.3.7.220"
+        RESOURCE_REQUEST_ADMIN = "jzhang7"
 
     # BFF RDS
-    RDS_HOST = "opsdb.utility"
+    if env == "test":
+        RDS_HOST = '10.3.7.215'
+    else:
+        RDS_HOST = "opsdb.utility"
     # RDS_HOST = '10.3.7.215'
     RDS_PORT = "5432"
     RDS_DBNAME = "INDOC_VRE"
@@ -87,6 +110,7 @@ class ConfigClass(object):
     LOG_FILE = 'application.log'
     ICON_SIZE_LIMIT = 500*1000
     GROUP_ADMIN = 'admin'
+    RESOURCES = ["SuperSet", "Guacamole"]
     
     
 

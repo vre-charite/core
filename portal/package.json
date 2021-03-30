@@ -1,8 +1,9 @@
 {
   "name": "portal",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "homepage": "/vre",
+  "proxy":"http://10.3.7.220/",
   "dependencies": {
     "@antv/g6": "^3.8.1",
     "@antv/graphin": "^1.4.1",
@@ -99,5 +100,3 @@
     }
   }
 }
-
-

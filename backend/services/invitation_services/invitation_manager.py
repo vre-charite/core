@@ -55,15 +55,14 @@ class SrvInvitationManager(metaclass=MetaService):
 
         # If there is another invitation with the same details expiry it
         sql_params = {
-            "invitation_detail": form_data_json,
             "email": invitation.email,
-            "role": invitation.role,
             "project": str(invitation.project_id),
         }
-        invite = db.session.query(InvitationModel).filter_by(**sql_params).first()
-        if invite:
-            invite.expiry_timestamp = now_utc_dt.isoformat()
-            db.session.commit()
+        invites = db.session.query(InvitationModel).filter_by(**sql_params)
+        if invites:
+            for invite in invites:
+                invite.expiry_timestamp = now_utc_dt.isoformat()
+                db.session.commit()
 
         sql_params = {
             "invitation_code": invitation_code_generated,

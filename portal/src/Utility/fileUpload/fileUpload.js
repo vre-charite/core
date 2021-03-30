@@ -1,6 +1,5 @@
 import { message } from 'antd';
-import { v4 as uuidv4 } from 'uuid';
-import { combineChunks, preUpload, uploadFileApi2 } from '../../APIs';
+import { combineChunksApi, uploadFileApi2 } from '../../APIs';
 import { cancelRequestReg } from '../../APIs/config';
 import { ErrorMessager, namespace } from '../../ErrorMessages';
 import {
@@ -14,8 +13,12 @@ import reduxActionWrapper from '../reduxActionWrapper';
 import i18n from '../../i18n';
 import { keepAlive } from '../';
 import { tokenManager } from '../../Service/tokenManager';
+import _ from 'lodash';
+import { objectKeysToSnakeCase } from '../';
+import { getPath } from './getPath'
 
 const USER_LOGOUT = 'user logged out';
+const MAX_LENGTH = 1024 * 1024 * 2;
 const [
   updateUploadItemDispatcher,
   setNewUploadIndicatorDispatcher,
@@ -62,9 +65,6 @@ function slice(file, piece = 1024 * 1024 * 5) {
  * @param {*} reject
  */
 async function fileUpload(data, resolve, reject) {
-  const MAX_LENGTH = 1024 * 1024 * 2;
-  const uuid = uuidv4();
-
   const {
     uploadKey,
     generateID,
@@ -74,15 +74,17 @@ async function fileUpload(data, resolve, reject) {
     projectCode,
     tags,
     manifest,
+    jobId,
+    resumableIdentifier
   } = data;
+
   setNewUploadIndicatorDispatcher();
 
   let chunks = slice(file, MAX_LENGTH);
-  //message.info(`File ${file.name} starts uploading process`)
   const totalSize = file.size;
-  let taskId = null;
   let uploadedSize = 0;
-
+  const sessionId = tokenManager.getCookie('sessionId');
+  console.log(sessionId, 'sessionId in upload')
   updateUploadItemDispatcher({
     uploadKey,
     status: 'uploading',
@@ -106,13 +108,15 @@ async function fileUpload(data, resolve, reject) {
       resumableCurrentChunkSizef: chunk.size,
       resumableTotalSize: file.size,
       resumableType: file.type,
-      resumableIdentifier: file.uid + uuid,
+      resumableIdentifier,
       resumableFilename: file.name,
-      resumableRelativePath: file.name,
+      resumableRelativePath: getPath(file.webkitRelativePath),
       resumableTotalChunks: totalChunks,
       //subPath:subPath||'',
-      generateID, // Add generate ID
-      uploader, // Add uploader
+      generateId: generateID, // Add generate ID
+      operator: uploader, // Add uploader
+      tags,
+      projectCode
     };
   };
 
@@ -120,14 +124,13 @@ async function fileUpload(data, resolve, reject) {
     let context = createContext(file, chunk, index, MAX_LENGTH, chunks.length);
 
     let fd = new FormData();
-    fd.append('file', chunk);
+    fd.append('chunk_data', chunk);
 
     Object.keys(context).forEach((item) => {
-      fd.append(item, context[item]);
+      fd.append(_.snakeCase(item), context[item]);
     });
-    fd.append('chunk', index + 1);
 
-    const { request } = cancelRequestReg(uploadFileApi2, datasetId, fd);
+    const { request } = cancelRequestReg(uploadFileApi2, fd, sessionId,);
     return request;
   };
 
@@ -144,140 +147,109 @@ async function fileUpload(data, resolve, reject) {
     }
     return Promise.any(arr);
   };
-  const bodyFormData = new FormData();
-  bodyFormData.append('resumableIdentifier', file.uid + uuid);
-  bodyFormData.append('resumableFilename', file.name);
-  if (generateID) bodyFormData.append('generateID', generateID);
-  const sessionId = tokenManager.getCookie('sessionId');
-  preUpload(datasetId, bodyFormData, sessionId)
-    .then((preRes) => {
-      Promise.map(
-        chunks,
-        function (chunk, index) {
-          return sendOneChunk(chunk, index)
-            .then(async (res) => {
-              uploadedSize += chunk.size;
-              updateUploadItemDispatcher({
-                uploadKey,
-                progress: uploadedSize / totalSize,
-                status: 'uploading',
-                projectCode,
-                taskId:
-                  preRes.data &&
-                  preRes.data.result &&
-                  preRes.data.result.taskId,
-              });
-              keepAlive();
-            })
-            .catch(async (err) => {
-              const { isLogin } = store.getState();
-              if (!isLogin) return Promise.reject(new Error(USER_LOGOUT));
-              await sleep(5000);
-              retry(chunk, index, 3);
-            });
-        },
-        {
-          concurrency: 3,
-        },
-      )
-        .then(async function (res) {
-          resolve();
-          const formData = new FormData();
-          formData.append('resumableIdentifier', file.uid + uuid);
-          formData.append('resumableFilename', file.name);
-          formData.append('resumableTotalChunks', chunks.length);
-          formData.append('resumableTotalSize', file.size);
-          formData.append('uploader', uploader);
-          if (tags) formData.append('tags', tags);
-          if (generateID) formData.append('generateID', generateID);
-          const result = await combineChunks(datasetId, formData, sessionId);
-          if (
-            result.status === 200 &&
-            result.data &&
-            result.data.result &&
-            result.data.result.taskId
-          ) {
-            taskId = result.data.result.taskId;
-          }
-          if (!taskId) {
-            await sleep(1000);
-            const checkedResult = await combineChunks(
-              datasetId,
-              formData,
-              sessionId,
-            );
-            if (
-              checkedResult.status === 200 &&
-              checkedResult.data &&
-              checkedResult.data.result &&
-              checkedResult.data.result.taskId
-            ) {
-              taskId = checkedResult.data.result.taskId;
-            } else {
-              throw new Error(`the task Id doesn't exist`);
-            }
-          }
-          manifest&&setUploadFileManifestDispatcher({
-            manifestId: manifest.id,
-            files: [result.data.result.uploadPath],
-            attributes: manifest && manifest.attributes,
-          });
-          updateUploadItemDispatcher({
-            uploadKey,
-            progress: 1,
-            status: 'pending',
-            taskId:
-              preRes.data && preRes.data.result && preRes.data.result.taskId,
-            projectCode,
-            uploadedTime: Date.now(),
-          });
-          message.success(
-            `${i18n.t('success:fileUpload.0')} ${file.name} ${i18n.t(
-              'success:fileUpload.1',
-            )}`,
-          );
-        })
-        .catch((err) => {
-          reject();
-          if (err.message === USER_LOGOUT) return;
-          if (err.response) {
-            const errorMessager = new ErrorMessager(
-              namespace.dataset.files.uploadFileApi,
-            );
-            errorMessager.triggerMsg(err.response.status, null, {
-              fileName: file.name,
-            });
-          } else {
-            const errorMessager = new ErrorMessager(
-              namespace.dataset.files.uploadRequestFail,
-            );
-            errorMessager.triggerMsg(null, null, { fileName: file.name });
-          }
-          updateUploadItemDispatcher({
-            uploadKey,
-            progress: uploadedSize / totalSize,
-            status: 'error',
-            uploadedTime: Date.now(),
-            projectCode,
-          });
-        });
-    })
-    .catch((err) => {
-      reject();
-      const errorMessager = new ErrorMessager(
-        namespace?.dataset?.files?.preUpload,
-      );
-      errorMessager.triggerMsg(err?.response?.status, null, {
-        fileName: file.name,
+
+  async function combineChunks() {
+    try {
+      const reqData = {
+        projectCode,
+        operator: uploader,
+        resumableIdentifier,
+        resumableFilename: file.name,
+        resumableRelativePath: getPath(file.webkitRelativePath),
+        resumableTotalChunks: chunks.length,
+        resumableTotalSize: file.size,
+        tags,
+        generateId: generateID,
+      }
+
+      const result = await combineChunksApi(objectKeysToSnakeCase(reqData), sessionId);
+      manifest && setUploadFileManifestDispatcher({
+        manifestId: manifest.id,
+        files: [result.data.result.source],
+        attributes: manifest && manifest.attributes,
       });
       updateUploadItemDispatcher({
         uploadKey,
-        progress: uploadedSize / totalSize,
-        status: 'error',
-        uploadedTime: Date.now(),
+        progress: 1,
+        status: 'pending',
+        jobId,
         projectCode,
+        uploadedTime: Date.now(),
       });
+      message.success(
+        `${i18n.t('success:fileUpload.0')} ${file.name} ${i18n.t(
+          'success:fileUpload.1'
+        )}`
+      );
+    } catch (err) {
+      message.error('Failed to combined file chunks for ' + file.name);
+    }
+  }
+
+
+  // start chunks uploading
+  try {
+    await Promise.map(
+      chunks,
+      function (chunk, index) {
+        return sendOneChunk(chunk, index)
+          .then(async (res) => {
+            uploadedSize += chunk.size;
+            updateUploadItemDispatcher({
+              uploadKey,
+              progress: uploadedSize / totalSize,
+              status: 'uploading',
+              projectCode,
+              jobId,
+            });
+            keepAlive();
+          })
+          .catch(async (err) => {
+            const { isLogin } = store.getState();
+            if (!isLogin) return Promise.reject(new Error(USER_LOGOUT));
+            await sleep(5000);
+            return retry(chunk, index, 3);
+          });
+      },
+      {
+        concurrency: 3,
+      },
+    )
+  } catch (err) {
+
+    reject();
+    if (err.message === USER_LOGOUT) return;
+
+    if (err.response) {
+      const errorMessager = new ErrorMessager(
+        namespace.dataset.files.uploadFileApi,
+      );
+      errorMessager.triggerMsg(err.response.status, null, {
+        fileName: file.name,
+      });
+    } else {
+      const errorMessager = new ErrorMessager(
+        namespace.dataset.files.uploadRequestFail,
+      );
+      errorMessager.triggerMsg(null, null, { fileName: file.name });
+    }
+
+    updateUploadItemDispatcher({
+      uploadKey,
+      progress: uploadedSize / totalSize,
+      status: 'error',
+      uploadedTime: Date.now(),
+      projectCode,
     });
+    return;
+
+  }
+
+  await combineChunks();
+  
+  setTimeout(() => {
+    resolve(); //resolve and start the next file uploading in queue
+  }, 2000)
 }
 
 export { fileUpload };

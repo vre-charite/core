@@ -41,6 +41,12 @@ import {
   SET_DELETE_LIST,
   SET_UPLOAD_FILE_MANIFEST,
   UPDATE_DELETE_LIST,
+  SET_SELECTED_FILES,
+  SET_SELECTED_FILES_KEYS,
+  CLEAN_FILES_SELECTION,
+  SET_FOLDER_ROUTING,
+  SHOW_SERVICE_REQUEST_RED_DOT,
+  CLEAR_CURRENT_PROJECT,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -210,6 +216,10 @@ export const setPanelActiveKey = (key) => ({
   payload: key,
 });
 
+export const clearCurrentProject = () => ({
+  type: CLEAR_CURRENT_PROJECT,
+});
+
 export const setCurrentProjectProfile = (profile) => ({
   type: SET_CURRENT_PROJECT_PROFILE,
   payload: profile,
@@ -273,5 +283,29 @@ export const setUploadFileManifest = (payload) => ({
 
 export const updateDeletedFileList = (payload) => ({
   type: UPDATE_DELETE_LIST,
+  payload,
+});
+
+export const setSelectedFiles = (payload) => ({
+  type: SET_SELECTED_FILES,
+  payload,
+});
+
+export const setSelectedFilesKeys = (payload) => ({
+  type: SET_SELECTED_FILES_KEYS,
+  payload,
+});
+
+export const clearFilesSelection = (payload) => ({
+  type: CLEAN_FILES_SELECTION,
+  payload,
+});
+
+export const setFolderRouting = (payload) => ({
+  type: SET_FOLDER_ROUTING,
+  payload,
+});
+export const setServiceRequestRedDot = (payload) => ({
+  type: SHOW_SERVICE_REQUEST_RED_DOT,
   payload,
 });

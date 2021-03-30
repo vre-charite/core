@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Form, Select } from 'antd';
 import ManifestForm from '../../../Components/Form/Manifest/ManifestForm';
-
+import styles from './index.module.scss';
 const { Option } = Select;
 const UploaderManifest = function (props) {
   const [form] = Form.useForm();
@@ -14,8 +14,9 @@ const UploaderManifest = function (props) {
   return (
     <>
       <Form layout="vertical" form={form}>
-        <Form.Item name="manifest" label="File Manifest">
+        <Form.Item name="manifest" label="Select Attribute Template">
           <Select
+            className={styles.inputBorder}
             allowClear={true}
             style={{ width: 200 }}
             onChange={(value) => {

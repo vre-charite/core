@@ -32,6 +32,24 @@ class FilesTable extends React.Component {
         tags: this.props.tags,
       });
     }
+    if (
+      this.props.currentRouting === null &&
+      prevProps.currentRouting &&
+      prevProps.currentRouting.length >= 1
+    ) {
+      // empty params when user leave folder
+      this.setState({
+        page: 0,
+        pageSize: 10,
+        order: 'desc',
+        sortColumn: 'createTime',
+        searchedColumn: '',
+        searchText: '',
+        inputVisible: false,
+        inputValue: '',
+        tags: this.props.tags,
+      });
+    }
   }
 
   getColumnSearchProps = (dataIndex) => ({
@@ -100,7 +118,6 @@ class FilesTable extends React.Component {
   };
 
   handleReset = (clearFilters) => {
-    clearFilters();
     this.setState({ searchText: '' });
   };
 
@@ -212,7 +229,7 @@ class FilesTable extends React.Component {
         key={this.props.tableKey}
         rowClassName={(record) => {
           let classArr = [];
-          if (this.props.selectedRecord?.name === record.name) {
+          if (record.name && this.props.selectedRecord?.name === record.name) {
             classArr.push('selected');
           }
           if (

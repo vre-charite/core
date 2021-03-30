@@ -7,13 +7,14 @@ from models.api_response import APIResponse, EAPIResponseCode
 from models.api_meta_class import MetaAPI
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from models.api_data_manifest import DataAttributeModel, DataManifestModel, TypeEnum, db
-from .utils import has_permissions, is_greenroom_raw, get_file_node, has_valid_attributes, check_attributes
+from .utils import has_permissions, is_greenroom_raw, get_file_node_bygeid, has_valid_attributes, check_attributes
 from api import module_api
 from flask import request
 import re
 import math
 import requests
 import json
+import time
 
 api_ns_data_manifests = module_api.namespace('Data Manifests Restful', description='For data manifest feature', path ='/v1')
 api_ns_data_manifest = module_api.namespace('Data Manifest Restful', description='For data manifest feature', path ='/v1')
@@ -333,18 +334,18 @@ class APIDataManifest(metaclass=MetaAPI):
 
             for data in manifests:
                 # Check required fields
-                if not "file_path" in data:
-                    results["error"].append(data.get("file_path", ""))
-                    print("missing file path")
+                if not "global_entity_id" in data:
+                    results["error"].append(data.get("global_entity_id", ""))
+                    print("missing global_entity_id")
                     api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_error_msg("missing file path")
+                    api_response.set_error_msg("missing global_entity_id")
                     return api_response.to_dict, api_response.code
 
-                path = data["file_path"]
+                global_entity_id = data["global_entity_id"]
                 manifest_id = data.get("manifest_id", None)
                 if not manifest_id:
                     if not "manifest_name" in data or not "project_code" in data:
-                        results["error"].append(data["file_path"])
+                        results["error"].append(data["name"])
                         print("missing manifest id or manifest_name and project_code")
                         api_response.set_code(EAPIResponseCode.bad_request)
                         api_response.set_error_msg("missing manifest id or manifest_name and project_code")
@@ -353,22 +354,22 @@ class APIDataManifest(metaclass=MetaAPI):
                     manifest = db.session.query(DataManifestModel).filter_by(name=data["manifest_name"], project_code=data["project_code"]).first()
                     manifest_id = manifest.id
                 if not manifest_id:
-                    results["error"].append(data["file_path"])
+                    results["error"].append(data["name"])
                     print("Manifest not found")
                     api_response.set_code(EAPIResponseCode.not_found)
                     api_response.set_error_msg("Manifest not found")
                     return api_response.to_dict, api_response.code
 
-                file_node = get_file_node(path)
+                file_node = get_file_node_bygeid(global_entity_id)
                 if not file_node:
-                    results["error"].append(data["file_path"])
+                    results["error"].append(data["name"])
                     print("File not found")
                     api_response.set_code(EAPIResponseCode.not_found)
                     api_response.set_error_msg("File not found")
                     return api_response.to_dict, api_response.code
                 # Make sure it's Greenroom/Raw
                 if not is_greenroom_raw(file_node):
-                    results["error"].append(file_node["full_path"])
+                    results["error"].append(file_node["name"])
                     print("not greenroom/raw")
                     api_response.set_code(EAPIResponseCode.bad_request)
                     api_response.set_error_msg("File is in not greenroom/raw")
@@ -376,7 +377,7 @@ class APIDataManifest(metaclass=MetaAPI):
 
                 # Permissions check
                 if not has_permissions(manifest_id, file_node):
-                    results["error"].append(file_node["full_path"])
+                    results["error"].append(file_node["name"])
                     print("Permission denied")
 
                     api_response.set_code(EAPIResponseCode.bad_request)
@@ -386,13 +387,35 @@ class APIDataManifest(metaclass=MetaAPI):
                 post_data = {
                     "manifest_id": manifest_id,
                 }
+
+                attributes = []
+                manifest = db.session.query(DataManifestModel).get(manifest_id)
+
                 for key, value in data.get("attributes", {}).items():
                     post_data["attr_" + key] = value
+
+                    sql_attribute = db.session.query(DataAttributeModel).filter_by(name=key, manifest_id=manifest_id)
+                    sql_attribute = sql_attribute[0]
+                    if sql_attribute.type.value == 'multiple_choice':
+                        attribute_value = []
+                        attribute_value.append(value)
+
+                        attributes.append({
+                            "attribute_name": key,
+                            "name": manifest.name,
+                            "value": attribute_value
+                        })
+                    else:
+                        attributes.append({
+                            "attribute_name": key,
+                            "name": manifest.name,
+                            "value": value
+                        })
 
                 # Check required attributes 
                 valid, error_msg = has_valid_attributes(manifest_id, data)
                 if not valid:
-                    results["error"].append(file_node["full_path"])
+                    results["error"].append(file_node["name"])
                     print("Mising required attributes")
                     api_response.set_code(EAPIResponseCode.bad_request)
                     api_response.set_error_msg("Mising required attributes")
@@ -400,7 +423,23 @@ class APIDataManifest(metaclass=MetaAPI):
 
                 file_id = file_node["id"]
                 response = requests.put(ConfigClass.NEO4J_SERVICE + f"nodes/File/node/{file_id}", json=post_data)
-                results["success"].append(file_node["full_path"])
+                results["success"].append(file_node["name"])
+
+                # Update Elastic Search Entity
+                es_payload = {
+                    "global_entity_id": file_node["global_entity_id"],
+                    "updated_fields": {
+                        "attributes": attributes,
+                        "time_lastmodified": time.time()
+                    }
+                }
+                es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'file-meta', json=es_payload)
+                if es_res.status_code != 200:
+                    api_response.set_code = EAPIResponseCode.internal_error
+                    api_response.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                    return api_response.to_dict, api_response.code
+
+
             api_response.set_result(results)
             return api_response.to_dict, api_response.code
             
@@ -413,12 +452,12 @@ class APIDataManifest(metaclass=MetaAPI):
         def put(self):
             api_response = APIResponse()
             data = request.get_json()
-            if not "file_path" in data:
+            if not "global_entity_id" in data:
                 api_response.set_code(EAPIResponseCode.bad_request)
-                api_response.set_result("Missing required parameter file_path")
+                api_response.set_result("Missing required parameter global_entity_id")
                 return api_response.to_dict, api_response.code
 
-            file_node = get_file_node(data.pop("file_path"))
+            file_node = get_file_node_bygeid(data.pop("global_entity_id"))
 
             # Permissions check
             manifest = db.session.query(DataManifestModel).get(file_node["manifest_id"])
@@ -658,12 +697,21 @@ class APIDataManifest(metaclass=MetaAPI):
         @jwt_required()
         def post(self):
             api_response = APIResponse()
-            paths = request.get_json().get("file_paths")
-            lineage_view = request.get_json().get("lineage_view")
+            required_fields = ["geid_list"]
+            data = request.get_json()
+            # Check required fields
+            for field in required_fields:
+                if not field in data:
+                    api_response.set_code(EAPIResponseCode.bad_request)
+                    api_response.set_result(f"Missing required field: {field}")
+                    return api_response.to_dict, api_response.code
+
+            geid_list = data.get("geid_list")
+            lineage_view = data.get("lineage_view")
 
             results = {} 
-            for path in paths:
-                file_node = get_file_node(path)
+            for geid in geid_list:
+                file_node = get_file_node_bygeid(geid)
                 if file_node and file_node.get("manifest_id"):
                     if not has_permissions(file_node["manifest_id"], file_node) and not lineage_view:
                         api_response.set_code(EAPIResponseCode.forbidden)
@@ -683,8 +731,8 @@ class APIDataManifest(metaclass=MetaAPI):
                             "optional": sql_attribute.optional,
                             "manifest_id": manifest_id,
                         })
-                    results[path] = attributes 
+                    results[geid] = attributes 
                 else:
-                    results[path] = {} 
+                    results[geid] = {} 
             api_response.set_result(results)
             return api_response.to_dict, api_response.code

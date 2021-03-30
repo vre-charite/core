@@ -8,6 +8,7 @@ import { Button, Collapse, Typography, Modal } from 'antd';
 import UserDetails from './UserDetails';
 import UserProjectsTable from './UserProjectsTable';
 import { getUserProjectListAPI } from '../../../APIs';
+import styles from '../index.module.scss';
 
 const { Panel } = Collapse;
 const { Title } = Typography;
@@ -35,7 +36,7 @@ function ScalableDetails(props) {
     setModalContent(element);
     setModalTitle(title);
   }
-
+  
   return (
     <div
       style={{
@@ -66,6 +67,8 @@ function ScalableDetails(props) {
             zIndex: '99',
             float: 'right',
             marginTop: '11px',
+            marginRight: '15px',
+            fontSize: '18px'
           }}
         />
         <Title level={4} style={{ lineHeight: '1.9' }}>
@@ -93,6 +96,7 @@ function ScalableDetails(props) {
           <UserDetails record={record} />
         </Panel>
         <Panel
+          className={styles.tablePanel}
           header="Projects"
           key="2"
           extra={

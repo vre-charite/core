@@ -6,12 +6,16 @@ import {
   SET_CURRENT_PROJECT_TREE_GREEN_ROOM,
   SET_CURRENT_PROJECT_ACTIVE_PANE,
   SET_CURRENT_PROJECT_TREE_CORE,
+  CLEAR_CURRENT_PROJECT,
 } from '../actionTypes';
 
 const init = {};
 export default function (state = init, action) {
   const { type, payload } = action;
   switch (type) {
+    case CLEAR_CURRENT_PROJECT: {
+      return {};
+    }
     case SET_CURRENT_PROJECT_PROFILE: {
       return { ...state, profile: payload };
     }

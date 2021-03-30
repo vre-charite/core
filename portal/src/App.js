@@ -191,7 +191,7 @@ function App(props) {
       setContainersPermissionDispatcher(containersPermission);
 
       const sessionId = tokenManager.getCookie('sessionId');
-      const res = await checkUploadStatus(0, sessionId);
+      const res = await checkUploadStatus('*', '*', sessionId);
       const { code, result } = res.data;
 
       if (code === 200) {
@@ -212,20 +212,28 @@ function App(props) {
 
       const pathname = props.location.pathname;
       const isInProject = pathname.includes('project');
-      
+
       if (isInProject) {
         const pathArray = pathname.split('/');
         const currentProjectId = pathArray[pathArray.length - 2];
 
-        const currentProject = containersPermission && containersPermission.find(el => el.id === Number(currentProjectId));
+        const currentProject =
+          containersPermission &&
+          containersPermission.find((el) => el.id === Number(currentProjectId));
 
         try {
-          const downloadRes = await checkDownloadStatus(sessionId, currentProject.code, username);
-          console.log(downloadRes)
+          const downloadRes = await checkDownloadStatus(
+            sessionId,
+            currentProject.code,
+            username,
+          );
           if (downloadRes.status === 200) {
             let downloadList = downloadRes.data && downloadRes.data.result;
             downloadList = downloadList.map((item) => {
-              if (item.status === 'READY_FOR_DOWNLOADING' || item.status === 'SUCCESS') {
+              if (
+                item.status === 'READY_FOR_DOWNLOADING' ||
+                item.status === 'SUCCESS'
+              ) {
                 item.status = 'success';
               } else if (item.status === 'ZIPPING') {
                 item.status = 'pending';
@@ -235,17 +243,20 @@ function App(props) {
 
               const sourceArray = item.source && item.source.split('/');
 
-              item.filename = sourceArray && sourceArray.length && sourceArray[sourceArray.length - 1];
+              item.filename =
+                sourceArray &&
+                sourceArray.length &&
+                sourceArray[sourceArray.length - 1];
 
               return item;
-            })
+            });
             setDownloadListDispatcher(downloadList);
           }
         } catch (err) {
           if (err.response && err.response.status === 404) {
-            console.log('no download history in current session')
+            console.log('no download history in current session');
           }
-        } 
+        }
       }
     } catch (err) {
       if (err.response) {
@@ -310,28 +321,28 @@ function App(props) {
     const time = 4;
     const func = () => {
       Promise.map(pendingArr, (item, index) => {
-        checkUploadStatus(item.projectId, sessionId)
+        checkUploadStatus('*', '*', sessionId)
           .then(async (res) => {
             const { code, result } = res.data;
             if (code === 200) {
               let fileName = item.fileName;
               if (item.generateID) fileName = `${item.generateID}_${fileName}`;
-              const isSuccess =
-                result &&
-                result.some(
-                  (el) => el.taskId === item.taskId && el.state === 'SUCCEED',
-                );
+              const fileStatus = result?.find((el) => el.jobId === item.jobId);
+              const isSuccess = fileStatus && fileStatus.status === 'SUCCEED';
 
               if (isSuccess) {
                 const manifestItem = uploadFileManifest.find((x) => {
                   const fileArr = x.files[0].split('/');
                   const fileNameFromPath = fileArr[fileArr.length - 1];
+                  if (fileNameFromPath === fileName) {
+                    x.geid = fileStatus.payload.sourceGeid;
+                  }
                   return fileNameFromPath === fileName;
                 });
                 if (manifestItem && manifestItem.manifestId) {
                   await attachManifest(
                     manifestItem.manifestId,
-                    manifestItem.files,
+                    [manifestItem.geid],
                     manifestItem.attributes,
                   );
                 }
@@ -399,8 +410,6 @@ function App(props) {
           ))}
         </Switch>
       </Suspense>
-
-      
     </>
   );
 }

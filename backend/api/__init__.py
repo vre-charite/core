@@ -14,6 +14,8 @@ from .api_system_tags import APISystemTags
 from .api_announcement.announcement import APIAnnouncement
 from .api_users import APIUsers
 from .api_provenance import APIProvenance
+from .api_scripts.neo_to_es import APINeo4j2ESScript
+from .api_resource_request.resource_request import APIResourceRequest
 
 apis = [
     APIHelloWorld(),
@@ -31,6 +33,8 @@ apis = [
     APIAnnouncement(),
     APIUsers(),
     APIProvenance(),
+    APINeo4j2ESScript(),
+    APIResourceRequest()
 ]
 
 

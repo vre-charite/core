@@ -71,7 +71,7 @@
     },
     "upload": {
       "file": {
-        "empty": "Please select a file for upload",
+        "empty": "Please select a file or folder for upload",
         "valid": "File already selected for uploading. Please select a different file."
       },
       "tags": {
@@ -164,7 +164,7 @@
   },
   "attachManifestModal":{
     "manifest": {
-      "empty": "Please select manifest first"
+      "empty": "Please select attribute template first"
     },
     "files": {
       "empty": "Please select at least one file to attach"
@@ -172,7 +172,7 @@
   },
   "manifestAttrsForm": {
     "attr": {
-      "required": "Please fill in all required manifest attributes",
+      "required": "Please fill in all required attributes",
       "text": "Text must be 1-100 characters"
     }
   },
@@ -182,16 +182,16 @@
       "empty": "Please add one attribute at least"
     },
     "manifestName": {
-      "empty": "Please input manifest name",
-      "length": "Manifest name must be between 1 and 32 characters",
-      "format": "Manifest name can not contain any of the following character \\ / : ? * < > | \" '",
+      "empty": "Please input attribute template name",
+      "length": "Attribute template name must be between 1 and 32 characters",
+      "format": "Attribute template name can not contain any of the following character \\ / : ? * < > | \" '",
       "existent": "This name has already been declared"
     },
     "attributeName":{
       "empty": "Please input attribute name",
       "length": "Attribute name must be between 1 and 32 characters",
       "format": "Only letters and numbers is allowed for attribute name",
-      "existent": "This name has already been defined in manifest"
+      "existent": "This name has already been defined in attribute template"
     },
     "attributeValue":{
       "length": "Value must be between 1 and 32 characters",

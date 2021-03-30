@@ -93,6 +93,7 @@ class users(Resource):
             # Create user node and default dataset node in neo4j
             post_data.pop("password", None)
             post_data['path'] = "users"
+            post_data["global_entity_id"] = fetch_geid("user")
             if(role is None):
                 post_data['role'] = "member"
             url = ConfigClass.NEO4J_SERVICE + "nodes/User"
@@ -176,7 +177,6 @@ class user_registry(Resource):
                 else:
                     _logger.error('Error: invitation link is not valid')
                     return {'result': 'Invalid HashID.'}, 400
-
             # Check if payload is sufficient
             email = post_data.get('email', None)
             container_id = post_data.get("project_id", None)
@@ -187,6 +187,17 @@ class user_registry(Resource):
             last_name = post_data.get("last_name", None)
             portal_role = post_data.get("portal_role", "member")
             status = post_data.get("status", "active")
+
+            invite = invite_data[1]
+            if portal_role == "admin" and invite.role != "admin":
+                return {'result': 'Role does not match invite permissions'}, 403
+            if invite.project != "None":
+                if invite.role != role:
+                    return {'result': 'Role does not match invite permissions'}, 403
+                if str(invite.project) != str(container_id):
+                    return {'result': 'Project does not match invite project'}, 403
+            if invite.project !="None" and portal_role == "admin":
+                return {'result': 'Role does not match invite permissions'}, 403
 
             access_token = request.headers.get('Authorization', None)
             if check_user_exists(access_token, username):
@@ -238,6 +249,7 @@ class user_registry(Resource):
                 "path": "users",
                 "role": portal_role,
                 "status": status,
+                "global_entity_id": fetch_geid("user")
             }
             res = requests.post(
                 url=ConfigClass.NEO4J_SERVICE + "nodes/User",

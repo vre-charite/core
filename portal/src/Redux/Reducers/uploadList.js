@@ -31,7 +31,7 @@ function uploadList(state = init, action) {
         return [...state];
       currentItem["progress"] = item["progress"];
       currentItem["status"] = item["status"];
-      currentItem["taskId"] = item["taskId"];
+      currentItem["jobId"] = item["jobId"];
       currentItem['uploadedTime'] = item["uploadedTime"]
       return [...state];
     }

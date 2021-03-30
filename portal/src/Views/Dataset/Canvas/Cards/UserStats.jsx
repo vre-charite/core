@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Col, Row, Empty } from 'antd';
+import { Col, Row, Empty, Tooltip } from 'antd';
 import { useSelector } from 'react-redux';
 import {
   CloudUploadOutlined,
@@ -146,6 +146,16 @@ function UserStats(props) {
     }
   };
 
+  // get the file's folder path
+  const getFolderPath = (fileLog) => {
+    const wholePathList = fileLog.outcome.split('/');
+    const outComePathList = wholePathList.slice(5, wholePathList.length);
+    const outComePathStr = outComePathList.join('/');
+    const outComePath = outComePathStr.replace(fileLog.displayName, '');
+
+    return outComePath;
+  };
+
   return (
     <div>
       <Col span={24} style={{ margin: '10px 0' }}>
@@ -153,13 +163,16 @@ function UserStats(props) {
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           sortedAllFileStreams.map((el) => {
+            const folderPath = getFolderPath(el);
             return (
               <Row style={{ marginBottom: '2%' }}>
                 <span className={styles.fileStreamIcon}>
                   {fileStreamIcon(el.tag)}
                 </span>
                 <span className={styles.fileName}>
-                  {el && el.displayName}
+                  <Tooltip title={folderPath}>
+                    {el && el.displayName}
+                  </Tooltip>
                 </span>
                 <span className={styles.firstSlash}>/</span>
                 <span className={styles.userName}>

@@ -13,6 +13,9 @@
 }
 .files_raw_table {
   :global {
+    .ant-table-tbody > tr > td {
+      background: none !important;
+    }
     tr.manifest-attached {
       opacity: 0.6;
       > td {

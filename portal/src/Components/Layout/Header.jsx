@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Layout, Menu, Button, Modal, Alert } from 'antd';
+import { Layout, Menu, Button, Modal, Alert, Badge } from 'antd';
 import styles from './index.module.scss';
 import {
   ContainerOutlined,
@@ -14,6 +14,7 @@ import {
   cleanDatasetCreator,
   userLogoutCreator,
   setUploadListCreator,
+  setServiceRequestRedDot,
 } from '../../Redux/actions';
 import { connect } from 'react-redux';
 import ResetPasswordModal from '../Modals/ResetPasswordModal';
@@ -21,6 +22,7 @@ import SupportDrawer from '../Tools/SupportDrawer';
 import { UploadQueueContext } from '../../Context';
 import { logout } from '../../Utility';
 import FilePanel from './FilePanel/FilePanel';
+import { getResourceRequestsAPI } from '../../APIs';
 
 const { confirm } = Modal;
 const { Header } = Layout;
@@ -45,7 +47,7 @@ class AppHeader extends Component {
     };
   }
 
-  componentDidMount() {
+  componentDidMount = async () => {
     //Update header
     const { params, path } = this.props.match;
     if (params.datasetId) {
@@ -65,7 +67,29 @@ class AppHeader extends Component {
       this.updatedSelectedKeys('clear');
       this.updatedSelectedKeys('add', 'users');
     }
+
+    // check if there are new service requests
+    const localStorageId = localStorage.getItem('serviceRequestId');
+    const res = await getResourceRequestsAPI({
+      page: 0,
+      pageSize: 1,
+      orderBy: 'request_date',
+      orderType: 'desc',
+      filters: {},
+    })
+
+    // Set the red dot when platform admin first login
+    if (res.data && res.data.result.length > 0 && !localStorageId) {
+      this.props.setServiceRequestRedDot(true);
+    }
+
+    if (res.data && res.data.result.length > 0 && localStorageId) {
+      if (res.data.result[0].id.toString() !== localStorageId) {
+        this.props.setServiceRequestRedDot(true);
+      }
+    }
   }
+  
   logout = async () => {
     modal = confirm({
       title: 'Are you sure you want to log out?',
@@ -172,6 +196,16 @@ class AppHeader extends Component {
 
   render() {
     const username = this.props.username;
+    const withRedDot = (
+      <div className={styles.user_management}>
+        <Badge status="error"><ControlOutlined /> User Management</Badge>
+      </div>
+    )
+    const withoutRedDot = (
+      <div>
+        <ControlOutlined />User Management
+      </div>
+    )
     return (
       <Header
         className={styles.siteHeader}
@@ -230,7 +264,7 @@ class AppHeader extends Component {
           {this.props.role === 'admin' ? (
             <Menu.Item key="users">
               <Link to="/users">
-                <ControlOutlined /> Administrator Console
+                {this.props.showRedDot ? withRedDot : withoutRedDot }
               </Link>
             </Menu.Item>
           ) : null}
@@ -302,10 +336,12 @@ export default connect(
     isLogin: state.isLogin,
     username: state.username,
     containersPermission: state.containersPermission,
+    showRedDot: state.serviceRequestRedDot.showRedDot,
   }),
   {
     cleanDatasetCreator,
     userLogoutCreator,
     setUploadListCreator,
+    setServiceRequestRedDot,
   },
 )(withCookies(withRouter(AppHeader)));

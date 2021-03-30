@@ -5,6 +5,7 @@ import {
   devOpServerUrl,
   devOpServer,
   kongAPI,
+  uploadAxios,
 } from './config';
 import { objectKeysToSnakeCase } from '../Utility';
 import { message } from 'antd';
@@ -23,18 +24,21 @@ function uploadFileApi(containerId, data, cancelToken) {
   });
 }
 
-function uploadFileApi2(containerId, data, cancelToken) {
-  return devOpAxios({
-    url: `/v1/upload/containers/${containerId}/chunks`,
+function uploadFileApi2(data, sessionId, cancelToken) {
+  return uploadAxios({
+    url: `/v1/files/chunks`,
     method: 'POST',
     data,
     cancelToken,
+    headers: {
+      'Session-ID': sessionId,
+    },
   });
 }
 
-function preUpload(containerId, data, sessionId) {
-  return devOpAxios({
-    url: `/v1/upload/containers/${containerId}/pre`,
+function preUploadApi(data, sessionId) {
+  return uploadAxios({
+    url: `/v1/files/jobs`,
     method: 'POST',
     data,
     headers: {
@@ -43,9 +47,9 @@ function preUpload(containerId, data, sessionId) {
   });
 }
 
-function combineChunks(containerId, data, sessionId) {
-  return devOpAxios({
-    url: `/v1/upload/containers/${containerId}/on-success`,
+function combineChunksApi(data, sessionId) {
+  return uploadAxios({
+    url: `/v1/files`,
     method: 'POST',
     data,
     headers: {
@@ -54,12 +58,16 @@ function combineChunks(containerId, data, sessionId) {
   });
 }
 
-function checkUploadStatus(containerId, sessionId) {
-  return devOpAxios({
-    url: `/v1/upload/containers/${containerId}/upload-state`,
+function checkUploadStatus(projectCode, operator, sessionId) {
+  return uploadAxios({
+    url: `/v1/files/jobs`,
     method: 'GET',
     headers: {
       'Session-ID': sessionId,
+    },
+    params: {
+      project_code: projectCode,
+      operator,
     },
   });
 }
@@ -94,7 +102,7 @@ function deleteDownloadStatus(sessionId) {
     method: 'DELETE',
     headers: {
       'Session-ID': `${sessionId}`,
-    }
+    },
   });
 }
 
@@ -145,12 +153,12 @@ function createFolderApi(containerId, path, folderName) {
   });
 }
 
-function getFileManifestAttrs(filePaths, lineageView = false) {
+function getFileManifestAttrs(geidsList, lineageView = false) {
   return serverAxiosNoIntercept({
     url: `/v1/file/manifest/query`,
     method: 'POST',
     data: {
-      file_paths: filePaths,
+      geid_list: geidsList,
       lineage_view: lineageView,
     },
   });
@@ -167,8 +175,32 @@ function getLabels(paths) {
     .map((v) => _.snakeCase(v))
     .join('/');
   if (relevant_path === 'trash') {
-    return [zoneLabel, 'TrashFile'];
+    return [zoneLabel + ':TrashFile'];
   }
+
+  let fileLabel = null;
+  if (zoneLabel === 'Greenroom') {
+    if (paths.find((p) => p.toLowerCase() === 'processed')) {
+      fileLabel = 'Processed';
+    }
+    if (paths.find((p) => p.toLowerCase() === 'raw')) {
+      fileLabel = 'Raw';
+    }
+  }
+  if (zoneLabel === 'Greenroom' && fileLabel === 'Raw') {
+    const prefix = zoneLabel + ':' + fileLabel;
+    return [prefix + ':File', zoneLabel + ':Folder'];
+  } else {
+    const prefix = fileLabel ? zoneLabel + ':' + fileLabel : zoneLabel;
+    return [prefix + ':File'];
+  }
+}
+function getLabelsNew(paths) {
+  const ZoneMap = {
+    greenroom: 'Greenroom',
+    core: 'VRECore',
+  };
+  const zoneLabel = ZoneMap[paths[0]];
 
   const labels = ['File'];
   labels.push(zoneLabel);
@@ -182,6 +214,92 @@ function getLabels(paths) {
   }
 
   return labels;
+}
+async function getFilesByFolderAPI(
+  geid,
+  pageSize,
+  page,
+  column,
+  order,
+  activePane,
+  filters,
+) {
+  if (!activePane) {
+    return;
+  }
+  const paths = activePane.split('-');
+  const labels = getLabelsNew(paths);
+  const columnMap = {
+    createTime: 'time_created',
+    fileName: 'name',
+    owner: 'uploader',
+    fileSize: 'file_size',
+    generateID: 'generate_id',
+  };
+  let params = {
+    page,
+    page_size: pageSize,
+    order_by: columnMap[column] ? columnMap[column] : column,
+    order_type: order,
+    partial: true,
+    query: {},
+    zone: labels[1],
+  };
+  if (labels[2]) {
+    params['datatype'] = labels[2];
+  }
+  if (filters && filters.fileName) {
+    params.query.name = filters.fileName;
+    params.partial = true;
+  }
+  if (filters && filters.owner) {
+    params.query.uploader = filters.owner;
+    params.partial = true;
+  }
+  if (filters && filters.generateID) {
+    params.query.generate_id = filters.generateID;
+    params.partial = true;
+  }
+
+  let res = await axios({
+    url: `/v1/files/entity/folder/${geid}`,
+    params: objectKeysToSnakeCase(params),
+  });
+
+  const entities = res.data.result.data.map((item) => {
+    console.log(item);
+    let typeName =
+      item.labels.indexOf('Raw') !== -1 ? 'nfs_file' : 'nfs_file_processed';
+    let formatRes = {
+      displayText: item.fullPath,
+      guid: item.guid,
+      geid: item.globalEntityId,
+      typeName: typeName,
+      attributes: {
+        createTime: item.timeCreated,
+        nodeLabel: item.labels,
+        fileName: item.name,
+        fileSize: item.fileSize,
+        name: item.fullPath,
+        owner: item.uploader,
+        path: item.path,
+        qualifiedName: item.fullPath,
+        generateId:
+          item.generateId && typeof item.generateId !== 'undefined'
+            ? item.generateId
+            : 'undefined',
+      },
+      labels: item.tags,
+    };
+    return formatRes;
+  });
+  res.data.result = {
+    approximateCount: res.data.total,
+    entities,
+    routing: res.data.result.routing,
+  };
+  console.log(entities);
+  return res;
 }
 /**
  * get a page of processed file on a path
@@ -214,7 +332,6 @@ async function getFilesByTypeAPI(
     page_size: pageSize,
     order_by: columnMap[column] ? columnMap[column] : column,
     order_type: order,
-    partial: true,
     query: {},
   };
   if (activePane) {
@@ -224,47 +341,72 @@ async function getFilesByTypeAPI(
       .slice(1)
       .map((v) => _.snakeCase(v))
       .join('/');
-    if (relevant_path === 'trash') {
-      params.query.labels = labels;
-    } else {
-      params.query.archived = false;
-      params.query.path = relevant_path;
-      params.query.labels = labels;
+    let conditions = {};
+    if (relevant_path !== 'trash') {
       if (
         pipeline === pipelines['DATA_COPY'] ||
         pipeline === pipelines['GENERATE_PROCESS'] ||
         pipeline === pipelines['DATA_DELETE']
       ) {
-        params.query.process_pipeline = _.snakeCase(pipeline);
+        conditions.process_pipeline = _.snakeCase(pipeline);
       }
     }
-    if (labels.indexOf('Greenroom') !== -1 && role === 'collaborator') {
-      params.query.uploader = username;
+    if (labels[0].indexOf('Greenroom') !== -1 && role === 'collaborator') {
+      conditions.uploader = username;
     }
     if (role === 'contributor') {
-      params.query.uploader = username;
+      conditions.uploader = username;
     }
     if (filters && filters.fileName) {
-      params.query.name = filters.fileName;
-      params.partial = true;
+      conditions.name = filters.fileName;
+      conditions.partial = conditions.partial
+        ? [...conditions.partial, 'name']
+        : ['name'];
     }
     if (filters && filters.owner) {
-      params.query.uploader = filters.owner;
-      params.partial = true;
+      conditions.uploader = filters.owner;
+      conditions.partial = conditions.partial
+        ? [...conditions.partial, 'uploader']
+        : ['uploader'];
     }
     if (filters && filters.generateID) {
-      params.query.generate_id = filters.generateID;
-      params.partial = true;
+      conditions.generate_id = filters.generateID;
+      conditions.partial = conditions.partial
+        ? [...conditions.partial, 'generate_id']
+        : ['generate_id'];
+    }
+    params.query = {
+      labels: labels,
+    };
+    for (let label of labels) {
+      if (label.indexOf('Folder') !== -1) {
+        let conditionsTemp = {
+          name: conditions['name'],
+          uploader: conditions['uploader'],
+          partial: conditions['partial'],
+          folder_level: 0,
+        };
+        params.query[label] = conditionsTemp;
+      } else {
+        params.query[label] = conditions;
+        if (relevant_path !== 'trash') {
+          params.query[label].archived = false;
+        }
+      }
     }
   }
 
   let res = await axios({
-    url: `/v2/files/containers/${containerId}/files/meta`,
-    params: objectKeysToSnakeCase(params),
+    url: `/v3/files/containers/${containerId}/files/meta`,
+    method: 'POST',
+    data: params,
   });
   const entities = res.data.result.map((item) => {
-    let typeName =
-      item.labels.indexOf('Raw') !== -1 ? 'nfs_file' : 'nfs_file_processed';
+    let typeName = item.fullPath
+      ? item.labels.indexOf('Raw') !== -1
+        ? 'nfs_file'
+        : 'nfs_file_processed'
+      : null;
     let formatRes = {
       displayText: item.fullPath,
       guid: item.guid,
@@ -272,6 +414,7 @@ async function getFilesByTypeAPI(
       typeName: typeName,
       attributes: {
         createTime: item.timeCreated,
+        nodeLabel: item.labels,
         fileName: item.name,
         fileSize: item.fileSize,
         name: item.fullPath,
@@ -292,18 +435,18 @@ async function getFilesByTypeAPI(
     entities,
   };
   if (activePane && activePane === 'greenroom-raw') {
-    const filePaths = res.data.result.entities.map(
-      (e) => e.attributes.qualifiedName,
-    );
-    let attrsMap = await getFileManifestAttrs(filePaths);
+    const geidsList = res.data.result.entities
+      .filter((e) => e.displayText)
+      .map((e) => e.geid);
+    let attrsMap = await getFileManifestAttrs(geidsList);
     attrsMap = attrsMap.data.result;
+
     res.data.result.entities = res.data.result.entities.map((entity) => {
       return {
         ...entity,
         manifest:
-          attrsMap[entity.attributes.qualifiedName] &&
-          attrsMap[entity.attributes.qualifiedName].length
-            ? attrsMap[entity.attributes.qualifiedName]
+          attrsMap[entity.geid] && attrsMap[entity.geid].length
+            ? attrsMap[entity.geid]
             : null,
       };
     });
@@ -420,7 +563,8 @@ function downloadFilesAPI(
 
         let item = {
           downloadKey: res.data.result['jobId'],
-          container: res.data.result.project_code,
+          container: res.data.result.projectCode,
+          projectCode: res.data.result.projectCode,
           status: 'pending',
           filename: fileName,
           projectId: containerId,
@@ -428,6 +572,7 @@ function downloadFilesAPI(
           namespace,
           createdTime: Date.now(),
         };
+
         appendDownloadListCreator(item);
 
         return null;
@@ -575,7 +720,7 @@ function emailUploadedFileListAPI(fileList, uploader) {
  */
 function projectFileCountTotal(containerId) {
   return axios({
-    url: `v1/files/containers/${containerId}/files/count/total`,
+    url: `v2/files/containers/${containerId}/files/count`,
   });
 }
 
@@ -748,12 +893,13 @@ export {
   checkDownloadStatusAPI,
   checkPendingStatusAPI,
   getFilesByTypeAPI,
+  getFilesByFolderAPI,
   emailUploadedFileListAPI,
   projectFileCountTotal,
   projectFileCountToday,
-  preUpload,
+  preUploadApi,
   uploadFileApi2,
-  combineChunks,
+  combineChunksApi,
   projectFileSummary,
   checkUploadStatus,
   listProjectTagsAPI,

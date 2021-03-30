@@ -26,6 +26,7 @@ const DeleteFilesModal = ({
     'tooltips',
     'success',
     'formErrorMessages',
+    'errormessages',
   ]);
 
   const dispatch = useDispatch();
@@ -42,7 +43,7 @@ const DeleteFilesModal = ({
     const deleteFiles = [];
     const allFiles = deletedFileList;
     if (permission === 'collaborator' && panelKey === 'core-Raw') {
-      files = files.filter(el => el.uploader === username);
+      files = files.filter((el) => el.uploader === username);
     }
 
     if (files && files.length === 0) {
@@ -65,7 +66,7 @@ const DeleteFilesModal = ({
         file.source = file.input_path;
         file.updateTimestamp = `${Date.now()}`;
         file.createdTime = Date.now();
-        delete file.input_path
+        delete file.input_path;
         allFiles.push(file);
       }
 
@@ -90,14 +91,15 @@ const DeleteFilesModal = ({
 
     deleteFileAPI(data)
       .then((res) => {
-        if (res.status === 200) message.success(t('success:fileOperations.delete'));
+        if (res.status === 200)
+          message.success(t('success:fileOperations.delete'));
         dispatch(setDeletedFileList(allFiles));
         dispatch(triggerEvent('LOAD_DELETED_LIST'));
         setConfirmLoading(false);
         handleCancel();
       })
       .catch((err) => {
-        message.error(t('errorMessages:fileOperations.delete'));
+        message.error(t('errormessages:fileOperations.deleteErr'));
         setConfirmLoading(false);
         handleCancel();
       });
@@ -115,8 +117,8 @@ const DeleteFilesModal = ({
     );
 
     if (permission === 'collaborator' && panelKey === 'core-Raw') {
-      const ownFiles = files.filter(el => el.uploader === username);
-      const otherFiles = files.filter(el => el.uploader !== username);
+      const ownFiles = files.filter((el) => el.uploader === username);
+      const otherFiles = files.filter((el) => el.uploader !== username);
 
       if (ownFiles && ownFiles.length) {
         content = (
@@ -144,8 +146,8 @@ const DeleteFilesModal = ({
     );
 
     if (permission === 'collaborator' && panelKey === 'core-Raw') {
-      const ownFiles = files.filter(el => el.uploader === username);
-      const otherFiles = files.filter(el => el.uploader !== username);
+      const ownFiles = files.filter((el) => el.uploader === username);
+      const otherFiles = files.filter((el) => el.uploader !== username);
 
       if (otherFiles && otherFiles.length) {
         content = (
@@ -153,11 +155,11 @@ const DeleteFilesModal = ({
             <p>
               {`${otherFiles.length} files will be skipped. Because these files are uploaded by other users.`}
             </p>
-  
+
             <p>
               {`The following ${ownFiles.length} files will be sent to ${trashPath} > Trash Bin`}
             </p>
-    
+
             <ul style={{ maxHeight: 90, overflowY: 'scroll' }}>
               {ownFiles.map((v) => {
                 return <li key={v.name}>{v.fileName}</li>;

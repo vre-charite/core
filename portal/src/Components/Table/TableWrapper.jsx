@@ -1,10 +1,10 @@
 import { Table, Input, Button, Space, Badge, Tooltip } from 'antd';
 import { SearchOutlined, CrownFilled } from '@ant-design/icons';
 import React from 'react';
-
+import styles from './index.module.scss';
 import { partialString } from '../../Utility';
 
-class PlatformUsersTable extends React.Component {
+class TableWrapper extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -173,26 +173,28 @@ class PlatformUsersTable extends React.Component {
       });
 
     return (
-      <Table
-        columns={columns}
-        dataSource={dataSource}
-        onChange={this.props.onChange}
-        pagination={{
-          current: page + 1,
-          pageSize,
-          total: totalItem,
-          showQuickJumper: true,
-          showSizeChanger: true,
-        }}
-        key={this.props.tableKey}
-        scroll={{ x: true }}
-        rowKey={(record) => record.name || record.email}
-        width={width}
-        rowClassName={setClassName} //This attribute takes a function to add classes to the row
-        style={style}
-      />
+        <Table
+          className={styles.table_wrapper}
+          columns={columns}
+          dataSource={dataSource}
+          onChange={this.props.onChange}
+          tableLayout={'fixed'}
+          pagination={{
+            current: page + 1,
+            pageSize,
+            total: totalItem,
+            showQuickJumper: true,
+            showSizeChanger: true,
+          }}
+          key={this.props.tableKey}
+          scroll={{ x: true }}
+          rowKey={(record) => record.name || record.email}
+          width={width}
+          rowClassName={setClassName} //This attribute takes a function to add classes to the row
+          style={style}
+        />
     );
   }
 }
 
-export default PlatformUsersTable;
+export default TableWrapper;
