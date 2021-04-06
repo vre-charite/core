@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Drawer,  Divider, Typography, Anchor } from 'antd';
+import { Button, Drawer, Divider, Typography, Anchor } from 'antd';
 import { SwapOutlined, PauseOutlined } from '@ant-design/icons';
 import SupportCollapse from './SupportCollapse';
 import ContactUsForm from './ContactUsForm';
@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './index.module.scss';
 
-const { Title,  } = Typography;
+const { Title } = Typography;
 const { Link } = Anchor;
 
 function SupportDrawer(props) {
@@ -139,7 +139,10 @@ function SupportDrawer(props) {
               <Link href="#security" title="Site security" />
               <Link href="#file" title="File upload" />
               <Link href="#file-organization" title={t('drawers.4.title')} />
-              <Link href="#external-project-tools" title={t('drawers.5.title')} />
+              <Link
+                href="#external-project-tools"
+                title={t('drawers.5.title')}
+              />
             </div>
           </Link>
         </div>
@@ -175,7 +178,11 @@ function SupportDrawer(props) {
 
       <Button type="primary" ghost>
         <a
-          href="/xwiki/bin/view/user_guide"
+          href={
+            process.env.REACT_APP_ENV === 'staging'
+              ? ' https://vre-staging.indocresearch.org/xwiki/wiki/vrepublic/view/user_guide/'
+              : '/xwiki/bin/view/user_guide'
+          }
           target="_blank"
         >
           {t('download_guide_button_text')}

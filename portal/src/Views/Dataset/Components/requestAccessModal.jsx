@@ -6,12 +6,13 @@ import 'antd/dist/antd.css';
 import styles from './index.module.scss';
 import {
   createResourceRequestAPI,
-  getUserAnnouncementApi
+  getUserAnnouncementApi,
 } from '../../../APIs';
 
-
 const RequestAccessModal = (props) => {
-  const [showConfirmationConetnt, toggleShowConfirmationContent] = useState(false);
+  const [showConfirmationConetnt, toggleShowConfirmationContent] = useState(
+    false,
+  );
   const [userGeid, setUserGeid] = useState(null);
   const [connectGuacamole, setConnectGuacamole] = useState(false);
   const [connectSuperSet, setConnectSuperSet] = useState(false);
@@ -25,10 +26,10 @@ const RequestAccessModal = (props) => {
       if (res.data.result) {
         setUserGeid(res.data.result.globalEntityId);
       }
-    }
+    };
 
     getUserGeid();
-  }, [props.username])
+  }, [props.username]);
 
   const createResourceRequest = async () => {
     let requestFor;
@@ -39,29 +40,30 @@ const RequestAccessModal = (props) => {
     }
     if (userGeid) {
       try {
-        await createResourceRequestAPI({
-          userGeid,
-          projectGeid: props.projectGeid,
-          requestFor
-        })
         if (requestFor === 'Guacamole') {
           setConnectGuacamole(true);
         }
         if (requestFor === 'SuperSet') {
           setConnectSuperSet(true);
         }
+        await createResourceRequestAPI({
+          userGeid,
+          projectGeid: props.projectGeid,
+          requestFor,
+        });
         toggleShowConfirmationContent(true);
-      }catch (error) {
+      } catch (error) {
         if (error.response.data.result === 'Request already exists') {
-          const errorMessage = 'Already requested, please wait for approval.'
+          const errorMessage = 'Already requested, please wait for approval.';
           message.info(errorMessage);
         } else if (error.response.data.result === 'Request already completed') {
-          const errorMessage = 'Request already completed, please refresh the page to access it.'
+          const errorMessage =
+            'Request already completed, please refresh the page to access it.';
           message.info(errorMessage);
         }
       }
     }
-  }
+  };
 
   const requestAccessTitle = 'Request Access';
   const requestAccessConetnt = (
@@ -94,20 +96,6 @@ const RequestAccessModal = (props) => {
           <ArrowRightOutlined /> Send Request
         </Button>
       </div>
-      {connectGuacamole ? (
-        <iframe
-          title="guacamole"
-          style={{ display: 'none', position: 'absolute', zIndex: -1 }}
-          src={`/workbench/${currentProject?.code}/guacamole/`}
-        ></iframe>
-      ) : null}
-      {connectSuperSet ? (
-        <iframe
-          title="superset"
-          style={{ display: 'none', position: 'absolute', zIndex: -1 }}
-          src={`/bi/${currentProject?.code}/superset/welcome`}
-        ></iframe>
-      ) : null}
     </div>
   );
 
@@ -155,9 +143,25 @@ const RequestAccessModal = (props) => {
       centered={true}
       footer={null}
     >
-      {showConfirmationConetnt
-        ? requestConfirmationContent
-        : requestAccessConetnt}
+      <div style={{ position: 'relative' }}>
+        {showConfirmationConetnt
+          ? requestConfirmationContent
+          : requestAccessConetnt}
+        {connectGuacamole ? (
+          <iframe
+            title="guacamole"
+            style={{ display: 'none', position: 'absolute', zIndex: -1 }}
+            src={`/workbench/${currentProject?.code}/guacamole/`}
+          ></iframe>
+        ) : null}
+        {connectSuperSet ? (
+          <iframe
+            title="superset"
+            style={{ display: 'none', position: 'absolute', zIndex: -1 }}
+            src={`/bi/${currentProject?.code}/superset/welcome`}
+          ></iframe>
+        ) : null}
+      </div>
     </Modal>
   );
 };
