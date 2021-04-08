@@ -1,6 +1,10 @@
 import React, { useState, Component, useEffect } from 'react';
 import { Menu, message, Spin } from 'antd';
-import { TeamOutlined, SettingOutlined, LoadingOutlined } from '@ant-design/icons';
+import {
+  TeamOutlined,
+  SettingOutlined,
+  LoadingOutlined,
+} from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
 import GreenRoomUploader from './GreenRoomUploader';
@@ -47,7 +51,7 @@ const ToolBar = ({
     currentProject?.code === 'indoctestproject';
 
   const showSuperset = ['indoctestproject'].includes(currentProject?.code);
-  
+
   useEffect(() => {
     const getResourceRequests = async () => {
       const res = await getResourceRequestsAPI({});
@@ -93,40 +97,16 @@ const ToolBar = ({
     getResourceRequests();
   }, [params.datasetId]);
 
-  const superSet = (
-    role,
-    showSuperset,
-    superSetActive
-  ) => {
+  const superSet = (role, showSuperset, superSetActive) => {
     if (showSuperset) {
-      
-        if (role === 'admin' || superSetActive === false) {
-          return (
-            <Menu.Item key="superset">
-              <a
-                href={`/bi/${currentProject?.code}/superset/welcome`}
-                //rel="noopener noreferrer"
-                // eslint-disable-next-line
-                target="_blank"
-              >
-                <span role="img" class="anticon">
-                  <img
-                    style={{ height: 10 }}
-                    src={require('../../../Images/SuperSet.svg')}
-                  />
-                </span>
-                <span>Superset</span>
-              </a>
-            </Menu.Item>
-          );
-        } else {
-          return (
-            <Menu.Item
-              key="superset"
-              onClick={() => {
-                setRequestItem('Superset');
-                toggleRequestModal(true);
-              }}
+      if (role === 'admin' || superSetActive === false) {
+        return (
+          <Menu.Item key="superset">
+            <a
+              href={`/bi/${currentProject?.code}/superset/welcome`}
+              //rel="noopener noreferrer"
+              // eslint-disable-next-line
+              target="_blank"
             >
               <span role="img" class="anticon">
                 <img
@@ -135,10 +115,28 @@ const ToolBar = ({
                 />
               </span>
               <span>Superset</span>
-            </Menu.Item>
-          );
-        }
-      
+            </a>
+          </Menu.Item>
+        );
+      } else {
+        return (
+          <Menu.Item
+            key="superset"
+            onClick={() => {
+              setRequestItem('Superset');
+              toggleRequestModal(true);
+            }}
+          >
+            <span role="img" class="anticon">
+              <img
+                style={{ height: 10 }}
+                src={require('../../../Images/SuperSet.svg')}
+              />
+            </span>
+            <span>Superset</span>
+          </Menu.Item>
+        );
+      }
     } else {
       return (
         <Menu.Item
@@ -159,40 +157,16 @@ const ToolBar = ({
     }
   };
 
-  const guacamole = (
-    role,
-    showGuacamole,
-    guacamoleActive
-  ) => {
+  const guacamole = (role, showGuacamole, guacamoleActive) => {
     if (showGuacamole) {
-      
-        if (role === 'admin' || guacamoleActive === false) {
-          return (
-            <Menu.Item key="guacamole">
-              <a
-                href={`/workbench/${currentProject?.code}/guacamole/`}
-                //rel="noopener noreferrer"
-                // eslint-disable-next-line
-                target="_blank"
-              >
-                <span role="img" class="anticon">
-                  <img
-                    style={{ width: 14 }}
-                    src={require('../../../Images/Guacamole.svg')}
-                  />
-                </span>
-                <span>Guacamole</span>
-              </a>
-            </Menu.Item>
-          );
-        } else {
-          return (
-            <Menu.Item
-              key="guacamole"
-              onClick={() => {
-                setRequestItem('Guacamole');
-                toggleRequestModal(true);
-              }}
+      if (role === 'admin' || guacamoleActive === false) {
+        return (
+          <Menu.Item key="guacamole">
+            <a
+              href={`/workbench/${currentProject?.code}/guacamole/`}
+              //rel="noopener noreferrer"
+              // eslint-disable-next-line
+              target="_blank"
             >
               <span role="img" class="anticon">
                 <img
@@ -201,10 +175,28 @@ const ToolBar = ({
                 />
               </span>
               <span>Guacamole</span>
-            </Menu.Item>
-          );
-        }
-      
+            </a>
+          </Menu.Item>
+        );
+      } else {
+        return (
+          <Menu.Item
+            key="guacamole"
+            onClick={() => {
+              setRequestItem('Guacamole');
+              toggleRequestModal(true);
+            }}
+          >
+            <span role="img" class="anticon">
+              <img
+                style={{ width: 14 }}
+                src={require('../../../Images/Guacamole.svg')}
+              />
+            </span>
+            <span>Guacamole</span>
+          </Menu.Item>
+        );
+      }
     } else {
       return (
         <Menu.Item
@@ -327,7 +319,7 @@ const ToolBar = ({
 
         <Menu.Item key="xwiki">
           <a
-            href={`/xwiki/bin/view/Main/${currentProject?.code}/`}
+            href={`/xwiki/wiki/${currentProject?.code}/view/Main/`}
             //rel="noopener noreferrer"
             // eslint-disable-next-line
             target="_blank"

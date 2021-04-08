@@ -178,11 +178,7 @@ function SupportDrawer(props) {
 
       <Button type="primary" ghost>
         <a
-          href={
-            process.env.REACT_APP_ENV === 'staging'
-              ? ' https://vre-staging.indocresearch.org/xwiki/wiki/vrepublic/view/user_guide/'
-              : '/xwiki/bin/view/user_guide'
-          }
+          href="/xwiki/wiki/vrepublic/view/Main/user_guide/"
           target="_blank"
         >
           {t('download_guide_button_text')}
