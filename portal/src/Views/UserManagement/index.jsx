@@ -95,17 +95,11 @@ class UserManagement extends Component {
 
   componentDidMount() {
     this.fetchUsers();
-    window.addEventListener(
-      'resize',
-      this.state.debounce
-    );
+    window.addEventListener('resize', this.state.debounce);
   }
 
   componentWillUnmount() {
-    window.removeEventListener(
-      'resize',
-      this.state.debounce
-    );
+    window.removeEventListener('resize', this.state.debounce);
   }
 
   setOpenCreateEmailModal = () => {
@@ -241,7 +235,7 @@ class UserManagement extends Component {
   };
 
   fetchInvitationUsers = async () => {
-    const res = await getInvitationsAPI({filters: {}});
+    const res = await getInvitationsAPI({ filters: {} });
     this.setState({ totalInvitations: res.data.total });
   };
 
@@ -307,8 +301,14 @@ class UserManagement extends Component {
   };
 
   updateStatus = async (record, action) => {
-    const { id, email } = record;
-    updateUserStatusAPI({ id, email, status: action })
+    const { realm, email } = record;
+    updateUserStatusAPI({
+      operationType: action,
+      userRealm: 'vre',
+      userGeid: null,
+      userEmail: email,
+      payload: {},
+    })
       .then((res) => {
         this.fetchUsers();
         message.success(`User status is updated successfully.`);
@@ -335,13 +335,13 @@ class UserManagement extends Component {
         </>
       ),
       onOk() {
-        thisComponent.updateStatus(record, 'disabled');
+        thisComponent.updateStatus(record, 'disable');
       },
     });
   };
 
   setTabPaneKey = (key) => {
-    this.setState({tabPaneKey: key})
+    this.setState({ tabPaneKey: key });
   };
 
   handleMenuClick = (e, type) => {
@@ -407,9 +407,15 @@ class UserManagement extends Component {
   };
 
   render() {
-    const { sidePanel, tableWidth, panelWidth, currentRecord, tabPaneKey } = this.state;
+    const {
+      sidePanel,
+      tableWidth,
+      panelWidth,
+      currentRecord,
+      tabPaneKey,
+    } = this.state;
     const { username, showRedDot } = this.props;
-
+    
     let columns = [
       {
         title: 'Account',
@@ -493,7 +499,7 @@ class UserManagement extends Component {
                 </Menu.Item>
               )}
               {record.status === 'disabled' && (
-                <Menu.Item onClick={() => this.updateStatus(record, 'active')}>
+                <Menu.Item onClick={() => this.updateStatus(record, 'enable')}>
                   Enable Account
                 </Menu.Item>
               )}
@@ -602,15 +608,11 @@ class UserManagement extends Component {
 
     const titleWithRedDot = (
       <div className={styles.red_dot}>
-        Resource Request <Badge status='error'/>
+        Resource Request <Badge status="error" />
       </div>
     );
 
-    const titleWithoutRedDot = (
-      <div>
-        Resource Request
-      </div>
-    );
+    const titleWithoutRedDot = <div>Resource Request</div>;
 
     return (
       <StandardLayout className={styles.layout}>
@@ -666,7 +668,11 @@ class UserManagement extends Component {
                         className={styles.tab}
                         style={{ borderRadius: '0px 0px 6px 6px' }}
                         onChange={this.setTabPaneKey}
-                        tabBarExtraContent={tabPaneKey === 'Resource_Request' ? null : extraContent}
+                        tabBarExtraContent={
+                          tabPaneKey === 'Resource_Request'
+                            ? null
+                            : extraContent
+                        }
                       >
                         <TabPane tab="Platform Users" key="users">
                           <div
@@ -690,6 +696,7 @@ class UserManagement extends Component {
                                 dataSource={this.state.users}
                                 totalItem={this.state.total}
                                 pageSize={this.state.pageSize}
+                                pageSizeOptions={[10, 20, 50]}
                                 page={this.state.page}
                                 key="userTable"
                                 setClassName={(record) => {
@@ -724,8 +731,13 @@ class UserManagement extends Component {
                             totalInvitations={this.state.totalInvitations}
                           />
                         </TabPane>
-                        <TabPane tab={showRedDot ? titleWithRedDot : titleWithoutRedDot} key="Resource_Request">
-                           <RequestTable/>
+                        <TabPane
+                          tab={
+                            showRedDot ? titleWithRedDot : titleWithoutRedDot
+                          }
+                          key="Resource_Request"
+                        >
+                          <RequestTable />
                         </TabPane>
                       </Tabs>
                     </div>

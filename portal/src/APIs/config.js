@@ -63,16 +63,16 @@ function errorHandler(error) {
   return new Promise((resolve, reject) => reject(error));
 }
 
-let kongAPI = 'http://10.3.7.220/vre/api/vre/portal';
-let devOpServerUrl = 'http://10.3.7.220/vre/api/vre/portal/dataops';
+let kongAPI = '/vre/api/vre/portal';
+let devOpServerUrl = '/vre/api/vre/portal/dataops';
 // let devOpServerUrl = 'http://10.3.7.234:5063';
-let uploadGrUrl = "http://10.3.7.220/vre/api/vre/upload/gr"
-// for staging env
+let uploadGrUrl = "/vre/api/vre/upload/gr"
+/* // for staging env
 if (process.env.REACT_APP_ENV === 'staging') {
   kongAPI = 'https://vre-staging.indocresearch.org/vre/api/vre/portal';
   devOpServerUrl =
     'https://vre-staging.indocresearch.org/vre/api/vre/portal/dataops';
-  uploadGrUrl = "https://vre-staging.indocresearch.org/vre/api/vre/upload/gr";
+  uploadGrUrl = 'https://vre-staging.indocresearch.org/vre/api/vre/upload/gr';
 }
 
 // for charite env
@@ -80,7 +80,7 @@ if (process.env.REACT_APP_ENV === 'charite') {
   kongAPI = 'https://vre.charite.de/vre/api/vre/portal';
   devOpServerUrl = 'https://vre.charite.de/vre/api/vre/portal/dataops';
   uploadGrUrl = "https://vre.charite.de/vre/api/vre/upload/gr"
-}
+} */
 
 const authService = 'http://auth.utility:5061';
 const serverAxios = axios.create({
@@ -139,6 +139,12 @@ devOpServer.defaults.timeout = 100000000000;
 devOpServer.interceptors.response.use(successHandler, errorHandler);
 useHeader(devOpServer);
 
+const devOpServerNoIntercept = axios.create({ baseURL: devOpServerUrl });
+// devOpServer.defaults.withCredentials = true;
+devOpServerNoIntercept.defaults.headers.post['Content-Type'] =
+  'application/json';
+devOpServerNoIntercept.defaults.timeout = 100000000000;
+useHeader(devOpServerNoIntercept);
 // devOpServer.defaults.withCredentials = true;
 
 const authServerAxios = axios.create({ baseURL: authService });
@@ -171,6 +177,7 @@ export {
   invitationAxios,
   devOpServerUrl,
   serverAxiosNoIntercept,
+  devOpServerNoIntercept,
   kongAPI,
-  uploadAxios
+  uploadAxios,
 };

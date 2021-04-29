@@ -33,7 +33,7 @@ function getDatasetsAPI(params = {}) {
  */
 function createProjectAPI(data, cancelAxios) {
   const CancelToken = axios.CancelToken;
-  const url = `/v1/datasets/`;
+  const url = `/v1/projects`;
   return serverAxios({
     url: url,
     method: 'POST',
@@ -206,7 +206,6 @@ function listAllContainersPermission(username) {
 
 async function listUsersContainersPermission(username, data) {
   return serverAxios({
-    // url: `http://localhost:5000/v1/users/${username}/datasets`,
     url: `/v1/users/${username}/datasets`,
     method: 'POST',
     data,
@@ -222,6 +221,7 @@ function updateDatasetInfoAPI(containerId, data) {
     data,
   });
 }
+
 function updateDatasetIcon(containerId, base64Img) {
   return serverAxios({
     url: `/v1/datasets/${containerId}`,
@@ -231,11 +231,32 @@ function updateDatasetIcon(containerId, base64Img) {
     },
   });
 }
-function listAllVirtualFolder(containerId) {
+
+function updateVirtualFolder(projectGeid, payload) {
   return serverAxios({
+    url: `/v1/project/${projectGeid}/vfolders`,
+    method: 'PUT',
+    data: {
+      vfolders: payload,
+    },
+  });
+}
+
+async function listAllVirtualFolder(containerId) {
+  const res = await serverAxios({
     url: `/v1/vfolder/?container_id=${containerId}`,
     method: 'GET',
   });
+  const vfolders = res.data.result.map((v) => {
+    return {
+      id: v.identity,
+      geid: v.globalEntityId,
+      labels: v.labels,
+      ...v.properties,
+    };
+  });
+  res.data.result = vfolders;
+  return res;
 }
 
 function createVirtualFolder(containerId, name) {
@@ -249,7 +270,7 @@ function createVirtualFolder(containerId, name) {
   });
 }
 async function listAllfilesVfolder(folderId, page, pageSize, order, column) {
-  const columnMap = {
+  /* const columnMap = {
     createTime: 'time_created',
     fileName: 'name',
     owner: 'uploader',
@@ -258,7 +279,7 @@ async function listAllfilesVfolder(folderId, page, pageSize, order, column) {
   };
   order = order ? order : 'desc';
   column = column && columnMap[column] ? columnMap[column] : 'time_created';
-
+ */
   const res = await serverAxios({
     url: `/v1/vfolder/${folderId}`,
     method: 'GET',
@@ -270,14 +291,12 @@ async function listAllfilesVfolder(folderId, page, pageSize, order, column) {
     },
   });
   const entities = res.data.result.map((item) => {
-    let typeName =
-      item.labels.indexOf('Raw') !== -1 ? 'nfs_file' : 'nfs_file_processed';
     let formatRes = {
       displayText: item.fullPath,
       guid: item.guid,
       geid: item.globalEntityId,
-      typeName: typeName,
       attributes: {
+        nodeLabel: item.labels,
         createTime: item.timeCreated,
         fileName: item.name,
         fileSize: item.fileSize,
@@ -604,6 +623,7 @@ export {
   createVirtualFolder,
   listAllVirtualFolder,
   listAllfilesVfolder,
+  updateVirtualFolder,
   deleteVirtualFolder,
   listUsersContainersPermission,
   listAllCopy2CoreFiles,

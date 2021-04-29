@@ -4,7 +4,6 @@ import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import LandingPageContent from './LandingPageContent/LandingPageContent';
 import styles from './LandingPageContent/index.module.scss';
-import ToolBar from './Components/LandingPageToolBar/LandingPageToolBar';
 
 function LandingPageLayout(props) {
   const config = {
@@ -19,5 +18,5 @@ function LandingPageLayout(props) {
 }
 
 export default connect((state) => ({
-  role: state.role
+  role: state.role,
 }))(withRouter(LandingPageLayout));

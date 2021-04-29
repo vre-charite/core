@@ -35,7 +35,7 @@ const getcard = (card, data, actions, state, handleExpand) => {
             currentUser: state.currentUser,
             isAdmin: state.currentRole === 'admin',
           }),
-          card.title,
+          "File Stream Advanced Search"||card.title,
           '55vw',
         );
       res = (

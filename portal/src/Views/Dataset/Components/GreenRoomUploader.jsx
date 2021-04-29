@@ -10,6 +10,7 @@ import {
   message,
   Dropdown,
   Menu,
+  Tooltip,
 } from 'antd';
 import {
   FolderOutlined,
@@ -28,13 +29,14 @@ import {
 } from '../../../Redux/actions';
 import _ from 'lodash';
 import { UploadQueueContext } from '../../../Context';
-import { listProjectTagsAPI, getProjectManifestList } from '../../../APIs';
+import { getProjectManifestList } from '../../../APIs';
 import { validateTag } from '../../../Utility';
 import { useTranslation } from 'react-i18next';
 import UploaderManifest from './UploaderManifest';
 import { validateForm } from '../../../Components/Form/Manifest/FormValidate';
 import styles from './index.module.scss';
 import { UploadFolder } from '../../../Components/Input';
+import { PanelKey } from '../Canvas/Charts/FileExplorer/RawTableValues';
 const { Option } = Select;
 
 const GreenRoomUploader = ({
@@ -59,6 +61,15 @@ const GreenRoomUploader = ({
   const folderRef = useRef(null);
   const fileRef = useRef(null);
   const [isFiles, setIsFiles] = useState(false);
+  const folderRouting = useSelector(
+    (state) => state.fileExplorer && state.fileExplorer.folderRouting,
+  );
+  const [mode, setMode] = useState(null);
+  const currentRouting = folderRouting[PanelKey.GREENROOM_HOME]
+    ? folderRouting[PanelKey.GREENROOM_HOME].filter(
+        (r) => typeof r.folderLevel !== 'undefined',
+      )
+    : folderRouting[PanelKey.GREENROOM_HOME];
   const isGenerate = currentDataset?.code === 'generate';
   useEffect(() => {
     async function loadManifest() {
@@ -75,7 +86,7 @@ const GreenRoomUploader = ({
   );
 
   const handleOk = () => {
-    if (selManifest&&isFiles) {
+    if (selManifest && isFiles) {
       const { valid, err } = validateForm(attrForm, selManifest);
       if (!valid) {
         message.error(err);
@@ -88,9 +99,19 @@ const GreenRoomUploader = ({
       .then((values) => {
         setIsloading(true);
         let jobType = values.file ? 'AS_FILE' : 'AS_FOLDER';
-        const fileList = values.file
+        let fileList = values.file
           ? values.file.fileList
           : values.folder.fileList;
+        fileList = _.cloneDeep(fileList);
+        let folderPath = null;
+        if (currentRouting?.length) {
+          const folderNames = currentRouting
+            .sort((a, b) => {
+              return a.folderLevel - b.folderLevel;
+            })
+            .map((v) => v.name);
+          folderPath = folderNames.join('/');
+        }
         const data = Object.assign({}, values, {
           /*           name: values.file.file.name,
           file_type: values.file.file.type, */
@@ -99,6 +120,8 @@ const GreenRoomUploader = ({
           projectCode: currentDataset.code,
           fileList,
           jobType,
+          toExistingFolder: currentRouting?.length ? true : false,
+          folderPath,
           manifest: selManifest
             ? {
                 id: selManifest.id,
@@ -125,12 +148,50 @@ const GreenRoomUploader = ({
     },
   };
 
+  function getCurrentFolder() {
+    const folderNames = currentRouting
+      .sort((a, b) => {
+        return a.folderLevel - b.folderLevel;
+      })
+      .map((v) => v.name);
+    const path = folderNames.join(' / ');
+    if (path.length > 32) {
+      let shortPath = '';
+      for (let i = folderNames.length - 1; i >= 0; i--) {
+        if (i === folderNames.length - 1 && folderNames[i].length > 27) {
+          const shortenName = folderNames[i].slice(
+            folderNames[i].length - 25,
+            folderNames[i].length,
+          );
+          return (
+            <Tooltip title={path}>
+              {'Green Room / ... / ' + shortenName + '...'}
+            </Tooltip>
+          );
+        }
+        if ((folderNames[i] + ' / ' + shortPath).length > 30) {
+          return (
+            <Tooltip title={path}>{'Green Room / ... / ' + shortPath}</Tooltip>
+          );
+        }
+        if (i === folderNames.length - 1) {
+          shortPath = folderNames[i];
+        } else {
+          shortPath = folderNames[i] + ' / ' + shortPath;
+        }
+      }
+      return <Tooltip title={path}>{'Green Room / ' + shortPath}</Tooltip>;
+    } else {
+      return 'Green Room / ' + path;
+    }
+  }
   const menu = (
     <Menu>
       <Menu.Item className={styles.uploadDropDown} key="1">
         <Button
           onClick={() => {
             fileRef.current.click();
+            setMode('files');
           }}
         >
           <FileImageOutlined />
@@ -141,6 +202,7 @@ const GreenRoomUploader = ({
         <Button
           onClick={() => {
             folderRef.current.click();
+            setMode('folder');
           }}
           id="form_in_modal_select_file"
           disabled={isGenerate}
@@ -303,12 +365,25 @@ const GreenRoomUploader = ({
             </>
           ) : null}
 
-          <Form.Item label="Upload Files">
-            <Dropdown overlay={menu}>
-              <Button className={styles.uploadSelector}>
-                <DownloadOutlined /> Select <DownOutlined />
-              </Button>
-            </Dropdown>
+          <Form.Item>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Dropdown overlay={menu}>
+                <Button className={styles.uploadSelector}>
+                  <DownloadOutlined /> Select <DownOutlined />
+                </Button>
+              </Dropdown>
+              {mode && currentRouting?.length ? (
+                <div style={{ marginLeft: 18 }}>
+                  <p style={{ fontSize: 14, lineHeight: '20px', margin: 0 }}>
+                    Selected {mode === 'folder' ? 'folder' : 'files'} will be
+                    uploaded to folder:
+                  </p>
+                  <p style={{ fontSize: 14, lineHeight: '20px', margin: 0 }}>
+                    {getCurrentFolder()}
+                  </p>
+                </div>
+              ) : null}
+            </div>
             <Form.Item
               noStyle
               rules={[
@@ -389,7 +464,7 @@ const GreenRoomUploader = ({
           {isFiles && (
             <Form.Item
               name="tags"
-              label="File Tags"
+              label="Tags"
               rules={[
                 ({ getFieldValue }) => ({
                   validator(rule, value) {

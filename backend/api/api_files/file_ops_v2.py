@@ -8,6 +8,7 @@ from .proxy import BaseProxyResource
 from config import ConfigClass
 import json
 import requests
+import time
 
 _logger = SrvLoggerFactory('api_files_ops_v2').get_logger()
 
@@ -160,6 +161,7 @@ class FileTags(Resource):
         try:
             data = request.get_json()
             geid = data.get('geid')
+            taglist = data.get('taglist')
 
             url = ConfigClass.DATA_SERVICE_V2 + 'containers/{}/tags'.format(dataset_id)
 
@@ -183,6 +185,19 @@ class FileTags(Resource):
                     return _res.to_dict, _res.code
                 
                 else:
+                    # Update Elastic Search Entity
+                    es_payload = {
+                        "global_entity_id": geid,
+                        "updated_fields": {
+                            "tags": taglist,
+                            "time_lastmodified": time.time()
+                        }
+                    }
+                    es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+                    if es_res.status_code != 200:
+                        _res.set_code = EAPIResponseCode.internal_error
+                        _res.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                        return _res.to_dict, _res.code
                     _logger.info('Successfully attach tags to file: {}'.format(json.dumps(response.json())))
                     return response.json()
 
@@ -221,14 +236,29 @@ class FileTags(Resource):
                             _logger.error('Failed to attach tags to file:   '+ str(response.text))
                             _res.set_code(EAPIResponseCode.internal_error)
                             _res.set_result("Failed to attach tags to file: " + str(response.text))
+
                             return _res.to_dict, _res.code
                         
                         else:
+                            # Update Elastic Search Entity
+                            es_payload = {
+                                "global_entity_id": geid,
+                                "updated_fields": {
+                                    "tags": taglist,
+                                    "time_lastmodified": time.time()
+                                }
+                            }
+                            es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+                            if es_res.status_code != 200:
+                                _res.set_code = EAPIResponseCode.internal_error
+                                _res.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                                return _res.to_dict, _res.code
+
                             _logger.info('Successfully attach tags to file: {}'.format(json.dumps(response.json())))
                             return response.json()
                     
                     elif project_role == 'contributor':
-                        if 'Raw' in file_labels and 'Greenroom' in file_labels and uploader == current_identity['username']:
+                        if 'Greenroom' in file_labels and uploader == current_identity['username']:
                             response = requests.post(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to attach tags to file:   '+ str(response.text))
@@ -237,6 +267,20 @@ class FileTags(Resource):
                                 return _res.to_dict, _res.code
                             
                             else:
+                                # Update Elastic Search Entity
+                                es_payload = {
+                                    "global_entity_id": geid,
+                                    "updated_fields": {
+                                        "tags": taglist,
+                                        "time_lastmodified": time.time()
+                                    }
+                                }
+                                es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+                                if es_res.status_code != 200:
+                                    _res.set_code = EAPIResponseCode.internal_error
+                                    _res.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                                    return _res.to_dict, _res.code
+
                                 _logger.info('Successfully attach tags to file: {}'.format(json.dumps(response.json())))
                                 return response.json()
                         else:
@@ -246,7 +290,7 @@ class FileTags(Resource):
                             return _res.to_dict, _res.code
 
                     elif project_role == 'collaborator':
-                        if ('Raw' in file_labels and uploader == current_identity['username']) or ('VRECore' in file_labels and 'Processed' in file_labels):
+                        if (uploader == current_identity['username']) or ('VRECore' in file_labels):
                             response = requests.post(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to attach tags to file:   '+ str(response.text))
@@ -255,6 +299,19 @@ class FileTags(Resource):
                                 return _res.to_dict, _res.code
                             
                             else:
+                                # Update Elastic Search Entity
+                                es_payload = {
+                                    "global_entity_id": geid,
+                                    "updated_fields": {
+                                        "tags": taglist,
+                                        "time_lastmodified": time.time()
+                                    }
+                                }
+                                es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+                                if es_res.status_code != 200:
+                                    _res.set_code = EAPIResponseCode.internal_error
+                                    _res.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                                    return _res.to_dict, _res.code
                                 _logger.info('Successfully attach tags to file: {}'.format(json.dumps(response.json())))
                                 return response.json()
                         else:
@@ -279,6 +336,7 @@ class FileTags(Resource):
         try:
             data = request.get_json()
             geid = data.get('geid')
+            taglist = data.get('taglist')
 
             url = ConfigClass.DATA_SERVICE_V2 + 'containers/{}/tags'.format(dataset_id)
 
@@ -294,7 +352,7 @@ class FileTags(Resource):
                 return _res.to_dict, _res.code
 
             elif current_identity['role'] == 'admin':
-                response = requests.post(url, json=data)
+                response = requests.delete(url, json=data)
                 if response.status_code != 200:
                     _logger.error('Failed to delete tags from file:   '+ str(response.text))
                     _res.set_code(EAPIResponseCode.internal_error)
@@ -302,6 +360,19 @@ class FileTags(Resource):
                     return _res.to_dict, _res.code
                 
                 else:
+                    # Update Elastic Search Entity
+                    es_payload = {
+                        "global_entity_id": geid,
+                        "updated_fields": {
+                            "tags": taglist,
+                            "time_lastmodified": time.time()
+                        }
+                    }
+                    es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+                    if es_res.status_code != 200:
+                        _res.set_code = EAPIResponseCode.internal_error
+                        _res.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                        return _res.to_dict, _res.code
                     _logger.info('Successfully delete tags from file: {}'.format(json.dumps(response.json())))
                     return response.json()
 
@@ -343,11 +414,24 @@ class FileTags(Resource):
                             return _res.to_dict, _res.code
                         
                         else:
+                            # Update Elastic Search Entity
+                            es_payload = {
+                                "global_entity_id": geid,
+                                "updated_fields": {
+                                    "tags": taglist,
+                                    "time_lastmodified": time.time()
+                                }
+                            }
+                            es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+                            if es_res.status_code != 200:
+                                _res.set_code = EAPIResponseCode.internal_error
+                                _res.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                                return _res.to_dict, _res.code
                             _logger.info('Successfully attach tags to file: {}'.format(json.dumps(response.json())))
                             return response.json()
                     
                     elif project_role == 'contributor':
-                        if 'Raw' in file_labels and 'Greenroom' in file_labels and uploader == current_identity['username']:
+                        if 'Greenroom' in file_labels and uploader == current_identity['username']:
                             response = requests.delete(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to delete tags from file:   '+ str(response.text))
@@ -356,6 +440,20 @@ class FileTags(Resource):
                                 return _res.to_dict, _res.code
                             
                             else:
+                                # Update Elastic Search Entity
+                                es_payload = {
+                                    "global_entity_id": geid,
+                                    "updated_fields": {
+                                        "tags": taglist,
+                                        "time_lastmodified": time.time()
+                                    }
+                                }
+                                es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+                                if es_res.status_code != 200:
+                                    _res.set_code = EAPIResponseCode.internal_error
+                                    _res.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                                    return _res.to_dict, _res.code
+
                                 _logger.info('Successfully delete tags from file: {}'.format(json.dumps(response.json())))
                                 return response.json()
                         else:
@@ -365,7 +463,7 @@ class FileTags(Resource):
                             return _res.to_dict, _res.code
 
                     elif project_role == 'collaborator':
-                        if ('Raw' in file_labels and uploader == current_identity['username']) or ('VRECore' in file_labels and 'Processed' in file_labels):
+                        if (uploader == current_identity['username']) or ('VRECore' in file_labels in file_labels):
                             response = requests.delete(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to delete tags from file:   '+ str(response.text))
@@ -374,6 +472,19 @@ class FileTags(Resource):
                                 return _res.to_dict, _res.code
                             
                             else:
+                                # Update Elastic Search Entity
+                                es_payload = {
+                                    "global_entity_id": geid,
+                                    "updated_fields": {
+                                        "tags": taglist,
+                                        "time_lastmodified": time.time()
+                                    }
+                                }
+                                es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+                                if es_res.status_code != 200:
+                                    _res.set_code = EAPIResponseCode.internal_error
+                                    _res.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                                    return _res.to_dict, _res.code
                                 _logger.info('Successfully delete tags to file: {}'.format(json.dumps(response.json())))
                                 return response.json()
                         else:

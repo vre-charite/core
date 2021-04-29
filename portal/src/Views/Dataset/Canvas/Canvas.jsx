@@ -129,7 +129,7 @@ class Canvas extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     let { containersPermission } = this.props;
-    if (prevProps.containersPermission !== containersPermission) {
+    if (prevProps.containersPermission?.length !== containersPermission?.length) {
       this.updatePermision();
       this.fetchDatasetInfo();
     }

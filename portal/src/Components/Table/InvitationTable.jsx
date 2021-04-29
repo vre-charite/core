@@ -114,7 +114,7 @@ function InvitationTable(props) {
         ...newFilters,
         orderBy: 'create_timestamp',
         orderType: 'desc',
-      }
+      };
     }
 
     setFilters(newFilters);
@@ -138,7 +138,7 @@ function InvitationTable(props) {
       dataIndex: 'email',
       key: 'email',
       sorter: true,
-      width: '20%',
+      width: '30%',
       searchKey: 'email',
     },
     {
@@ -146,15 +146,7 @@ function InvitationTable(props) {
       dataIndex: 'createTimestamp',
       key: 'create_timestamp',
       sorter: true,
-      width: '15%',
-      render: (text) => text && timeConvert(text, 'datetime'),
-    },
-    {
-      title: 'Expiration Time',
-      dataIndex: 'expiryTimestamp',
-      key: 'expiry_timestamp',
-      sorter: true,
-      width: '15%',
+      width: '20%',
       render: (text) => text && timeConvert(text, 'datetime'),
     },
     {
@@ -162,47 +154,33 @@ function InvitationTable(props) {
       dataIndex: 'invitedBy',
       key: 'invited_by',
       sorter: true,
-      width: '10%',
+      width: '15%',
       searchKey: 'invited_by',
     },
-    // To be added later
-    // {
-    //   title: 'Action',
-    //   key: 'action',
-    //   width: '5%',
-    //   render: (text, record) => {
-    //     const menu = (
-    //       <Menu>
-    //         <Menu.Item onClick={() => console.log('reinviting')}>
-    //           Re-invite
-    //         </Menu.Item>
-    //         <Menu.Item
-    //           onClick={() => console.log('revoking')}
-    //           style={{ color: 'red' }}
-    //         >
-    //           Revoke Invitation
-    //         </Menu.Item>
-    //       </Menu>
-    //     );
-    //     return (
-    //       <Dropdown overlay={menu} placement="bottomRight">
-    //         <Button shape="circle">
-    //           <MoreOutlined />
-    //         </Button>
-    //       </Dropdown>
-    //     );
-    //   },
-    // },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: '14%',
+      render: (text, record) => {
+        if (text === 'pending') {
+          return 'Pending';
+        } else {
+          return 'Completed';
+        }
+      },
+    },
   ];
   if (!props.projectId) {
-    invitationColumns.push({
+    const projectColumn = {
       title: 'Project',
       dataIndex: 'projectId',
       key: 'project',
-      width: '10%',
+      width: '20%',
       render: (text) => {
         const string =
-          _.find(allProjects, (p) => p.id === parseInt(text))?.name || 'No Project Assigned ';
+          _.find(allProjects, (p) => p.id === parseInt(text))?.name ||
+          'No Project Assigned';
 
         if (string.length < 20) {
           return <span>{string}</span>;
@@ -210,13 +188,11 @@ function InvitationTable(props) {
           return partialString(string, 20, true);
         }
       },
-    });
+    };
+    invitationColumns.splice(invitationColumns.length - 1, 0, projectColumn);
   }
   const getExpired = (record) => {
-    const current = moment();
-    const isExpired = moment(
-      timeConvert(record.expiryTimestamp, 'datetime'),
-    ).isBefore(current);
+    const isExpired = record.status !== 'pending';
     return isExpired ? 'disabled' : ' ';
   };
   return (

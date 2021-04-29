@@ -123,7 +123,7 @@ class APIResourceRequest(metaclass=MetaAPI):
                 "request_for": resource_request.request_for,
                 "project_name": resource_request.project_name,
                 "project_code": dataset_node["code"],
-                "admin_email": ConfigClass.EMAIL_ADMIN_CONNECTION,
+                "admin_email": ConfigClass.EMAIL_SUPPORT,
             }
             try:
                 email_sender = SrvEmail()
@@ -295,7 +295,7 @@ class APIResourceRequest(metaclass=MetaAPI):
                 "request_for": resource_request.request_for,
                 "project_name": resource_request.project_name,
                 "project_code": dataset_node["code"],
-                "admin_email": ConfigClass.EMAIL_ADMIN_CONNECTION,
+                "admin_email": ConfigClass.EMAIL_SUPPORT,
                 "vre_portal_url": ConfigClass.VRE_DOMAIN,
                 "user_role": user_role.title()
             }

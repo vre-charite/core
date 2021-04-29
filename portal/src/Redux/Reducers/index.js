@@ -27,6 +27,7 @@ import deletedFileList from './deletedFileList';
 import uploadFileManifest from './uploadFileManifest';
 import fileExplorer from './fileExplorer';
 import serviceRequestRedDot from './serviceRequest';
+import user from './user';
 // export default combineReducers({
 //   datasetList,
 //   userList,
@@ -66,6 +67,7 @@ const appReducer = combineReducers({
   uploadFileManifest,
   fileExplorer,
   serviceRequestRedDot,
+  user,
 });
 
 const rootReducer = (state, action) => {

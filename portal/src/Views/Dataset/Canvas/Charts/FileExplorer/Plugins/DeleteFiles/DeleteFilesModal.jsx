@@ -41,7 +41,8 @@ const DeleteFilesModal = ({
   const handleOk = () => {
     const projectCode = project && project.profile && project.profile.code;
     const deleteFiles = [];
-    const allFiles = deletedFileList;
+    // const allFiles = deletedFileList;
+    const allFiles = [...deletedFileList];
     if (permission === 'collaborator' && panelKey === 'core-Raw') {
       files = files.filter((el) => el.uploader === username);
     }
@@ -58,7 +59,7 @@ const DeleteFilesModal = ({
       const isExist = deletedFileList.find(
         (el) => el.fileName === file.fileName,
       );
-
+      
       if (!isExist) {
         file.status = 'running';
         file.projectCode = projectCode;
@@ -93,7 +94,6 @@ const DeleteFilesModal = ({
       .then((res) => {
         if (res.status === 200)
           message.success(t('success:fileOperations.delete'));
-        dispatch(setDeletedFileList(allFiles));
         dispatch(triggerEvent('LOAD_DELETED_LIST'));
         setConfirmLoading(false);
         handleCancel();
@@ -112,18 +112,14 @@ const DeleteFilesModal = ({
     trashPath = 'Core';
 
   if (files && files.length === 1) {
-    content = (
-      <p>{`${files[0].fileName} will be sent to ${trashPath} > Trash Bin`}</p>
-    );
+    content = <p>{`${files[0].fileName} will be sent to Trash Bin`}</p>;
 
     if (permission === 'collaborator' && panelKey === 'core-Raw') {
       const ownFiles = files.filter((el) => el.uploader === username);
       const otherFiles = files.filter((el) => el.uploader !== username);
 
       if (ownFiles && ownFiles.length) {
-        content = (
-          <p>{`${files[0].fileName} will be sent to ${trashPath} > Trash Bin`}</p>
-        );
+        content = <p>{`${files[0].fileName} will be sent to Trash Bin`}</p>;
       } else {
         content = (
           <p>{`${files[0].fileName} will be skipped. Because it is uploaded by other user.`}</p>
@@ -133,9 +129,7 @@ const DeleteFilesModal = ({
   } else if (files && files.length > 1) {
     content = (
       <div>
-        <p>
-          {`The following ${files.length} files will be sent to ${trashPath} > Trash Bin`}
-        </p>
+        <p>{`The following ${files.length} files will be sent to Trash Bin`}</p>
 
         <ul style={{ maxHeight: 90, overflowY: 'scroll' }}>
           {files.map((v) => {

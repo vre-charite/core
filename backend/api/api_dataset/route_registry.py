@@ -30,17 +30,17 @@ class APIDateSet(metaclass=MetaAPI):
 
         # Actions on the specific user
         datasets_entity_ns.add_resource(
-            dataset_user, '/<dataset_id>/users/<username>')
+            DatasetUser, '/<dataset_id>/users/<username>')
         datasets_entity_ns.add_resource(
             DatasetUserProjectStatus, '/<dataset_id>/users/<username>/status')
 
         # Actions on users
         users_entity_ns.add_resource(users, '/platform')
-        users_entity_ns.add_resource(user_registry, '/new')
         users_entity_ns.add_resource(
             user_dataset_query, '/<username>/datasets')
         users_entity_ns.add_resource(
             user_default_dataset, '/<username>/default')
+        users_entity_ns.add_resource(ADUserUpdate, '')
 
         # users management
         users_entity_ns.add_resource(

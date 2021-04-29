@@ -19,10 +19,10 @@ class TableWrapper extends React.Component {
 
   statusMap = {
     active: 'success',
-    disabled: 'error',
     pending: 'warning',
     hibernate: 'error',
     null: 'success',
+    disabled: 'error',
   };
 
   getColumnSearchProps = (dataIndex, tableKey) => ({
@@ -89,10 +89,10 @@ class TableWrapper extends React.Component {
       if (dataIndex === 'name') {
         //Handle the 3 status from projectUsers table, if in projectUsers table (active, disabled, hibernate)
         //and other status (active, disabled)
-        const status =
-          tableKey === 'projectUsers' ? record.projectStatus : record.status;
+        const status = tableKey === 'projectUsers' ? record.projectStatus : record.status;
+        
         const statusBadge = (
-          <Tooltip placement="top" title={status || 'active'}>
+          <Tooltip placement="top" title={status === 'hibernate' ? '' : status}>
             <Badge status={this.statusMap[status]} />
           </Tooltip>
         );
@@ -158,6 +158,7 @@ class TableWrapper extends React.Component {
       setClassName,
       tableKey,
       style,
+      pageSizeOptions,
     } = this.props;
 
     const columns =
@@ -172,27 +173,31 @@ class TableWrapper extends React.Component {
         return el;
       });
 
+    const pagenationParams = {
+      current: page + 1,
+      pageSize,
+      total: totalItem,
+      showQuickJumper: true,
+      showSizeChanger: true,
+    };
+    if (this.props.pageSizeOptions) {
+      pagenationParams['pageSizeOptions'] = this.props.pageSizeOptions;
+    }
     return (
-        <Table
-          className={styles.table_wrapper}
-          columns={columns}
-          dataSource={dataSource}
-          onChange={this.props.onChange}
-          tableLayout={'fixed'}
-          pagination={{
-            current: page + 1,
-            pageSize,
-            total: totalItem,
-            showQuickJumper: true,
-            showSizeChanger: true,
-          }}
-          key={this.props.tableKey}
-          scroll={{ x: true }}
-          rowKey={(record) => record.name || record.email}
-          width={width}
-          rowClassName={setClassName} //This attribute takes a function to add classes to the row
-          style={style}
-        />
+      <Table
+        className={styles.table_wrapper}
+        columns={columns}
+        dataSource={dataSource}
+        onChange={this.props.onChange}
+        tableLayout={'fixed'}
+        pagination={pagenationParams}
+        key={this.props.tableKey}
+        scroll={{ x: true }}
+        rowKey={(record) => record.name || record.email}
+        width={width}
+        rowClassName={setClassName} //This attribute takes a function to add classes to the row
+        style={style}
+      />
     );
   }
 }

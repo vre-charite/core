@@ -14,6 +14,7 @@ class InvitationModel(db.Model):
     email = db.Column(db.String())
     role = db.Column(db.String())
     project = db.Column(db.String())
+    status = db.Column(db.String())
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -31,6 +32,7 @@ class InvitationModel(db.Model):
             "email",
             "role",
             "project",
+            "status",
         ]
         for field in field_list:
             result[field] = getattr(self, field)
@@ -45,7 +47,9 @@ class InvitationForm:
             self._attribute_map = {
                 'email': '',  # by default success
                 'projectId': -1,  # empty when success
-                'role': '',
+                'platform_role': '',
+                'project_role': '',
+                'inviter': '',
             }
 
     @property
@@ -69,9 +73,25 @@ class InvitationForm:
         self._attribute_map['projectId'] = project_id
 
     @property
-    def role(self):
-        return self._attribute_map['role']
+    def platform_role(self):
+        return self._attribute_map.get('platform_role')
 
-    @role.setter
-    def role(self, role):
-        self._attribute_map['role'] = role
+    @platform_role.setter
+    def platform_role(self, role):
+        self._attribute_map['platform_role'] = role
+
+    @property
+    def project_role(self):
+        return self._attribute_map.get('project_role')
+
+    @project_role.setter
+    def project_role(self, role):
+        self._attribute_map['project_role'] = role
+
+    @property
+    def inviter(self):
+        return self._attribute_map.get('inviter')
+
+    @inviter.setter
+    def inviter(self, inviter):
+        self._attribute_map['inviter'] = inviter

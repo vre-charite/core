@@ -6,7 +6,7 @@ import json
 
 class SrvEmail(metaclass=MetaService):
     def send(self, subject, receiver: list = [], content=None, msg_type="plain", attachments=[], \
-            sender=ConfigClass.EMAIL_DEFAULT_NOTIFIER, template=None, template_kwargs={}):
+            sender=ConfigClass.EMAIL_SUPPORT, template=None, template_kwargs={}):
         '''
         (str, str, str, str, str) -> dict   #**TypeContract**
         '''

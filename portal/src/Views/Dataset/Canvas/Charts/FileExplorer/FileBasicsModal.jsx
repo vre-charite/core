@@ -18,11 +18,7 @@ function FileBasicsModal(props) {
           </Button>,
         ]}
       >
-        <FileBasics
-          pid={props.projectId}
-          record={record}
-          refresh={props.refresh}
-        />
+        <FileBasics pid={props.projectId} record={record} />
       </Modal>
     </>
   );

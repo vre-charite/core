@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 import { listUsersContainersPermission, getDatasetsAPI } from '../../../APIs';
 import { connect } from 'react-redux';
 import {
@@ -8,28 +7,20 @@ import {
   Tabs,
   Layout,
   Typography,
-  Row,
   Button,
-  Col,
   Dropdown,
   Menu,
-  Space,
   Card,
   Form,
   Input,
   Select,
   DatePicker,
-  Avatar,
 } from 'antd';
 import {
-  BarChartOutlined,
   UpOutlined,
   DownOutlined,
   SortAscendingOutlined,
-  CaretUpOutlined,
-  CaretDownOutlined,
   SearchOutlined,
-  SaveOutlined,
 } from '@ant-design/icons';
 import {
   AddDatasetCreator,
@@ -40,20 +31,12 @@ import NewProjectPanel from './newProjectPanel';
 import styles from './index.module.scss';
 import _ from 'lodash';
 import moment from 'moment';
-import { convertUTCDateToLocalDate, currentBrowser } from '../../../Utility';
+import { convertUTCDateToLocalDate } from '../../../Utility';
 import ProjectItemCard from '../Components/ProjectItemCard/ProjectItemCard';
 
-const { Paragraph } = Typography;
 const { TabPane } = Tabs;
-const { Content } = Layout;
 const { RangePicker } = DatePicker;
 
-const IconText = ({ icon, text }) => (
-  <span style={{ color: '#1890ff' }}>
-    {React.createElement(icon, { style: { marginRight: 8 } })}
-    {text}
-  </span>
-);
 const initPane = '0';
 const formRef = React.createRef();
 
@@ -473,7 +456,7 @@ class LandingPageContent extends Component {
     );
   };
   render() {
-    const { sortby, order, selectedTab, filters } = this.state;
+    const { sortby, order, filters } = this.state;
 
     if (Object.keys(filters))
       formRef.current && formRef.current.setFieldsValue(filters);
@@ -789,8 +772,6 @@ class LandingPageContent extends Component {
         </Form>
       </Card>
     );
-
-    const isSafari = currentBrowser();
 
     const extraContent1 = (
       <div>

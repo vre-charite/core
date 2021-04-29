@@ -56,3 +56,4 @@ wrapt==1.12.1
 zope.event==4.4
 zope.interface==5.1.0
 flask-sqlalchemy==2.4.4
+python-ldap==3.3.1

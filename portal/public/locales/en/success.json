@@ -29,7 +29,8 @@
     "delete": "Collection has been deleted successfully",
     "removeFiles": "Files have been removed successfully",
     "addFilesDuplicate": "Files added successfully with existing files skipped",
-    "addFiles": "Files have been added successfully"
+    "addFiles": "Files have been added successfully",
+    "updateFiles": "Files have been updated successfully"
   },
   "contactUs": {
     "text": [

@@ -12,6 +12,7 @@ import {
   Popover,
   Tooltip as Tip,
   Breadcrumb,
+  message,
 } from 'antd';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
@@ -35,13 +36,11 @@ import {
 } from '../../../../../Redux/actions';
 import {
   downloadFilesAPI,
-  getFilesByTypeAPI,
-  listProjectTagsAPI,
   fileLineageAPI,
   listAllfilesVfolder,
   getZipContentAPI,
   getFileManifestAttrs,
-  getFilesByFolderAPI,
+  getFiles,
 } from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
 import FilesTable from './FilesTable';
@@ -51,7 +50,6 @@ import {
   getFileSize,
   timeConvert,
   pathsMap,
-  useCurrentProject,
 } from '../../../../../Utility';
 import { setSuccessNum } from '../../../../../Redux/actions';
 import LineageGraph from './LineageGraph';
@@ -63,18 +61,14 @@ import Copy2CorePlugin from './Plugins/Copy2Core/Copy2CorePlugin';
 import VirtualFolderPlugin from './Plugins/VirtualFolders/VirtualFolderPlugin';
 import VirtualFolderFilesDeletePlugin from './Plugins/VirtualFolderDeleteFiles/VirtualFolderFilesDeletePlugin';
 import VirtualFolderDeletePlugin from './Plugins/VirtualFolderDelete/VirtualFolderDeletePlugin';
-import Copy2ProcessedPlugin from './Plugins/Copy2Processed/Copy2ProcessedPlugin';
 import ZipContentPlugin from './Plugins/ZipContent/ZipContentPlugin';
 import DeleteFilesPlugin from './Plugins/DeleteFiles/DeleteFilesPlugin';
 import ManifestManagementPlugin from './Plugins/ManifestManagement/ManifestManagementPlugin';
-import { pipelines } from '../../../../../Utility/pipelines';
 import { tokenManager } from '../../../../../Service/tokenManager';
 import FileManifest from './FileManifest';
-import Tooltip from '@antv/g6/lib/plugins/tooltip';
-import { registerBehavior } from '@antv/g6';
+import i18n from '../../../../../i18n';
 const { Panel } = Collapse;
-const { Option } = Select;
-const { Paragraph, Title } = Typography;
+const { Title } = Typography;
 const _ = require('lodash');
 
 function RawTable(props) {
@@ -82,23 +76,14 @@ function RawTable(props) {
   const dispatch = useDispatch();
   const ref = React.useRef(null);
   const [loading, setLoading] = useState(false);
-  const [pageSize] = useState(10);
-  const [page] = useState(0);
   const [groupDownloadStatus] = useState({});
   let [rawFiles, setRawFiles] = useState({ data: [], total: 0 });
   const [reFreshing, setRefreshing] = useState(false);
-  const [searchText] = useState([]);
   const [searchInput] = useState({});
-  const [sortColumn] = useState('createTime');
-  const [order] = useState('desc');
   const [pageLoading, setPageLoading] = useState(true);
   const [isShown, toggleModal] = useState(false);
-  const [isQuery] = useState(false);
   const [tableKey, setTableKey] = useState(0);
-  const [tagList, setTagList] = useState([]);
-  const [data, setData] = useState([]);
   const [value, setValue] = useState([]);
-  const [fetching, setFetching] = useState(false);
   const [sidepanel, setSidepanel] = useState(false);
   const [currentRecord, setCurrentRecord] = useState({});
   const [fileModalVisible, setFileModalVisible] = useState(false);
@@ -109,7 +94,6 @@ function RawTable(props) {
   const [tableLoading, setTableLoading] = useState(false);
   const [detailsPanelWidth, setDetailsPanelWidth] = useState(300);
   const [tableState, setTableState] = useState(TABLE_STATE.NORMAL);
-  // const [keyCopied, setKeyCopied] = useState([]);
   const [lineageLoading, setLineageLoading] = useState(false);
   const [direction, setDirection] = useState('INPUT');
 
@@ -129,7 +113,6 @@ function RawTable(props) {
       )
     : folderRouting[panelKey];
   const deletedFileList = useSelector((state) => state.deletedFileList);
-  const copyEvent = useSelector((state) => state.events.LOAD_COPY_LIST);
   let permission = false;
   if (currentDataset) permission = currentDataset.permission;
   const updateFileManifest = (record, manifestIndex) => {
@@ -139,261 +122,31 @@ function RawTable(props) {
     setRawFiles({ ...rawFiles, data: [...rawFiles.data] });
   };
 
-  const reqFilesByFolderAPI = async (
-    geid,
-    pageSize,
-    page,
-    sortColumn,
-    order,
-    projectActivePanel,
-    filters,
-  ) => {
-    const res = await getFilesByFolderAPI(
-      geid,
-      pageSize,
-      page,
-      sortColumn,
-      order,
-      projectActivePanel,
-      filters,
-    );
-    const total = res.data?.result?.approximateCount;
-    const result = res.data?.result?.entities;
-    const files = result.map((item) => {
-      return {
-        ...item.attributes,
-        tags: item.labels,
-        guid: item.guid,
-        geid: item.geid,
-        key: item.attributes.name,
-        typeName: item.typeName,
-        manifest: item.manifest,
-      };
-    });
-    setRawFiles({
-      data: files,
-      total: total,
-    });
-    const folderRoutingTemp = folderRouting || {};
-    folderRoutingTemp[panelKey] = res.data?.result?.routing;
-    dispatch(setFolderRouting(folderRoutingTemp));
-  };
-  const loadFolderFiles = async (geid) => {
-    const filters = {};
-
-    if (searchText.length > 0) {
-      for (const item of searchText) {
-        filters[item.key] = item.value;
-      }
-    }
-    filters['tags'] = value;
-
-    setTableLoading(true);
-    await reqFilesByFolderAPI(
-      geid,
-      pageSize,
-      page,
-      sortColumn,
-      order,
-      projectActivePanel,
-      filters,
-    );
-    setTableLoading(false);
-  };
-  function getFilesAndUpdate(
-    containerId,
-    pageSize,
-    page,
-    panelKey,
-    column,
-    text,
-    order,
-    tags,
-  ) {
+  const getCurrentGeid = () => {
+    let geid;
     if (currentRouting && currentRouting.length) {
-      const geid = currentRouting[currentRouting.length - 1].globalEntityId;
-      const filters = {};
-      if (text.length > 0) {
-        for (const item of text) {
-          filters[item.key] = item.value;
-        }
-      }
-      filters['tags'] = tags;
-      reqFilesByFolderAPI(
-        geid,
-        pageSize,
-        page,
-        column,
-        order,
-        panelKey,
-        filters,
-      );
+      geid = currentRouting[currentRouting.length - 1].globalEntityId;
     } else {
-      getRawFilesAndUpdateUI(
-        containerId,
-        pageSize,
-        page,
-        panelKey,
-        column,
-        text,
-        order,
-        tags,
+      geid = datasetGeid;
+    }
+    return geid;
+  };
+
+  useEffect(() => {
+    if (
+      rawFiles.data &&
+      rawFiles.data.length &&
+      currentRecord &&
+      currentRecord.geid
+    ) {
+      const newRecord = rawFiles.data.find(
+        (x) => x.geid === currentRecord.geid,
       );
-    }
-  }
-  function getRawFilesAndUpdateUI(
-    containerId,
-    pageSize,
-    page,
-    panelKey,
-    column,
-    text,
-    order,
-    tags,
-  ) {
-    if (panelKey && panelKey.startsWith('vfolder')) {
-      return listAllfilesVfolder(folderId, page, pageSize, order, column)
-        .then((res) => {
-          const total = res.data?.result?.approximateCount;
-          const result = res.data?.result?.entities;
-          const files = result.map((item) => {
-            return {
-              ...item.attributes,
-              tags: item.labels,
-              guid: item.guid,
-              geid: item.geid,
-              key: item.attributes.name,
-              typeName: item.typeName,
-              manifest: item.manifest,
-              nodeLabel: [],
-            };
-          });
-          if (Object.keys(currentRecord)?.length > 0) {
-            const lineage = currentRecord?.lineage; //Need to keep lineage information
-            const record = files.filter(
-              (file) => file.key === currentRecord.key,
-            );
-            if (record?.length > 0) {
-              record[0].lineage = lineage;
-              setCurrentRecord(record[0]);
-            }
-          }
-          setRawFiles({
-            data: files,
-            total: total,
-          });
-
-          setRefreshing(false);
-        })
-        .catch((err) => {
-          console.error(
-            'RawTable -> err, API funtion exception',
-            err,
-            err.status,
-          ); //sometimes throw error
-          setRefreshing(false);
-          if (err.response) {
-            const errorMessager = new ErrorMessager(
-              namespace.dataset.files.getFilesByTypeAPI,
-            );
-            errorMessager.triggerMsg(err.response.status, null, {
-              datasetId: containerId,
-            });
-          }
-        });
-    }
-
-    let pipeline = null;
-    if (panelKey && panelKey.startsWith('greenroom')) {
-      if (panelKey === 'greenroom-processed-dicomEdit') {
-        pipeline = pipelines['GENERATE_PROCESS'];
-      } else if (panelKey === 'greenroom-processed-straightCopy') {
-        pipeline = pipelines['DATA_COPY'];
-      } else if (panelKey === 'greenroom-trash') {
-        pipeline = pipelines['DATA_DELETE'];
-      } else {
-        pipeline = pipelines['GREEN_RAW'];
-      }
-    } else if (panelKey && panelKey.startsWith('core')) {
-      // pipeline = pipelines['DATA_COPY'];
-      if (panelKey === 'core-trash') pipeline = pipelines['DATA_DELETE'];
-    }
-    const filters = {};
-
-    if (text.length > 0) {
-      for (const item of text) {
-        filters[item.key] = item.value;
+      if (newRecord) {
+        setCurrentRecord(newRecord);
       }
     }
-    filters['tags'] = tags;
-
-    const currentDataset = getCurrentProject(containerId);
-
-    let role = false;
-
-    if (currentDataset) role = currentDataset.permission;
-    return getFilesByTypeAPI(
-      containerId,
-      pageSize,
-      page,
-      pipeline,
-      column,
-      order,
-      role,
-      props.username,
-      projectActivePanel,
-      filters,
-    )
-      .then((res) => {
-        const { entities, approximateCount } = res.data.result;
-
-        const files = entities.map((item) => {
-          return {
-            ...item.attributes,
-            tags: item.labels,
-            guid: item.guid,
-            geid: item.geid,
-            key: item.attributes.name,
-            typeName: item.typeName,
-            manifest: item.manifest,
-          };
-        });
-        //Set the new current record for highlighting and side panel
-        if (Object.keys(currentRecord)?.length > 0) {
-          const lineage = currentRecord?.lineage; //Need to keep lineage information
-          const record = files.filter((file) => file.key === currentRecord.key);
-          if (record?.length > 0) {
-            record[0].lineage = lineage;
-            setCurrentRecord(record[0]);
-          }
-        }
-        setRawFiles({
-          data: files,
-          total: approximateCount,
-        });
-        const folderRoutingTemp = folderRouting || {};
-        folderRoutingTemp[panelKey] = null;
-        dispatch(setFolderRouting(folderRoutingTemp));
-        setRefreshing(false);
-      })
-      .catch((err) => {
-        console.error(
-          'RawTable -> err, API funtion exception',
-          err,
-          err.status,
-        ); //sometimes throw error
-        setRefreshing(false);
-        if (err.response) {
-          const errorMessager = new ErrorMessager(
-            namespace.dataset.files.getFilesByTypeAPI,
-          );
-          errorMessager.triggerMsg(err.response.status, null, {
-            datasetId: containerId,
-          });
-        }
-      });
-  }
-
+  }, [rawFiles.data]);
   let columns = [
     {
       title: '',
@@ -442,7 +195,10 @@ function RawTable(props) {
             }}
             onClick={(e) => {
               record.nodeLabel.indexOf('Folder') !== -1 &&
-                loadFolderFiles(record.geid);
+                refreshFiles({
+                  geid: record.geid,
+                  sourceType: 'Folder',
+                });
             }}
           >
             {record.tags &&
@@ -512,17 +268,50 @@ function RawTable(props) {
           },
         }
       : {},
-    {
-      title: 'Created',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      sorter: true,
-      width: '14%',
-      ellipsis: true,
-      render: (text, record) => {
-        return text && timeConvert(text, 'date');
-      },
-    },
+    !panelKey.includes('trash')
+      ? {
+          title: 'Created',
+          dataIndex: 'createTime',
+          key: 'createTime',
+          sorter: true,
+          width: '14%',
+          ellipsis: true,
+          render: (text, record) => {
+            return text && timeConvert(text, 'date');
+          },
+        }
+      : {},
+    panelKey.includes('trash')
+      ? {
+          title: 'Deleted Date',
+          dataIndex: 'createTime',
+          key: 'createTime',
+          sorter: true,
+          width: '14%',
+          ellipsis: true,
+          render: (text, record) => {
+            return text && timeConvert(text, 'date');
+          },
+        }
+      : {},
+    panelKey.includes('trash')
+      ? {
+          title: 'Original Location',
+          dataIndex: 'nodeLabel',
+          key: 'nodeLabel',
+          render: (text, record) => {
+            if (record.nodeLabel.indexOf('Greenroom') !== -1) {
+              return 'Green Room';
+            } else if (record.nodeLabel.indexOf('VRECore') !== -1) {
+              return 'Core';
+            } else {
+              return '';
+            }
+          },
+          ellipsis: true,
+          width: '18%',
+        }
+      : {},
     {
       title: 'Size',
       dataIndex: 'fileSize',
@@ -537,7 +326,6 @@ function RawTable(props) {
       ellipsis: true,
       width: '10%',
     },
-
     {
       title: 'Action',
       key: 'action',
@@ -656,30 +444,49 @@ function RawTable(props) {
   useEffect(() => {
     setPageLoading(false);
   }, [
-    page,
-    pageSize,
+    // page,
+    // pageSize,
     searchInput,
     props.projectId,
     props.rawData,
     // props.successNum,
   ]);
 
+  const datasetGeid = currentDataset?.globalEntityId;
+  async function fetchData() {
+    if (currentRouting && currentRouting.length) {
+      const leveledRoutes = currentRouting.sort((a, b) => {
+        return a.folderLevel - b.folderLevel;
+      });
+      const routeToGo = leveledRoutes.pop();
+      if (routeToGo) {
+        setRefreshing(true);
+        await refreshFiles({
+          geid: routeToGo.globalEntityId,
+          sourceType: 'Folder',
+          resetTable: true,
+        });
+        setRefreshing(false);
+      }
+    } else {
+      await refreshFiles({
+        geid: datasetGeid, // TODO: or dataset or folder Geid
+        sourceType: getSourceType(),
+        resetTable: true,
+      });
+    }
+  }
   useEffect(() => {
-    if (panelKey === projectActivePanel && !tableLoading) {
+    if (panelKey === projectActivePanel && datasetGeid) {
       fetchData();
     }
     // eslint-disable-next-line
-  }, [props.successNum]);
+  }, [props.successNum, datasetGeid]);
 
   /*   //when the copy succeed reload the page
   useEffect(()=>{
 
   },[copyEvent]); */
-  useEffect(() => {
-    listProjectTagsAPI(props.projectId, null, null, 10).then((res) => {
-      setTagList(res.data.result);
-    });
-  }, [props.projectId]);
 
   const onSelectChange = (selectedRowKeys, selectedRowsNew) => {
     setSelectedFilesKeys(selectedRowKeys);
@@ -703,7 +510,7 @@ function RawTable(props) {
   }
 
   async function updateLineage(record, direction) {
-    const { key, typeName } = record;
+    const { key } = record;
     let recordWithLineage = {};
     const res = await fileLineageAPI(key, 'file_data', direction);
 
@@ -717,7 +524,7 @@ function RawTable(props) {
           ? entity.attributes.name.split('/')
           : [];
       const space = pathsMap(pathArray);
-      if (entity && space === 'Green Room/Raw') {
+      if (entity && space === 'Green Room/Home') {
         const data = [];
         data.push(entity.attributes.globalEntityId);
         const manifestRes = await getFileManifestAttrs(data, true);
@@ -752,7 +559,7 @@ function RawTable(props) {
           return {
             disabled: true,
           };
-        } else if (record.manifest !== null && record.manifest.length !== 0) {
+        } else if (record.manifest && record.manifest.length !== 0) {
           return {
             disabled: true,
           };
@@ -829,96 +636,7 @@ function RawTable(props) {
       });
     clearSelection();
   };
-
-  async function fetchData() {
-    if (currentRouting && currentRouting.length) {
-      const leveledRoutes = currentRouting.sort((a, b) => {
-        return a.folderLevel - b.folderLevel;
-      });
-      const routeToGo = leveledRoutes.pop();
-      if (routeToGo) {
-        setRefreshing(true);
-        await loadFolderFiles(routeToGo.globalEntityId);
-        setRefreshing(false);
-        //Reset sorting and search
-        setTableKey(tableKey + 1);
-      }
-    } else {
-      setRefreshing(true);
-      setTableLoading(true);
-      getRawFilesAndUpdateUI(
-        props.projectId,
-        pageSize,
-        page,
-        panelKey,
-        sortColumn,
-        searchText,
-        order,
-        value,
-      );
-      setTableLoading(false);
-      setTableKey(tableKey + 1);
-    }
-  }
   const hasSelected = selectedRowKeys.length > 0;
-  let lastFetchId = 0;
-  const fetchTags = (value) => {
-    value = value.toLowerCase();
-    lastFetchId += 1;
-    const fetchId = lastFetchId;
-    setData([]);
-    setFetching(true);
-    listProjectTagsAPI(props.projectId, true, value, 3).then((res) => {
-      if (fetchId !== lastFetchId) {
-        // for fetch callback order
-        return;
-      }
-      const data = res.data.result.map((i) => ({
-        text: i.name,
-        value: i.name,
-      }));
-      setData(data);
-      setFetching(false);
-    });
-  };
-
-  const handleChange = (value) => {
-    if (value.length !== 0) {
-      value = value.map((i) => i.toLowerCase());
-      let newTag = value.pop();
-      let index = value.indexOf(newTag);
-      if (index > -1) {
-        value.splice(index, 1);
-      } else {
-        value.push(newTag);
-      }
-    }
-    setValue(value);
-    setData([]);
-    setFetching(false);
-  };
-
-  function tagRender(props) {
-    const { label, closable, onClose } = props;
-
-    return (
-      <Tag
-        color="blue"
-        closable={closable}
-        onClose={onClose}
-        style={{ marginRight: 3 }}
-      >
-        {label}
-      </Tag>
-    );
-  }
-
-  const addTag = (e) => {
-    const newTag = e.target.innerText;
-    if (!_.includes(value, newTag)) {
-      setValue([...value, newTag]);
-    }
-  };
 
   const onFold = (key) => {
     const data = [];
@@ -996,33 +714,111 @@ function RawTable(props) {
     setSelectedFiles([]);
     setSelectedFilesKeys([]);
   }
-  async function goBack() {
-    const leveledRoutes = currentRouting.sort((a, b) => {
-      return a.folderLevel - b.folderLevel;
+  async function goHome() {
+    const folderRoutingTemp = folderRouting || {};
+    folderRoutingTemp[panelKey] = null;
+    dispatch(setFolderRouting(folderRoutingTemp));
+    await refreshFiles({
+      geid: datasetGeid,
+      sourceType: 'Project',
+      resetTable: true,
     });
-    clearFilesSelection();
-    const routeToGo = leveledRoutes[leveledRoutes.length - 2];
-    if (routeToGo) {
-      loadFolderFiles(routeToGo.globalEntityId);
-    } else {
-      setTableLoading(true);
-      const folderRoutingTemp = folderRouting || {};
-      folderRoutingTemp[panelKey] = null;
-      dispatch(setFolderRouting(folderRoutingTemp));
-      await getRawFilesAndUpdateUI(
-        props.projectId,
-        pageSize,
-        page,
-        panelKey,
-        sortColumn,
-        searchText,
-        order,
-        value,
-      );
-      setTableKey(tableKey + 1);
-      setTableLoading(false);
-    }
   }
+
+  const getSourceType = () => {
+    if (checkIsVirtualFolder(panelKey)) {
+      return null;
+    } else {
+      if (currentRouting?.length) {
+        return 'Folder';
+      }
+      if (panelKey.toLowerCase().includes('trash')) {
+        return 'TrashFile';
+      }
+      return 'Project';
+    }
+  };
+
+  /**
+   * The function take an object as the parameter. The following are the properties of that object
+   * @param {string} geid the geid of project or folder. virtual folder will skip geid since it uses folderId
+   * @param {number} page
+   * @param {number} pageSize
+   * @param {string} orderBy order by which column
+   * @param {"desc"|"asc"} orderType "desc"|"asc"
+   * @param {*} query the query search text. should convert it to an object if it's an array
+   * @param {string[]} partial what queries are partial search. If it's undefined, all keys in query will be search partially.
+   * @param {"Project"|"Folder"|"TrashFile"} sourceType "Project"|"Folder"|"TrashFile" skip this for virtual folder
+   * @param {boolean} resetTable wether needed to reset the table page, page size, sorting and search text.
+   * @returns
+   */
+  async function refreshFiles({
+    geid,
+    page = 0,
+    pageSize = 10,
+    orderBy = 'createTime',
+    orderType = 'desc',
+    query = {},
+    partial,
+    sourceType,
+    resetTable = false,
+  }) {
+    if (tableLoading) return;
+    setTableLoading(true);
+    const isVirtualFolder = checkIsVirtualFolder(panelKey);
+    let res;
+    try {
+      if (isVirtualFolder) {
+        res = await listAllfilesVfolder(
+          folderId,
+          page,
+          pageSize,
+          orderType,
+          mapColumnKey(orderBy),
+        );
+      } else {
+        if (!partial) {
+          partial = [];
+          Object.keys(query).forEach((key) => {
+            partial.push(mapColumnKey(key));
+          });
+        }
+        if (!geid) throw new Error('geid is required');
+        res = await getFiles(
+          geid,
+          page,
+          pageSize,
+          mapColumnKey(orderBy),
+          orderType,
+          mapQueryKeys(query),
+          getZone(panelKey, permission),
+          sourceType,
+          partial,
+        );
+      }
+      if (props.type === DataSourceType.GREENROOM_HOME) {
+        //only green room home first level files have manifest
+        res = await insertManifest(res);
+      }
+
+      const { files, total } = resKeyConvert(res);
+
+      setRawFiles({
+        data: files,
+        total: total,
+      });
+
+      updateFolderRouting(res);
+    } catch (error) {
+      message.error(
+        `${i18n.t('errormessages:rawTable.getFilesApi.default.0')}`,
+      );
+    }
+    setTableLoading(false);
+
+    if (resetTable) setTableKey(tableKey + 1);
+  }
+
   const orderRouting =
     currentRouting &&
     currentRouting.sort((a, b) => {
@@ -1034,9 +830,8 @@ function RawTable(props) {
         style={{ marginBottom: 36, marginTop: 20, position: 'relative' }}
         className={styles.file_explore_actions}
       >
-        {currentRouting ? (
+        {currentRouting?.length ? (
           <>
-            <LeftOutlined onClick={goBack} />
             <div
               style={{
                 marginLeft: 10,
@@ -1044,13 +839,22 @@ function RawTable(props) {
                 display: 'inline-block',
               }}
             >
-              {currentRouting.length > 4 ? (
-                <span style={{ color: 'rgba(0, 0, 0, 0.45)' }}>... {'>'} </span>
-              ) : null}
               <Breadcrumb
                 separator=">"
                 style={{ maxWidth: 500, display: 'inline-block' }}
+                className={styles.file_folder_path}
               >
+                <Breadcrumb.Item
+                  style={{
+                    cursor: 'pointer',
+                  }}
+                  onClick={goHome}
+                >
+                  Home
+                </Breadcrumb.Item>
+                {currentRouting.length > 4 ? (
+                  <Breadcrumb.Item>...</Breadcrumb.Item>
+                ) : null}
                 {orderRouting.slice(-3).map((v) => {
                   return (
                     <Breadcrumb.Item
@@ -1068,7 +872,10 @@ function RawTable(props) {
                           return;
                         }
                         clearFilesSelection();
-                        loadFolderFiles(v.globalEntityId);
+                        refreshFiles({
+                          geid: v.globalEntityId,
+                          sourceType: 'Folder',
+                        });
                       }}
                     >
                       {v.name.length > 23 ? (
@@ -1082,7 +889,19 @@ function RawTable(props) {
               </Breadcrumb>
             </div>
           </>
-        ) : null}
+        ) : (
+          <Breadcrumb
+            style={{
+              maxWidth: 500,
+              display: 'inline-block',
+              marginLeft: 10,
+              marginRight: 30,
+            }}
+            className={styles.file_folder_path}
+          >
+            <Breadcrumb.Item onClick={goHome}>Home</Breadcrumb.Item>
+          </Breadcrumb>
+        )}
 
         {!hasSelected && (
           <Button
@@ -1096,9 +915,7 @@ function RawTable(props) {
             Refresh
           </Button>
         )}
-        {!hasSelected &&
-        props.type === DataSourceType.GREENROOM_RAW &&
-        !currentRouting ? (
+        {!hasSelected && props.type === DataSourceType.GREENROOM_HOME ? (
           <Button
             id="raw_table_upload"
             type="link"
@@ -1120,9 +937,9 @@ function RawTable(props) {
             Download
           </Button>
         ) : null}
-        {props.type === DataSourceType.GREENROOM_PROCESSED &&
+        {props.type === DataSourceType.GREENROOM_HOME &&
         permission === 'admin' &&
-        !currentRouting ? (
+        !currentRouting?.length ? (
           <Copy2CorePlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -1132,23 +949,9 @@ function RawTable(props) {
             panelKey={panelKey}
           />
         ) : null}
-        {props.type === DataSourceType.GREENROOM_RAW &&
-        permission === 'admin' &&
-        !currentRouting &&
+        {props.type === DataSourceType.CORE_HOME &&
+        !currentRouting?.length &&
         hasSelected ? (
-          <Copy2ProcessedPlugin
-            tableState={tableState}
-            setTableState={setTableState}
-            selectedRowKeys={selectedRowKeys}
-            clearSelection={clearSelection}
-            selectedRows={selectedRows}
-            panelKey={panelKey}
-          />
-        ) : null}
-        {props.type === DataSourceType.CORE_PROCESSED ||
-        (props.type === DataSourceType.CORE_RAW &&
-          !currentRouting &&
-          hasSelected) ? (
           <VirtualFolderPlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -1158,9 +961,7 @@ function RawTable(props) {
             panelKey={panelKey}
           />
         ) : null}
-        {hasSelected &&
-        props.type === DataSourceType.GREENROOM_RAW &&
-        !currentRouting ? (
+        {hasSelected && props.type === DataSourceType.GREENROOM_HOME ? (
           <ManifestManagementPlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -1171,7 +972,7 @@ function RawTable(props) {
           />
         ) : null}
         {props.type === DataSourceType.CORE_VIRTUAL_FOLDER &&
-        !currentRouting &&
+        !currentRouting?.length &&
         hasSelected ? (
           <VirtualFolderFilesDeletePlugin
             tableState={tableState}
@@ -1183,7 +984,7 @@ function RawTable(props) {
           />
         ) : null}
         {props.type !== DataSourceType.CORE_VIRTUAL_FOLDER &&
-          !currentRouting &&
+          !currentRouting?.length &&
           !panelKey.includes('trash') &&
           hasSelected && (
             <DeleteFilesPlugin
@@ -1197,7 +998,7 @@ function RawTable(props) {
             />
           )}
         {props.type === DataSourceType.CORE_VIRTUAL_FOLDER &&
-        !currentRouting &&
+        !currentRouting?.length &&
         !hasSelected ? (
           <VirtualFolderDeletePlugin
             tableState={tableState}
@@ -1231,7 +1032,7 @@ function RawTable(props) {
         dataSource={rawFiles.data}
         currentRouting={currentRouting}
         totalItem={rawFiles.total}
-        updateTable={getFilesAndUpdate}
+        updateTable={refreshFiles}
         projectId={props.projectId}
         rowSelection={rowSelection}
         tableKey={tableKey}
@@ -1242,6 +1043,8 @@ function RawTable(props) {
         tags={value}
         selectedRecord={currentRecord}
         tableState={tableState}
+        getCurrentGeid={getCurrentGeid}
+        getSourceType={getSourceType}
       />
       {tableLoading ? (
         <div
@@ -1260,49 +1063,6 @@ function RawTable(props) {
 
   return (
     <Spin spinning={pageLoading}>
-      {isQuery && (
-        <div
-          style={{
-            padding: '20px 0px 10px 0px',
-            backgroundColor: '#FAFAFA',
-          }}
-        >
-          <div style={{ width: '70%', margin: '0 auto' }}>
-            <Select
-              mode="tags"
-              tagRender={tagRender}
-              value={value}
-              placeholder={'Search tags...'}
-              notFoundContent={fetching ? <Spin size="small" /> : null}
-              onSearch={fetchTags}
-              onChange={handleChange}
-              style={{ width: '100%', padding: '20px 0px' }}
-              autoFocus
-            >
-              {data.map((d) => (
-                <Option key={d.value}>{d.text}</Option>
-              ))}
-            </Select>
-
-            <div>
-              <Paragraph
-                ellipsis={{ rows: 2, expandable: true, symbol: 'more' }}
-              >
-                <p style={{ fontWeight: 'bold', display: 'inline' }}>
-                  Popular:
-                </p>{' '}
-                {tagList.length > 0
-                  ? tagList.map((i) => (
-                      <Tag color="blue" onClick={addTag}>
-                        {i.name}
-                      </Tag>
-                    ))
-                  : 'No tag found in the project.'}
-              </Paragraph>
-            </div>
-          </div>
-        </div>
-      )}
       {Object.keys(groupDownloadStatus).length !== 0 && (
         <Collapse
           bordered={false}
@@ -1394,11 +1154,9 @@ function RawTable(props) {
                   panelKey={panelKey}
                   record={currentRecord}
                   pid={props.projectId}
-                  refresh={fetchData}
                 />
               </Panel>
-              {props.type === DataSourceType.GREENROOM_RAW &&
-              !currentRouting &&
+              {props.type === DataSourceType.GREENROOM_HOME &&
               currentRecord.nodeLabel.indexOf('Folder') === -1 ? (
                 <Panel header="File Attributes" key="Manifest">
                   <FileManifest
@@ -1408,8 +1166,7 @@ function RawTable(props) {
                   />
                 </Panel>
               ) : null}
-              {!currentRouting &&
-              currentRecord.nodeLabel.indexOf('Folder') === -1 ? (
+              {currentRecord.nodeLabel.indexOf('Folder') === -1 ? (
                 <Panel
                   header={
                     <span
@@ -1471,7 +1228,6 @@ function RawTable(props) {
         pid={props.projectId}
         handleOk={handleOk}
         // handleCancel={handleCancel}
-        refresh={fetchData}
       />
 
       <LineageGraphModal
@@ -1493,6 +1249,31 @@ function RawTable(props) {
       />
     </Spin>
   );
+
+  function updateFolderRouting(res) {
+    const folderRoutingTemp = folderRouting || {};
+    folderRoutingTemp[panelKey] = res.data?.result?.routing;
+    dispatch(setFolderRouting(folderRoutingTemp));
+  }
+
+  async function insertManifest(res) {
+    const geidsList = res.data.result.entities
+      .filter((e) => e.displayText)
+      .map((e) => e.geid);
+    let attrsMap = await getFileManifestAttrs(geidsList);
+    attrsMap = attrsMap.data.result;
+
+    res.data.result.entities = res.data.result.entities.map((entity) => {
+      return {
+        ...entity,
+        manifest:
+          attrsMap[entity.geid] && attrsMap[entity.geid].length
+            ? attrsMap[entity.geid]
+            : null,
+      };
+    });
+    return res;
+  }
 }
 
 export default connect(
@@ -1505,3 +1286,69 @@ export default connect(
   }),
   { appendDownloadListCreator },
 )(RawTable);
+
+/**
+ * Do NOT call this function on virtual folder panel
+ * @param {string} panelKey the current open panel key
+ * @returns {"Greenroom" | "VRECore" | "All"} "Greenroom" | "VRECore" | "All"
+ */
+const getZone = (panelKey, role) => {
+  if (panelKey.includes('trash')) {
+    return role === 'contributor' ? 'Greenroom' : 'All';
+  }
+  if (panelKey.startsWith('greenroom')) {
+    return 'Greenroom';
+  }
+  if (panelKey.startsWith('core')) {
+    return 'VRECore';
+  }
+  throw new TypeError('only greenroom, core and trash can use getZone');
+};
+
+/**
+ *
+ * @param {string} panelKey the current open panel key
+ * @returns {boolean} true if the current panel is a virtual folder
+ */
+const checkIsVirtualFolder = (panelKey) => {
+  return !(
+    panelKey.includes('trash') ||
+    panelKey.startsWith('greenroom') ||
+    panelKey.startsWith('core')
+  );
+};
+
+function resKeyConvert(res) {
+  const total = res.data?.result?.approximateCount;
+  const result = res.data?.result?.entities;
+  const files = result.map((item) => {
+    return {
+      ...item.attributes,
+      tags: item.labels,
+      guid: item.guid,
+      geid: item.geid,
+      key: item.attributes.name,
+      manifest: item.manifest,
+    };
+  });
+  return { files, total };
+}
+
+const mapColumnKey = (column) => {
+  const columnMap = {
+    createTime: 'time_created',
+    fileName: 'name',
+    owner: 'uploader',
+    fileSize: 'file_size',
+    generateID: 'generate_id',
+  };
+  return columnMap[column] || column;
+};
+
+const mapQueryKeys = (query) => {
+  let newQuery = {};
+  Object.keys(query).forEach((oldKey) => {
+    newQuery[mapColumnKey(oldKey)] = query[oldKey];
+  });
+  return newQuery;
+};

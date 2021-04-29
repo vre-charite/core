@@ -42,8 +42,11 @@ class APIResponse:
     @property
     def num_of_pages(self):
         return self._attribute_map['num_of_pages']
-    def set_code(self, code: EAPIResponseCode):
-        self._attribute_map['code'] = code.value
+    def set_code(self, code):
+        if isinstance(code, int):
+            self._attribute_map['code'] = code
+        else:
+            self._attribute_map['code'] = code.value
     def set_error_msg(self, error_msg: str):
         self._attribute_map['error_msg'] = error_msg
     def set_result(self, result):

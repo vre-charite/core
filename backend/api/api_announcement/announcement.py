@@ -35,7 +35,7 @@ class APIAnnouncement(metaclass=MetaAPI):
                 response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query", json={"code": data["project_code"]})
                 if not response.json():
                     api_response.set_error_msg("Dataset not found")
-                    api_response.set_code(EAPIResponseCode.bad_request)
+                    api_response.set_code(EAPIResponseCode.not_found)
                     return api_response.to_dict, api_response.code
                 dataset_id = response.json()[0]["id"]
 
@@ -52,9 +52,8 @@ class APIAnnouncement(metaclass=MetaAPI):
 
             response = requests.get(ConfigClass.NOTIFY_SERVICE + "/v1/announcements", params=data)
             if response.status_code != 200:
-                api_response.set_code(EAPIResponseCode.internal_error)
                 api_response.set_error_msg(response.json())
-                return api_response.to_dict, api_response.code
+                return api_response.to_dict, response.status_code
             api_response.set_result(response.json())
             return api_response.to_dict, api_response.code
 
@@ -67,31 +66,32 @@ class APIAnnouncement(metaclass=MetaAPI):
                 api_response.set_code(EAPIResponseCode.bad_request)
                 return api_response.to_dict, api_response.code
 
-            if current_identity["role"] != "admin":
-                # Get Dataset
-                response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query", json={"code": data["project_code"]})
-                if not response.json():
-                    api_response.set_error_msg("Dataset not found")
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    return api_response.to_dict, api_response.code
-                dataset_id = response.json()[0]["id"]
+            # Get Dataset
+            response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query", json={"code": data["project_code"]})
+            if not response.json():
+                api_response.set_error_msg("Dataset not found")
+                api_response.set_code(EAPIResponseCode.not_found)
+                return api_response.to_dict, api_response.code
+            dataset_id = response.json()[0]["id"]
 
+            if current_identity["role"] != "admin":
                 # Get relation between user and dataset
                 params = {
                     "start_id": current_identity["user_id"],
                     "end_id": dataset_id
                 }
                 relation = requests.get(ConfigClass.NEO4J_SERVICE + "relations", params=params)
-                if relation.json()[0]["r"]["type"] != "admin":
+                if not relation.json() or relation.json()[0]["r"]["type"] != "admin":
                     api_response.set_error_msg("Permission denied")
                     api_response.set_code(EAPIResponseCode.forbidden)
                     return api_response.to_dict, api_response.code
             data["publisher"] = current_identity["username"]
             response = requests.post(ConfigClass.NOTIFY_SERVICE + "/v1/announcements", json=data)
             if response.status_code != 200:
-                api_response.set_code(EAPIResponseCode.internal_error)
-                api_response.set_error_msg(response.json())
-                return api_response.to_dict, api_response.code
+                api_response.set_error_msg(response.json()["error_msg"])
+                response_dict = api_response.to_dict
+                response_dict["code"] = response.status_code
+                return response_dict, response.status_code
             api_response.set_result(response.json())
             return api_response.to_dict, api_response.code
 

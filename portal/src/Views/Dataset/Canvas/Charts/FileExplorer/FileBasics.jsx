@@ -32,17 +32,15 @@ function FileBasics(props) {
           </Descriptions.Item>
         ) : null}
 
-        {record.nodeLabel.indexOf('Folder') === -1 &&
-        !folderRouting[panelKey] ? (
+        {record.nodeLabel.indexOf('Folder') === -1 ? (
           <Descriptions.Item>
             <FileTags
               panelKey={panelKey}
               key={record.guid}
-              tags={record.tags || []}
               pid={props.pid}
+              record={record}
               guid={record.guid}
               geid={record.geid}
-              refresh={props.refresh}
             />
           </Descriptions.Item>
         ) : null}

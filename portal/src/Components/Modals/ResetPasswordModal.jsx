@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, message, Form, Input, Tooltip } from 'antd';
-import { QuestionCircleOutlined } from '@ant-design/icons';
-
-import { resetPasswordAPI } from '../../APIs';
-import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { useTranslation } from 'react-i18next';
+import { CloseOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import styles from './resetpasswd.module.scss';
 const ResetPasswordModal = (props) => {
   const [userInfo, setUserInfo] = useState({});
   const [loading, setLoading] = useState(false);
@@ -16,216 +14,80 @@ const ResetPasswordModal = (props) => {
     setUserInfo(info);
   }, [props.visible, props.username]);
 
-  const FormInstance = React.createRef();
-
-  const onFinish = (values) => {
-    console.log('Success:', values);
-  };
-
-  const onFinishFailed = (errorInfo) => {
-    console.log('Failed:', errorInfo);
-  };
-
   const onCancel = () => {
     props.handleCancel();
-    FormInstance.current.resetFields();
   };
 
-  const onOk = () => {
-    setLoading(true);
-
-    FormInstance.current
-      .validateFields()
-      .then((values) => {
-        if (
-          values.password === values.newPassword ||
-          values.newPassword !== values.newPassword2
-        ) {
-          setLoading(false);
-          return;
-        }
-
-        resetPasswordAPI({
-          old_password: values.password,
-          new_password: values.newPassword,
-          username: props.username,
-        })
-          .then((res) => {
-            if (res && res.status === 200) {
-              message.success(t('success:resetPassword'));
-              setLoading(false);
-              form.resetFields();
-              props.handleCancel();
-            }
-          })
-          .catch((err) => {
-            if (err.response) {
-              const errorMessager = new ErrorMessager(
-                namespace.login.resetPassword,
-              );
-              errorMessager.triggerMsg(err.response.status);
-            }
-
-            setLoading(false);
-          });
-      })
-      .catch((error) => {
-        setLoading(false);
-      });
-  };
-
-  const onPasswordChange = (e) => {
-    form.setFieldsValue(e.target.value);
-
-    const confirmPassword = form.getFieldValue('newPassword2');
-
-    if (!confirmPassword || e.target.value === confirmPassword) {
-      form.validateFields(['newPassword2'], () => Promise.resolve());
-    } else if (confirmPassword && e.target.value !== confirmPassword) {
-      form.validateFields(['newPassword2'], () => Promise.reject());
-    }
-  };
+  const onOk = () => {};
 
   return (
     <Modal
-      title="Reset Password"
+      title={
+        <div>
+          <p
+            style={{
+              margin: 0,
+              padding: '4px 20px 0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <b style={{ color: '#003262', fontSize: 14, lineHeight: '40px' }}>
+              Password Reset
+            </b>
+            <CloseOutlined
+              style={{ fontSize: 14 }}
+              onClick={() => {
+                props.handleCancel();
+              }}
+            />
+          </p>
+        </div>
+      }
+      className={styles.reset_pop_up}
       visible={props.visible}
       maskClosable={false}
       closable={false}
       destroyOnClose={true}
-      footer={[
-        <Button
-          id={'reset_password_modal_cancel'}
-          key="back"
-          onClick={onCancel}
-          disabled={loading}
-        >
-          Close
-        </Button>,
-        <Button
-          id={'reset_password_modal_submit'}
-          key="submit"
-          type="primary"
-          loading={loading}
-          onClick={onOk}
-        >
-          Submit
-        </Button>,
-      ]}
+      footer={null}
     >
-      <Form
-        layout="vertical"
-        name="basic"
-        initialValues={userInfo}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        ref={FormInstance}
-        form={form}
-      >
-        <Form.Item
-          label="Username"
-          name="username"
-          rules={[
-            {
-              required: true,
-              message: t('formErrorMessages:common.username.empty'),
-            },
-          ]}
+      <div style={{ margin: '35px 0 30px', textAlign: 'center' }}>
+        <p style={{ textAlign: 'center', cursor: 'default', marginBottom: 4 }}>
+          To reset Password please visit
+        </p>
+        <a
+          style={{ fontSize: 16, fontWeight: 'bold' }}
+          href="https://zugang.charite.de/"
+          target="_blank"
         >
-          <Input disabled />
-        </Form.Item>
-
-        <Form.Item
-          label="Old Password"
-          name="password"
-          rules={[
-            {
-              required: true,
-              message: t('formErrorMessages:resetPassword.oldPassword.empty'),
-            },
-          ]}
+          https://zugang.charite.de/
+        </a>
+      </div>
+      <div style={{ textAlign: 'center', paddingBottom: 15 }}>
+        <Button
+          type="link"
+          style={{
+            marginRight: 40,
+            color: 'rgba(0,0,0,0.65)',
+            fontWeight: 'bold',
+          }}
+          onClick={() => {
+            props.handleCancel();
+          }}
         >
-          <Input.Password
-            onCopy={(e) => e.preventDefault()}
-            onPaste={(e) => e.preventDefault()}
-            autocomplete="off"
-          />
-        </Form.Item>
-
-        <Form.Item
-          label={
-            <span>
-              New Password&nbsp;
-              <Tooltip title={t('password')}>
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-          name="newPassword"
-          rules={[
-            {
-              required: true,
-              message: t('formErrorMessages:resetPassword.newPassword.empty'),
-              whitespace: true,
-            },
-            {
-              pattern: new RegExp(
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[-_!%&/()=?*+#,.;])[A-Za-z\d-_!%&/()=?*+#,.;]{11,30}$/g,
-              ),
-              message: t('formErrorMessages:common.password.valid'),
-            },
-            ({ getFieldValue }) => ({
-              validator(rule, value) {
-                if (!value || getFieldValue('password') !== value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(
-                  t('formErrorMessages:resetPassword.newPassword.valid'),
-                );
-              },
-            }),
-          ]}
-          dependencies={['password']}
-        >
-          <Input.Password
-            onCopy={(e) => e.preventDefault()}
-            onPaste={(e) => e.preventDefault()}
-            autocomplete="off"
-            onChange={onPasswordChange}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Confirm Password"
-          name="newPassword2"
-          rules={[
-            {
-              required: true,
-              message: t(
-                'formErrorMessages:resetPassword.confirmPassword.empty',
-              ),
-            },
-
-            ({ getFieldValue }) => ({
-              validator(rule, value) {
-                if (!value || getFieldValue('newPassword') === value) {
-                  return Promise.resolve();
-                }
-
-                return Promise.reject(
-                  t('formErrorMessages:common.confirmPassword.valid'),
-                );
-              },
-            }),
-          ]}
-        >
-          <Input.Password
-            onCopy={(e) => e.preventDefault()}
-            onPaste={(e) => e.preventDefault()}
-            autocomplete="off"
-          />
-        </Form.Item>
-      </Form>
+          Cancel
+        </Button>
+        <a target="_blank" href="https://zugang.charite.de/">
+          <Button
+            style={{ borderRadius: 10, width: 120 }}
+            type="primary"
+            icon={<ArrowRightOutlined />}
+          >
+            Visit Link
+          </Button>
+        </a>
+      </div>
     </Modal>
   );
 };

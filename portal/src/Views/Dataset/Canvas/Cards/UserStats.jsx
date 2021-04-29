@@ -148,6 +148,9 @@ function UserStats(props) {
 
   // get the file's folder path
   const getFolderPath = (fileLog) => {
+    if (fileLog.action === 'data_delete') {
+      return;
+    }
     const wholePathList = fileLog.outcome.split('/');
     const outComePathList = wholePathList.slice(5, wholePathList.length);
     const outComePathStr = outComePathList.join('/');
@@ -155,6 +158,15 @@ function UserStats(props) {
 
     return outComePath;
   };
+
+  const getFileDisplayName = (fileLog) => {
+    if (fileLog.action !== 'data_delete') {
+      return fileLog.displayName;
+    } else {
+      const wholePathList = fileLog.outcome.split('/');
+      return wholePathList.pop();
+    }
+  }
 
   return (
     <div>
@@ -171,7 +183,7 @@ function UserStats(props) {
                 </span>
                 <span className={styles.fileName}>
                   <Tooltip title={folderPath}>
-                    {el && el.displayName}
+                    {el && getFileDisplayName(el)}
                   </Tooltip>
                 </span>
                 <span className={styles.firstSlash}>/</span>

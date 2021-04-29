@@ -105,11 +105,17 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
       const virualFolders = allVirtualRes.data.result;
       updateVFolder(virualFolders);
     } catch (e) {
-      const msg = e.response?.data?.error_msg;
-      message.error(
-        msg ? msg : `${i18n.t('errormessages:addFilesToNewFolder.default.0')}`,
-        3,
-      );
+      switch(e.response?.status){
+        case(409):{
+          message.error(`${i18n.t('errormessages:createVirtualFolder.duplicate.0')}`,3);
+          break;
+        }case(400):{
+          message.error(`${i18n.t('errormessages:createVirtualFolder.limit.0')}`,3);
+          break;
+        }default:{
+          message.error(`${i18n.t('errormessages:createVirtualFolder.default.0')}`,3);
+        }
+      }
       setSentBtnLoading(false);
       return;
     }

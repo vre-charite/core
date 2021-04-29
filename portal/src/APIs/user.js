@@ -1,5 +1,6 @@
 import { serverAxios as axios } from './config';
 import { objectKeysToSnakeCase } from '../Utility';
+import userEmail from '../Redux/Reducers/userEmail';
 
 function getAllUsersAPI() {
   return axios({
@@ -66,16 +67,34 @@ function checkEmailExistAPI(email, datasetId) {
 }
 
 /**
- *
+ * invite a new user to platform, and to a specified project if available.
+ * https://indocconsortium.atlassian.net/browse/VRE-1343
  * @param {string} email
- * @param {string} role
- * @param {number} projectId
+ * @param {"admin"|"member"} platformRole
+ * @param {string|null} projectRole
+ * @param {string|null} projectGeid the project geid
+ * @param {boolean} inAd true if the user is already in AD but not in neo4j yet.
+ * @returns
  */
-function inviteUserApi(email, role, projectId) {
+function inviteUserApi(email, platformRole, projectRole, projectGeid, inviter,inAd,adUserDn) {
+  const data = {
+    email,
+    platform_role: platformRole,
+    ad_account_created:inAd,
+    ad_user_dn:adUserDn
+  };
+  if (projectGeid && projectRole && inviter) {
+    const relationship = {
+      project_geid: projectGeid,
+      project_role: projectRole,
+      inviter,
+    };
+    data['relationship'] = relationship;
+  }
   return axios({
     url: '/v1/invitations',
     method: 'post',
-    data: { email, role, projectId },
+    data,
   });
 }
 
@@ -135,7 +154,14 @@ function guacomoleAPI() {
   });
 }
 
-function checkUserPlatformRole(email) {
+function checkUserPlatformRole(email, projectGeid) {
+  if (projectGeid) {
+    return axios({
+      url: `/v1/invitation/check/${email}`,
+      method: 'GET',
+      params: { project_geid: projectGeid }
+    });
+  }
   return axios({
     url: `/v1/invitation/check/${email}`,
     method: 'GET',
@@ -154,9 +180,9 @@ function getUserProjectListAPI(username) {
     method: 'POST',
     data: {
       is_all: true,
-      order_by: "time_created",
-      order_type: "desc",
-    }
+      order_by: 'time_created',
+      order_type: 'desc',
+    },
   });
 }
 
@@ -166,11 +192,17 @@ function getUserProjectListAPI(username) {
  * @param {object} data {id, email, status: action}
  * @returns
  */
-function updateUserStatusAPI(data) {
+function updateUserStatusAPI(params) {
   return axios({
-    url: `/v1/users/action`,
+    url: `v1/user/account`,
     method: 'PUT',
-    data,
+    data: {
+      operation_type: params.operationType,
+      realm: params.userRealm,
+      user_geid: params.userGeid,
+      user_email: params.userEmail,
+      payload: params.payload
+    },
   });
 }
 /**
@@ -190,12 +222,12 @@ function getInvitationsAPI(params) {
  * https://indocconsortium.atlassian.net/browse/VRE-1200
  * List or query on all resource requests.
  */
- function getResourceRequestsAPI(params) {
+function getResourceRequestsAPI(params) {
   return axios({
     url: `/v1/resource-requests/query`,
     method: 'POST',
     data: objectKeysToSnakeCase(params),
-  })
+  });
 }
 
 /**
@@ -207,18 +239,37 @@ function createResourceRequestAPI(params) {
     url: `/v1/resource-requests`,
     method: 'POST',
     data: objectKeysToSnakeCase(params),
-  })
+  });
 }
 
 /**
  * https://indocconsortium.atlassian.net/browse/VRE-1200
  * Mark a request as completed
  */
- function approveResourceRequestAPI(requestId) {
+function approveResourceRequestAPI(requestId) {
   return axios({
     url: `/v1/resource-request/${requestId}/complete`,
     method: 'PUT',
-  })
+  });
+}
+function getUserstatusAPI() {
+  return axios({
+    url: `/v1/user/status`,
+    method: 'GET',
+  });
+}
+
+function changeUserStatusAPI(email, userName, familyName, givenName) {
+  return axios({
+    url: `/v1/users`,
+    method: 'PUT',
+    data: {
+      email: email,
+      username: userName,
+      last_name: familyName,
+      first_name: givenName,
+    },
+  });
 }
 
 export {
@@ -242,4 +293,6 @@ export {
   getResourceRequestsAPI,
   createResourceRequestAPI,
   approveResourceRequestAPI,
+  getUserstatusAPI,
+  changeUserStatusAPI,
 };

@@ -8,6 +8,7 @@ import {
 } from '../../../../../APIs';
 import { EditOutlined, CheckOutlined, UpOutlined } from '@ant-design/icons';
 import { withTranslation } from 'react-i18next';
+import { setSuccessNum } from '../../../../../Redux/actions';
 import { connect } from 'react-redux';
 
 const { Paragraph } = Typography;
@@ -17,37 +18,28 @@ class FileTags extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      tags: this.props.tags,
+      tagsEdited: [],
       inputVisible: false,
       inputValue: '',
       errorMessage: false,
       edit: false,
       expand: false,
+      saveTagsLoading: false,
       counter: 0,
       manifest: this.props.project.manifest,
     };
   }
 
-  componentDidUpdate(prevProps) {
-    //Sometimes the props and state wouldn't align. this is a fix
-    if (this.state.tags !== this.props.tags) {
-      this.setState({
-        tags: this.props.tags,
-      });
-    }
+  componentDidMount() {
+    this.setState({
+      tagsEdited: this.props.record.tags,
+    });
   }
-
   handleClose = (removedTag) => {
-    const tags = this.state.tags.filter((tag) => tag !== removedTag);
-    const { geid, pid } = this.props;
-    deleteProjectTagsAPI(pid, { taglist: tags, geid: geid })
-      .then((res) => {
-        this.setState({ tags });
-        this.props.refresh();
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    const tags = this.state.tagsEdited.filter((tag) => tag !== removedTag);
+    this.setState({
+      tagsEdited: tags,
+    });
   };
 
   showInput = () => {
@@ -79,7 +71,7 @@ class FileTags extends Component {
       });
       return;
     }
-    let { tags } = this.state;
+    let tags = this.state.tagsEdited;
     if (inputValue && _.includes(tags, inputValue)) {
       this.setState({
         errorMessage: this.props.t(
@@ -89,8 +81,8 @@ class FileTags extends Component {
       return;
     }
 
-    tags = [...tags, inputValue];
-    if (tags.length > 10) {
+    const tagsNew = [...tags, inputValue];
+    if (tagsNew.length > 10) {
       this.setState({
         errorMessage: this.props.t(
           'formErrorMessages:project.filePanel.tags.limit',
@@ -98,24 +90,28 @@ class FileTags extends Component {
       });
       return;
     }
-
-    const { geid, pid } = this.props;
-    updateProjectTagsAPI(pid, { taglist: tags, geid: geid })
-      .then((res) => {
-        this.props.refresh();
-        this.setState({
-          tags,
-          errorMessage: false,
-          inputVisible: false,
-          inputValue: '',
-          edit: true,
-        });
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    this.setState({
+      tagsEdited: tagsNew,
+      errorMessage: false,
+      inputVisible: false,
+      inputValue: '',
+      edit: true,
+    });
   };
 
+  saveTags = async () => {
+    const { geid, pid } = this.props;
+    // const projectSystemTags = this.state.manifest.tags;
+    const customizedTags = this.state.tagsEdited;
+    // .filter(
+    //   (v) => projectSystemTags && projectSystemTags.indexOf(v) === -1,
+    // );
+    await updateProjectTagsAPI(pid, {
+      taglist: customizedTags,
+      geid: geid,
+    });
+    this.props.setSuccessNum(this.props.successNum + 1);
+  };
   handleOnBlur = () => {
     this.setState({
       inputVisible: false,
@@ -146,8 +142,10 @@ class FileTags extends Component {
   };
 
   render() {
+    if (!this.props.record) {
+      return null;
+    }
     const {
-      // tags,
       inputVisible,
       inputValue,
       errorMessage,
@@ -155,10 +153,10 @@ class FileTags extends Component {
       manifest,
     } = this.state;
     const projectSystemTags = manifest.tags;
-    const systemTags = this.props.tags.filter(
+    const systemTags = this.state.tagsEdited.filter(
       (v) => projectSystemTags && projectSystemTags.indexOf(v) !== -1,
     );
-    const tags = this.props.tags.filter(
+    const tags = this.state.tagsEdited.filter(
       (v) => projectSystemTags && projectSystemTags.indexOf(v) === -1,
     );
     return (
@@ -203,11 +201,13 @@ class FileTags extends Component {
                 onPressEnter={this.handleInputConfirm}
               />
             )}
-            {!inputVisible && (this.props.panelKey && !this.props.panelKey.includes("trash")) && (
-              <Tag onClick={this.showInput} className="site-tag-plus">
-                <PlusOutlined /> New Tag
-              </Tag>
-            )}
+            {!inputVisible &&
+              this.props.panelKey &&
+              !this.props.panelKey.includes('trash') && (
+                <Tag onClick={this.showInput} className="site-tag-plus">
+                  <PlusOutlined /> New Tag
+                </Tag>
+              )}
             {tags.map((tag) => (
               <Tag
                 color="blue"
@@ -221,14 +221,19 @@ class FileTags extends Component {
                 {tag}
               </Tag>
             ))}
-            {tags.length !== 0 &&  (
+            {edit && (
               <Button
                 type="link"
                 style={{ padding: '0px' }}
-                onClick={() => {
-                  this.setState({ edit: false });
+                onClick={async () => {
+                  this.setState({
+                    saveTagsLoading: true,
+                  });
+                  await this.saveTags();
+                  this.setState({ saveTagsLoading: false, edit: false });
                   this.typoClose();
                 }}
+                loading={this.state.saveTagsLoading}
                 icon={<CheckOutlined />}
               >
                 Finish Edit
@@ -255,16 +260,18 @@ class FileTags extends Component {
                 {tag}
               </Tag>
             ))}
-            {tags.length !== 0 && (this.props.panelKey && !this.props.panelKey.includes("trash")) && (
-              <Button
-                type="link"
-                style={{ padding: '0px' }}
-                onClick={() => this.setState({ edit: true })}
-                icon={<EditOutlined />}
-              >
-                Edit Tags{' '}
-              </Button>
-            )}
+            {tags.length !== 0 &&
+              this.props.panelKey &&
+              !this.props.panelKey.includes('trash') && (
+                <Button
+                  type="link"
+                  style={{ padding: '0px' }}
+                  onClick={() => this.setState({ edit: true })}
+                  icon={<EditOutlined />}
+                >
+                  Edit Tags{' '}
+                </Button>
+              )}
             {this.state.expand && (
               <Button
                 type="link"
@@ -285,6 +292,7 @@ class FileTags extends Component {
 export default connect(
   (state) => ({
     project: state.project,
+    successNum: state.successNum,
   }),
-  {},
+  { setSuccessNum },
 )(withTranslation('formErrorMessages')(FileTags));

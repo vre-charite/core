@@ -10,6 +10,27 @@ import pytz
 from models.api_response import APIResponse, EAPIResponseCode
 
 
+def check_invite_permissions(invitation_form, current_identity):
+    if not invitation_form.project_id:
+        # Only platform admin can invite with a project
+        if current_identity["role"] != "admin":
+            return False
+    else:
+        if current_identity["role"] != "admin":
+            params = {
+                "start_id": current_identity["user_id"],
+                "end_id": invitation_form.project_id 
+            }
+            res = requests.get(ConfigClass.NEO4J_SERVICE + "relations", params=params)
+            relations = json.loads(res.text)
+            if not relations:
+                return False
+            role = relations[0]["r"]["type"]
+            # Check project permissions
+            if role != "admin":
+                return False
+    return True
+
 def fetch_geid(id_type):
     ## fetch global entity id
     entity_id_url = ConfigClass.UTILITY_SERVICE + "/v1/utility/id?entity_type={}".format(id_type)
@@ -41,23 +62,26 @@ def get_project_permissions(project_code, user_id):
     return res.json()[0]['r']['type']
 
 
-def remove_user_from_project_group(container_id, username, logger):
+def remove_user_from_project_group(container_id, user_email, logger, access_token):
     # Remove user from keycloak group with the same name as the project
     res = requests.get(
         url=ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/node/{container_id}",
     )
-    project_name = json.loads(res.content)[0]["code"]
+    project_code = json.loads(res.content)[0]["code"]
     payload = {
-        "realm": "vre",
-        "username": username,
-        "groupname": project_name,
+        "operation_type": "remove",
+        "user_email": user_email,
+        "group_code": project_code,
     }
-    res = requests.delete(
-        url=ConfigClass.AUTH_SERVICE + "admin/users/group",
-        params=payload
+    res = requests.put(
+        url=ConfigClass.AUTH_SERVICE + "user/ad-group",
+        json=payload,
+        headers={
+            "Authorization": access_token
+        }
     )
     if(res.status_code != 200):
-        logger.error(f"Error removing user from group in keycloak: {res.text} {res.status_code}")
+        logger.error(f"Error removing user from group in ad: {res.text} {res.status_code}")
 
 
 def add_user_to_project_group(container_id, username, logger):
@@ -77,6 +101,35 @@ def add_user_to_project_group(container_id, username, logger):
     )
     if(res.status_code != 200):
         logger.error(f"Error adding user to group in keycloak: {res.text} {res.status_code}")
+
+def add_admin_to_project_group(groupname, username, logger):
+    # Add user to keycloak group with the same name as the project
+    payload = {
+        "realm": "vre",
+        "username": username,
+        "groupname": groupname,
+    }
+    res = requests.post(
+        url=ConfigClass.AUTH_SERVICE + "admin/users/group",
+        json=payload
+    )
+    if(res.status_code != 200):
+        logger.error(f"Error adding user to group in keycloak: {res.text} {res.status_code}")
+
+
+def assign_project_role(email, project_role, logger):
+    payload = {
+        "realm": "vre",
+        "email": email,
+        "project_role": project_role
+    }
+    res = requests.post(
+        url=ConfigClass.AUTH_SERVICE + "user/project-role",
+        json=payload
+    )
+    if(res.status_code != 200):
+        logger.error(f"Error assign user group role in keycloak: {res.text} {res.status_code}")
+
 
 
 ######################################################### DATASET API #################################################

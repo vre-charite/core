@@ -4,6 +4,9 @@ from .vfolder_ops import VirtualFolderFiles, VirtualFolder, VirtualFolderInfo
 from .file_ops import FileExistCheck, FileDownloadLog, FilePreDownload, FileInfo, ProcessedFile, TotalFileCount, DailyFileCount, FileTransfer, FileActionLogs, FileDeletion
 from .file_ops_v2 import TotalFileCountV2, FileInfoV2, FileTags
 from .file_ops_v3 import FileInfoV3, FolderInfoV3
+from .file_ops_v4 import FileInfoV4
+from .meta import FileMeta
+from .file_stats import FileStatistics
 from .folder_entity import FolderEntity, FoldersEntity
 from flask_restx import Api, Resource, fields, Namespace
 from config import ConfigClass
@@ -25,7 +28,9 @@ nfs_entity_ns.add_resource(FileTransfer, '/transfer')
 nfs_entity_ns.add_resource(FileActionLogs, '/actions/logs')
 nfs_entity_ns.add_resource(FileDeletion, '/actions')
 nfs_entity_ns.add_resource(FoldersEntity, '/entity/folders')
-nfs_entity_ns.add_resource(FolderEntity, '/entity/folder/<geid>')
+nfs_entity_ns.add_resource(FolderEntity, '/entity/folder/')
+nfs_entity_ns.add_resource(FileMeta, '/entity/meta/<geid>')
+nfs_entity_ns.add_resource(FileStatistics, '/project/<project_geid>/files/statistics')
 
 
 nfs_entity_ns_v2 = Namespace(
@@ -60,3 +65,9 @@ nfs_entity_ns_v3 = Namespace(
 )
 nfs_entity_ns_v3.add_resource(FileInfoV3, '/containers/<dataset_id>/files/meta')
 nfs_entity_ns_v3.add_resource(FolderInfoV3, '/containers/<dataset_id>/folder/<folder_geid>/meta')
+
+
+nfs_entity_ns_v4 = Namespace(
+    'File Search', description='File Search', path='/v1/<dataset_id>/files'
+)
+nfs_entity_ns_v4.add_resource(FileInfoV4, '/search')

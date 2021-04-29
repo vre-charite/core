@@ -5,7 +5,7 @@ export function usePanel() {
     const [activePane, setActivePane] = useState('');
 
     const updatePanes = (updatedPanes) => {
-        setPanes(updatePanes);
+        setPanes(updatedPanes);
     }
 
     const addPane = (newPane) => {

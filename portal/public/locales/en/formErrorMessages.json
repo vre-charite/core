@@ -20,7 +20,7 @@
   "project": {
     "code": {
       "empty": "Please enter the project code",
-      "valid": "Project code may only contain lowercase letters and numbers and must be between 1 and 32 characters."
+      "valid": "Project code may only contain lowercase letters and numbers and must be between 1 and 32 characters and it starts with characters."
     },
     "name": {
       "empty": "Please enter a project name",

@@ -72,7 +72,7 @@ function checkTokenAPI(token) {
 
 function lastLoginAPI(username) {
   return axios({
-    url: 'users/lastlogin',
+    url: '/v1/users/lastlogin',
     method: 'POST',
     data: {
       username

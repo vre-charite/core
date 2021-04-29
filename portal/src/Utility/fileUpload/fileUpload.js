@@ -15,7 +15,7 @@ import { keepAlive } from '../';
 import { tokenManager } from '../../Service/tokenManager';
 import _ from 'lodash';
 import { objectKeysToSnakeCase } from '../';
-import { getPath } from './getPath'
+import { getPath } from './getPath';
 
 const USER_LOGOUT = 'user logged out';
 const MAX_LENGTH = 1024 * 1024 * 2;
@@ -75,7 +75,9 @@ async function fileUpload(data, resolve, reject) {
     tags,
     manifest,
     jobId,
-    resumableIdentifier
+    resumableIdentifier,
+    toExistingFolder,
+    folderPath,
   } = data;
 
   setNewUploadIndicatorDispatcher();
@@ -84,7 +86,7 @@ async function fileUpload(data, resolve, reject) {
   const totalSize = file.size;
   let uploadedSize = 0;
   const sessionId = tokenManager.getCookie('sessionId');
-  console.log(sessionId, 'sessionId in upload')
+  console.log(sessionId, 'sessionId in upload');
   updateUploadItemDispatcher({
     uploadKey,
     status: 'uploading',
@@ -94,6 +96,14 @@ async function fileUpload(data, resolve, reject) {
     projectCode,
   });
 
+  let relativePath = getPath(file.webkitRelativePath);
+  if (toExistingFolder) {
+    if (relativePath === '') {
+      relativePath = folderPath;
+    } else {
+      relativePath = folderPath + '/' + relativePath;
+    }
+  }
   const createContext = function (
     file,
     chunk,
@@ -110,13 +120,13 @@ async function fileUpload(data, resolve, reject) {
       resumableType: file.type,
       resumableIdentifier,
       resumableFilename: file.name,
-      resumableRelativePath: getPath(file.webkitRelativePath),
+      resumableRelativePath: relativePath,
       resumableTotalChunks: totalChunks,
       //subPath:subPath||'',
       generateId: generateID, // Add generate ID
       operator: uploader, // Add uploader
       tags,
-      projectCode
+      projectCode,
     };
   };
 
@@ -130,7 +140,7 @@ async function fileUpload(data, resolve, reject) {
       fd.append(_.snakeCase(item), context[item]);
     });
 
-    const { request } = cancelRequestReg(uploadFileApi2, fd, sessionId,);
+    const { request } = cancelRequestReg(uploadFileApi2, fd, sessionId);
     return request;
   };
 
@@ -155,19 +165,23 @@ async function fileUpload(data, resolve, reject) {
         operator: uploader,
         resumableIdentifier,
         resumableFilename: file.name,
-        resumableRelativePath: getPath(file.webkitRelativePath),
+        resumableRelativePath: relativePath,
         resumableTotalChunks: chunks.length,
         resumableTotalSize: file.size,
         tags,
         generateId: generateID,
-      }
+      };
 
-      const result = await combineChunksApi(objectKeysToSnakeCase(reqData), sessionId);
-      manifest && setUploadFileManifestDispatcher({
-        manifestId: manifest.id,
-        files: [result.data.result.source],
-        attributes: manifest && manifest.attributes,
-      });
+      const result = await combineChunksApi(
+        objectKeysToSnakeCase(reqData),
+        sessionId,
+      );
+      manifest &&
+        setUploadFileManifestDispatcher({
+          manifestId: manifest.id,
+          files: [result.data.result.source],
+          attributes: manifest && manifest.attributes,
+        });
       updateUploadItemDispatcher({
         uploadKey,
         progress: 1,
@@ -178,14 +192,16 @@ async function fileUpload(data, resolve, reject) {
       });
       message.success(
         `${i18n.t('success:fileUpload.0')} ${file.name} ${i18n.t(
-          'success:fileUpload.1'
-        )}`
+          'success:fileUpload.1',
+        )}`,
       );
     } catch (err) {
-      message.error('Failed to combined file chunks for ' + file.name);
+      const errorMessage = new ErrorMessager(
+        namespace.dataset.files.combineChunk,
+      );
+      errorMessage.triggerMsg(null, null, { fileName: file.name });
     }
   }
-
 
   // start chunks uploading
   try {
@@ -214,9 +230,8 @@ async function fileUpload(data, resolve, reject) {
       {
         concurrency: 3,
       },
-    )
+    );
   } catch (err) {
-
     reject();
     if (err.message === USER_LOGOUT) return;
 
@@ -242,14 +257,13 @@ async function fileUpload(data, resolve, reject) {
       projectCode,
     });
     return;
-
   }
 
   await combineChunks();
-  
+
   setTimeout(() => {
     resolve(); //resolve and start the next file uploading in queue
-  }, 2000)
+  }, 2000);
 }
 
 export { fileUpload };

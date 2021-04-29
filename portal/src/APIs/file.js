@@ -2,16 +2,15 @@ import {
   serverAxiosNoIntercept,
   serverAxios as axios,
   devOpServer as devOpAxios,
-  devOpServerUrl,
-  devOpServer,
+  devOpServerNoIntercept,
   kongAPI,
   uploadAxios,
 } from './config';
-import { objectKeysToSnakeCase } from '../Utility';
+import { objectKeysToSnakeCase, objectKeysToCamelCase } from '../Utility';
 import { message } from 'antd';
 import _ from 'lodash';
 import { pipelines } from '../Utility/pipelines';
-
+const mockData = objectKeysToCamelCase(require('./mock.json'));
 const GREENROOM_DOWNLOAD_URL = kongAPI + '/download/gr/v1/download';
 const VRE_CORE_DOWNLOAD_URL = kongAPI + '/download/vre/v1/download';
 
@@ -41,6 +40,7 @@ function preUploadApi(data, sessionId) {
     url: `/v1/files/jobs`,
     method: 'POST',
     data,
+    timeout: 100 * 1000,
     headers: {
       'Session-ID': sessionId,
     },
@@ -164,117 +164,51 @@ function getFileManifestAttrs(geidsList, lineageView = false) {
   });
 }
 
-function getLabels(paths) {
-  const ZoneMap = {
-    greenroom: 'Greenroom',
-    core: 'VRECore',
-  };
-  const zoneLabel = ZoneMap[paths[0]];
-  const relevant_path = paths
-    .slice(1)
-    .map((v) => _.snakeCase(v))
-    .join('/');
-  if (relevant_path === 'trash') {
-    return [zoneLabel + ':TrashFile'];
-  }
-
-  let fileLabel = null;
-  if (zoneLabel === 'Greenroom') {
-    if (paths.find((p) => p.toLowerCase() === 'processed')) {
-      fileLabel = 'Processed';
-    }
-    if (paths.find((p) => p.toLowerCase() === 'raw')) {
-      fileLabel = 'Raw';
-    }
-  }
-  if (zoneLabel === 'Greenroom' && fileLabel === 'Raw') {
-    const prefix = zoneLabel + ':' + fileLabel;
-    return [prefix + ':File', zoneLabel + ':Folder'];
-  } else {
-    const prefix = fileLabel ? zoneLabel + ':' + fileLabel : zoneLabel;
-    return [prefix + ':File'];
-  }
-}
-function getLabelsNew(paths) {
-  const ZoneMap = {
-    greenroom: 'Greenroom',
-    core: 'VRECore',
-  };
-  const zoneLabel = ZoneMap[paths[0]];
-
-  const labels = ['File'];
-  labels.push(zoneLabel);
-  if (zoneLabel === 'Greenroom') {
-    if (paths.find((p) => p.toLowerCase() === 'processed')) {
-      labels.push('Processed');
-    }
-    if (paths.find((p) => p.toLowerCase() === 'raw')) {
-      labels.push('Raw');
-    }
-  }
-
-  return labels;
-}
-async function getFilesByFolderAPI(
+/**
+ *
+ * @param {string} geid the geid of a virtual folder or folder, like bcae46e0-916c-11eb-be94-eaff9e667817-1617118177
+ * @param {number} page the nth page. start from ?
+ * @param {number} pageSize the number of items in each page
+ * @param {string} orderBy order by which column. should be one of the column name
+ * @param {"desc"|"asc"} orderType
+ * @param {*} filters the query filter like {"name":"hello"}
+ * @param {"Greenroom"|"VRECore"|"All"} zone if the sourceType is "Trash", the zone is All
+ * @param {"Project"|"Folder"|"TrashFile"} sourceType The Folder are the folders inside file explorer.
+ * @param {string[]} partial what queries should be partial search.
+ */
+async function getFiles(
   geid,
-  pageSize,
   page,
-  column,
-  order,
-  activePane,
+  pageSize,
+  orderBy,
+  orderType,
   filters,
+  zone,
+  sourceType,
+  partial,
 ) {
-  if (!activePane) {
-    return;
-  }
-  const paths = activePane.split('-');
-  const labels = getLabelsNew(paths);
-  const columnMap = {
-    createTime: 'time_created',
-    fileName: 'name',
-    owner: 'uploader',
-    fileSize: 'file_size',
-    generateID: 'generate_id',
-  };
-  let params = {
+  filters['archived'] = sourceType === 'TrashFile';
+  const params = {
     page,
     page_size: pageSize,
-    order_by: columnMap[column] ? columnMap[column] : column,
-    order_type: order,
-    partial: true,
-    query: {},
-    zone: labels[1],
+    order_by: orderBy,
+    order_type: orderType,
+    partial,
+    query: _.omit(filters, ['tags']),
+    zone: zone,
+    sourceType,
   };
-  if (labels[2]) {
-    params['datatype'] = labels[2];
-  }
-  if (filters && filters.fileName) {
-    params.query.name = filters.fileName;
-    params.partial = true;
-  }
-  if (filters && filters.owner) {
-    params.query.uploader = filters.owner;
-    params.partial = true;
-  }
-  if (filters && filters.generateID) {
-    params.query.generate_id = filters.generateID;
-    params.partial = true;
-  }
-
-  let res = await axios({
-    url: `/v1/files/entity/folder/${geid}`,
+  const res = await axios({
+    url: `/v1/files/entity/meta/${geid}`,
     params: objectKeysToSnakeCase(params),
   });
-
-  const entities = res.data.result.data.map((item) => {
-    console.log(item);
-    let typeName =
-      item.labels.indexOf('Raw') !== -1 ? 'nfs_file' : 'nfs_file_processed';
+  res.data.result.entities = res.data.result.data;
+  res.data.result.entities = res.data.result.entities.map((item) => {
+    res.data.result.approximateCount = res.data.total;
     let formatRes = {
       displayText: item.fullPath,
       guid: item.guid,
       geid: item.globalEntityId,
-      typeName: typeName,
       attributes: {
         createTime: item.timeCreated,
         nodeLabel: item.labels,
@@ -293,164 +227,6 @@ async function getFilesByFolderAPI(
     };
     return formatRes;
   });
-  res.data.result = {
-    approximateCount: res.data.total,
-    entities,
-    routing: res.data.result.routing,
-  };
-  console.log(entities);
-  return res;
-}
-/**
- * get a page of processed file on a path
- * @param {number} containerId
- * @param {number} pageSize
- * @param {number} page
- * @param {string} path
- */
-async function getFilesByTypeAPI(
-  containerId,
-  pageSize,
-  page,
-  pipeline,
-  column,
-  order,
-  role,
-  username,
-  activePane,
-  filters,
-) {
-  const columnMap = {
-    createTime: 'time_created',
-    fileName: 'name',
-    owner: 'uploader',
-    fileSize: 'file_size',
-    generateID: 'generate_id',
-  };
-  let params = {
-    page,
-    page_size: pageSize,
-    order_by: columnMap[column] ? columnMap[column] : column,
-    order_type: order,
-    query: {},
-  };
-  if (activePane) {
-    const paths = activePane.split('-');
-    const labels = getLabels(paths);
-    const relevant_path = paths
-      .slice(1)
-      .map((v) => _.snakeCase(v))
-      .join('/');
-    let conditions = {};
-    if (relevant_path !== 'trash') {
-      if (
-        pipeline === pipelines['DATA_COPY'] ||
-        pipeline === pipelines['GENERATE_PROCESS'] ||
-        pipeline === pipelines['DATA_DELETE']
-      ) {
-        conditions.process_pipeline = _.snakeCase(pipeline);
-      }
-    }
-    if (labels[0].indexOf('Greenroom') !== -1 && role === 'collaborator') {
-      conditions.uploader = username;
-    }
-    if (role === 'contributor') {
-      conditions.uploader = username;
-    }
-    if (filters && filters.fileName) {
-      conditions.name = filters.fileName;
-      conditions.partial = conditions.partial
-        ? [...conditions.partial, 'name']
-        : ['name'];
-    }
-    if (filters && filters.owner) {
-      conditions.uploader = filters.owner;
-      conditions.partial = conditions.partial
-        ? [...conditions.partial, 'uploader']
-        : ['uploader'];
-    }
-    if (filters && filters.generateID) {
-      conditions.generate_id = filters.generateID;
-      conditions.partial = conditions.partial
-        ? [...conditions.partial, 'generate_id']
-        : ['generate_id'];
-    }
-    params.query = {
-      labels: labels,
-    };
-    for (let label of labels) {
-      if (label.indexOf('Folder') !== -1) {
-        let conditionsTemp = {
-          name: conditions['name'],
-          uploader: conditions['uploader'],
-          partial: conditions['partial'],
-          folder_level: 0,
-        };
-        params.query[label] = conditionsTemp;
-      } else {
-        params.query[label] = conditions;
-        if (relevant_path !== 'trash') {
-          params.query[label].archived = false;
-        }
-      }
-    }
-  }
-
-  let res = await axios({
-    url: `/v3/files/containers/${containerId}/files/meta`,
-    method: 'POST',
-    data: params,
-  });
-  const entities = res.data.result.map((item) => {
-    let typeName = item.fullPath
-      ? item.labels.indexOf('Raw') !== -1
-        ? 'nfs_file'
-        : 'nfs_file_processed'
-      : null;
-    let formatRes = {
-      displayText: item.fullPath,
-      guid: item.guid,
-      geid: item.globalEntityId,
-      typeName: typeName,
-      attributes: {
-        createTime: item.timeCreated,
-        nodeLabel: item.labels,
-        fileName: item.name,
-        fileSize: item.fileSize,
-        name: item.fullPath,
-        owner: item.uploader,
-        path: item.path,
-        qualifiedName: item.fullPath,
-        generateId:
-          item.generateId && typeof item.generateId !== 'undefined'
-            ? item.generateId
-            : 'undefined',
-      },
-      labels: item.tags,
-    };
-    return formatRes;
-  });
-  res.data.result = {
-    approximateCount: res.data.total,
-    entities,
-  };
-  if (activePane && activePane === 'greenroom-raw') {
-    const geidsList = res.data.result.entities
-      .filter((e) => e.displayText)
-      .map((e) => e.geid);
-    let attrsMap = await getFileManifestAttrs(geidsList);
-    attrsMap = attrsMap.data.result;
-
-    res.data.result.entities = res.data.result.entities.map((entity) => {
-      return {
-        ...entity,
-        manifest:
-          attrsMap[entity.geid] && attrsMap[entity.geid].length
-            ? attrsMap[entity.geid]
-            : null,
-      };
-    });
-  }
   return res;
 }
 
@@ -592,6 +368,7 @@ function downloadFilesAPI(
           projectId: containerId,
           namespace,
           createdTime: Date.now(),
+          payload: res.data.result.payload,
         };
         appendDownloadListCreator(item);
 
@@ -656,6 +433,7 @@ function downloadFilesAPI(
           projectId: containerId,
           namespace,
           createdTime: Date.now(),
+          payload: res.data.result.payload,
         };
         appendDownloadListCreator(item);
 
@@ -718,34 +496,11 @@ function emailUploadedFileListAPI(fileList, uploader) {
  * @param {int} containerId containerId
  * @VRE-314
  */
-function projectFileCountTotal(containerId) {
+function projectFileCountTotal(geid, params) {
   return axios({
-    url: `v2/files/containers/${containerId}/files/count`,
+    url: `v1/files/project/${geid}/files/statistics`,
+    params,
   });
-}
-
-/**
- * Get daily summary of the file download/upload
- *
- * @param {int} containerId containerId
- * @VRE-315
- */
-function projectFileCountToday(containerId, admin_view) {
-  if (admin_view === false) {
-    return axios({
-      url: `v1/files/containers/${containerId}/files/count/daily?admin_view=false`,
-      params: {
-        action: 'all',
-      },
-    });
-  } else {
-    return axios({
-      url: `v1/files/containers/${containerId}/files/count/daily`,
-      params: {
-        action: 'all',
-      },
-    });
-  }
 }
 
 /**
@@ -773,19 +528,6 @@ function projectFileSummary(containerId, admin_view, params) {
 }
 
 /**
- * List all tags existed in the project and its frequency
- *
- * @param {int} containerId containerId
- * @VRE-314
- */
-function listProjectTagsAPI(containerId, query, pattern, length) {
-  return devOpAxios({
-    url: `/v1/containers/${containerId}/tags`,
-    params: { query, pattern, length },
-  });
-}
-
-/**
  * Add new tags to existed file entities
  *
  * @param {int} containerId containerId
@@ -793,8 +535,9 @@ function listProjectTagsAPI(containerId, query, pattern, length) {
  * @VRE-314
  */
 function updateProjectTagsAPI(containerId, data) {
-  return devOpAxios({
-    url: `/v2/containers/${containerId}/tags`,
+  data['internal'] = true;
+  return axios({
+    url: `/v2/files/containers/${containerId}/files/tags`,
     method: 'POST',
     data,
   });
@@ -810,8 +553,8 @@ function updateProjectTagsAPI(containerId, data) {
  * @VRE-314
  */
 function deleteProjectTagsAPI(containerId, params) {
-  return devOpAxios({
-    url: `/v2/containers/${containerId}/tags`,
+  return axios({
+    url: `/v2/files/containers/${containerId}/files/tags`,
     method: 'DELETE',
     data: params,
   });
@@ -868,7 +611,7 @@ function removeFromVirtualFolder(folderId, geids) {
 }
 
 function getZipContentAPI(file) {
-  return devOpServer({
+  return devOpServerNoIntercept({
     url: '/v1/archive',
     params: {
       file_path: file,
@@ -884,6 +627,14 @@ function deleteFileAPI(data) {
   });
 }
 
+function searchFilesAPI(params, datasetId) {
+  return axios({
+    url: `/v1/${datasetId}/files/search`,
+    method: 'GET',
+    params,
+  });
+}
+
 export {
   uploadFileApi,
   getFilesAPI,
@@ -892,17 +643,13 @@ export {
   downloadFilesAPI,
   checkDownloadStatusAPI,
   checkPendingStatusAPI,
-  getFilesByTypeAPI,
-  getFilesByFolderAPI,
   emailUploadedFileListAPI,
   projectFileCountTotal,
-  projectFileCountToday,
   preUploadApi,
   uploadFileApi2,
   combineChunksApi,
   projectFileSummary,
   checkUploadStatus,
-  listProjectTagsAPI,
   deleteUploadStatus,
   updateProjectTagsAPI,
   deleteProjectTagsAPI,
@@ -916,4 +663,6 @@ export {
   getZipContentAPI,
   deleteFileAPI,
   getFileManifestAttrs,
+  searchFilesAPI,
+  getFiles,
 };

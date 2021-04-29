@@ -138,19 +138,22 @@ export default function ErrorMessager(name) {
       },
       500: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:uploadFileApi.500.0')} ${params.fileName
+          `${i18n.t('errormessages:uploadFileApi.500.0')} ${
+            params.fileName
           }. ${i18n.t('errormessages:uploadFileApi.500.1')}`,
         );
       },
       502: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:uploadFileApi.502.0')} ${params.fileName
+          `${i18n.t('errormessages:uploadFileApi.502.0')} ${
+            params.fileName
           }. ${i18n.t('errormessages:uploadFileApi.502.1')}`,
         );
       },
       default: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:uploadFileApi.default.0')} ${params.fileName
+          `${i18n.t('errormessages:uploadFileApi.default.0')} ${
+            params.fileName
           }`,
         );
       },
@@ -158,8 +161,16 @@ export default function ErrorMessager(name) {
     [namespace.dataset.files.uploadRequestFail]: {
       default: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:uploadRequestFail.default.0')} ${params.fileName
+          `${i18n.t('errormessages:uploadRequestFail.default.0')} ${
+            params.fileName
           }, ${i18n.t('errormessages:uploadRequestFail.default.1')}`,
+        );
+      },
+    },
+    [namespace.dataset.files.combineChunk]: {
+      default: (err, params) => {
+        message.error(
+          i18n.t('errormessages:combineChunks.default.0') + params.fileName,
         );
       },
     },
@@ -234,7 +245,8 @@ export default function ErrorMessager(name) {
       },
       409: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:preUpload.409.0')} ${params.fileName
+          `${i18n.t('errormessages:preUpload.409.0')} ${
+            params.fileName
           } ${i18n.t('errormessages:preUpload.409.1')}`,
         );
       },
@@ -262,33 +274,38 @@ export default function ErrorMessager(name) {
     [namespace.teams.inviteUser]: {
       403: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:selfRegistration.403.0')} ${params.email
+          `${i18n.t('errormessages:selfRegistration.403.0')} ${
+            params.email
           }, ${i18n.t('errormessages:selfRegistration.403.1')}`,
         );
       },
       404: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:selfRegistration.404.0')} ${params.email
+          `${i18n.t('errormessages:selfRegistration.404.0')} ${
+            params.email
           } ${i18n.t('errormessages:selfRegistration.404.1')}`,
         );
       },
       500: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:selfRegistration.500.0')} ${params.email
+          `${i18n.t('errormessages:selfRegistration.500.0')} ${
+            params.email
           } ${i18n.t('errormessages:selfRegistration.500.1')}`,
         );
       },
       default: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:selfRegistration.500.0')} ${params.email
-          } ${i18n.t('errormessages:selfRegistration.500.1')}`,
+          `${i18n.t('errormessages:inviteUser.500.0')} ${
+            params.email
+          } ${i18n.t('errormessages:inviteUser.500.1')}`,
         );
       },
     },
     [namespace.teams.checkEmailExistAPI]: {
       403: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:checkEmailExistAPI.403.0')} ${params.email
+          `${i18n.t('errormessages:checkEmailExistAPI.403.0')} ${
+            params.email
           } ${i18n.t('errormessages:checkEmailExistAPI.403.1')}`,
         );
       },
@@ -317,33 +334,41 @@ export default function ErrorMessager(name) {
     [namespace.teams.addUsertoDataSet]: {
       403: (err, params) => {
         message.error(
-          `${params.email} ${i18n.t('errormessages:addUsertoDataSet.403.0')} ${params.email
+          `${params.email} ${i18n.t('errormessages:addUsertoDataSet.403.0')} ${
+            params.email
           } ${i18n.t('errormessages:addUsertoDataSet.403.1')}`,
         );
       },
       500: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:addUsertoDataSet.500.0')} ${params.email
+          `${i18n.t('errormessages:addUsertoDataSet.500.0')} ${
+            params.email
           } ${i18n.t('errormessages:addUsertoDataSet.500.1')}`,
         );
       },
+      "default":(err,parames)=>{
+        message.error(i18n.t('errormessages:addUsertoDataSet.default.0'))
+      }
     },
     [namespace.teams.changeRoleInDataset]: {
       403: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:changeRoleInDataset.403.0')} ${params.name
+          `${i18n.t('errormessages:changeRoleInDataset.403.0')} ${
+            params.name
           }, ${i18n.t('errormessages:changeRoleInDataset.403.1')}`,
         );
       },
       404: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:changeRoleInDataset.403.0')} ${params.name
+          `${i18n.t('errormessages:changeRoleInDataset.403.0')} ${
+            params.name
           }, ${i18n.t('errormessages:changeRoleInDataset.403.1')}`,
         );
       },
       500: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:changeRoleInDataset.500.0')} ${params.name
+          `${i18n.t('errormessages:changeRoleInDataset.500.0')} ${
+            params.name
           }, ${i18n.t('errormessages:changeRoleInDataset.500.1')}`,
         );
       },
@@ -362,7 +387,8 @@ export default function ErrorMessager(name) {
     [namespace.teams.removeUserFromDataset]: {
       403: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:removeUserFromDataset.403.0')} ${params.username
+          `${i18n.t('errormessages:removeUserFromDataset.403.0')} ${
+            params.username
           } ${i18n.t('errormessages:removeUserFromDataset.403.1')}`,
         );
       },
@@ -376,7 +402,8 @@ export default function ErrorMessager(name) {
     [namespace.teams.restoreUserFromDataset]: {
       403: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:removeUserFromDataset.403.0')} ${params.username
+          `${i18n.t('errormessages:removeUserFromDataset.403.0')} ${
+            params.username
           } ${i18n.t('errormessages:removeUserFromDataset.403.1')}`,
         );
       },
@@ -427,7 +454,8 @@ export default function ErrorMessager(name) {
     [namespace.userManagement.inviteUserApi]: {
       400: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:inviteUserApi.400.0')} ${params.email
+          `${i18n.t('errormessages:inviteUserApi.400.0')} ${
+            params.email
           } ${i18n.t('errormessages:inviteUserApi.400.1')}`,
         );
       },
@@ -458,6 +486,35 @@ export default function ErrorMessager(name) {
         message.error(`${i18n.t('errormessages:getInvitationsAPI.default.0')}`);
       },
     },
+    [namespace.userManagement.getServiceRequestAPI]: {
+      default: () => {
+        message.error(
+          `${i18n.t('errormessages:userManagement.getServiceRequestAPI')}`,
+        );
+      },
+    },
+    [namespace.announcement.getAnnouncementApi]: {
+      default: (err, parames) => {
+        message.error(
+          i18n.t('errormessages:announcement.getAnnouncementApi.default.0'),
+        );
+      },
+    },
+    [namespace.announcement.getUserAnnouncementApi]: {
+      default: (err, params) => {
+        message.error(
+          i18n.t('errormessages:announcement.getUserAnnouncementApi.default.0'),
+        );
+      },
+    },
+    [namespace.manifest.getManifestById]: {
+      default: (err, parames) => {
+        message.error(
+          i18n.t('errormessages:getManifestById.default.0') +
+            parames.manifestId,
+        );
+      },
+    },
   };
 
   this.messageObj = _namespaces[name];
@@ -467,7 +524,7 @@ export default function ErrorMessager(name) {
   }
 
   if (!this.messageObj['401']) {
-    this.messageObj['401'] = () => { };
+    this.messageObj['401'] = () => {};
   }
 }
 /**

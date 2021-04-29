@@ -7,14 +7,20 @@ from models.api_meta_class import MetaAPI
 from models.invitation import db, InvitationModel, InvitationForm
 from resources.swagger_modules import create_invitation_request_model, create_invitation_return_example
 from resources.swagger_modules import read_invitation_return_example
+from resources.utils import check_invite_permissions, fetch_geid
+from resources.validations import boolean_validate_role
 from services.invitation_services.invitation_manager import SrvInvitationManager
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from services.neo4j_service.neo4j_client import Neo4jClient
 from api import module_api
 from flask import request
 import json
 import requests
 import math
+import ldap
 import datetime
+import ldap
+import ldap.modlist as modlist
 
 api_ns_invitations = module_api.namespace(
     'Invitation Restful', description='Portal Invitation Restful', path='/v1')
@@ -26,8 +32,6 @@ class APIInvitation(metaclass=MetaAPI):
         api_ns_invitations.add_resource(
             self.InvitationsRestful, '/invitations')
         api_ns_invitation.add_resource(
-            self.InvitationRestful, '/invitation/<invitation_hash>')
-        api_ns_invitation.add_resource(
             self.CheckUserPlatformRole, '/invitation/check/<email>')
         api_ns_invitation.add_resource(
             self.PendingUserRestful, '/invitation-list')
@@ -36,114 +40,185 @@ class APIInvitation(metaclass=MetaAPI):
         @api_ns_invitations.expect(create_invitation_request_model)
         @api_ns_invitations.response(200, create_invitation_return_example)
         @jwt_required()
-        # @check_role('admin')
         def post(self):
             '''
             This method allow to create invitation in platform.
             '''
-            # init logger
             _logger = SrvLoggerFactory('api_invitation').get_logger()
-            # init resp
             my_res = APIResponse()
-            # get access_token
             access_token = request.headers.get("Authorization", None)
-            # init form
             post_json = request.get_json()
+            neo4j_client = Neo4jClient()
 
             _logger.info("Start Creating Invitation: {}".format(post_json))
-            if not post_json.get("email"):
-                my_res.set_result('missing required field email')
+            required_fields = ["email", "platform_role", "ad_account_created"]
+            for field in required_fields:
+                if not field in post_json:
+                    my_res.set_result(f'missing required field {field}')
+                    my_res.set_code(EAPIResponseCode.bad_request)
+                    return my_res.to_dict, my_res.code
+
+            email = post_json["email"] 
+            ad_account_created = post_json["ad_account_created"]
+            ad_user_dn = post_json.get("ad_user_dn", None)
+            relation_data = post_json.get("relationship")
+            dataset_node = None
+            invite_data = {
+                "email": email,
+                "platform_role": post_json["platform_role"],
+            }
+            if relation_data:
+                required_fields = ["project_geid", "project_role", "inviter"]
+                for field in required_fields:
+                    if not relation_data.get(field):
+                        my_res.set_result(f'missing required relation field {field}')
+                        my_res.set_code(EAPIResponseCode.bad_request)
+                        return my_res.to_dict, my_res.code
+                response = neo4j_client.get_dataset_by_geid(relation_data.get("project_geid"))
+                if response.get("code") != 200:
+                    return response, response.get("code")
+                dataset_node = response["result"]
+                invite_data["projectId"] = dataset_node["id"]
+                invite_data["project_role"] = relation_data["project_role"]
+                invite_data["inviter"] = relation_data["inviter"]
+            invitation_form = InvitationForm(invite_data)
+
+            # Make sure the user doesn't always exist
+            response = neo4j_client.get_user_by_email(email)
+            if response.get("code") != 404:
+                _logger.info('User already exists in platform')
+                my_res.set_result('[ERROR] User already exists in platform')
                 my_res.set_code(EAPIResponseCode.bad_request)
                 return my_res.to_dict, my_res.code
 
-            invitation_form = InvitationForm(post_json)
-            if not invitation_form.project_id:
-                # Only platform admin can invite with a project
-                if current_identity["role"] != "admin":
-                    my_res.set_code(EAPIResponseCode.forbidden)
-                    my_res.set_error_msg('Permission denied')
+            if not check_invite_permissions(invitation_form, current_identity):
+                my_res.set_result('Permission denied')
+                my_res.set_code(EAPIResponseCode.forbidden)
+                return my_res.to_dict, my_res.code
+
+            # Create user in neo4j
+            response = neo4j_client.create_user({
+                "email": email,
+                "role": post_json["platform_role"],
+                "status": post_json.get("status", "pending"),
+                "global_entity_id": fetch_geid("User"),
+            })
+            if response.get("code") != 200:
+                my_res.set_result('Error creating user in neo4j' + str(response.get("result")))
+                my_res.set_code(EAPIResponseCode.internal_error)
+                return my_res.to_dict, my_res.code
+            user_node = response["result"]
+
+            # Create relation in neo4j
+            properties = {
+                "status": "active"
+            }
+            if relation_data:
+                response = neo4j_client.create_relation(
+                    user_node["id"], 
+                    dataset_node["id"], 
+                    relation_data["project_role"],
+                    properties=properties
+                )
+                if response.get("code") != 200:
+                    my_res.set_result('Error creating relation in neo4j' + str(response.get("result")))
+                    my_res.set_code(EAPIResponseCode.internal_error)
                     return my_res.to_dict, my_res.code
 
-                res = requests.post(
-                    url=ConfigClass.NEO4J_SERVICE + "nodes/User/query",
-                    json={"email": invitation_form.email}
-                )
-                result = json.loads(res.text)
-                if result:
-                    my_res.set_result('[ERROR] User already exists in platform')
-                    _logger.info('User already exists in platform')
+            ad_first = ""
+            if ad_account_created:
+                # Create Project User Group in ldap
+                if not ad_user_dn:
+                    my_res.set_result('[ERROR] Need user dn')
                     my_res.set_code(EAPIResponseCode.bad_request)
                     return my_res.to_dict, my_res.code
-            else:
-                if current_identity["role"] != "admin":
-                    params = {
-                        "start_id": current_identity["user_id"],
-                        "end_id": invitation_form.project_id 
-                    }
-                    res = requests.get(ConfigClass.NEO4J_SERVICE + "relations", params=params)
-                    relations = json.loads(res.text)
-                    if not relations:
-                        my_res.set_code(EAPIResponseCode.forbidden)
-                        my_res.set_error_msg('Permission denied')
+
+                conn = ldap.initialize(ConfigClass.LDAP_URL)
+                conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN, ConfigClass.LDAP_ADMIN_SECRET)
+
+                # Get user from ldap
+                email = user_node["email"]
+                user_query = f'(&(objectClass=user)(mail={email}))'
+                res = conn.search_s(
+                    ad_user_dn,
+                    ldap.SCOPE_SUBTREE,
+                    user_query,
+                )
+                user_dn, entry = res[0]
+
+                ad_first = ""
+                try:
+                    ad_first = entry["givenName"][0].decode()
+                except Exception as e:
+                    # Failed to get first_name fall back to username
+                    ad_first = entry["sAMAccountName"][0].decode()
+
+                # add user to vre-vre-users group in ldap
+                try:
+                    group_dn = "CN=vre-vre-users,OU=Gruppen,OU={},DC={},DC={}".format(
+                        ConfigClass.LDAP_OU, 
+                        ConfigClass.LDAP_DC1, 
+                        ConfigClass.LDAP_DC2
+                    )
+                    add_entry = [(ldap.MOD_ADD, 'member', [user_dn.encode('utf-8')])]
+                    conn.modify_s(
+                        group_dn,
+                        add_entry
+                    )
+                except Exception as e:
+                    error = 'Error adding user to group vre-vre-users: ' + str(e)
+                    _logger.info(error)
+                    my_res.set_result(error)
+                    my_res.set_code(EAPIResponseCode.internal_error)
+                    return my_res.to_dict, my_res.code
+
+                if relation_data:
+                    # add to the project group
+                    try:
+                        code = dataset_node["code"]
+                        group_dn = "CN=vre-{},OU=Gruppen,OU={},DC={},DC={}".format(
+                            code,
+                            ConfigClass.LDAP_OU, 
+                            ConfigClass.LDAP_DC1, 
+                            ConfigClass.LDAP_DC2
+                        )
+                        add_entry = [(ldap.MOD_ADD, 'member', [user_dn.encode('utf-8')])]
+                        conn.modify_s(
+                            group_dn,
+                            add_entry
+                        )
+                    except Exception as e:
+                        error = f'Error adding user to group vre-{code}: ' + str(e)
+                        _logger.info(error)
+                        my_res.set_result(error)
+                        my_res.set_code(EAPIResponseCode.internal_error)
                         return my_res.to_dict, my_res.code
-                    role = relations[0]["r"]["type"]
-                    # Check project permissions
-                    if role != "admin":
-                        my_res.set_code(EAPIResponseCode.forbidden)
-                        my_res.set_error_msg('Permission denied')
-                        return my_res.to_dict, my_res.code
+                conn.unbind_s()
+
+                # Sync group info to keycloak
+                access_token = request.headers.get("Authorization", None)
+                headers = {
+                    'Authorization': access_token
+                }
+                response = requests.post(ConfigClass.AUTH_SERVICE + "admin/users/group/sync", json={"realm": "vre"}, headers=headers)
+
+                if response.status_code != 200:
+                    return {'result': "Error syncing keycloak: " + str(response.text)}, response.status_code
 
             # init invitation managemer
             invitation_mgr = SrvInvitationManager()
-            # save invitation
-            invitation_mgr.save_invitation(invitation_form, access_token, current_identity)
+            invitation_mgr.save_invitation(
+                invitation_form, 
+                access_token, 
+                current_identity, 
+                ad_account_created=ad_account_created,
+                ad_first=ad_first,
+            )
+
             my_res.set_result('[SUCCEED] Invitation Saved, Email Sent')
             _logger.info('Invitation Saved, Email Sent')
             my_res.set_code(EAPIResponseCode.success)
             return my_res.to_dict, my_res.code
-
-    class InvitationRestful(Resource):
-        @api_ns_invitation.response(200, read_invitation_return_example)
-        def get(self, invitation_hash):
-            '''
-            This method allow to get invitation details by HashID.
-            '''
-            # init logger
-            _logger = SrvLoggerFactory('api_invitation').get_logger()
-            # init resp
-            my_res = APIResponse()
-            try:
-                # init invitation managemer
-                invitation_mgr = SrvInvitationManager()
-                invitation_validation = invitation_mgr.validate_invitation_code(
-                    invitation_hash)
-                is_valid = invitation_validation[0]
-                invitation_find = invitation_validation[1]
-                error_code = invitation_validation[2]
-                if is_valid:
-                    form_data = json.loads(invitation_find.invitation_detail)
-                    invitation_form = InvitationForm(form_data)
-                    my_res.set_code(EAPIResponseCode.success)
-                    my_res.set_result(invitation_form.to_dict)
-                else:
-                    if error_code == 404:
-                        my_res.set_code(EAPIResponseCode.not_found),
-                        my_res.set_error_msg(
-                            'Invitation Not Found: ' + invitation_hash)
-                        _logger.warning(
-                            'Invitation Not Found: ' + invitation_hash)
-                    else:
-                        my_res.set_code(EAPIResponseCode.unauthorized),
-                        my_res.set_error_msg(
-                            'Invitation Expired: ' + invitation_hash)
-                        _logger.warning(
-                            'Invitation Expired: ' + invitation_hash)
-                return my_res.to_dict, my_res.code
-            except Exception as e:
-                _logger.fatal(str(e))
-                my_res.set_code(EAPIResponseCode.internal_error)
-                my_res.set_error_msg('Internal Error' + str(e))
-                return my_res.to_dict, my_res.code
 
 
     class CheckUserPlatformRole(Resource):
@@ -152,37 +227,86 @@ class APIInvitation(metaclass=MetaAPI):
             '''
             This method allow to get user's detail on the platform.
             '''
-            # init logger
-            _logger = SrvLoggerFactory('api_invitation').get_logger()
-            # init resp
             my_res = APIResponse()
+            _logger = SrvLoggerFactory('api_invitation').get_logger()
+            project_geid = request.args.get("project_geid")
 
-            try:
-                # get access_token
-                access_token = request.headers.get("Authorization", None)
+            neo4j_client = Neo4jClient()
+            response = neo4j_client.get_user_by_email(email)
 
-                res = requests.post(
-                    url=ConfigClass.NEO4J_SERVICE + "nodes/User/query",
-                    headers={"Authorization": access_token},
-                    json={"email": email}
-                )
-                result = json.loads(res.text)
+            # Check if user exists in ad  
+            ad_account_created = False
+            ad_user_dn = None
+            ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
+            conn = ldap.initialize(ConfigClass.LDAP_URL)
+            conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN, ConfigClass.LDAP_ADMIN_SECRET)
+            user_query = f'(&(objectClass=user)(mail={email}))'
 
-                if result:
-                    my_res.set_result(result)
-                    my_res.set_code(EAPIResponseCode.success)
-                    return my_res.to_dict, my_res.code
+            users = conn.search_s(
+                "dc={},dc={}".format(ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2), 
+                ldap.SCOPE_SUBTREE, 
+                user_query
+            )
 
-                else:
-                    my_res.set_result('User is not existed in platform')
+            for user_dn, entry in users:
+                if 'mail' in entry:
+                    if entry['mail'][0].decode("utf-8") == email:
+                        ad_account_created = True
+                        ad_user_dn = user_dn
+                        break
+
+            if response.get("code") == 404:
+                my_res.set_result({ 'msg': 'User does not exist in platform', 'ad_account_created': ad_account_created, 'ad_user_dn': ad_user_dn })
+                my_res.set_code(EAPIResponseCode.not_found)
+                return my_res.to_dict, my_res.code
+            elif response.get("code") != 200:
+                return response
+            user_node = response["result"]
+            result = user_node
+            result["relationship"] = {}
+            result["ad_account_created"] = ad_account_created
+            result["ad_user_dn"] = ad_user_dn
+
+            if project_geid:
+                response = neo4j_client.get_dataset_by_geid(project_geid)
+                if response.get("code") == 404:
+                    my_res.set_result('Dataset does not exist in platform')
                     my_res.set_code(EAPIResponseCode.not_found)
                     return my_res.to_dict, my_res.code
+                elif response.get("code") != 200:
+                    return response
+                dataset_node = response["result"]
 
-            except Exception as e:
-                _logger.fatal(str(e))
-                my_res.set_code(EAPIResponseCode.internal_error)
-                my_res.set_error_msg('Internal Error' + str(e))
-                return my_res.to_dict, my_res.code
+                if current_identity["role"] != "admin":
+                    valid, project_role = boolean_validate_role(
+                        "admin", 
+                        current_identity["role"], 
+                        current_identity["user_id"], 
+                        project_geid
+                    )
+                    if not valid:
+                        my_res.set_result("Permission denied")
+                        my_res.set_code(EAPIResponseCode.unauthorized)
+                        return my_res.to_dict, my_res.code
+                response = neo4j_client.get_relation(user_node["id"], dataset_node["id"])
+                if response.get("code") == 200 and response["result"]:
+                    result["relationship"] = {
+                        "project_code": dataset_node["code"],
+                        "project_role": response["result"][0]["r"]["type"],
+                        "project_geid": dataset_node["global_entity_id"],
+                    }
+                elif response.get("code") == 404:
+                    pass
+                elif response.get("code") == 200 and not response["result"]:
+                    pass
+                else:
+                    my_res.set_result(response)
+                    my_res.set_error_msg('Getting relation internal error')
+                    my_res.set_code(EAPIResponseCode.internal_error)
+                    return my_res.to_dict, my_res.code
+            my_res.set_result(result)
+            my_res.set_code(EAPIResponseCode.success)
+            return my_res.to_dict, my_res.code
 
 
     class PendingUserRestful(Resource):
@@ -236,9 +360,9 @@ class APIInvitation(metaclass=MetaAPI):
                 for record in records:
                     detail = json.loads(record.invitation_detail)
                     user_info = { 
-                        'expiry_timestamp': record.expiry_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                         'create_timestamp': record.create_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                         'invited_by': record.invited_by,
+                        'status': record.status,
                         **detail
                     }
                     result.append(user_info)

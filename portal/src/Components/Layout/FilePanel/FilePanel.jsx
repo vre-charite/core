@@ -16,30 +16,20 @@ import _ from 'lodash';
 import styles from '../index.module.scss';
 import {
   setUploadListCreator,
-  setPanelActiveKey,
   setDownloadListCreator,
   updateCopy2CoreList,
   setSuccessNum,
-  setCurrentProjectTreeGreenRoom,
-  setCurrentProjectTreeCore,
   setDeletedFileList,
   updateDeletedFileList,
 } from '../../../Redux/actions';
-import {
-  useIsMount,
-  getGreenRoomTreeNodes,
-  getCoreTreeNodes,
-  keepAlive,
-} from '../../../Utility';
+import { useIsMount, keepAlive } from '../../../Utility';
 import {
   deleteUploadStatus,
   deleteDownloadStatus,
   listAllCopy2CoreFiles,
-  traverseFoldersContainersAPI,
   loadDeletedFiles,
 } from '../../../APIs';
 import { tokenManager } from '../../../Service/tokenManager';
-import { OmitProps } from 'antd/lib/transfer/renderListBody';
 
 const { TabPane } = Tabs;
 
@@ -52,7 +42,6 @@ function FilePanel(props) {
   const uploadListGlobal = useSelector((state) => state.uploadList);
   const downloadList = useSelector((state) => state.downloadList);
   let copy2CoreList = useSelector((state) => state.copy2CoreList);
-  const panelActiveKey = useSelector((state) => state.panelActiveKey);
   const successNum = useSelector((state) => state.successNum);
   const project = useSelector((state) => state.project);
   const loadCopyEvent = useSelector((state) => state.events.LOAD_COPY_LIST);
@@ -101,7 +90,6 @@ function FilePanel(props) {
           // last call
           if (refreshJobStart) {
             dispatch(setSuccessNum(successNum + 1));
-            updateFolders();
             refreshJobStart = false;
           }
         }
@@ -132,6 +120,7 @@ function FilePanel(props) {
           fileName,
         });
       }
+
       if (deletedFileList.length) {
         dispatch(updateDeletedFileList(files));
       } else {
@@ -150,20 +139,11 @@ function FilePanel(props) {
         } else {
           if (refreshJobStart) {
             dispatch(setSuccessNum(successNum + 1));
-            updateFolders();
             refreshJobStart = false;
           }
         }
       }
     }
-  }
-
-  async function updateFolders() {
-    const allFolders = await traverseFoldersContainersAPI(project.profile.id);
-    const greenRoomTree = getGreenRoomTreeNodes(allFolders);
-    const coreTreeData = getCoreTreeNodes(allFolders);
-    dispatch(setCurrentProjectTreeGreenRoom(greenRoomTree));
-    dispatch(setCurrentProjectTreeCore(coreTreeData));
   }
 
   useEffect(() => {
@@ -189,83 +169,6 @@ function FilePanel(props) {
     }
     // eslint-disable-next-line
   }, [uploadList.length, downloadList.length, copy2CoreList.length]);
-
-  useEffect(() => {
-    if (isMount) {
-      if (!visibility) {
-        dispatch(setPanelActiveKey(['upload']));
-      } else {
-        dispatch(
-          setPanelActiveKey([...new Set([...panelActiveKey, 'upload'])]),
-        );
-      }
-    }
-    // eslint-disable-next-line
-  }, [uploadList.length]);
-
-  useEffect(() => {
-    if (isMount) {
-      if (!visibility) {
-        dispatch(setPanelActiveKey(['download']));
-      } else {
-        dispatch(
-          setPanelActiveKey([...new Set([...panelActiveKey, 'download'])]),
-        );
-      }
-    }
-    // eslint-disable-next-line
-  }, [downloadList.length]);
-
-  useEffect(() => {
-    if (isMount) {
-      if (!visibility) {
-        // eslint-disable-next-line
-        const core2Processed = copy2CoreList.filter((item) => {
-          const sourcePath = item.source;
-          const pathArray = sourcePath.split('/');
-
-          if (pathArray.includes('vre-storage') && pathArray.includes('raw'))
-            return true;
-        });
-        // eslint-disable-next-line
-        const copy2Core = copy2CoreList.filter((item) => {
-          const sourcePath = item.source;
-          const pathArray = sourcePath.split('/');
-
-          if (
-            pathArray.includes('vre-storage') &&
-            pathArray.includes('processed') &&
-            pathArray.includes('straight_copy')
-          )
-            return true;
-          if (
-            pathArray.includes('vre-storage') &&
-            pathArray.includes('processed') &&
-            pathArray.includes('dicom_edit')
-          )
-            return true;
-        });
-
-        if (core2Processed.length && copy2Core.length)
-          dispatch(setPanelActiveKey(['copy2core', 'copy2processed']));
-        if (core2Processed.length && copy2Core.length === 0)
-          dispatch(setPanelActiveKey(['copy2processed']));
-        if (core2Processed.length === 0 && copy2Core.length)
-          dispatch(setPanelActiveKey(['copy2core']));
-      } else {
-        dispatch(
-          setPanelActiveKey([
-            ...new Set([...panelActiveKey, 'copy2core', 'copy2processed']),
-          ]),
-        );
-      }
-    }
-    // eslint-disable-next-line
-  }, [copy2CoreList.length]);
-
-  function toggleVisibility() {
-    setVisibility(!visibility);
-  }
 
   const cleanUploadList = async () => {
     const res = await deleteUploadStatus(0, sessionId);
@@ -388,18 +291,16 @@ function FilePanel(props) {
     defaultKey = ['download'];
   if (uploadingList && uploadingList.length > 0) defaultKey = ['upload'];
   // eslint-disable-next-line
-  const core2Processed = copy2CoreList.filter((item) => {
-    const sourcePath = item.source;
-    const pathArray = sourcePath.split('/');
-
-    if (pathArray.includes('vre-storage') && pathArray.includes('raw'))
-      return true;
-  });
-  // eslint-disable-next-line
   copy2CoreList = copy2CoreList.filter((item) => {
     const sourcePath = item.source;
     const pathArray = sourcePath.split('/');
 
+    if (
+      pathArray.includes('vre-storage') &&
+      pathArray.includes('raw') &&
+      item.projectCode === projectCode
+    )
+      return true;
     if (
       pathArray.includes('vre-storage') &&
       pathArray.includes('processed') &&
@@ -626,6 +527,13 @@ function FilePanel(props) {
         </span>
       );
     } else if (item.status === 'success' && tabName === 'download') {
+      const nameZone = (item) => {
+        if (item.payload.frontendZone === 'Vre Core') {
+          return 'VRE Core'
+        }
+
+        return item.payload.frontendZone;
+      }
       return (
         <span>
           <Icon
@@ -638,7 +546,7 @@ function FilePanel(props) {
               />
             )}
           />
-          <span className={styles.fileName}>{item.filename}</span>
+          <span className={styles.fileName}>{item.filename}</span>{' '}{'-'}{' '}<span>{nameZone(item)}</span>
         </span>
       );
     } else if (item.status === 'succeed' && tabName === 'approved') {
@@ -669,7 +577,7 @@ function FilePanel(props) {
               <RestOutlined className={styles.icons} />
             </Tooltip>
           }
-          <span className={styles.fileName}>{item.fileName}</span>
+          <span className={styles.fileName}>{item.fileName}</span>{' '}{'-'}{' '}<span>{item.payload.frontendZone}</span>
         </span>
       );
     } else {
@@ -678,11 +586,10 @@ function FilePanel(props) {
   };
 
   let inProgressList;
-  const approvedList = copy2CoreList
-    .map((el) => ({ ...el, copyTag: 'Copied to Core' }))
-    .concat(
-      core2Processed.map((el) => ({ ...el, copyTag: 'Copied to Processed' })),
-    );
+  const approvedList = copy2CoreList.map((el) => ({
+    ...el,
+    copyTag: 'Copied to Core',
+  }));
   const allFileList = [
     ...uploadList.map((el) => ({ ...el, action: 'data_upload' })),
     ...downloadList.map((el) => ({ ...el, action: 'data_download' })),
@@ -730,9 +637,6 @@ function FilePanel(props) {
   let approvedToCoreNum = approvedList.filter(
     (el) => el.status === 'succeed' && el.copyTag === 'Copied to Core',
   ).length;
-  let approvedToProcessedNum = approvedList.filter(
-    (el) => el.status === 'succeed' && el.copyTag === 'Copied to Processed',
-  ).length;
   let approvedFailureNum = approvedList.filter((el) => el.status === 'error')
     .length;
   let deletedSuccessNum = deletedFileList.filter(
@@ -758,9 +662,7 @@ function FilePanel(props) {
     approvedSuccessNum > 0
       ? `${approvedToCoreNum} ${
           approvedToCoreNum > 1 ? `files` : `file`
-        } copied to core. ${approvedToProcessedNum} ${
-          approvedToProcessedNum > 1 ? `files` : `file`
-        } copied to processed. ${approvedFailureNum} ${
+        } copied to core. ${approvedFailureNum} ${
           approvedFailureNum !== 1 ? `files` : `file`
         } failed.`
       : `You haven't approved to copy any files to the Core yet!`;

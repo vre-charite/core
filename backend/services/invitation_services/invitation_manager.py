@@ -5,10 +5,12 @@ from services.notifier_services.email_service import SrvEmail
 from services.data_providers.bff_rds import SrvRDSSingleton
 from services.container_services.container_manager import SrvContainerManager
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from services.neo4j_service.neo4j_client import Neo4jClient
 from resources.utils import helper_now_utc
 from config import ConfigClass
 from hashlib import md5
 import json
+import base64
 from datetime import timedelta, datetime
 
 class SrvInvitationManager(metaclass=MetaService):
@@ -16,111 +18,121 @@ class SrvInvitationManager(metaclass=MetaService):
     def __init__(self):
         self._logger = SrvLoggerFactory('api_invitation').get_logger()
 
-    def validate_invitation_code(self, invitation_code):
-        '''
-        (str) -> (bool, InvitationForm | None)    #**TypeContract**
-        '''
-        self._logger.info('start validating invitation code...........')
-        invite = self.read_invitation(invitation_code)
-        if not invite:
-            self._logger.info('[Error] invalid invitation')
-            return (False, None, 404)
-        expiry_dt = invite.expiry_timestamp
-        now_dt = helper_now_utc().replace(tzinfo=None)
-        diff_dt_days = (expiry_dt - now_dt).days
-        if not diff_dt_days > 0:
-            self._logger.info('[Error] expired invitation')
-            return (False, invite, 401)
-        self._logger.info('[Info] valid invitation')
-        return (True, invite, 200)
+    def update_invitation(self, query_data, update_data):
+        try:
+            db.session.query(InvitationModel).filter_by(**query_data).update(update_data)
+            db.session.commit()
+        except Exception as e:
+            self._logger.error("Failed to update SQL record: " + str(e))
+            return str(e)
+        return 'success'
 
-    def read_invitation(self, invitation_code):
-        invite = db.session.query(InvitationModel).filter_by(invitation_code=invitation_code).first()
-        return invite
-
-    def save_invitation(self, invitation: InvitationModel, access_token, current_identity):
+    def save_invitation(self, invitation: InvitationModel, access_token, current_identity, status="pending", ad_account_created=False, ad_first=None):
         invitor_name = current_identity['username']
         email_sender = SrvEmail()
         container_mgr = SrvContainerManager()
         now_utc_dt = helper_now_utc()
-        expiry_dt = now_utc_dt + timedelta(days=ConfigClass.INVITATION_EXPIRY_DAYS)
         create_timestamp = now_utc_dt.isoformat()
-        expiry_timestamp = expiry_dt.isoformat()
 
-        raw_data_str = invitation.email + str(invitation.project_id) + str(create_timestamp)
-        invitation_code_generated = md5(raw_data_str.encode('utf-8')).hexdigest()
-        invitataion_link = ConfigClass.INVITATION_URL_PREFIX + '/' + invitation_code_generated
         form_data = invitation.to_dict
         form_data_json = json.dumps(form_data)
 
-        # If there is another invitation with the same details expiry it
         sql_params = {
-            "email": invitation.email,
-            "project": str(invitation.project_id),
-        }
-        invites = db.session.query(InvitationModel).filter_by(**sql_params)
-        if invites:
-            for invite in invites:
-                invite.expiry_timestamp = now_utc_dt.isoformat()
-                db.session.commit()
-
-        sql_params = {
-            "invitation_code": invitation_code_generated,
             "invitation_detail": form_data_json,
-            "expiry_timestamp": expiry_timestamp,
             "create_timestamp": create_timestamp,
+            "expiry_timestamp": create_timestamp, #TODO remove when SQL is updated
             "invited_by": invitor_name,
             "email": invitation.email,
-            "role": invitation.role,
-            "project": str(invitation.project_id)
+            "role": invitation.platform_role,
+            "project": str(invitation.project_id),
+            "invite_by": str(invitation.inviter),
+            "status": status,
         }
+        if invitation.project_id:
+            sql_params["role"] = invitation.project_role
         inserted = InvitationModel(**sql_params)
         db.session.add(inserted)
         db.session.commit()
         db.session.refresh(inserted)
 
+        neo4j_client = Neo4jClient()
+        response = neo4j_client.get_user_by_username(invitor_name)
+        if response.get("code") != 200:
+            return response
+        inviter_node = response["result"]
+
         self._logger.info(f'Invitation {inserted.id} Saved To Database')
         if invitation.project_id:
-            my_project = container_mgr.check_container_exist(
-                    access_token, "Dataset", invitation.project_id)[0]
+            my_project = container_mgr.check_container_exist(access_token, "Dataset", invitation.project_id)[0]
             my_project_name = my_project['name']
             self._logger.info(my_project)
-            subject = "Welcome to Project {}!".format(my_project_name)
-            template = "invitation/project.html"
+            subject = "Welcome to the {} project!".format(my_project_name)
+            if not ad_account_created: 
+                template = "invitation/ad_invite_project.html"
+            else:
+                template = "invitation/ad_existing_invite_project.html"
             template_kwargs = {
-                "invitor": invitor_name,
+                "inviter_email": inviter_node["email"],
+                "inviter_name": inviter_node["name"],
                 "project_name": my_project_name,
-                "role": map_neo4j_to_frontend(invitation.role),
-                "register_link": invitataion_link,
-                "admin_email": ConfigClass.EMAIL_ADMIN_CONNECTION,
+                "project_code": my_project["code"],
+                "project_role": map_neo4j_to_frontend(invitation.project_role),
+                "support_email": ConfigClass.EMAIL_SUPPORT,
+                "admin_email": ConfigClass.EMAIL_ADMIN,
+                "url": ConfigClass.INVITATION_URL_LOGIN,
+                "user_email": invitation.email,
+                "domain": ConfigClass.VRE_DOMAIN,
+                "helpdesk_email": ConfigClass.EMAIL_HELPDESK,
+                "user_first": ad_first,
             }
         else:
             subject = "Welcome to VRE!"
-            template = "invitation/without_project.html"
+            if not ad_account_created: 
+                template = "invitation/ad_invite_without_project.html"
+            else:
+                template = "invitation/ad_existing_invite_without_project.html"
+
+            if invitation.platform_role == "admin":
+                platform_role = "Platform Administrator"
+            else:
+                platform_role = "Platform User"
             template_kwargs = {
-                "invitor": invitor_name,
-                "register_link": invitataion_link,
-                "admin_email": ConfigClass.EMAIL_ADMIN_CONNECTION,
+                "inviter_email": inviter_node["email"],
+                "inviter_name": inviter_node["name"],
+                "support_email": ConfigClass.EMAIL_SUPPORT,
+                "admin_email": ConfigClass.EMAIL_ADMIN,
+                "platform_role": platform_role,
+                "url": ConfigClass.INVITATION_URL_LOGIN,
+                "user_email": invitation.email,
+                "domain": ConfigClass.VRE_DOMAIN,
+                "helpdesk_email": ConfigClass.EMAIL_HELPDESK,
+                "user_first": ad_first,
             }
-        email_sender.send(
-            subject,
-            [invitation.email],
-            msg_type='html',
-            template=template,
-            template_kwargs=template_kwargs,
-        )
+        with open("attachments/Invite-AD-Application.pdf", 'rb') as f:
+            if not ad_account_created:
+                data = base64.b64encode(f.read()).decode()
+                attachment = [{"name": "Charite AD Request Form.pdf", "data": data}]
+            else:
+                attachment = []
+            email_sender.send(
+                subject,
+                [invitation.email],
+                msg_type='html',
+                template=template,
+                template_kwargs=template_kwargs,
+                attachments=attachment,
+            )
+            if not ad_account_created: 
+                # send copy to admin
+                email_sender.send(
+                    subject,
+                    [ConfigClass.EMAIL_ADMIN],
+                    msg_type='html',
+                    template=template,
+                    template_kwargs=template_kwargs,
+                    attachments=attachment,
+                )
         return 'Saved'
-
-    def deactivate_invitation(self, invitation_code):
-        sql_params = {
-            "invitation_code": invitation_code,
-        }
-        invite = db.session.query(InvitationModel).filter_by(**sql_params).first()
-        if invite:
-            invite.expiry_timestamp = datetime.now()
-            db.session.commit()
-        self._logger.info(str(invitation_code) + ' Invitation deactivated')
-
 
     def get_invitations(self, page, page_size, filters, order_by, order_type):
         if not filters:
@@ -129,20 +141,17 @@ class SrvInvitationManager(metaclass=MetaService):
         sql_filter = {}
         if "project_id" in filters:
             sql_filter["project"] = str(filters["project_id"])
+        if "status" in filters:
+            sql_filter["status"] = filters["status"]
 
         invites = db.session.query(InvitationModel).filter_by(**sql_filter)
         if "email" in filters:
             invites = invites.filter(InvitationModel.invitation_detail.like("%" + filters["email"] + "%"))
         if "invited_by" in filters:
             invites = invites.filter(InvitationModel.invited_by.like("%" + filters["invited_by"] + "%"))
-        if "status" in filters:
-            if filters["status"] == "disabled":
-                invites = invites.filter(InvitationModel.expiry_timestamp <= datetime.now())
-            else:
-                invites = invites.filter(InvitationModel.expiry_timestamp >= datetime.now())
 
         if not order_by:
-            order_by = "expiry_timestamp"
+            order_by = "create_timestamp"
         if order_type == "desc":
             sort_param = getattr(InvitationModel, order_by).desc()
         else:

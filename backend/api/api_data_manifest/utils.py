@@ -19,8 +19,8 @@ def get_file_node(full_path):
         return None
     return response.json()[0] 
 
-def is_greenroom_raw(file_node):
-    if not "Greenroom" in file_node["labels"] or not "Raw" in file_node["labels"]:
+def is_greenroom(file_node):
+    if not "Greenroom" in file_node["labels"]:
         return False
     else:
         return True

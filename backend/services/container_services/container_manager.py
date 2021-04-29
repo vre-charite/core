@@ -59,3 +59,19 @@ class SrvContainerManager(metaclass=MetaService):
             error_msg = 'error when get_by_project_id ' + str(json.loads(res.text))
             _logger.error()
             return False, error_msg
+
+    def get_by_project_geid(self, geid):
+        url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query" 
+        payload = {
+            "global_entity_id": geid
+        }
+        res = requests.post(
+            url=url,
+            json=payload
+        )
+        if res.status_code == 200:
+            return True, res.json()
+        else:
+            error_msg = 'error when get_by_project_code: ' + str(json.loads(res.text))
+            _logger.error()
+            return False, error_msg

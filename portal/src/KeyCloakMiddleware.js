@@ -1,5 +1,5 @@
 //the component App and below can only use keycloak.access_token to bind it to axios and authenticated in react router
-import App from './App';
+import Portal from './Portal';
 import { Router, Switch, Route, Redirect } from 'react-router-dom';
 import { authedRoutes, unAuthedRoutes, basename } from './Routes';
 import { history } from './Routes';
@@ -333,6 +333,7 @@ function KeyCloakMiddleware() {
       return timeRemain <= 0 && !!keycloak.refreshTokenParsed;
     },
     func() {
+      window.onbeforeunload = () => {};
       logout();
     },
   };
@@ -356,7 +357,7 @@ function KeyCloakMiddleware() {
                     render={(props) => {
                       // only if keycloak ready, app will be rendered
                       if (isKeycloakReady) {
-                        return <App />;
+                        return <Portal />;
                       } else {
                         return <Loading />;
                       }

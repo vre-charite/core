@@ -25,8 +25,6 @@ class APIContactUs(metaclass=MetaAPI):
     class ContactUsRestful(Resource):
         @api_ns_contact.expect(contact_us_model)
         @api_ns_contact.response(200, contact_us_return_example)
-        @jwt_required()
-        # @check_role('admin')
         def post(self):
             '''
             This method allow to create invitation in platform.

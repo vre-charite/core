@@ -66,12 +66,12 @@ export default function (props) {
       let textArr = displayText.split('/');
       label = textArr && textArr.length > 1 && textArr[textArr.length - 1];
 
-      let location = textArr && pathsMap(textArr);
-      let fileType = textArr && pathNameMap(textArr);
+      let location;
+      let fileType;
 
       let isCurrentNode = attributes.name === record.name;
       let pipelineImg = '/vre/operation.svg';
-
+      const isPipeline = nodeInfo.typeName === 'Process';
       if (nodeInfo.typeName === 'Process') {
         textArr = displayText.split(':');
         label = textArr && textArr.length > 1 && textArr[1];
@@ -84,13 +84,12 @@ export default function (props) {
 
         time = textArr[2];
         createdTime = moment(time * 1000).format('YYYY-MM-DD HH:mm:ss');
-
         location = null;
         fileType = 'Pipeline';
+      } else {
+        location = textArr && pathsMap(textArr);
+        fileType = textArr && pathNameMap(textArr);
       }
-
-      const isPipeline = nodeInfo.typeName === 'Process';
-
       if (fileManifests.length) {
         fileManifests = fileManifests.map((menifest) => {
           return `<li><b>(${menifest.manifest_name})</b> ${menifest.name}: ${menifest.value}</li>`;

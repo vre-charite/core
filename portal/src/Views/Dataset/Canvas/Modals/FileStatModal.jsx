@@ -17,8 +17,16 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import styles from './index.module.scss';
 
-import { getUsersOnDatasetAPI, projectFileSummary, fileAuditLogsAPI, getAuditLogsApi } from '../../../../APIs';
-import { objectKeysToCamelCase, timeConvert, pathsMap } from '../../../../Utility';
+import {
+  getUsersOnDatasetAPI,
+  projectFileSummary,
+  getAuditLogsApi,
+} from '../../../../APIs';
+import {
+  objectKeysToCamelCase,
+  timeConvert,
+  pathsMap,
+} from '../../../../Utility';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -43,7 +51,9 @@ const FileStatModal = (props) => {
   const [loading, setLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const { datasetId, currentUser, isAdmin } = props;
-  const containersPermission = useSelector((state) => state.containersPermission);
+  const containersPermission = useSelector(
+    (state) => state.containersPermission,
+  );
   const username = useSelector((state) => state.username);
 
   const currentDataset = _.find(
@@ -51,42 +61,42 @@ const FileStatModal = (props) => {
     (d) => d.id === parseInt(datasetId),
   );
 
-  const currentPermission = containersPermission.find(el => el.id === parseInt(datasetId));
+  const currentPermission = containersPermission.find(
+    (el) => el.id === parseInt(datasetId),
+  );
 
   useEffect(() => {
     const now = moment();
 
     if (props.isAdmin) {
-      getUsersOnDatasetAPI(datasetId)
-        .then((res) => {
-          const result = objectKeysToCamelCase(res.data.result);
-          setUsers(result);
+      getUsersOnDatasetAPI(datasetId).then((res) => {
+        const result = objectKeysToCamelCase(res.data.result);
+        setUsers(result);
 
-          setSelectedUser('all');
-          form.setFieldsValue({ user: 'all' });
-          form.setFieldsValue({
-            date: [moment(today, dateFormat), moment(today, dateFormat)],
-          });
-          form.setFieldsValue({ action: 'upload' });
-
-          const paginationParams = {
-            "page": 0,
-            "page_size": 10,
-          };
-          const query = {
-            "action": 'data_upload',
-            "start_date": now.startOf('day').unix(),
-            "end_date": now.endOf('day').unix(),
-            "resource": "file",
-            'project_code': currentDataset && currentDataset.code
-          }
-          getAuditLogsApi(datasetId, paginationParams, query)
-            .then((res) => {
-              setTreeData(res.data.result);
-              setTotal(res.data.total);
-              setLoading(false);
-            })
+        setSelectedUser('all');
+        form.setFieldsValue({ user: 'all' });
+        form.setFieldsValue({
+          date: [moment(today, dateFormat), moment(today, dateFormat)],
         });
+        form.setFieldsValue({ action: 'upload' });
+
+        const paginationParams = {
+          page: 0,
+          page_size: 10,
+        };
+        const query = {
+          action: 'data_upload',
+          start_date: now.startOf('day').unix(),
+          end_date: now.endOf('day').unix(),
+          resource: 'file',
+          project_code: currentDataset && currentDataset.code,
+        };
+        getAuditLogsApi(datasetId, paginationParams, query).then((res) => {
+          setTreeData(res.data.result);
+          setTotal(res.data.total);
+          setLoading(false);
+        });
+      });
     } else {
       const users = [];
       users.push({
@@ -101,23 +111,22 @@ const FileStatModal = (props) => {
       form.setFieldsValue({ action: 'upload' });
 
       const paginationParams = {
-        "page": 0,
-        "page_size": 10,
+        page: 0,
+        page_size: 10,
       };
       const query = {
-        "action": 'data_upload',
-        "start_date": now.startOf('day').unix(),
-        "end_date": now.endOf('day').unix(),
-        "resource": "file",
-        "operator": username,
-        'project_code': currentDataset && currentDataset.code
-      }
-      getAuditLogsApi(datasetId, paginationParams, query)
-        .then((res) => {
-          setTreeData(res.data.result);
-          setTotal(res.data.total);
-          setLoading(false);
-        })
+        action: 'data_upload',
+        start_date: now.startOf('day').unix(),
+        end_date: now.endOf('day').unix(),
+        resource: 'file',
+        operator: username,
+        project_code: currentDataset && currentDataset.code,
+      };
+      getAuditLogsApi(datasetId, paginationParams, query).then((res) => {
+        setTreeData(res.data.result);
+        setTotal(res.data.total);
+        setLoading(false);
+      });
     }
   }, [datasetId]);
 
@@ -149,7 +158,7 @@ const FileStatModal = (props) => {
     if (values.user !== 'all') params.user = values.user;
 
     params['action'] = values.action;
-    params['size'] = 10
+    params['size'] = 10;
 
     setTreeData([]);
     setAction(values.action);
@@ -161,15 +170,15 @@ const FileStatModal = (props) => {
     if (values.action === 'upload') operation = 'data_upload';
 
     const paginationParams = {
-      "page": 0,
-      "page_size": 10,
+      page: 0,
+      page_size: 10,
     };
     const query = {
-      "action": operation,
-      "start_date": moment(date[0]).startOf('day').unix(),
-      "end_date": moment(date[1]).endOf('day').unix(),
-      "resource": "file",
-      'project_code': currentDataset && currentDataset.code
+      action: operation,
+      start_date: moment(date[0]).startOf('day').unix(),
+      end_date: moment(date[1]).endOf('day').unix(),
+      resource: 'file',
+      project_code: currentDataset && currentDataset.code,
     };
     if (values.user !== 'all') query['operator'] = values.user;
     getAuditLogsApi(datasetId, paginationParams, query)
@@ -197,23 +206,22 @@ const FileStatModal = (props) => {
     if (action === 'upload') operation = 'data_upload';
 
     const paginationParams = {
-      "page": page - 1,
-      "page_size": 10,
+      page: page - 1,
+      page_size: 10,
     };
     const query = {
-      "action": operation,
-      "start_date": moment(dateRange[0]).startOf('day').unix(),
-      "end_date": moment(dateRange[1]).endOf('day').unix(),
-      "resource": "file",
-      'project_code': currentDataset && currentDataset.code
-    }
+      action: operation,
+      start_date: moment(dateRange[0]).startOf('day').unix(),
+      end_date: moment(dateRange[1]).endOf('day').unix(),
+      resource: 'file',
+      project_code: currentDataset && currentDataset.code,
+    };
     if (selectedUser !== 'all') query['operator'] = selectedUser;
-    getAuditLogsApi(datasetId, paginationParams, query)
-      .then((res) => {
-        setTreeData(res.data.result);
-        setTotal(res.data.total);
-        setLoading(false);
-      })
+    getAuditLogsApi(datasetId, paginationParams, query).then((res) => {
+      setTreeData(res.data.result);
+      setTotal(res.data.total);
+      setLoading(false);
+    });
   };
 
   let resultContent = (
@@ -228,8 +236,12 @@ const FileStatModal = (props) => {
         <Timeline style={{ marginTop: 40 }}>
           {filterData &&
             filterData.map((i) => {
-              let { createdTime, displayName, operator, target, outcome } = i['source'];
-              let localTime = moment(createdTime*1000).format('YYYY-MM-DD HH:mm:ss');
+              let { createdTime, displayName, operator, target, outcome } = i[
+                'source'
+              ];
+              let localTime = moment(createdTime * 1000).format(
+                'YYYY-MM-DD HH:mm:ss',
+              );
 
               let operate = 'copied';
               if (action === 'delete') operate = 'deleted';
@@ -246,8 +258,8 @@ const FileStatModal = (props) => {
                 return (
                   <Timeline.Item color="green">
                     <span>
-                    {operator} {operate} {displayName} from {originPathName} to {pathName} at{' '}
-                    {localTime}
+                      {operator} {operate} {displayName} from {originPathName}{' '}
+                      to {pathName} at {localTime}
                     </span>
                   </Timeline.Item>
                 );
@@ -255,15 +267,16 @@ const FileStatModal = (props) => {
 
               return (
                 <Timeline.Item color="green">
-                  {operator} {operate} {displayName} at{' '}
-                  {localTime}
+                  {operator} {operate} {displayName} at {localTime}
                 </Timeline.Item>
               );
             })}
         </Timeline>
 
         <Pagination
-          total={page === 0 && filterData.length < 10 ? filterData.length : total}
+          total={
+            page === 0 && filterData.length < 10 ? filterData.length : total
+          }
           size="small"
           style={{ float: 'right' }}
           onChange={onChangePage}
@@ -347,7 +360,7 @@ const FileStatModal = (props) => {
                     <Option value="download">Download</Option>
                     {currentPermission.permission === 'admin' ? (
                       <Option value="copy">Copy</Option>
-                    ) : null }
+                    ) : null}
                     <Option value="delete">Delete</Option>
                   </Select>
                 </Form.Item>

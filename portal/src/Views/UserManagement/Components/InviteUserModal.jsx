@@ -1,26 +1,69 @@
 import React, { useState } from 'react';
 import { Modal, Form, Tooltip, Radio, message, Input, Button } from 'antd';
-import { QuestionCircleOutlined } from '@ant-design/icons';
-import { validateEmail } from '../../../Utility';
+import {
+  QuestionCircleOutlined,
+  CheckCircleFilled,
+  ExclamationCircleOutlined,
+  MailOutlined,
+} from '@ant-design/icons';
+import { validateEmail, formatRole } from '../../../Utility';
 import { useTranslation } from 'react-i18next';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
+import { checkUserPlatformRole } from '../../../APIs';
+import styles from '../index.module.scss';
+import { useCurrentProject } from '../../../Utility';
+import { inviteUserApi } from '../../../APIs';
+import { useKeycloak } from '@react-keycloak/web';
 
 const InviteUserModal = (props) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const { t } = useTranslation(['tooltips', 'formErrorMessages', 'success', 'errormessages']);
+  const { t } = useTranslation([
+    'tooltips',
+    'formErrorMessages',
+    'success',
+    'errormessages',
+    'modals',
+  ]);
+  const [userAddCompleted, setUserAddCompleted] = useState(false);
+  const { keycloak } = useKeycloak();
+  const addUser = async (inAd, adUserDn) => {
+    const values = form.getFieldsValue();
+    const email = values.email;
+    const role = values.role;
+    try {
+      await inviteUserApi(email, role, null, null, null, inAd, adUserDn);
+      //setCompletedUserAdd(true);
+      if (!inAd) {
+        message.success('Invitation email sent with AD request form attached');
+      }
+    } catch (err) {
+      /*       if (err.response) {
+        const errorMessager = new ErrorMessager(namespace.teams.inviteUser);
+        errorMessager.triggerMsg(null, null, {
+          email: email,
+        });
+      } */
+      message.error(
+        `${t('errormessages:inviteUserPlatform.default.0')}${email}${t(
+          'errormessages:inviteUserPlatform.default.1',
+        )}`,
+      );
+    }
+  };
 
   const onSubmit = async () => {
     const values = form.getFieldsValue();
     setLoading(true);
+    const email = values.email;
 
-    if (!values.email) {
+    if (!email) {
       message.error(t('errormessages:addUser2Project.emailRequired'));
       setLoading(false);
       return;
     }
 
-    const isValidEmail = validateEmail(values.email);
+    const isValidEmail = validateEmail(email);
 
     if (!isValidEmail) {
       message.error(t('errormessages:addUser2Project.email'));
@@ -28,16 +71,144 @@ const InviteUserModal = (props) => {
       return;
     }
 
-    try {
+    checkUserPlatformRole(email.toLowerCase())
+      .then((res) => {
+        if (res.status === 200) {
+          if (res.data.result) {
+            const invitedUser = res.data.result;
+            const { role, status, name } = invitedUser;
+            if (status === 'disabled') {
+              //message.error(t('errormessages:addUser2Project.disabledUser'));
+              Modal.warning({
+                title: t('errormessages:addUser2Platform.disabledUser.title'),
+                content: `${t(
+                  'errormessages:addUser2Platform.disabledUser.content.0',
+                )} ${values.email} ${t(
+                  'errormessages:addUser2Platform.disabledUser.content.1',
+                )}`,
+                className: styles['warning-modal'],
+              });
+            } else if (status === 'pending') {
+              //message.error(t('errormessages:addUser2Project.pending'));
+              Modal.warning({
+                title: t('errormessages:addUser2Platform.pending.title'),
+                content: `${t(
+                  'errormessages:addUser2Platform.pending.content.0',
+                )} ${values.email} ${t(
+                  'errormessages:addUser2Platform.pending.content.1',
+                )}`,
+                className: styles['warning-modal'],
+              });
+            } else if (role === 'admin') {
+              //message.error(t('errormessages:addUser2Project.platformAdmin'));
+              Modal.warning({
+                title: t('modals:inviteExist.title'),
+                content: `${t('modals:inviteExist.content.0')} ${email} ${t(
+                  'modals:inviteExist.content.1',
+                )}`,
+              });
+            } else if (role === 'member') {
+              /* const inviter = keycloak.tokenParsed?.preferred_username;
+              Modal.confirm({
+                title: t('modals:inviteToProject.title'),
+                icon: <ExclamationCircleOutlined />,
+                content: (
+                  <>
+                    <p>{`[${values.email}] ${t(
+                      'modals:inviteToProject.content.0',
+                    )}`}</p>{' '}
+                    <p>{`${t('modals:inviteToProject.content.1')} ${
+                      currentDataset.code
+                    } ${t('modals:inviteToProject.content.2')} ${formatRole(
+                      role,
+                    )}`}</p>
+                  </>
+                ),
+                okText: 'Add',
+                cancelText: 'Cancel',
+                onOk() {
+                  addUserToProject(
+                    values.email,
+                    values.role,
+                    currentDataset.globalEntityId,
+                    currentDataset,
+                    name,
+                    props,
+                    t,
+                    inviter,
+                  );
+                },
+              }); */
+              Modal.warning({
+                title: t('modals:inviteExist.title'),
+                content: `${t('modals:inviteExist.content.0')} ${email} ${t(
+                  'modals:inviteExist.content.1',
+                )}`,
+              });
+            }
+            setLoading(false);
+            props.onCancel();
+          }
+        }
+      })
+      .catch((err) => {
+        if (err.response && err.response.status === 404) {
+          const email = values.email;
+          const role = values.role;
+          Modal.confirm({
+            title: t('modals:inviteNoExistPlatform.title'),
+            icon: <ExclamationCircleOutlined />,
+            content: (
+              <>
+                {' '}
+                <p>{`${t(
+                  'modals:inviteNoExistPlatform.content.0',
+                )} ${email} ${t(
+                  'modals:inviteNoExistPlatform.content.1',
+                )} ${formatRole(role)}`}</p>
+                {!err.response.data.result?.ad_account_created ? (
+                  <p>{`${t('modals:inviteNoExistPlatform.content.2')}`}</p>
+                ) : (
+                  <p>{`${t('modals:inviteNoExistPlatform.content.4')}`}</p>
+                )}
+                <p>{`${t('modals:inviteNoExistPlatform.content.3')}`}</p>
+              </>
+            ),
+            okText: (
+              <>
+                <MailOutlined /> Send
+              </>
+            ),
+            onOk() {
+              if (err.response.data.result?.ad_account_created === true) {
+                addUser(true, err.response.data.result?.ad_user_dn);
+              } else {
+                addUser(false, err.response.data.result?.ad_user_dn);
+              }
+            },
+            className: styles['warning-modal'],
+          });
+
+          setLoading(false);
+          props.onCancel();
+        } else {
+          const errorMessager = new ErrorMessager(
+            namespace.teams.checkUserPlatformRole,
+          );
+          errorMessager.triggerMsg(null, null, {
+            email: values.email,
+          });
+        }
+      });
+
+    /*     try {
       const res = await props.inviteUserApi(values.email, values.role);
 
       if (res.status === 200) {
-        message.success(
-          `${t('success:userManagement.inviteUser.0')} ${values.email}.`,
-        );
+        setUserAddCompleted(true);
       }
       props.getInvitationListApi();
-      props.onCancel();
+
       setLoading(false);
     } catch (err) {
       if (err.response) {
@@ -49,7 +220,7 @@ const InviteUserModal = (props) => {
         });
       }
       setLoading(false);
-    }
+    } */
   };
 
   return (
@@ -60,71 +231,98 @@ const InviteUserModal = (props) => {
       closable={false}
       okButtonProps={{ loading }}
       cancelButtonProps={{ disabled: loading }}
-      footer={[
-        <Button
-          disabled={loading}
-          key="back"
-          onClick={() => {
-            props.onCancel();
-            form.resetFields();
-          }}
-        >
-          Cancel
-        </Button>,
-        <Button
-          key="submit"
-          type="primary"
-          loading={loading}
-          onClick={onSubmit}
-        >
-          Submit
-        </Button>,
-      ]}
+      footer={
+        userAddCompleted
+          ? [
+              <Button
+                key="submit"
+                type="primary"
+                onClick={() => {
+                  props.onCancel();
+                  form.resetFields();
+                  setTimeout(() => {
+                    setUserAddCompleted(false);
+                  }, 500);
+                }}
+              >
+                Close
+              </Button>,
+            ]
+          : [
+              <Button
+                disabled={loading}
+                key="back"
+                onClick={() => {
+                  props.onCancel();
+                  form.resetFields();
+                }}
+              >
+                Cancel
+              </Button>,
+              <Button
+                key="submit"
+                type="primary"
+                loading={loading}
+                onClick={onSubmit}
+              >
+                Submit
+              </Button>,
+            ]
+      }
     >
-      <Form form={form}>
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[
-            {
-              type: 'email',
-              message: t('formErrorMessages:common.email.valid'),
-            },
-            {
-              required: true,
-              message: t('formErrorMessages:common.email.empty'),
-            },
-          ]}
-        >
-          <Input type="email" />
-        </Form.Item>
-        <Form.Item
-          initialValue="member"
-          label={'Role'}
-          name="role"
-          rules={[
-            {
-              required: true,
-              message: t('formErrorMessages:platformUserManagement.role.empty'),
-            },
-          ]}
-        >
-          <Radio.Group>
-            <Radio value="member">
-              Platform User &nbsp;
-              <Tooltip title="VRE Members who can view public content and Projects to which they are invited. Platform Users may hold either Project Administrator or Collaborator or Contributor roles in their Projects.">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </Radio>
-            <Radio value="admin">
-              Platform Administrator &nbsp;
-              <Tooltip title="A VRE Administrator who has access to advanced permissions across all Projects to maintain the platform and assist Project Administrators with support issues related to their Project.">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </Radio>
-          </Radio.Group>
-        </Form.Item>
-      </Form>
+      {userAddCompleted ? (
+        <p>
+          <CheckCircleFilled style={{ color: '#BAEEA2', marginRight: 6 }} />{' '}
+          Invitation email sent with AD request form attached
+        </p>
+      ) : (
+        <Form form={form}>
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              {
+                type: 'email',
+                message: t('formErrorMessages:common.email.valid'),
+              },
+              {
+                required: true,
+                message: t('formErrorMessages:common.email.empty'),
+              },
+            ]}
+          >
+            <Input type="email" />
+          </Form.Item>
+          <Form.Item
+            initialValue="member"
+            label={'Role'}
+            name="role"
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'formErrorMessages:platformUserManagement.role.empty',
+                ),
+              },
+            ]}
+          >
+            <Radio.Group>
+              <Radio value="member">
+                Platform User &nbsp;
+                <Tooltip title="VRE Members who can view public content and Projects to which they are invited. Platform Users may hold either Project Administrator or Collaborator or Contributor roles in their Projects.">
+                  <QuestionCircleOutlined />
+                </Tooltip>
+              </Radio>
+              <Radio value="admin">
+                Platform Administrator &nbsp;
+                <Tooltip title="A VRE Administrator who has access to advanced permissions across all Projects to maintain the platform and assist Project Administrators with support issues related to their Project.">
+                  <QuestionCircleOutlined />
+                </Tooltip>
+              </Radio>
+            </Radio.Group>
+          </Form.Item>
+        </Form>
+      )}
     </Modal>
   );
 };

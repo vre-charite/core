@@ -19,7 +19,7 @@ import {
   setContainersPermissionCreator,
 } from '../../../Redux/actions';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
-import { QuestionCircleOutlined, SaveOutlined } from '@ant-design/icons';
+import { QuestionCircleOutlined, FileAddOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { trimString } from '../../../Utility';
 import styles from './index.module.scss';
@@ -112,7 +112,7 @@ function NewProjectPanel({
 
     createProjectAPI(
       {
-        dataset_name: _.trimStart(values.name),
+        name: _.trimStart(values.name),
         code: values.code,
         tags: values.tags,
         discoverable: discoverable,
@@ -120,6 +120,7 @@ function NewProjectPanel({
         icon: imgURL,
         metadatas,
         description: values.description,
+        roles: ['admin', 'collaborator', 'contributor'],
       },
       cancelAxios,
     )
@@ -260,7 +261,9 @@ function NewProjectPanel({
               Visibility
             </p>
             <p style={{ color: '#818181', fontSize: '12px' }}>
-              {discoverable ? ('Discoverable by all platform users') : ('Not discoverable by all platform users')} 
+              {discoverable
+                ? 'Discoverable by all platform users'
+                : 'Not discoverable by all platform users'}
             </p>
           </div>
         </div>
@@ -325,7 +328,7 @@ function NewProjectPanel({
                 message: t('formErrorMessages:project.code.empty'),
               },
               {
-                pattern: new RegExp(/^[a-z0-9]{1,32}$/g), // Format BXT-1234
+                pattern: new RegExp(/^[a-z][a-z0-9]{1,32}$/g), // Format BXT-1234
                 message: t('formErrorMessages:project.code.valid'),
               },
               {
@@ -424,7 +427,7 @@ function NewProjectPanel({
                 type="primary"
                 htmlType="submit"
               >
-                <SaveOutlined />
+                <FileAddOutlined />
                 {` `}Create
               </Button>
               <Button

@@ -52,7 +52,7 @@ class APINeo4j2ESScript(metaclass=MetaAPI):
             es_entities = []
 
             for current_page in range(pages):
-                body['page_size'] = 100
+                body['page_size'] = 1000
                 body['page'] = current_page
 
                 neo4j_res = requests.post(neo4j_url, json=body)
@@ -102,13 +102,7 @@ class APINeo4j2ESScript(metaclass=MetaAPI):
                     if len(path_parts) < 3:
                         continue
                     
-                    project_code = path_parts[len(path_parts) - 2]
-
-                    if "Greenroom" not in labels:
-                        zone = "Core"
-                    if "Raw" not in labels:
-                        file_type = "Processed"
-                        project_code = path_parts[len(path_parts) - 3]
+                    project_code = item["project_code"]
 
                     time_created = datetime.datetime.strptime(item["time_created"], "%Y-%m-%dT%H:%M:%S") 
                     time_created_timestamp = datetime.datetime.timestamp(time_created)
@@ -116,22 +110,39 @@ class APINeo4j2ESScript(metaclass=MetaAPI):
                     time_lastmodified = datetime.datetime.strptime(item["time_lastmodified"], "%Y-%m-%dT%H:%M:%S") 
                     time_lastmodified_timestamp = datetime.datetime.timestamp(time_lastmodified) 
 
+                    archived = False
+                    tags = []
+                    atlas_guid = ''
+                    operator = item["uploader"]
+                    process_pipeline = ""
+
+                    if "archived" in item:
+                        archived = item["archived"]
+                    if "tags" in item:
+                        tags = item["tags"]
+                    if "guid" in item:
+                        atlas_guid = item["guid"]
+                    if "operator" in item:
+                        operator = item["operator"]
+                    if "process_pipeline" in item:
+                        process_pipeline = item["process_pipeline"]
+
                     es_body = {
                         "global_entity_id": item["global_entity_id"],
                         "zone": zone,
                         "data_type": "File",
-                        "file_type": file_type,
-                        "operator": item["operator"],
+                        # "file_type": file_type,
+                        "operator": operator,
                         "file_size": item["file_size"],
-                        "tags": item["tags"],
-                        "archived": item["archived"],
+                        "tags": tags,
+                        "archived": archived,
                         "path": item["path"],
                         "time_lastmodified": time_lastmodified_timestamp,
-                        "process_pipeline": item["process_pipeline"],
+                        "process_pipeline": process_pipeline,
                         "uploader": item["uploader"],
                         "file_name": item["name"],
                         "time_created": time_created_timestamp,
-                        "atlas_guid": item["guid"],
+                        "atlas_guid": atlas_guid,
                         "full_path": item["full_path"],
                         "generate_id": item["generate_id"],
                         "project_code": project_code,
@@ -143,7 +154,7 @@ class APINeo4j2ESScript(metaclass=MetaAPI):
 
                     es_entities.append(es_body)
 
-                    es_res = requests.post(ConfigClass.PROVENANCE_SERVICE + 'file-meta', json=es_body)
+                    es_res = requests.post(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_body)
                     print(es_res.json())
 
             return es_entities

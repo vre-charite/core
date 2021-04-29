@@ -7,11 +7,7 @@ import {
   CloudDownloadOutlined,
   CheckOutlined,
 } from '@ant-design/icons';
-import {
-  projectFileCountTotal,
-  projectFileCountToday,
-  fileAuditLogsAPI,
-} from '../../../../APIs';
+import { projectFileCountTotal } from '../../../../APIs';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
 import { connect } from 'react-redux';
@@ -19,8 +15,8 @@ import { withRouter } from 'react-router-dom';
 import styles from './index.module.scss';
 
 function FileStats(props) {
-  const [rawCount, setRawCount] = useState(0);
-  const [processedCount, setProcessedCount] = useState(0);
+  const [greenRoomCount, setGreenRoomCount] = useState(0);
+  const [coreCount, setCoreCount] = useState(0);
   const [uploadCount, setUploadCount] = useState(0);
   const [downloadCount, setDownloadCount] = useState(0);
   const [copyCount, setCopyCount] = useState(0);
@@ -48,68 +44,17 @@ function FileStats(props) {
 
   useEffect(() => {
     if (currentDataset) {
-      projectFileCountTotal(datasetId).then((res) => {
-        setRawCount(res.data.result['rawFileCount']);
-        setProcessedCount(res.data.result['processFileCount']);
-      });
-
-      // projectFileCountToday(datasetId).then((res) => {
-      //   let uploadLog = [];
-      //   let downloadLog = [];
-
-      //   if (res.data.result['recentUpload']) {
-      //     uploadLog = res.data.result['recentUpload'].filter((el) => {
-      //       return checkTimeForToday(el.attributes.createTime);
-      //     });
-      //   }
-
-      //   setUploadCount(uploadLog.length);
-      // });
-      fileAuditLogsAPI({
-        page_size: 50,
-        page: 0,
-        operation_type: 'data_transfer',
-        project_code: currentDataset && currentDataset.code,
-        operator: props.projectRole === 'admin' ? null : props.username,
-        container_id: datasetId,
+      projectFileCountTotal(currentDataset.globalEntityId, {
         start_date: moment().startOf('day').unix(),
         end_date: moment().endOf('day').unix(),
       }).then((res) => {
-        if (res.status === 200 && res.data) {
-          const { total } = res.data;
-          setCopyCount(total);
-        }
-      });
-
-      fileAuditLogsAPI({
-        page_size: 50,
-        page: 0,
-        operation_type: 'data_download',
-        project_code: currentDataset && currentDataset.code,
-        operator: props.projectRole === 'admin' ? null : props.username,
-        container_id: datasetId,
-        start_date: moment().startOf('day').unix(),
-        end_date: moment().endOf('day').unix(),
-      }).then((res) => {
-        if (res.status === 200 && res.data) {
-          const { total } = res.data;
-          setDownloadCount(total);
-        }
-      });
-
-      fileAuditLogsAPI({
-        page_size: 50,
-        page: 0,
-        operation_type: 'data_upload',
-        project_code: currentDataset && currentDataset.code,
-        operator: props.projectRole === 'admin' ? null : props.username,
-        container_id: datasetId,
-        start_date: moment().startOf('day').unix(),
-        end_date: moment().endOf('day').unix(),
-      }).then((res) => {
-        if (res.status === 200 && res.data) {
-          const { total } = res.data;
-          setUploadCount(total);
+        const statistics = res?.data?.result;
+        if (res.status === 200 && statistics) {
+          setGreenRoomCount(statistics.greenroom);
+          setCoreCount(statistics.core);
+          setCopyCount(statistics.approved);
+          setDownloadCount(statistics.downloaded);
+          setUploadCount(statistics.uploaded);
         }
       });
     }
@@ -124,15 +69,15 @@ function FileStats(props) {
           </Col>
           <Col>
             <Row>
-              <span className={styles.fileNumber}>{rawCount}</span>
+              <span className={styles.fileNumber}>{greenRoomCount}</span>
             </Row>
             <Row>
-              <span className={styles.fileFont}>Raw Files</span>
+              <span className={styles.fileFont}>Green Room</span>
             </Row>
           </Col>
         </Row>
       </div>
-      {props.projectRole === 'admin' && (
+      {coreCount !== null ? (
         <div size={'small'} className={styles.card}>
           <Row>
             <Col className={styles.iconColumn}>
@@ -140,15 +85,15 @@ function FileStats(props) {
             </Col>
             <Col>
               <Row>
-                <span className={styles.fileNumber}>{processedCount}</span>
+                <span className={styles.fileNumber}>{coreCount}</span>
               </Row>
               <Row>
-                <span className={styles.fileFont}>Processed Files</span>
+                <span className={styles.fileFont}>Core</span>
               </Row>
             </Col>
           </Row>
         </div>
-      )}
+      ) : null}
       <div size={'small'} className={styles.card}>
         <Row>
           <Col className={styles.iconColumn}>

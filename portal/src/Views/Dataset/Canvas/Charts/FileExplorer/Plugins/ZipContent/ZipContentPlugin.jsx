@@ -1,13 +1,13 @@
-import React  from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tree, Modal, Button } from 'antd';
-
+import { LoadingOutlined } from '@ant-design/icons';
 import { nestedLoop, pathsMap } from '../../../../../../../Utility';
-
+const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 const { DirectoryTree } = Tree;
 
 const ZipContentPlugin = (props) => {
-  let data = [];
-  let defaultKeys = [];
+  const [data, setData] = useState([]);
+  const [defaultKeys, setDefaultKeys] = useState([]);
 
   const fileName = props.record.fileName;
 
@@ -15,16 +15,25 @@ const ZipContentPlugin = (props) => {
 
   const location = filePaths && pathsMap(filePaths);
 
-  const upperZipContent = props.record.zipContent || {}
+  const upperZipContent = props.record.zipContent || {};
 
+  const [loading, setLoading] = useState(false);
   const zipContent = {};
-  zipContent[fileName] = upperZipContent
+  zipContent[fileName] = upperZipContent;
 
-  for (const key in zipContent) {
-    const { treeData, expandedKey } = nestedLoop(zipContent[key], key)
-    data = data.concat(treeData);
-    defaultKeys = defaultKeys.concat(expandedKey);
-  }
+  useEffect(() => {
+    if (props.visible) {
+      for (const key in zipContent) {
+        setLoading(true);
+        setData([]);
+        setDefaultKeys([]);
+        const { treeData, expandedKey } = nestedLoop(zipContent[key], key);
+        setData(treeData);
+        setDefaultKeys(expandedKey);
+        setLoading(false);
+      }
+    }
+  }, [props.visible]);
 
   const onSelect = (keys, info) => {
     console.log('Trigger Select', keys, info);
@@ -36,11 +45,21 @@ const ZipContentPlugin = (props) => {
 
   const titile = (
     <div>
-      <span style={{ fontSize: '16px', fontWeight: 500, lineHeight: '22px' }}>Zip File Previewer</span>
-      <span style={{ fontSize: '14px', fontWeight: 300, lineHeight: '22px', marginLeft: 10 }}>- {location}</span>
+      <span style={{ fontSize: '16px', fontWeight: 500, lineHeight: '22px' }}>
+        Zip File Previewer
+      </span>
+      <span
+        style={{
+          fontSize: '14px',
+          fontWeight: 300,
+          lineHeight: '22px',
+          marginLeft: 10,
+        }}
+      >
+        - {location}
+      </span>
     </div>
-  )
-
+  );
   return (
     <Modal
       title={titile}
@@ -54,17 +73,21 @@ const ZipContentPlugin = (props) => {
         </Button>,
       ]}
     >
-      <div style={{ overflowX: 'scroll' }}>
-        <DirectoryTree
-          multiple
-          defaultExpandAll
-          onSelect={onSelect}
-          onExpand={onExpand}
-          treeData={data}
-          height={500}
-          defaultExpandedKeys={defaultKeys}
-        />
-      </div>
+      {loading ? (
+        <antIcon />
+      ) : (
+        <div style={{ overflowX: 'scroll' }}>
+          <DirectoryTree
+            multiple
+            // defaultExpandAll
+            onSelect={onSelect}
+            onExpand={onExpand}
+            treeData={data}
+            height={500}
+            defaultExpandedKeys={defaultKeys}
+          />
+        </div>
+      )}
     </Modal>
   );
 };

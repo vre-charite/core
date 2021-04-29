@@ -114,6 +114,9 @@
   "uploadRequestFail": {
     "default": ["Failed to upload", "please try again."]
   },
+  "combineChunks": {
+    "default": ["Failed to combined file chunks for "]
+  },
   "getChildrenDataset": {
     "403": [
       "You do not have permission to access child datasets in this project."
@@ -145,6 +148,11 @@
     "default": [
       "Something went wrong while trying to process files, please try again later."
     ]
+  },
+  "rawTable": {
+    "getFilesApi": {
+      "default": ["Error occurs when getting the file information"]
+    }
   },
   "downloadFilesAPI": {
     "400": ["Folder is empty"],
@@ -205,6 +213,9 @@
       "to the project, please try again later."
     ]
   },
+  "inviteUserPlatform": {
+    "default": ["Failed to add user [", "] to the platform"]
+  },
   "checkEmailExistAPI": {
     "403": ["A user with the email address", "already exists in the project."],
     "500": [
@@ -226,14 +237,18 @@
     ]
   },
   "addUsertoDataSet": {
-    "403": [
-      "is already a member of this project.  To modify permissions for",
-      "you can update their role in the project Member module."
-    ],
+    "403": {
+      "title": ["User is already a Project Member"],
+      "content": [
+        "is already a member of this project. ",
+        "If you would like to update their permissions, you can change their Project role in the Action menu. "
+      ]
+    },
     "500": [
       "Something went wrong while trying to invite user",
       "to the project, please try again later."
-    ]
+    ],
+    "default": ["failed to add the user to project"]
   },
   "changeRoleInDataset": {
     "403": [
@@ -328,33 +343,63 @@
       "Something went wrong while trying to featch invitations, please try again later."
     ]
   },
-  "editManifestOnFile":{
-    "emptyNonOptional":["Input cannot be empty for non-optional attributes"],
-    "lengthExceed":["Text cannot be longer than 100 characters"]
+  "editManifestOnFile": {
+    "emptyNonOptional": ["Input cannot be empty for non-optional attributes"],
+    "lengthExceed": ["Text cannot be longer than 100 characters"]
   },
-  "updateFileManifestAPI":{
-    "default":["Failed to update the attribute template"]
+  "updateFileManifestAPI": {
+    "default": ["Failed to update the attribute template"]
   },
-  "importExportManifest":{
-    "manifestNumberOver":["The number of attribute templates is over limit"],
-    "parseJsonFailed":["Failed to parse the json file"],
-    "fileTypeError":["Incorrect File format"],
-    "attributesMissing":["The json should have a \"attributes\" property"],
-    "attributesNotArray":["The \"attributes\" property should be an array"],
-    "propertyMissing":["property is missing on the","th attribute"],
-    "nameNotString":["the \"name\" property should be a string on the","th attribute"],
-    "nameLength":["the \"name\" property length should between 1-32 on the","th attribute"],
-    "nameFormat":["the \"name\" property should only contains letters, and/or digits on the","th attribute"],
-    "optionalNotBoolean":["the \"optional\" property should be a boolean on the","th attribute"],
-    "typeFormat":["the \"type\" property should be 'multiple_choice'|'text' on the","th attribute"],
-    "valueNullText":["the \"value\" should be null when the \"type\" is 'text' on the","th attribute"],
-    "valueString":["the \"value\" should be string when the \"multiple_choice\" is 'text' on the","th attribute"],
-    "choiceLength":["the choice's length should be between 1-32 on the","th attribute"],
-    "choiceFormat":["the choice should only contain numbers, digits, and -_!%&/()=?*+#.; on the","th attribute"],
-    "uniqueName":["The \"name\" property should be unique"]
+  "importExportManifest": {
+    "manifestNumberOver": ["The number of attribute templates is over limit"],
+    "parseJsonFailed": ["Failed to parse the json file"],
+    "fileTypeError": ["Incorrect File format"],
+    "attributesMissing": ["The json should have a \"attributes\" property"],
+    "attributesNotArray": ["The \"attributes\" property should be an array"],
+    "propertyMissing": ["property is missing on the", "th attribute"],
+    "nameNotString": [
+      "the \"name\" property should be a string on the",
+      "th attribute"
+    ],
+    "nameLength": [
+      "the \"name\" property length should between 1-32 on the",
+      "th attribute"
+    ],
+    "nameFormat": [
+      "the \"name\" property should only contains letters, and/or digits on the",
+      "th attribute"
+    ],
+    "optionalNotBoolean": [
+      "the \"optional\" property should be a boolean on the",
+      "th attribute"
+    ],
+    "typeFormat": [
+      "the \"type\" property should be 'multiple_choice'|'text' on the",
+      "th attribute"
+    ],
+    "valueNullText": [
+      "the \"value\" should be null when the \"type\" is 'text' on the",
+      "th attribute"
+    ],
+    "valueString": [
+      "the \"value\" should be string when the \"multiple_choice\" is 'text' on the",
+      "th attribute"
+    ],
+    "choiceLength": [
+      "the choice's length should be between 1-32 on the",
+      "th attribute"
+    ],
+    "choiceFormat": [
+      "the choice should only contain numbers, digits, and -_!%&/()=?*+#.; on the",
+      "th attribute"
+    ],
+    "uniqueName": ["The \"name\" property should be unique"]
   },
-  "importManifestAPI":{
-    "default":["Failed to upload the attribute template"]
+  "importManifestAPI": {
+    "default": ["Failed to upload the attribute template"]
+  },
+  "getManifestById": {
+    "default": ["Failed to get the Manifest id: "]
   },
   "fileOperations": {
     "deleteErr": "Error occured when delete files",
@@ -367,27 +412,80 @@
     "default": ["Failed to attach attribute template, please try again later"]
   },
   "deleteManifest": {
-    "500": ["Attribute template has already been attached to files. Please do not delete it"]
+    "500": [
+      "Attribute template has already been attached to files. Please do not delete it"
+    ]
   },
-  "deleteVirtualFolder":{
+  "deleteVirtualFolder": {
     "default": ["Failed to delete collection. Please try again later"]
-  }, 
+  },
   "removeFromVirtualFolder": {
-    "default": ["Failed to remove files from collection. Please try again later"]
+    "default": [
+      "Failed to remove files from collection. Please try again later"
+    ]
   },
   "addFilesToVirtualFolder": {
     "default": ["Failed to add files to collection. Please try again later"]
   },
-  "createVirtualFolder":{
-    "default": ["Failed to create collection. Please try again later"]
+  "createVirtualFolder": {
+    "default": ["Failed to create collection. Please try again later"],
+    "duplicate": ["Found duplicate Folder"],
+    "limit": ["Folder limit reached"]
   },
-  "addFilesToNewFolder":{
+  "updateVirtualFolder": {
+    "default": ["Failed to update collection. Please try again later"],
+    "noFoldersToUpdate": [
+      "Please change the collections' name you want to update!"
+    ]
+  },
+  "addFilesToNewFolder": {
     "default": ["Failed to add files to new collection. Please try again later"]
   },
   "addUser2Project": {
     "email": "Wrong email format",
     "emailRequired": "Email is required.",
-    "disabledUser": "This user is disabled on the platform and cannot be added to a project.",
-    "platformAdmin": "Platform Administrator can not be invited to the project"
+    "disabledUser": {
+      "title": "User cannot be added to the Project",
+      "content": "cannot be added to the Project at this time, please contact a Platform Administrator for assistance."
+    },
+    "platformAdmin": {
+      "title": "User cannot be added to the Project",
+      "content": "cannot be added to the Project at this time, please contact a Platform Administrator for assistance."
+    },
+    "pending": {
+      "title": "User already invited",
+      "content": "User cannot be added to the Project at this time. Please try again later."
+    }
+  },
+  "addUser2Platform": {
+    "disabledUser": {
+      "title": "User account is disabled",
+      "content": [
+        "The account for",
+        "has been disabled.  You can reactivate the user’s account in the Action menu."
+      ]
+    },
+    "platformAdmin": {
+      "title": "User cannot be added to the Project",
+      "content": "cannot be added to the Project at this time, please contact a Platform Administrator for assistance."
+    },
+    "pending": {
+      "title": "User already invited",
+      "content": [
+        "A user with the email address",
+        "has already been invited to the VRE, you can see their invitation status in the Invitations tab."
+      ]
+    }
+  },
+  "userManagement": {
+    "getServiceRequestAPI": "Get service request table resources failed!"
+  },
+  "announcement": {
+    "getAnnouncementApi": {
+      "default": ["Failed to get announcements"]
+    },
+    "getUserAnnouncementApi": {
+      "default": ["Failed to get announcements for project "]
+    }
   }
 }

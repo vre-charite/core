@@ -31,6 +31,16 @@ spec:
           env:
           - name: env
             value: "charite"
+          - name: RDS_PWD
+            valueFrom:
+              secretKeyRef:
+                name: opsdb
+                key: password
+          - name: LDAP_ADMIN_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: ad
+                key: password
           readinessProbe:
             tcpSocket:
               port: 5060

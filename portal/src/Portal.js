@@ -1,7 +1,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { Switch, Route, Redirect, withRouter } from 'react-router-dom';
 import { authedRoutes, unAuthedRoutes } from './Routes';
-import './App.css';
+import './Portal.css';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   setContainersPermissionCreator,
@@ -16,6 +16,7 @@ import {
   setUsernameCreator,
   setEmailCreator,
   setIsReleaseNoteShownCreator,
+  setUserStatus,
 } from './Redux/actions';
 import {
   checkDownloadStatusAPI,
@@ -23,6 +24,7 @@ import {
   checkDownloadStatus,
   lastLoginAPI,
   listUsersContainersPermission,
+  getUserstatusAPI,
   attachManifest,
 } from './APIs';
 import { protectedRoutes, reduxActionWrapper, keepAlive } from './Utility';
@@ -38,6 +40,7 @@ import { useKeycloak } from '@react-keycloak/web';
 import { version } from '../package.json';
 import { tokenTimer } from './Service/keycloak';
 import { Loading } from './Components/Layout/Loading';
+import TermsOfUse from './Views/TermsOfUse/TermsOfUse';
 import semver from 'semver';
 
 // router change
@@ -62,6 +65,7 @@ const [
   setUsernameDispatcher,
   setEmailDispatcher,
   setIsReleaseNoteShownDispatcher,
+  setUserStatusDispather,
 ] = reduxActionWrapper([
   setContainersPermissionCreator,
   setUserRoleCreator,
@@ -75,9 +79,10 @@ const [
   setUsernameCreator,
   setEmailCreator,
   setIsReleaseNoteShownCreator,
+  setUserStatus,
 ]);
 
-function App(props) {
+function Portal(props) {
   const {
     uploadList,
     downloadList,
@@ -90,31 +95,47 @@ function App(props) {
     uploadFileManifest,
     username,
     project,
+    user,
   } = useSelector((state) => state);
+  const userStatus = user.status;
   const dispatch = useDispatch();
   const { keycloak } = useKeycloak();
 
   //keycloak event binding
   useEffect(() => {
     // initial logic
-    async function initAppAfterLogin() {
-      if (!tokenManager.getCookie('sessionId')) {
+    async function initUser() {
+      if (!tokenManager.getCookie('sessionId')&&userStatus==='active') {
         const sourceId = uuidv4();
         tokenManager.setCookies({
           sessionId: `${keycloak?.tokenParsed.preferred_username}-${sourceId}`,
         });
         lastLoginAPI(keycloak?.tokenParsed.preferred_username);
       }
-
       setUsernameDispatcher(keycloak?.tokenParsed.preferred_username);
       setEmailDispatcher(keycloak?.tokenParsed.email);
-      await initApis(keycloak?.tokenParsed.preferred_username);
+      getUserstatus();
+    }
+    async function getUserstatus() {
+      try{
+        const res = await getUserstatusAPI();
+        if (res && res.data) {
+          setUserStatusDispather(res.data.status);
+        }
+        
+      }catch(err){
+        message.error('User not found');
+      }
+      
     }
     if (keycloak?.tokenParsed) {
-      initAppAfterLogin();
+      initUser();
+    }
+    if (userStatus === 'active') {
+      initApis(keycloak?.tokenParsed.preferred_username);
     }
     // eslint-disable-next-line
-  }, []);
+  }, [userStatus]);
 
   //check version number
   useEffect(() => {
@@ -195,19 +216,19 @@ function App(props) {
       const { code, result } = res.data;
 
       if (code === 200) {
-        const uploadList = [];
+        const newUploadList = [];
         for (const item of result) {
-          if (['TERMINATED', 'SUCCEED'].includes(item.state)) {
-            uploadList.push({
-              fileName: item.fileName,
-              status: item.state === 'SUCCEED' ? 'success' : 'error',
+          if (['TERMINATED', 'SUCCEED'].includes(item.status)) {
+            newUploadList.push({
+              fileName: item.source,
+              status: item.status === 'SUCCEED' ? 'success' : 'error',
               progress: 1,
-              uploadedTime: item.startTimestamp,
+              uploadedTime: parseInt(item.updateTimestamp),
               projectCode: item.projectCode,
             });
           }
         }
-        setUploadListDispatcher(uploadList);
+        setUploadListDispatcher(newUploadList);
       }
 
       const pathname = props.location.pathname;
@@ -373,7 +394,12 @@ function App(props) {
     maxWait: 15 * 1000,
   });
 
-  return (
+/*   if (userStatus === null) {
+    return null;
+  } */
+  return userStatus === 'pending' ? (
+    <TermsOfUse />
+  ) : (
     <>
       <Suspense fallback={null}>
         <Switch>
@@ -414,6 +440,6 @@ function App(props) {
   );
 }
 
-export default withRouter(App);
+export default withRouter(Portal);
 
 // trigger cicd

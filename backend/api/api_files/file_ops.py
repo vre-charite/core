@@ -66,7 +66,6 @@ class FileDeletion(Resource):
     # required_roles = {"GET": "member"}
     # url = ConfigClass.DATA_UTILITY_SERVICE + "filedata/"
     @jwt_required()
-
     def delete(self):
         '''
             Delete Files:
@@ -217,7 +216,7 @@ class FileDeletion(Resource):
                         if len(failed_list):
                             _logger.error('files can not be deleted:   '+ str(failed_list))
                         if len(delete_files) == 0:
-                            _res.set_code(EAPIResponseCode.bad_request)
+                            _res.set_code(EAPIResponseCode.forbidden)
                             _res.set_result("Failed to delete files: " + str(failed_list))
                             return _res.to_dict, _res.code
 

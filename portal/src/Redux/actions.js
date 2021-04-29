@@ -47,6 +47,7 @@ import {
   SET_FOLDER_ROUTING,
   SHOW_SERVICE_REQUEST_RED_DOT,
   CLEAR_CURRENT_PROJECT,
+  SET_USER_STATUS,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -307,5 +308,10 @@ export const setFolderRouting = (payload) => ({
 });
 export const setServiceRequestRedDot = (payload) => ({
   type: SHOW_SERVICE_REQUEST_RED_DOT,
+  payload,
+});
+
+export const setUserStatus = (payload) => ({
+  type: SET_USER_STATUS,
   payload,
 });

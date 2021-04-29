@@ -5,6 +5,9 @@ import styles from './index.module.scss';
 function Collapse(props) {
   const [collapsed, setCollased] = useState(false);
   function onClick(e) {
+    if (props.disabled) {
+      return;
+    }
     setCollased(!collapsed);
   }
   return (
@@ -13,7 +16,9 @@ function Collapse(props) {
         <strong>
           {props.icon} {props.title}
         </strong>
-        <span>{collapsed ? <PlusOutlined /> : <MinusOutlined />}</span>
+        {!props.hideIcon ? (
+          <span>{collapsed ? <PlusOutlined /> : <MinusOutlined />}</span>
+        ) : null}
       </p>
       <div
         style={{ maxHeight: props.maxHeight ? props.maxHeight : 300 }}

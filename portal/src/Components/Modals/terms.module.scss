@@ -1,0 +1,9 @@
+.terms_modal {
+  border-radius: 8px;
+  overflow: hidden;
+  :global {
+    .ant-modal-content {
+      border-radius: 8px;
+    }
+  }
+}

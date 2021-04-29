@@ -35,6 +35,9 @@ export function UploadFolder(props) {
           props.onChange(info);
           setValue(info);
         }}
+        beforeUpload={(file) => {
+          return false;
+        }}
         showUploadList={false}
         value={value}
       />

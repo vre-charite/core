@@ -4,7 +4,7 @@ import { objectKeysToCamelCase, objectKeysToSnakeCase } from './caseConvert';
 import getChildrenTree from './getChildrenTree';
 import protectedRoutes from './protectedRoutes';
 import { validateEmail } from './tokenRefresh';
-import { sleep, getFileSize, trimString, currentBrowser, } from './common';
+import { sleep, getFileSize, trimString, currentBrowser, toFixedNumber } from './common';
 import {
   useCurrentProject,
   withCurrentProject,
@@ -14,14 +14,11 @@ import { resetReduxState } from './resetReduxState';
 import { useIsMount } from './useIsMount';
 import { validateTag } from './validateTag';
 import { formatRole, convertRole } from './roleConvert';
-import { convertUTCDateToLocalDate, timeConvert, timezone  } from './timeCovert';
+import { convertUTCDateToLocalDate, timeConvert, timezone } from './timeCovert';
 import { partialString } from './column';
-import {
-  getGreenRoomTreeNodes,
-  getCoreTreeNodes,
-  nestedLoop,
-} from './fileTree';
-import { pathsMap, pathNameMap } from './pathsMap';
+import { nestedLoop } from './fileTree';
+import { pathsMap, pathNameMap, locationMap } from './pathsMap';
+import { getHighlightedText } from './highlight';
 
 export {
   fileUpload,
@@ -47,15 +44,16 @@ export {
   timezone,
   trimString,
   partialString,
-  getGreenRoomTreeNodes,
   pathsMap,
-  getCoreTreeNodes,
   nestedLoop,
   pathNameMap,
-  currentBrowser 
+  getHighlightedText,
+  locationMap,
+  currentBrowser,
+  toFixedNumber,
 };
 
-export { logout,refresh,login } from './keycloakActions';
+export { logout, refresh, login } from './keycloakActions';
 export {
   actionType,
   broadcastAction,

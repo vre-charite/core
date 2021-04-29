@@ -118,7 +118,7 @@ class FilesTable extends React.Component {
   };
 
   handleReset = (clearFilters) => {
-    this.setState({ searchText: '' });
+    clearFilters();
   };
 
   onChange = (pagination, filters, sorter) => {
@@ -169,29 +169,15 @@ class FilesTable extends React.Component {
 
     this.setState({ searchText: searchText });
 
-    if (!sorter.column && !sorter.order) {
-      this.props.updateTable(
-        this.props.projectId,
-        pagination.pageSize,
-        pagination.current - 1,
-        this.props.panelKey,
-        'createTime',
-        searchText,
-        'desc',
-        this.props.tags,
-      );
-    } else {
-      this.props.updateTable(
-        this.props.projectId,
-        pagination.pageSize,
-        pagination.current - 1,
-        this.props.panelKey,
-        sorter.columnKey || 'createTime',
-        searchText,
-        order,
-        this.props.tags,
-      );
-    }
+    this.props.updateTable({
+      geid: this.props.getCurrentGeid(),
+      page: pagination.current - 1,
+      pageSize: pagination.pageSize,
+      orderBy: sorter.columnKey,
+      orderType: order,
+      query: convertFilter(searchText),
+      sourceType: this.props.getSourceType(),
+    });
   };
 
   render() {
@@ -219,6 +205,7 @@ class FilesTable extends React.Component {
           current: page + 1,
           pageSize,
           total: totalItem,
+          pageSizeOptions: [10, 20, 50],
           showQuickJumper: true,
           showSizeChanger: true,
         }}
@@ -245,5 +232,21 @@ class FilesTable extends React.Component {
     );
   }
 }
+
+/**
+ *
+ * @param {array} searchText
+ * @returns
+ */
+const convertFilter = (searchText) => {
+  const filters = {};
+
+  if (searchText.length > 0) {
+    for (const item of searchText) {
+      filters[item.key] = item.value;
+    }
+  }
+  return filters;
+};
 
 export default FilesTable;

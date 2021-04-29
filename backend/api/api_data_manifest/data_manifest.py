@@ -7,7 +7,7 @@ from models.api_response import APIResponse, EAPIResponseCode
 from models.api_meta_class import MetaAPI
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from models.api_data_manifest import DataAttributeModel, DataManifestModel, TypeEnum, db
-from .utils import has_permissions, is_greenroom_raw, get_file_node_bygeid, has_valid_attributes, check_attributes
+from .utils import has_permissions, is_greenroom, get_file_node_bygeid, has_valid_attributes, check_attributes
 from api import module_api
 from flask import request
 import re
@@ -117,7 +117,6 @@ class APIDataManifest(metaclass=MetaAPI):
 
 
     class RestfulManifest(Resource):
-        @jwt_required()
         def get(self, manifest_id):
             """
             Get a data manifest and list attributes
@@ -368,11 +367,11 @@ class APIDataManifest(metaclass=MetaAPI):
                     api_response.set_error_msg("File not found")
                     return api_response.to_dict, api_response.code
                 # Make sure it's Greenroom/Raw
-                if not is_greenroom_raw(file_node):
+                if not is_greenroom(file_node):
                     results["error"].append(file_node["name"])
-                    print("not greenroom/raw")
+                    print("not greenroom")
                     api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_error_msg("File is in not greenroom/raw")
+                    api_response.set_error_msg("File is not in greenroom")
                     return api_response.to_dict, api_response.code
 
                 # Permissions check
@@ -433,7 +432,7 @@ class APIDataManifest(metaclass=MetaAPI):
                         "time_lastmodified": time.time()
                     }
                 }
-                es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'file-meta', json=es_payload)
+                es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
                 if es_res.status_code != 200:
                     api_response.set_code = EAPIResponseCode.internal_error
                     api_response.set_error_msg = f"Elastic Search Error: {es_res.json()}"
@@ -474,6 +473,7 @@ class APIDataManifest(metaclass=MetaAPI):
             attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=file_node["manifest_id"]).\
                     order_by(DataAttributeModel.id.asc())
             valid_attributes = []
+            es_attributes = []
             for attr in attributes:
                 valid_attributes.append(attr.name)
                 if not attr.optional and not attr.name in data:
@@ -487,6 +487,13 @@ class APIDataManifest(metaclass=MetaAPI):
                         api_response.set_result("Invalid attribute value")
                         api_response.set_code(EAPIResponseCode.bad_request)
                         return api_response.to_dict, api_response.code
+                    attribute_value = []
+                    attribute_value.append(data[attr.name])
+                    es_attributes.append({
+                        "attribute_name": attr.name,
+                        "name": manifest.name,
+                        "value": attribute_value
+                    })
                 if attr.type.value == "text":
                     value = data[attr.name]
                     if value:
@@ -494,6 +501,11 @@ class APIDataManifest(metaclass=MetaAPI):
                             api_response.set_result("text to long")
                             api_response.set_code(EAPIResponseCode.bad_request)
                             return api_response.to_dict, api_response.code
+                        es_attributes.append({
+                            "attribute_name": attr.name,
+                            "name": manifest.name,
+                            "value": value
+                        })
             post_data = {
                 "manifest_id": file_node["manifest_id"],
             }
@@ -507,6 +519,21 @@ class APIDataManifest(metaclass=MetaAPI):
             file_id = file_node["id"]
             response = requests.put(ConfigClass.NEO4J_SERVICE + f"nodes/File/node/{file_id}", json=post_data)
             api_response.set_result(response.json()[0])
+
+            # Update Elastic Search Entity
+            es_payload = {
+                "global_entity_id": file_node["global_entity_id"],
+                "updated_fields": {
+                    "attributes": es_attributes,
+                    "time_lastmodified": time.time()
+                }
+            }
+            es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
+            if es_res.status_code != 200:
+                api_response.set_code = EAPIResponseCode.internal_error
+                api_response.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+                return api_response.to_dict, api_response.code
+
             return api_response.to_dict, api_response.code
 
 

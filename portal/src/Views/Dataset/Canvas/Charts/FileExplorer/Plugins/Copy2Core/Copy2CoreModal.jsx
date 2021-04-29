@@ -6,6 +6,7 @@ import { triggerEvent } from '../../../../../../../Redux/actions';
 import { useEffect } from 'react';
 import { tokenManager } from '../../../../../../../Service/tokenManager';
 import i18n from '../../../../../../../i18n';
+import styles from './index.module.scss';
 const Copy2CoreModal = ({ visible, setVisible, files, eraseSelect }) => {
   const [confirmLoading, setConfirmLoading] = React.useState(false);
   const [warning, setWarning] = React.useState(false);
@@ -113,7 +114,8 @@ const Copy2CoreModal = ({ visible, setVisible, files, eraseSelect }) => {
             the VRE Core.
           </p>
           <p>
-            Please input the code: <b>{codeRandom}</b> to confirm
+            Please input the code:{' '}
+            <b className={styles.no_select}>{codeRandom}</b> to confirm
           </p>
           <Input
             placeholder=""

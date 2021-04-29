@@ -23,7 +23,7 @@ class SrvContactUsManager(metaclass=MetaService):
         subject = "Contact Email from {}".format(invitation.email)
         email_sender.send(
             subject,
-            [ConfigClass.EMAIL_ADMIN_CONNECTION],
+            [ConfigClass.EMAIL_SUPPORT],
             msg_type='html',
             attachments=invitation.attachments,
             template="contact_us/confirm_email.html",
@@ -46,7 +46,7 @@ class SrvContactUsManager(metaclass=MetaService):
                 "title": invitation.title,
                 "category": invitation.category, 
                 "description": invitation.description, 
-                "email": ConfigClass.EMAIL_ADMIN_CONNECTION, 
+                "email": ConfigClass.EMAIL_SUPPORT, 
             }
         )
         return 'Saved'

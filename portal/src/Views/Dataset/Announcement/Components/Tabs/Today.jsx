@@ -3,6 +3,7 @@ import { Pagination, List, message } from 'antd';
 import { getAnnouncementApi } from '../../../../../APIs';
 import styles from '../../index.module.scss';
 import moment from 'moment';
+import {ErrorMessager,namespace} from '../../../../../ErrorMessages'
 export default function Today({ currentProject, indicator }) {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,8 @@ export default function Today({ currentProject, indicator }) {
       })
       .catch((err) => {
         console.log(err);
-        message.error('Failed to get announcements');
+        const errorMessage = new ErrorMessager(namespace.announcement.getAnnouncementApi);
+        errorMessage.triggerMsg();
       })
       .finally(() => {
         setLoading(false);

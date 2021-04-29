@@ -1,10 +1,6 @@
 import React, { useState, Component, useEffect } from 'react';
 import { Menu, message, Spin } from 'antd';
-import {
-  TeamOutlined,
-  SettingOutlined,
-  LoadingOutlined,
-} from '@ant-design/icons';
+import { TeamOutlined, SettingOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
 import GreenRoomUploader from './GreenRoomUploader';
@@ -229,14 +225,14 @@ const ToolBar = ({
         <Menu.Item key="canvas" onClick={() => toggleIcon('canvas')}>
           <Link to="canvas">
             {iconSelected === 'canvas' ? (
-              <span role="img" class="anticon">
+              <span role="img" className="anticon">
                 <img
                   style={{ width: 15 }}
                   src={require('../../../Images/Dashboard-selected.svg')}
                 />
               </span>
             ) : (
-              <span role="img" class="anticon">
+              <span role="img" className="anticon">
                 <img
                   style={{ width: 15 }}
                   src={require('../../../Images/Dashboard.svg')}
@@ -244,6 +240,12 @@ const ToolBar = ({
               </span>
             )}
             <span>Canvas</span>
+          </Link>
+        </Menu.Item>
+        <Menu.Item key="search" onClick={() => toggleIcon('')}>
+          <Link to="search">
+            <SearchOutlined />
+            <span>Search</span>
           </Link>
         </Menu.Item>
         <Menu.Item
@@ -324,7 +326,7 @@ const ToolBar = ({
             // eslint-disable-next-line
             target="_blank"
           >
-            <span role="img" class="anticon">
+            <span role="img" className="anticon">
               <img
                 style={{ width: 18 }}
                 src={require('../../../Images/XWIKI.svg')}

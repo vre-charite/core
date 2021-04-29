@@ -28,6 +28,7 @@ const dataset = {
     downloadFilesAPI: 'dataset.files.downloadFilesAPI',
     processingFile: 'dataset.files.processingFile',
     preUpload: 'dataset.files.preUpload',
+    combineChunk:'dataset.files.combineChunks'
   },
 };
 
@@ -58,6 +59,15 @@ const userManagement = {
   getServiceRequestAPI: 'userManagement.getServiceRequestAPI'
 };
 
+const announcement = {
+  getAnnouncementApi:'announcement.getAnnouncementApi',
+  getUserAnnouncementApi:"announcement.getUserAnnouncementApi",
+}
+
+const manifest = {
+  getManifestById:'manifest.getManifestById'
+}
+
 export default {
   common,
   login,
@@ -66,5 +76,5 @@ export default {
   selfRegister,
   teams,
   contactUs,
-  userManagement,
+  userManagement,announcement,manifest
 };

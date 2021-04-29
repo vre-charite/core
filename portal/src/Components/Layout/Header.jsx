@@ -67,29 +67,30 @@ class AppHeader extends Component {
       this.updatedSelectedKeys('clear');
       this.updatedSelectedKeys('add', 'users');
     }
+    if (!this.props.unauthorized) {
+      // check if there are new service requests
+      const localStorageId = localStorage.getItem('serviceRequestId');
+      const res = await getResourceRequestsAPI({
+        page: 0,
+        pageSize: 1,
+        orderBy: 'request_date',
+        orderType: 'desc',
+        filters: {},
+      });
 
-    // check if there are new service requests
-    const localStorageId = localStorage.getItem('serviceRequestId');
-    const res = await getResourceRequestsAPI({
-      page: 0,
-      pageSize: 1,
-      orderBy: 'request_date',
-      orderType: 'desc',
-      filters: {},
-    })
-
-    // Set the red dot when platform admin first login
-    if (res.data && res.data.result.length > 0 && !localStorageId) {
-      this.props.setServiceRequestRedDot(true);
-    }
-
-    if (res.data && res.data.result.length > 0 && localStorageId) {
-      if (res.data.result[0].id.toString() !== localStorageId) {
+      // Set the red dot when platform admin first login
+      if (res.data && res.data.result.length > 0 && !localStorageId) {
         this.props.setServiceRequestRedDot(true);
       }
+
+      if (res.data && res.data.result.length > 0 && localStorageId) {
+        if (res.data.result[0].id.toString() !== localStorageId) {
+          this.props.setServiceRequestRedDot(true);
+        }
+      }
     }
-  }
-  
+  };
+
   logout = async () => {
     modal = confirm({
       title: 'Are you sure you want to log out?',
@@ -198,14 +199,17 @@ class AppHeader extends Component {
     const username = this.props.username;
     const withRedDot = (
       <div className={styles.user_management}>
-        <Badge status="error"><ControlOutlined /> User Management</Badge>
+        <Badge status="error">
+          <ControlOutlined /> User Management
+        </Badge>
       </div>
-    )
+    );
     const withoutRedDot = (
       <div>
-        <ControlOutlined />User Management
+        <ControlOutlined />
+        User Management
       </div>
-    )
+    );
     return (
       <Header
         className={styles.siteHeader}
@@ -256,15 +260,17 @@ class AppHeader extends Component {
               />
             </Link>
           </Menu.Item>
-          <Menu.Item key="uploader">
-            <Link to="/landing">
-              <ContainerOutlined /> Projects
-            </Link>
-          </Menu.Item>
-          {this.props.role === 'admin' ? (
+          {!this.props.unauthorized && (
+            <Menu.Item key="uploader">
+              <Link to="/landing">
+                <ContainerOutlined /> Projects
+              </Link>
+            </Menu.Item>
+          )}
+          {this.props.role === 'admin' && !this.props.unauthorized ? (
             <Menu.Item key="users">
               <Link to="/users">
-                {this.props.showRedDot ? withRedDot : withoutRedDot }
+                {this.props.showRedDot ? withRedDot : withoutRedDot}
               </Link>
             </Menu.Item>
           ) : null}

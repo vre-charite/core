@@ -1,0 +1,9 @@
+.no_select {
+  user-select: none;
+}
+.no_select::selection {
+  background: none;
+}
+.no_select::-moz-selection {
+  background: none;
+}

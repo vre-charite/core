@@ -11,6 +11,7 @@ import { NotificationOutlined, DownCircleOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import _ from 'lodash';
 import styles from './index.module.scss';
+import { ErrorMessager, namespace } from '../../../ErrorMessages';
 
 //let setTimeoutId; // will this cause issue if there are more than 1 instance?
 export default function AnnouncementButton({ currentProject }) {
@@ -144,9 +145,11 @@ export default function AnnouncementButton({ currentProject }) {
           }
         } catch (err) {
           console.log(err);
-          message.error(
+          const errorMessage = new ErrorMessager(namespace.announcement.getUserAnnouncementApi);
+          errorMessage.triggerMsg(null,null,{projectCode:currentProject?.code})
+/*           message.error(
             `Failed to get announcements for project ${currentProject?.code}`,
-          );
+          ); */
         }
       }
     }

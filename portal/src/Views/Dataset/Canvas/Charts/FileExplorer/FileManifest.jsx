@@ -5,6 +5,7 @@ import { EditOutlined, SaveOutlined } from '@ant-design/icons';
 import { getManifestById, updateFileManifestAPI } from '../../../../../APIs';
 import _ from 'lodash';
 import { useTranslation } from 'react-i18next';
+import { ErrorMessager, namespace } from '../../../../../ErrorMessages';
 const { Option } = Select;
 function FileManifest({ currentRecord, permission, updateFileManifest }) {
   const { t } = useTranslation(['errormessages']);
@@ -38,7 +39,9 @@ function FileManifest({ currentRecord, permission, updateFileManifest }) {
           setManifests(attributes);
         })
         .catch((err) => {
-          message.error('Failed to get the Manifest id: ' + manifestId);
+          const errorMessage = new ErrorMessager(namespace.manifest.getManifestById);
+          errorMessage.triggerMsg(null,null,{manifestId:manifestId})
+          //message.error('Failed to get the Manifest id: ' + manifestId);
         });
     }
   }, [currentRecord]);
@@ -59,9 +62,6 @@ function FileManifest({ currentRecord, permission, updateFileManifest }) {
       message.error(t('errormessages:editManifestOnFile.lengthExceed.0'));
       return;
     }
-    /*     if (!draft.match(/^[A-Za-z0-9-_!%&/()=?*+#.;]+$/)) {
-      message.error('The text should only contains letters, digits, and -_!%&/()=?*+#.; ');
-    } */
     newAttr[attrIndex].value = draft;
     const attrObj = {};
     newAttr.forEach((item) => {

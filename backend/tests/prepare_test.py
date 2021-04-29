@@ -158,6 +158,24 @@ class SetUpTest:
             self.log.info(f"PLEASE DELETE THE FILE MANUALLY WITH ID: {node_id}")
             raise e
 
+    def delete_user_by_email(self, email):
+        self.log.info("\n")
+        self.log.info("Preparing delete user node".ljust(80, '-'))
+
+        response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/User/query", json={"email": email})
+        if not response.json():
+            return
+        user_node = response.json()[0]
+        delete_api = ConfigClass.NEO4J_SERVICE+ "nodes/User/node/%s" % str(user_node["id"])
+        try:
+            delete_res = requests.delete(delete_api)
+            self.log.info(f"DELETE STATUS: {delete_res.status_code}")
+            self.log.info(f"DELETE RESPONSE: {delete_res.text}")
+        except Exception as e:
+            self.log.info(f"ERROR DELETING FILE: {e}")
+            self.log.info(f"PLEASE DELETE THE FILE MANUALLY WITH ID: {node_id}")
+            raise e
+
 
 class Singleton(type):
     _instances = {}
@@ -170,11 +188,12 @@ class Singleton(type):
 class PrepareTest(metaclass=Singleton):
 
     def __init__(self):
-        self.app = self.create_test_client()
+        self.app, self.root_app  = self.create_test_client()
 
     def create_test_client(self):
         app = create_app()
         app.config['TESTING'] = True
         app.config['DEBUG'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = ConfigClass.SQLALCHEMY_DATABASE_URI
         test_client = app.test_client(self)
-        return test_client
+        return test_client, app

@@ -25,6 +25,7 @@ import {
   //addUserToDatasetAPI,
   removeUserFromDatasetApi,
   setUserStatusFromDatasetApi,
+  updateUserStatusAPI,
 } from '../../../APIs';
 import {
   objectKeysToSnakeCase,
@@ -33,7 +34,7 @@ import {
 } from '../../../Utility';
 import { namespace, ErrorMessager } from '../../../ErrorMessages';
 import { withCurrentProject, formatRole } from '../../../Utility';
-import MembersTable from '../../../Components/Table/TableWrapper';
+import TableWrapper from '../../../Components/Table/TableWrapper';
 import { withTranslation } from 'react-i18next';
 import InvitationTable from '../../../Components/Table/InvitationTable';
 import CanvasPageHeader from '../Canvas/PageHeader/CanvasPageHeader';
@@ -173,9 +174,21 @@ class Teams extends Component {
       });
   };
 
-  restoreUser = (username) => {
+  restoreUser = (record, action) => {
     const { datasetId } = this.props.match.params;
-    setUserStatusFromDatasetApi(username, datasetId, 'active')
+    const projectCode = this.props.containersPermission.find(
+      (el) => el.id === parseInt(datasetId),
+    )?.code;
+    const { email, username } = record;
+    updateUserStatusAPI({
+      operationType: action,
+      userRealm: 'vre',
+      userGeid: null,
+      userEmail: email,
+      payload: {
+        project_code: projectCode,
+      },
+    })
       .then(async (res) => {
         await this.getUsers();
         message.success(
@@ -304,7 +317,7 @@ class Teams extends Component {
       );
     const projectName = this.props.currentProject?.name;
     let role = this.props.currentProject?.permission;
-
+    console.log(this.props.userListOnDataset);
     const menu = (record, role) => (
       <Menu id="teams_role_dropdown">
         {/* {this.props.containerDetails &&
@@ -419,10 +432,10 @@ class Teams extends Component {
                   // eslint-disable-next-line
                   <a
                     onClick={() => {
-                      this.restoreUser(record.name);
+                      this.restoreUser(record, 'restore');
                     }}
                   >
-                    Restore
+                    Restore access
                   </a>
                 ) : (
                   <Dropdown
@@ -521,7 +534,7 @@ class Teams extends Component {
                   className={styles.tab}
                 >
                   <TabPane tab="Members" key="users">
-                    <MembersTable
+                    <TableWrapper
                       dataSource={this.props.userListOnDataset}
                       columns={columns}
                       totalItem={this.state.total}

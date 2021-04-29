@@ -14,7 +14,7 @@ const UploaderManifest = function (props) {
   return (
     <>
       <Form layout="vertical" form={form}>
-        <Form.Item name="manifest" label="Select Attribute Template">
+        <Form.Item name="manifest" label="File Attribute">
           <Select
             className={styles.inputBorder}
             allowClear={true}
@@ -42,7 +42,7 @@ const UploaderManifest = function (props) {
           style={{
             margin: '0 -24px',
             padding: '30px 0',
-            background: '#f0f2f5',
+            background: '#E6F5FF',
             maxHeight: 195,
             overflowY: 'scroll',
           }}

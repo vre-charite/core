@@ -4,6 +4,7 @@ import { getAnnouncementApi } from '../../../../../APIs';
 
 import styles from '../../index.module.scss';
 import moment from 'moment';
+import { ErrorMessager, namespace } from '../../../../../ErrorMessages';
 export default function All({
   currentProject,
   dateString: dateStringRaw,
@@ -37,7 +38,8 @@ export default function All({
       })
       .catch((err) => {
         console.log(err);
-        message.error('Failed to get announcements');
+        const errorMessage = new ErrorMessager(namespace.announcement.getAnnouncementApi);
+        errorMessage.triggerMsg();
       })
       .finally(() => {
         setLoading(false);

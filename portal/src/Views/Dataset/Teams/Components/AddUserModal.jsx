@@ -3,6 +3,8 @@ import { Modal, Form, Radio, message, Input, Button, Tooltip } from 'antd';
 import {
   ExclamationCircleOutlined,
   QuestionCircleOutlined,
+  CheckCircleFilled,
+  MailOutlined,
 } from '@ant-design/icons';
 import { connect } from 'react-redux';
 import {
@@ -18,56 +20,21 @@ import {
 } from '../../../../Utility';
 import { namespace, ErrorMessager } from '../../../../ErrorMessages';
 import { useTranslation } from 'react-i18next';
-const { confirm } = Modal;
+import styles from '../index.module.scss';
+import { useKeycloak } from '@react-keycloak/web';
 
 function AddUserModal(props) {
   const { isAddUserModalShown, cancelAddUser } = props;
   const [form] = Form.useForm();
   const [submitting, toggleSubmitting] = useState(false);
-  const { t } = useTranslation();
+  const { t } = useTranslation(['errormessages', 'modals']);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [role, setRole] = useState('admin');
   const [currentDataset = {}] = useCurrentProject();
+  const { keycloak } = useKeycloak();
   const handleCancel = () => {
     form.resetFields();
     cancelAddUser();
-  };
-
-  /**
-   * Invite user from outside
-   * @param {number} projectId
-   * @param {"admin"|"member"|"uploader"} role
-   * @param {string} email
-   */
-  const confirmForOutPlatform = (projectId, role, email) => {
-    const config = {
-      title: 'Confirm',
-      content: `User ${email} doesn't exist. Invite the user to the ${
-        currentDataset.name
-      } Project with the role of ${formatRole(role)}?`,
-      icon: <ExclamationCircleOutlined />,
-      onOk: () => {
-        inviteUserApi(email, role, parseInt(projectId))
-          .then((res) => {
-            message.success(`${t('success:addUser.invitation')}`);
-            form.resetFields();
-          })
-          .catch((err) => {
-            console.log(err);
-
-            if (err.response) {
-              const errorMessager = new ErrorMessager(
-                namespace.teams.inviteUser,
-              );
-              errorMessager.triggerMsg(err.response.status, null, {
-                email: email,
-              });
-            }
-          });
-      },
-      onCancel: () => {},
-    };
-    confirm(config);
   };
 
   const onSubmit = () => {
@@ -83,53 +50,63 @@ function AddUserModal(props) {
       }
 
       toggleSubmitting(true);
-      checkUserPlatformRole(values.email.toLowerCase())
+      checkUserPlatformRole(
+        values.email.toLowerCase(),
+        currentDataset.globalEntityId,
+      )
         .then((res) => {
           //block status === disabled
           if (res.status === 200) {
-            if (res.data.result && res.data.result.length > 0) {
-              const { role, status } = res.data.result[0];
+            if (res.data.result) {
+              const invitedUser = res.data.result;
+              const { role, status, name, relationship } = invitedUser;
               if (status === 'disabled') {
-                message.error(t('errormessages:addUser2Project.disabledUser'));
+                //message.error(t('errormessages:addUser2Project.disabledUser'));
                 toggleSubmitting(false);
                 setIsSubmitting(false);
-              } else if (role === 'admin') {
-                message.error(t('errormessages:addUser2Project.platformAdmin'));
-                toggleSubmitting(false);
-                setIsSubmitting(false);
-              } else if (role === 'member') {
-                checkEmailExistAPI(
-                  values.email.toLowerCase(),
-                  props.datasetId,
-                ).then((res) => {
-                  const username = res.data.result['username'];
-                  const role = values.role;
-                  const projectId = parseInt(props.datasetId);
-                  addUserToDatasetAPI(username, projectId, role)
-                    .then(async (res) => {
-                      await props.getUsers();
-
-                      message.success(
-                        `${t(
-                          'success:addUser.addUserToDataset.0',
-                        )} ${username} ${t(
-                          'success:addUser.addUserToDataset.1',
-                        )} ${currentDataset.name}`,
-                      );
-                    })
-                    .catch((err) => {
-                      if (err.response) {
-                        const errorMessager = new ErrorMessager(
-                          namespace.teams.addUsertoDataSet,
-                        );
-                        errorMessager.triggerMsg(err.response.status, null, {
-                          email: values.email,
-                        });
-                      }
-
-                      return Promise.reject();
-                    });
+                Modal.warning({
+                  title: t('errormessages:addUser2Project.disabledUser.title'),
+                  content: `${values.email} ${t(
+                    'errormessages:addUser2Project.disabledUser.content',
+                  )}`,
+                  className: styles['warning-modal'],
                 });
+              } else if (role === 'admin') {
+                //message.error(t('errormessages:addUser2Project.platformAdmin'));
+                Modal.warning({
+                  title: t('errormessages:addUser2Project.platformAdmin.title'),
+                  content: `${values.email} ${t(
+                    'errormessages:addUser2Project.platformAdmin.content',
+                  )}`,
+                  className: styles['warning-modal'],
+                });
+                toggleSubmitting(false);
+                setIsSubmitting(false);
+              } else if (status === 'pending') {
+                //message.error(t('errormessages:addUser2Project.pending'));
+                toggleSubmitting(false);
+                setIsSubmitting(false);
+                Modal.warning({
+                  title: t('errormessages:addUser2Project.pending.title'),
+                  content: t('errormessages:addUser2Project.pending.content'),
+                  className: styles['warning-modal'],
+                });
+              } else if (role === 'member') {
+                const inviter = keycloak.tokenParsed?.preferred_username;
+                if (relationship.hasOwnProperty('projectGeid')) {
+                  memberWarning(t, values.email);
+                } else {
+                  addUserToProject(
+                    values.email,
+                    values.role,
+                    currentDataset.globalEntityId,
+                    currentDataset,
+                    name,
+                    props,
+                    t,
+                    inviter,
+                  );
+                }
               }
             }
           }
@@ -138,11 +115,46 @@ function AddUserModal(props) {
           toggleSubmitting(false);
           if (err.response && err.response.status === 404) {
             cancelAddUser();
-            confirmForOutPlatform(
-              parseInt(props.datasetId),
-              values.role,
-              values.email,
-            );
+            const email = values.email;
+            const role = values.role;
+            Modal.confirm({
+              title: t('modals:inviteNoExist.title'),
+              icon: <ExclamationCircleOutlined />,
+              content: (
+                <>
+                  {' '}
+                  <p>
+                    {`${t('modals:inviteNoExist.content.0')} ${email} ${t(
+                      'modals:inviteNoExist.content.1',
+                    )}`}{' '}
+                    {currentDataset.name.length < 30 ? (
+                      `${currentDataset.name}`
+                    ) : (
+                      <Tooltip title={currentDataset.name}>
+                        {currentDataset.name.slice(0, 28) + '...'}
+                      </Tooltip>
+                    )}{' '}
+                    {`${t('modals:inviteNoExist.content.2')} ${formatRole(
+                      role,
+                    )}`}
+                  </p>
+                  <p>{`${t('modals:inviteNoExist.content.3')}`}</p>
+                </>
+              ),
+              okText: (
+                <>
+                  <MailOutlined /> Send
+                </>
+              ),
+              onOk() {
+                if (err.response.data.result?.ad_account_created === true) {
+                  addUser(true, err.response.data.result?.ad_user_dn);
+                } else {
+                  addUser(false, err.response.data.result?.ad_user_dn);
+                }
+              },
+              className: styles['warning-modal'],
+            });
           } else {
             const errorMessager = new ErrorMessager(
               namespace.teams.checkUserPlatformRole,
@@ -158,7 +170,6 @@ function AddUserModal(props) {
         })
         .finally(() => {
           cancelAddUser();
-          form.resetFields();
           setIsSubmitting(false);
         });
     } else {
@@ -171,78 +182,104 @@ function AddUserModal(props) {
     setRole(e.target.value);
   };
 
-  return (
-    <Modal
-      title="Add a member to project"
-      visible={isAddUserModalShown}
-      maskClosable={false}
-      closable={false}
-      confirmLoading={submitting}
-      onCancel={handleCancel}
-      filterOption={(input, option) =>
-        option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+  const addUser = async (inAd = false, adUserDn) => {
+    const values = form.getFieldsValue();
+    const email = values.email;
+    const role = values.role;
+    try {
+      await inviteUserApi(
+        email,
+        'member',
+        role,
+        currentDataset?.globalEntityId,
+        keycloak.tokenParsed?.preferred_username,
+        inAd,
+        adUserDn,
+      );
+      //setCompletedUserAdd(true);
+      if (!inAd) {
+        message.success('Invitation email sent with AD request form attached');
       }
-      footer={[
-        <Button disabled={isSubmitting} key="back" onClick={handleCancel}>
-          Cancel
-        </Button>,
-        <Button
-          key="submit"
-          type="primary"
-          loading={isSubmitting}
-          onClick={onSubmit}
-        >
-          Submit
-        </Button>,
-      ]}
-      cancelButtonProps={{ disabled: submitting }}
-    >
-      <Form form={form} initialValues={{ role }}>
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[
-            {
-              type: 'email',
-              message: t('formErrorMessages:common.email.valid'),
-            },
-            {
-              required: true,
-              message: t('formErrorMessages:common.email.valid'),
-            },
-          ]}
-        >
-          <Input type="email" />
-        </Form.Item>
-        <Form.Item
-          initialValue={
-            props.rolesDetail &&
-            props.rolesDetail['admin'] &&
-            props.rolesDetail['admin']['value']
-          }
-          label={'Role'}
-          name="role"
-          rules={[
-            {
-              required: true,
-              message: t('formErrorMessages:project.addMemberModal.role.empty'),
-            },
-          ]}
-        >
-          <Radio.Group style={{ marginTop: 5 }} onChange={onRoleChange}>
-            {props.rolesDetail &&
-              props.rolesDetail.map((el) => (
-                <Radio value={el.value}>
-                  {el.label}&nbsp;
-                  <Tooltip title={el.description}>
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </Radio>
-              ))}
-          </Radio.Group>
-        </Form.Item>
-      </Form>
-    </Modal>
+    } catch (err) {
+      if (err.response) {
+        const errorMessager = new ErrorMessager(namespace.teams.inviteUser);
+        errorMessager.triggerMsg(err.response.status, null, {
+          email: email,
+        });
+      }
+    }
+  };
+  return (
+    <>
+      <Modal
+        title="Add a member to project"
+        visible={isAddUserModalShown}
+        maskClosable={false}
+        closable={false}
+        confirmLoading={submitting}
+        onCancel={handleCancel}
+        filterOption={(input, option) =>
+          option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+        }
+        footer={[
+          <Button disabled={isSubmitting} key="back" onClick={handleCancel}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            loading={isSubmitting}
+            onClick={onSubmit}
+          >
+            Submit
+          </Button>,
+        ]}
+        cancelButtonProps={{ disabled: submitting }}
+      >
+        <Form form={form} initialValues={{ role }}>
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              {
+                type: 'email',
+                message: t('formErrorMessages:common.email.valid'),
+              },
+              {
+                required: true,
+                message: t('formErrorMessages:common.email.valid'),
+              },
+            ]}
+          >
+            <Input type="email" />
+          </Form.Item>
+          <Form.Item
+            label="Role"
+            name="role"
+            rules={[
+              {
+                required: true,
+                message: t(
+                  'formErrorMessages:project.addMemberModal.role.empty',
+                ),
+              },
+            ]}
+          >
+            <Radio.Group style={{ marginTop: 5 }} onChange={onRoleChange}>
+              {props.rolesDetail &&
+                props.rolesDetail.map((el) => (
+                  <Radio value={el.value}>
+                    {el.label}&nbsp;
+                    <Tooltip title={el.description}>
+                      <QuestionCircleOutlined />
+                    </Tooltip>
+                  </Radio>
+                ))}
+            </Radio.Group>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
   );
 }
 
@@ -250,3 +287,55 @@ export default connect((state) => ({
   userList: state.userList,
   containersPermission: state.containersPermission,
 }))(AddUserModal);
+
+function addUserToProject(
+  email,
+  role,
+  projectGeid,
+  currentDataset,
+  username,
+  props,
+  t,
+  inviter,
+) {
+  addUserToDatasetAPI(username, currentDataset.id, role)
+    .then(async (res) => {
+      // successfully invited
+      await props.getUsers();
+      message.success(
+        `${t('success:addUser.addUserToDataset.0')} ${username} ${t(
+          'success:addUser.addUserToDataset.1',
+        )} ${currentDataset.name}`,
+      );
+    })
+    .catch((err) => {
+      console.log(err);
+      if (err.response?.status === 403) {
+        //Already Project Member
+        memberWarning(t, email);
+      } else {
+        const errorMessager = new ErrorMessager(
+          namespace.teams.addUsertoDataSet,
+        );
+        errorMessager.triggerMsg(null, null, {
+          email: email,
+        });
+      }
+
+      return Promise.reject();
+    });
+}
+
+function memberWarning(t, email) {
+  Modal.warning({
+    title: t('errormessages:addUsertoDataSet.403.title.0'),
+    content: (
+      <>
+        {' '}
+        <p>{`${email} ${t('errormessages:addUsertoDataSet.403.content.0')}`}</p>{' '}
+        <p>{`${t('errormessages:addUsertoDataSet.403.content.1')}`} </p>
+      </>
+    ),
+    className: styles['warning-modal'],
+  });
+}
