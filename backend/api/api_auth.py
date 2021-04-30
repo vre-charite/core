@@ -138,7 +138,8 @@ class APIAuthService(metaclass=MetaAPI):
                         template_kwargs={
                             "username": user_info['name'],
                             "admin_name": current_identity["username"],
-                            "admin_email": ConfigClass.EMAIL_SUPPORT,
+                            "admin_email": ConfigClass.EMAIL_ADMIN,
+                            "support_email": ConfigClass.EMAIL_SUPPORT,
                         },
                     )
                 elif operation_type == "disable":
@@ -152,13 +153,14 @@ class APIAuthService(metaclass=MetaAPI):
                         template_kwargs={
                             "username": user_info['name'],
                             "admin_name": current_identity["username"],
-                            "admin_email": ConfigClass.EMAIL_SUPPORT,
+                            "admin_email": ConfigClass.EMAIL_ADMIN,
+                            "support_email": ConfigClass.EMAIL_SUPPORT,
                         },
                     )
-                elif operation_type == "restored":
+                elif operation_type == "restore":
                     project_code = operation_payload.get("project_code")
                     container_mgr = SrvContainerManager()
-                    project = container_mgr.get_by_project_code(project_code)[1]
+                    project = container_mgr.get_by_project_code(project_code)[1][0]
                     subject = "VRE access restored to {}".format(project["name"])
                     email_sender = SrvEmail()
                     email_result = email_sender.send(
@@ -170,7 +172,8 @@ class APIAuthService(metaclass=MetaAPI):
                             "username": user_info['name'],
                             "admin_name": current_identity["username"],
                             "project_name": project["name"],
-                            "admin_email": ConfigClass.EMAIL_SUPPORT,
+                            "admin_email": ConfigClass.EMAIL_ADMIN,
+                            "support_email": ConfigClass.EMAIL_SUPPORT,
                         },
                     )
                 return response.json(), response.status_code

@@ -20,18 +20,18 @@ class SrvContactUsManager(metaclass=MetaService):
         email_sender = SrvEmail()
         container_mgr = SrvContainerManager()
 
-        subject = "Contact Email from {}".format(invitation.email)
+        subject = "ACTION REQUIRED - VRE Support Request Submitted"
         email_sender.send(
             subject,
             [ConfigClass.EMAIL_SUPPORT],
             msg_type='html',
             attachments=invitation.attachments,
-            template="contact_us/confirm_email.html",
+            template="contact_us/support_email.html",
             template_kwargs={
                 "title": invitation.title,
                 "category": invitation.category, 
                 "description": invitation.description, 
-                "email": invitation.email, 
+                "user_email": invitation.email, 
             }
         )
 

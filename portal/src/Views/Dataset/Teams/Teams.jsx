@@ -39,7 +39,7 @@ import { withTranslation } from 'react-i18next';
 import InvitationTable from '../../../Components/Table/InvitationTable';
 import CanvasPageHeader from '../Canvas/PageHeader/CanvasPageHeader';
 import styles from './index.module.scss';
-
+import i18n from '../../../i18n';
 const { Content } = Layout;
 const { TabPane } = Tabs;
 
@@ -185,6 +185,20 @@ class Teams extends Component {
     if (inList) {
       return;
     }
+    Modal.warning({
+      title: i18n.t('modals:updateStatusTime.title'),
+      content: (
+        <>
+          <p>
+            {`${i18n.t('modals:updateStatusTime.content.5')} ${username}
+            ${i18n.t('modals:updateStatusTime.content.1')} restored${i18n.t(
+              'modals:updateStatusTime.content.2',
+            )}`}
+          </p>
+          <p>{i18n.t('modals:updateStatusTime.content.4')}</p>
+        </>
+      ),
+    });
     this.setState({
       recordInProcess: [...this.state.recordInProcess, record.email],
     });

@@ -189,6 +189,9 @@ class APIProject(metaclass=MetaAPI):
                 )
                 users = users_res.json()
 
+                # exclude the admin user
+                users = [user for user in users if user['name'] != 'admin']
+
                 for user in users:
                     email = user["email"]
                     user_query = f'(&(objectClass=user)(mail={email}))'
@@ -197,8 +200,19 @@ class APIProject(metaclass=MetaAPI):
                         ldap.SCOPE_SUBTREE, 
                         user_query
                     )
+                    user_found = None
                     for user_dn, entry in ad_users:
-                        platform_admin_list.append((ldap.MOD_ADD, 'member', [user_dn.encode('utf-8')]))
+                        if 'mail' in entry and user_dn:
+                            decoded_email = entry['mail'][0].decode("utf-8")
+                            if decoded_email == email:
+                                user_found = (user_dn, entry)
+                    _logger.info("found user by email: " + str(user_found))
+                    if not user_found:
+                        return {
+                            "error_message": 'error on adding p-admin in AD: User not found on AD: ' + email,
+                            "entry_email": email
+                        }, 500
+                    platform_admin_list.append((ldap.MOD_ADD, 'member', [user_found[0].encode('utf-8')]))
 
                 conn.modify_s(
                     dn,

@@ -640,7 +640,8 @@ class DatasetUser(Resource):
                         "project_name": dataset_name,
                         "role": map_neo4j_to_frontend(new_role),
                         "login_url": ConfigClass.INVITATION_URL_LOGIN,
-                        "admin_email": admin_email,
+                        "admin_email": ConfigClass.EMAIL_ADMIN,
+                        "support_email": ConfigClass.EMAIL_SUPPORT,
                     },
                 )
 
@@ -1113,7 +1114,8 @@ class DatasetUserManagement(Resource):
                     template_kwargs={
                         "username": username,
                         "admin_name": current_identity["username"],
-                        "admin_email": ConfigClass.EMAIL_SUPPORT,
+                        "admin_email": ConfigClass.EMAIL_ADMIN,
+                        "support_email": ConfigClass.EMAIL_SUPPORT,
                     },
                 )
             else:
@@ -1127,7 +1129,8 @@ class DatasetUserManagement(Resource):
                     template_kwargs={
                         "username": username,
                         "admin_name": current_identity["username"],
-                        "admin_email": ConfigClass.EMAIL_SUPPORT,
+                        "admin_email": ConfigClass.EMAIL_ADMIN,
+                        "support_email": ConfigClass.EMAIL_SUPPORT,
                     },
                 )
             return {'result': json.loads(res.text)}, 200
@@ -1210,7 +1213,8 @@ class DatasetUserProjectStatus(Resource):
                         "username": username,
                         "admin_name": current_identity["username"],
                         "project_name": project_name,
-                        "admin_email": ConfigClass.EMAIL_SUPPORT,
+                        "admin_email": ConfigClass.EMAIL_ADMIN,
+                        "support_email": ConfigClass.EMAIL_SUPPORT,
                     },
                 )
 

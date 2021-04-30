@@ -40,6 +40,17 @@
       "already exists in the user list."
     ]
   },
+  "updateStatusTime": {
+    "title": "Update processing",
+    "content": [
+      "The account",
+      "is in the process of being",
+      ", this process may take up to 10 minutes to complete.",
+      "Please do not make any additional changes to the account status while the action is being processed.  Once processing is complete the user account status will be updated in the user list.",
+      "Please do not make any additional changes to this user’s Project membership status or Project role while the user’s Project membership is being restored.  Once processing is complete the user account status will be updated in the Project member list.",
+      "The Project membership for"
+    ]
+  },
   "inviteInAd": {
     "title": "Confirm user invitation",
     "content": [

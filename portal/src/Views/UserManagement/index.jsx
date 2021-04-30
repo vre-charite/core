@@ -42,7 +42,7 @@ import RequestTable from '../../Components/Table/requestTable';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import CreateEmailModal from '../../Components/Modals/CreateEmailModal';
 import styles from './index.module.scss';
-
+import i18n from '../../i18n';
 const { Content } = Layout;
 const { TabPane } = Tabs;
 
@@ -302,11 +302,25 @@ class UserManagement extends Component {
   };
 
   updateStatus = async (record, action) => {
-    const { realm, email } = record;
+    const { email } = record;
     const inList = this.state.recordInProcess.find((item) => item === email);
     if (inList) {
       return;
     }
+    Modal.warning({
+      title: i18n.t('modals:updateStatusTime.title'),
+      content: (
+        <>
+          <p>
+            {`${i18n.t('modals:updateStatusTime.content.0')} ${record.name}
+            ${i18n.t('modals:updateStatusTime.content.1')} ${
+              action === 'disable' ? 'disabled' : 'enabled'
+            }${i18n.t('modals:updateStatusTime.content.2')}`}
+          </p>
+          <p>{i18n.t('modals:updateStatusTime.content.3')}</p>
+        </>
+      ),
+    });
     this.setState({
       recordInProcess: [...this.state.recordInProcess, record.email],
     });
