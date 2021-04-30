@@ -1,6 +1,11 @@
 {
   "versions": [
     {
+      "version": "1.2.0",
+      "date": "30.04.2021",
+      "note": "<h3>What's new</h3> <ul> <li> Added the new user invitation and onboarding workflow to support the AD federation. </li> <li> Implemented advanced query interface to support the search based on metadata and attributes. </li> <li> Implemented new authentication flows to enable role based access control on Workbench tools. </li> <li>Added the feature to support folder upload.</li> </ul> <h3>Bug Fixes</h3> <ul> <li> File Statistic card displays wrong total file counts after folder uploading. </li> <li> The search button disappears from the Advance Query UI when user modified the search criterions. </li> <li> Data Lineage Graph shows incorrect processing time and incomplete file attributes for data uploaded by VRE CLI. </li> <li> Project Collaborators could not see files deleted from project Core zone in trash bin. </li> </ul> <h3>Improvements</h3> <ul> <li>The project folder panel in file explorer is simplified.</li> <li>Improved usability of Advanced Query.</li> <li> Refined access control in VRE XWiki to separate the project content. </li> <li>Standardized VRE CLI arguments and options.</li> <li> Updated REDCap data transformation script to include metadata fields. </li> </ul>"
+    },
+    {
       "version": "1.1.1",
       "date": "31.03.2021",
       "note": "<h3>What's new</h3> <ul> <li>Users can now upload data in a folder structure and view folder contents in the File Explorer.</li> <li>Project Service Request feature implemented to support Project-based services access requests and notifications.</li> <li>Development for back-end storage of file metadata to support advanced File Query feature.</li> </ul> <h3>Bug Fixes</h3> <ul> <li>Fixed bug causing files to display incorrectly when switching between folders in the File Explorer. </li> </ul> <h3>Improvements</h3> <ul> <li>Updated Portal terminology from File Manifest to File Attribute.</li> <li>Improved display responsivity in tables during Portal window re-sizing.</li>  </ul>"

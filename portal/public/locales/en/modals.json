@@ -37,7 +37,7 @@
     "title": "User already exists",
     "content": [
       "A user with the email address",
-      "already exists in the user list."
+      "already exists in the user list, you can change their Platform role in the Action menu."
     ]
   },
   "inviteInAd": {
