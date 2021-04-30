@@ -420,7 +420,7 @@ class DatasetUser(Resource):
 
             # Add user to keycloak group
             add_user_to_project_group(dataset_id, username, _logger)
-
+            ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
             conn = ldap.initialize(ConfigClass.LDAP_URL)
             conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN, ConfigClass.LDAP_ADMIN_SECRET)
             ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
@@ -428,7 +428,7 @@ class DatasetUser(Resource):
             # Get user from ldap
             user_query = f'(&(objectClass=user)(mail={user_email}))'
             ad_response= conn.search_s(
-                "ou={},dc={},dc={}".format(ConfigClass.LDAP_USER_OU, ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
+                "dc={},dc={}".format(ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
                 ldap.SCOPE_SUBTREE,
                 user_query,
             )

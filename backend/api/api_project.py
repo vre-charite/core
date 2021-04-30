@@ -161,6 +161,7 @@ class APIProject(metaclass=MetaAPI):
                 }
 
                 # Create Project User Group in ldap
+                ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
                 conn = ldap.initialize(ConfigClass.LDAP_URL)
                 conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN, ConfigClass.LDAP_ADMIN_SECRET)
 
@@ -192,7 +193,7 @@ class APIProject(metaclass=MetaAPI):
                     email = user["email"]
                     user_query = f'(&(objectClass=user)(mail={email}))'
                     ad_users = conn.search_s(
-                        "ou={},dc={},dc={}".format(ConfigClass.LDAP_USER_OU, ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2), 
+                        "dc={},dc={}".format(ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2), 
                         ldap.SCOPE_SUBTREE, 
                         user_query
                     )

@@ -105,7 +105,7 @@ class ConfigClass(object):
         LDAP_OU = "VRE,OU=Charite-Zentrale-Anwendungen"
         LDAP_URL = "ldap://charite.de:389/"
         LDAP_ADMIN_DN = "svc-vre-ad@CHARITE"
-        LDAP_ADMIN_SECRET = os.environ.get('LDAP_ADMIN_SECRET')
+        LDAP_ADMIN_SECRET = "~*<whA\\5PCnk%X<k"
         LDAP_DC1 = "charite"
         LDAP_DC2 = "de"
         KEYCLOAK = 'http://keycloak.utility:8080/'
