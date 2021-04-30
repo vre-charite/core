@@ -155,6 +155,8 @@ const InviteUserModal = (props) => {
         if (err.response && err.response.status === 404) {
           const email = values.email;
           const role = values.role;
+          const platFormRole =
+            role === 'admin' ? 'Platform Administrator' : 'Platform User';
           Modal.confirm({
             title: t('modals:inviteNoExistPlatform.title'),
             icon: <ExclamationCircleOutlined />,
@@ -165,7 +167,7 @@ const InviteUserModal = (props) => {
                   'modals:inviteNoExistPlatform.content.0',
                 )} ${email} ${t(
                   'modals:inviteNoExistPlatform.content.1',
-                )} ${formatRole(role)}`}</p>
+                )} ${platFormRole}`}</p>
                 {!err.response.data.result?.ad_account_created ? (
                   <p>{`${t('modals:inviteNoExistPlatform.content.2')}`}</p>
                 ) : (

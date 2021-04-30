@@ -149,9 +149,11 @@
       "Something went wrong while trying to process files, please try again later."
     ]
   },
-  "rawTable":{
-    "getFilesApi":{
-      "default":["An error occurred while trying to retrieve the file information"]
+  "rawTable": {
+    "getFilesApi": {
+      "default": [
+        "An error occurred while trying to retrieve the file information"
+      ]
     }
   },
   "downloadFilesAPI": {
@@ -343,36 +345,67 @@
       "Something went wrong while trying to fetch invitations, please try again later."
     ]
   },
-  "editManifestOnFile":{
-    "emptyNonOptional":["Input cannot be empty for non-optional attributes"],
-    "lengthExceed":["Text cannot be longer than 100 characters"]
+  "editManifestOnFile": {
+    "emptyNonOptional": ["Input cannot be empty for non-optional attributes"],
+    "lengthExceed": ["Text cannot be longer than 100 characters"]
   },
-  "updateFileManifestAPI":{
-    "default":["Update failed - something went wrong while trying to update the attribute template, please try again later."]
+  "updateFileManifestAPI": {
+    "default": [
+      "Update failed - something went wrong while trying to update the attribute template, please try again later."
+    ]
   },
-  "importExportManifest":{
-    "manifestNumberOver":["The maximum number of attribute templates has been reached."],
-    "parseJsonFailed":["Failed to parse the json file"],
-    "fileTypeError":["Incorrect file format"],
-    "attributesMissing":["The json should have a \"attributes\" property"],
-    "attributesNotArray":["The \"attributes\" property should be an array"],
-    "propertyMissing":["property is missing on the","th attribute"],
-    "nameNotString":["the \"name\" property should be a string on the","th attribute"],
-    "nameLength":["the \"name\" property length should between 1-32 on the","th attribute"],
-    "nameFormat":["the \"name\" property should only contains letters, and/or digits on the","th attribute"],
-    "optionalNotBoolean":["the \"optional\" property should be a boolean on the","th attribute"],
-    "typeFormat":["the \"type\" property should be 'multiple_choice'|'text' on the","th attribute"],
-    "valueNullText":["the \"value\" should be null when the \"type\" is 'text' on the","th attribute"],
-    "valueString":["the \"value\" should be string when the \"multiple_choice\" is 'text' on the","th attribute"],
-    "choiceLength":["the choice's length should be between 1-32 on the","th attribute"],
-    "choiceFormat":["the choice should only contain numbers, digits, and -_!%&/()=?*+#.; on the","th attribute"],
-    "uniqueName":["The \"name\" property should be unique"]
+  "importExportManifest": {
+    "manifestNumberOver": [
+      "The maximum number of attribute templates has been reached."
+    ],
+    "parseJsonFailed": ["Failed to parse the json file"],
+    "fileTypeError": ["Incorrect file format"],
+    "attributesMissing": ["The json should have a \"attributes\" property"],
+    "attributesNotArray": ["The \"attributes\" property should be an array"],
+    "propertyMissing": ["property is missing on the", "th attribute"],
+    "nameNotString": [
+      "the \"name\" property should be a string on the",
+      "th attribute"
+    ],
+    "nameLength": [
+      "the \"name\" property length should between 1-32 on the",
+      "th attribute"
+    ],
+    "nameFormat": [
+      "the \"name\" property should only contains letters, and/or digits on the",
+      "th attribute"
+    ],
+    "optionalNotBoolean": [
+      "the \"optional\" property should be a boolean on the",
+      "th attribute"
+    ],
+    "typeFormat": [
+      "the \"type\" property should be 'multiple_choice'|'text' on the",
+      "th attribute"
+    ],
+    "valueNullText": [
+      "the \"value\" should be null when the \"type\" is 'text' on the",
+      "th attribute"
+    ],
+    "valueString": [
+      "the \"value\" should be string when the \"multiple_choice\" is 'text' on the",
+      "th attribute"
+    ],
+    "choiceLength": [
+      "the choice's length should be between 1-32 on the",
+      "th attribute"
+    ],
+    "choiceFormat": [
+      "the choice should only contain numbers, digits, and -_!%&/()=?*+#.; on the",
+      "th attribute"
+    ],
+    "uniqueName": ["The \"name\" property should be unique"]
   },
-  "importManifestAPI":{
-    "default":["Failed to upload the attribute template"]
+  "importManifestAPI": {
+    "default": ["Failed to upload the attribute template"]
   },
-  "getManifestById":{
-    "default":["Failed to retrieve the attribute template id: "]
+  "getManifestById": {
+    "default": ["Failed to retrieve the attribute template id: "]
   },
   "fileOperations": {
     "deleteErr": "Error occured when delete files",
@@ -402,8 +435,10 @@
   },
   "createVirtualFolder": {
     "default": ["Failed to create collection. Please try again later"],
-    "duplicate":["A collection by this name already exists, please enter a new name."],
-    "limit":["The maximum number of collections has been reached."]
+    "duplicate": [
+      "A collection by this name already exists, please enter a new name."
+    ],
+    "limit": ["The maximum number of collections has been reached."]
   },
   "updateVirtualFolder": {
     "default": ["Failed to update collection. Please try again later"],
@@ -426,8 +461,8 @@
       "content": "cannot be added to the Project at this time, please contact a Platform Administrator for assistance."
     },
     "pending": {
-      "title": "Already Invited",
-      "content": "User is Already invited, please hold until user's account being activated"
+      "title": "User already invited",
+      "content": "User cannot be added to the Project at this time. Please try again later."
     }
   },
   "addUser2Platform": {
@@ -453,12 +488,16 @@
   "userManagement": {
     "getServiceRequestAPI": "Get service request table resources failed!"
   },
-  "announcement":{
-    "getAnnouncementApi":{
-      "default":["Something went wrong while trying to retrieve announcements, please try again later."]
+  "announcement": {
+    "getAnnouncementApi": {
+      "default": [
+        "Something went wrong while trying to retrieve announcements, please try again later."
+      ]
     },
-    "getUserAnnouncementApi":{
-      "default":["Something went wrong while trying to retrieve announcements for this project, please try again later."]
+    "getUserAnnouncementApi": {
+      "default": [
+        "Something went wrong while trying to retrieve announcements for this project, please try again later."
+      ]
     }
   }
 }

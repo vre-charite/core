@@ -103,7 +103,7 @@ class ConfigClass(object):
 
         KEYCLOAK_ID = "aadfdc5b-e4e2-4675-9239-e2f9a10bdb50"
         LDAP_OU = "VRE,OU=Charite-Zentrale-Anwendungen"
-        LDAP_URL = "ldap://charite.de/"
+        LDAP_URL = "ldap://charite.de:389/"
         LDAP_ADMIN_DN = "svc-vre-ad@CHARITE"
         LDAP_ADMIN_SECRET = os.environ.get('LDAP_ADMIN_SECRET')
         LDAP_DC1 = "charite"
