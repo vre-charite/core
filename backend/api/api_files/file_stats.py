@@ -35,7 +35,6 @@ class FileStatistics(Resource):
                 user_id,
                 project_geid
             )
-            print(res_boolean_validate_role)
             if not res_boolean_validate_role[0]:
                 _res.set_code(EAPIResponseCode.unauthorized)
                 _res.set_error_msg(res_boolean_validate_role[1])
@@ -51,6 +50,10 @@ class FileStatistics(Resource):
                     raise("Error when fetching stats, payload: " + str(query_params))
                 _res.set_code(EAPIResponseCode.success)
                 result = fetched_stats.json()['result']
+                result['current_role'] = current_role
+                result['operator'] = operator
+                result['query_params'] = query_params
+                result['policy'] = "fa"
                 _res.set_result(result)
                 return _res.to_dict, _res.code
             # Not Admin
@@ -74,6 +77,9 @@ class FileStatistics(Resource):
                 if not all_fetched_stats.status_code == 200:
                     raise("Error when fetching stats, payload: " + str(query_params))
                 result['core'] = all_fetched_stats.json()['result']['core']
+            result['current_role'] = current_role
+            result['operator'] = operator
+            result['query_params'] = query_params
             _res.set_code(EAPIResponseCode.success)
             _res.set_result(result)
             return _res.to_dict, _res.code
