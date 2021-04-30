@@ -73,6 +73,7 @@ class UserManagement extends Component {
       invitations: {
         data: null,
       },
+      recordInProcess: [],
       statusFilter: 'All',
       roleFilter: 'All',
       isAdminOnly: false,
@@ -302,6 +303,13 @@ class UserManagement extends Component {
 
   updateStatus = async (record, action) => {
     const { realm, email } = record;
+    const inList = this.state.recordInProcess.find((item) => item === email);
+    if (inList) {
+      return;
+    }
+    this.setState({
+      recordInProcess: [...this.state.recordInProcess, record.email],
+    });
     updateUserStatusAPI({
       operationType: action,
       userRealm: 'vre',
@@ -318,6 +326,14 @@ class UserManagement extends Component {
           namespace.userManagement.updateUserStatusAPI,
         );
         errorMessager.triggerMsg(err.response.status);
+      })
+      .finally(() => {
+        const removedList = this.state.recordInProcess.filter(
+          (item) => item !== email,
+        );
+        this.setState({
+          recordInProcess: removedList,
+        });
       });
   };
 
@@ -415,7 +431,7 @@ class UserManagement extends Component {
       tabPaneKey,
     } = this.state;
     const { username, showRedDot } = this.props;
-    
+
     let columns = [
       {
         title: 'Account',

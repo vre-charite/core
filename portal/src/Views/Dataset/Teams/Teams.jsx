@@ -51,7 +51,7 @@ class Teams extends Component {
 
       total: 0,
       users: [],
-
+      recordInProcess: [],
       searchText: [],
       searchedColumn: '',
       page: 0,
@@ -180,6 +180,13 @@ class Teams extends Component {
       (el) => el.id === parseInt(datasetId),
     )?.code;
     const { email, username } = record;
+    const inList = this.state.recordInProcess.find((item) => item === email);
+    if (inList) {
+      return;
+    }
+    this.setState({
+      recordInProcess: [...this.state.recordInProcess, record.email],
+    });
     updateUserStatusAPI({
       operationType: action,
       userRealm: 'vre',
@@ -207,6 +214,14 @@ class Teams extends Component {
             username: username,
           });
         }
+      })
+      .finally(() => {
+        const removedList = this.state.recordInProcess.filter(
+          (item) => item !== email,
+        );
+        this.setState({
+          recordInProcess: removedList,
+        });
       });
   };
 
