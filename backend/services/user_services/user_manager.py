@@ -16,3 +16,12 @@ class SrvUserManager(metaclass=MetaService):
         )
         users = json.loads(res.text)
         return users[0]['email']
+    
+    def get_user_by_email(self, email):
+        url = ConfigClass.NEO4J_SERVICE + "nodes/User/query"
+        res = requests.post(
+            url=url,
+            json={"email": email}
+        )
+        users = json.loads(res.text)
+        return users[0]

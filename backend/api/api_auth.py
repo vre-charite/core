@@ -4,6 +4,9 @@ import requests
 from api import module_api
 from models.api_meta_class import MetaAPI
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from services.notifier_services.email_service import SrvEmail
+from services.container_services.container_manager import SrvContainerManager
+from services.user_services.user_manager import SrvUserManager
 from models.api_response import APIResponse, EAPIResponseCode
 from flask_jwt import jwt_required, current_identity
 from resources.decorator import check_role
@@ -120,6 +123,56 @@ class APIAuthService(metaclass=MetaAPI):
                 }
                 headers = request.headers
                 response = requests.put(ConfigClass.AUTH_SERVICE + "user/account", json=payload, headers=headers)
+
+                # send email
+                user_mgr = SrvUserManager()
+                user_info = user_mgr.get_user_by_email(user_email)
+                if operation_type == "enable":
+                    subject = "VRE User enabled"
+                    email_sender = SrvEmail()
+                    email_result = email_sender.send(
+                        subject,
+                        [user_email],
+                        msg_type="html",
+                        template="user_actions/enable.html",
+                        template_kwargs={
+                            "username": user_info['name'],
+                            "admin_name": current_identity["username"],
+                            "admin_email": ConfigClass.EMAIL_SUPPORT,
+                        },
+                    )
+                elif operation_type == "disable":
+                    subject = "VRE User disabled"
+                    email_sender = SrvEmail()
+                    email_result = email_sender.send(
+                        subject,
+                        [user_email],
+                        msg_type="html",
+                        template="user_actions/disable.html",
+                        template_kwargs={
+                            "username": user_info['name'],
+                            "admin_name": current_identity["username"],
+                            "admin_email": ConfigClass.EMAIL_SUPPORT,
+                        },
+                    )
+                elif operation_type == "restored":
+                    project_code = operation_payload.get("project_code")
+                    container_mgr = SrvContainerManager()
+                    project = container_mgr.get_by_project_code(project_code)[1]
+                    subject = "VRE access restored to {}".format(project["name"])
+                    email_sender = SrvEmail()
+                    email_result = email_sender.send(
+                        subject,
+                        [user_email],
+                        msg_type="html",
+                        template="user_actions/enable.html",
+                        template_kwargs={
+                            "username": user_info['name'],
+                            "admin_name": current_identity["username"],
+                            "project_name": project["name"],
+                            "admin_email": ConfigClass.EMAIL_SUPPORT,
+                        },
+                    )
                 return response.json(), response.status_code
             except Exception as e:
                 return {'result': "Error calling user account management service" + str(e)}, 500
