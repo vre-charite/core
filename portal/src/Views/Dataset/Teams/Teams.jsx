@@ -179,7 +179,8 @@ class Teams extends Component {
     const projectCode = this.props.containersPermission.find(
       (el) => el.id === parseInt(datasetId),
     )?.code;
-    const { email, username } = record;
+    const { email } = record;
+    const username = record.name;
     const inList = this.state.recordInProcess.find((item) => item === email);
     if (inList) {
       return;
@@ -332,7 +333,6 @@ class Teams extends Component {
       );
     const projectName = this.props.currentProject?.name;
     let role = this.props.currentProject?.permission;
-    console.log(this.props.userListOnDataset);
     const menu = (record, role) => (
       <Menu id="teams_role_dropdown">
         {/* {this.props.containerDetails &&
