@@ -76,12 +76,20 @@ function checkEmailExistAPI(email, datasetId) {
  * @param {boolean} inAd true if the user is already in AD but not in neo4j yet.
  * @returns
  */
-function inviteUserApi(email, platformRole, projectRole, projectGeid, inviter,inAd,adUserDn) {
+function inviteUserApi(
+  email,
+  platformRole,
+  projectRole,
+  projectGeid,
+  inviter,
+  inAd,
+  adUserDn,
+) {
   const data = {
     email,
     platform_role: platformRole,
-    ad_account_created:inAd,
-    ad_user_dn:adUserDn
+    ad_account_created: inAd,
+    ad_user_dn: adUserDn,
   };
   if (projectGeid && projectRole && inviter) {
     const relationship = {
@@ -159,11 +167,13 @@ function checkUserPlatformRole(email, projectGeid) {
     return axios({
       url: `/v1/invitation/check/${email}`,
       method: 'GET',
-      params: { project_geid: projectGeid }
+      timeout: 5 * 60 * 1000,
+      params: { project_geid: projectGeid },
     });
   }
   return axios({
     url: `/v1/invitation/check/${email}`,
+    timeout: 5 * 60 * 1000,
     method: 'GET',
   });
 }
@@ -196,12 +206,13 @@ function updateUserStatusAPI(params) {
   return axios({
     url: `v1/user/account`,
     method: 'PUT',
+    timeout: 5 * 60 * 1000,
     data: {
       operation_type: params.operationType,
       realm: params.userRealm,
       user_geid: params.userGeid,
       user_email: params.userEmail,
-      payload: params.payload
+      payload: params.payload,
     },
   });
 }
