@@ -17,7 +17,7 @@ import { formatRole, convertRole } from './roleConvert';
 import { convertUTCDateToLocalDate, timeConvert, timezone } from './timeCovert';
 import { partialString } from './column';
 import { nestedLoop } from './fileTree';
-import { pathsMap, pathNameMap, locationMap } from './pathsMap';
+import { pathsMap, pathNameMap, locationMap, pathsMapV2, } from './pathsMap';
 import { getHighlightedText } from './highlight';
 
 export {
@@ -51,6 +51,7 @@ export {
   locationMap,
   currentBrowser,
   toFixedNumber,
+  pathsMapV2,
 };
 
 export { logout, refresh, login } from './keycloakActions';

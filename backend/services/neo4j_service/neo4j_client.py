@@ -122,6 +122,24 @@ class Neo4jClient(object):
         self.result["result"] = response["result"][0]
         return self.result
 
+    def get_dataset_from_vfolder(self, geid):
+        response = self.node_query("VirtualFolder", {"global_entity_id": geid})
+        if not response.get("result"):
+            if not response.get("error_msg"):
+                self.result["error_msg"] = "VirtualFolder not found"
+                self.result["code"] = 404
+            return self.result 
+        folder_node = response["result"][0]
+
+        response = self.node_query("Dataset", {"id": folder_node["container_id"]})
+        if not response.get("result"):
+            if not response.get("error_msg"):
+                self.result["error_msg"] = "Dataset not found"
+                self.result["code"] = 404
+            return self.result
+        self.result["result"] = response["result"][0]
+        return self.result
+
     ### Users
     def get_user_by_email(self, email):
         response = self.node_query("User", {"email": email})

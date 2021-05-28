@@ -9,10 +9,7 @@ import {
   deleteVirtualFolder,
   updateVirtualFolder,
 } from '../../../../../APIs';
-import {
-  useCurrentProject,
-  trimString,
-} from '../../../../../Utility';
+import { useCurrentProject, trimString } from '../../../../../Utility';
 import RawTable from './RawTable';
 import { connect } from 'react-redux';
 import _ from 'lodash';
@@ -37,6 +34,7 @@ import {
 import i18n from '../../../../../i18n';
 import { usePanel } from './usePanel';
 import styles from './index.module.scss';
+import { createHash } from 'crypto';
 
 const { TabPane } = Tabs;
 const VFOLDER_CREATE_LEAF = 'vfolder-create';
@@ -78,14 +76,8 @@ let clickLock = false;
  * @extends {Component}
  */
 function FilesContent(props) {
-  const {
-    panes,
-    addPane,
-    removePane,
-    activePane,
-    activatePane,
-    updatePanes,
-  } = usePanel();
+  const { panes, addPane, removePane, activePane, activatePane, updatePanes } =
+    usePanel();
   const [treeKey, setTreeKey] = useState(0);
   const [vfolders, setVfolders] = useState([]);
   const [editCollection, setEditCollection] = useState(false);
@@ -132,6 +124,7 @@ function FilesContent(props) {
         disabled: false,
         children: null,
         createdTime: folder.timeCreated,
+        geid: folder.geid,
       };
     });
 
@@ -167,6 +160,7 @@ function FilesContent(props) {
         disabled: false,
         children: null,
         createdTime: folder.timeCreated,
+        geid: folder.geid,
       };
     });
 
@@ -199,7 +193,7 @@ function FilesContent(props) {
     fetch();
   }, [projectId]);
 
-   useEffect(() => {
+  useEffect(() => {
     updateVfolderTree(
       editCollection,
       createCollection,
@@ -209,10 +203,14 @@ function FilesContent(props) {
   }, [vfolders.length, updateTimes]);
 
   async function updateVfolders() {
-    const res = await listAllVirtualFolder(projectId);
-    const virualFolders = res.data.result;
-    setVfolders(virualFolders);
-    return virualFolders;
+    try {
+      const res = await listAllVirtualFolder(projectGeid);
+      const virualFolders = res.data.result;
+      setVfolders(virualFolders);
+      return virualFolders;
+    } catch (e) {
+      return [];
+    }
   }
 
   //Tab
@@ -305,19 +303,30 @@ function FilesContent(props) {
     const { newCollectionName } = values;
     try {
       setSaveBtnLoading(true);
-      await createVirtualFolder(projectId, newCollectionName);
+      await createVirtualFolder(projectGeid, newCollectionName);
       updateVfolders();
     } catch (error) {
       setSaveBtnLoading(false);
-      switch(error.response?.status){
-        case(409):{
-          message.error(`${i18n.t('errormessages:createVirtualFolder.duplicate.0')}`,3);
+      switch (error.response?.status) {
+        case 409: {
+          message.error(
+            `${i18n.t('errormessages:createVirtualFolder.duplicate.0')}`,
+            3,
+          );
           break;
-        }case(400):{
-          message.error(`${i18n.t('errormessages:createVirtualFolder.limit.0')}`,3);
+        }
+        case 400: {
+          message.error(
+            `${i18n.t('errormessages:createVirtualFolder.limit.0')}`,
+            3,
+          );
           break;
-        }default:{
-          message.error(`${i18n.t('errormessages:createVirtualFolder.default.0')}`,3);
+        }
+        default: {
+          message.error(
+            `${i18n.t('errormessages:createVirtualFolder.default.0')}`,
+            3,
+          );
         }
       }
     }
@@ -777,6 +786,9 @@ function FilesContent(props) {
                         panelKey={pane.key}
                         folderId={pane.content.folderId}
                         removePanel={remove}
+                        geid={pane.content.geid} // only for vfolder
+                        title={pane.title}
+                        titleText={pane.titleText}
                       />
                     </div>
                   </TabPane>
@@ -828,25 +840,18 @@ function FilesContent(props) {
         vfolder = vfoldersRes.find((v) => v.name === info.node.title);
       }
       if (vfolder) {
-        const filesRes = await listAllfilesVfolder(
-          vfolder.id,
-          1,
-          10,
-          'desc',
-          'createTime',
-        );
-        if (filesRes.data.result) {
-          const title = getTitle(`Collection - ${info.node.title}  `);
-          newPane = {
-            title: title,
-            content: {
-              projectId: projectId,
-              type: DataSourceType.CORE_VIRTUAL_FOLDER,
-              folderId: vfolder.id,
-            },
-            key: info.node.key.toString(),
-          };
-        }
+        const title = getTitle(`Collection - ${info.node.title}  `);
+        newPane = {
+          title: title,
+          titleText:info.node.title,
+          content: {
+            projectId: projectId,
+            type: DataSourceType.CORE_VIRTUAL_FOLDER,
+            folderId: vfolder.id,
+            geid: info.node.geid,
+          },
+          key: info.node.key.toString(),
+        };
       }
     }
     return newPane;

@@ -8,7 +8,6 @@ from services.notifier_services.email_service import SrvEmail
 import requests
 from config import ConfigClass
 
-@unittest.skip('deprecated')
 class TestInvitation(unittest.TestCase):
     log = Logger(name='test_invitation.log')
     test = SetUpTest(log)
@@ -50,7 +49,6 @@ class TestInvitation(unittest.TestCase):
             }
         }
         response = self.app.post("/v1/invitations", json=payload, headers=self.headers)
-        self.log(response.json)
         self.assertEqual(response.status_code, 200)
         with self.root_app.app_context():
             invite = db.session.query(InvitationModel).filter_by(email=self.emails[0]).first()

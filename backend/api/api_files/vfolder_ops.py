@@ -12,49 +12,55 @@ import json
 _logger = SrvLoggerFactory('api_files_ops_v1').get_logger()
 
 class VirtualFolderFiles(BaseProxyResource):
-    # methods = ["POST", "DELETE"]
-    # required_roles = {"GET": "member"}
-    # url = ConfigClass.DATA_UTILITY_SERVICE + "vfolders/{folderId}/files"
 
-    def post(self, folderId):
+    def post(self, folder_geid):
         _res = APIResponse()
-        url = ConfigClass.DATA_UTILITY_SERVICE + "vfolders/{}/files".format(folderId)
         headers = request.headers
 
         try:
+            # Get vfolder
+            url = ConfigClass.NEO4J_SERVICE + f"nodes/VirtualFolder/query"
+            payload = {
+                "global_entity_id": folder_geid,
+            }
+            response = requests.post(url, json=payload)
+            if response.status_code != 200:
+                api_response.code = response.status_code
+                api_response.error_msg = response.json()
+                return api_response.json_response()
+            vfolder = response.json()[0]
+
             data = request.get_json()
             payload = {
                 "start_id": current_identity['user_id'],
-                "end_id": folderId
+                "end_id": vfolder["id"] 
             }
             relation_res = requests.get(ConfigClass.NEO4J_SERVICE + 'relations', params=payload)
             relations = relation_res.json()
 
-            if len(relations) == 0:
+            if current_identity["role"] != "admin":
+                if len(relations) == 0:
                     _res.set_code(EAPIResponseCode.bad_request)
                     _res.set_result("no permission for this project")
                     return _res.to_dict, _res.code
-            else:
                 relation = relations[0]
                 project_role = relation['r']['type']
 
-                if project_role == 'owner':
-                    response = requests.post(url, json=data, headers=headers)
-                    if response.status_code != 200:
-                        _logger.error('Failed to add files to vfolder:   '+ response.text)
-                        _res.set_code(EAPIResponseCode.internal_error)
-                        _res.set_result("Failed to add files to vfolder")
-                        return _res.to_dict, _res.code
-                
-                    else:
-                        _logger.info('Successfully add files to vfolder: {}'.format(json.dumps(response.json())))
-                        return response.json()
-
-                else:
+                if project_role != 'owner':
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_result("no permission to add files to vfolder")
                     return _res.to_dict, _res.code
 
+            url = ConfigClass.DATA_UTILITY_SERVICE + f"collections/{folder_geid}/files"
+            response = requests.post(url, json=data, headers=headers)
+            if response.status_code != 200:
+                _logger.error('Failed to add files to vfolder:   '+ response.text)
+                _res.set_code(EAPIResponseCode.internal_error)
+                _res.set_result("Failed to add files to vfolder")
+                return _res.to_dict, _res.code
+            else:
+                _logger.info('Successfully add files to vfolder: {}'.format(json.dumps(response.json())))
+                return response.json()
 
         except Exception as e:
             print(str(e))
@@ -64,46 +70,56 @@ class VirtualFolderFiles(BaseProxyResource):
             return _res.to_dict, _res.code
 
 
-    def delete(self, folderId):
+    def delete(self, folder_geid):
         _res = APIResponse()
-        url = ConfigClass.DATA_UTILITY_SERVICE + "vfolders/{}/files".format(folderId)
         headers = request.headers
         
 
         try:
-            data = request.get_json()
+            # Get vfolder
+            url = ConfigClass.NEO4J_SERVICE + f"nodes/VirtualFolder/query"
             payload = {
-                "start_id": current_identity['user_id'],
-                "end_id": folderId
+                "global_entity_id": folder_geid,
             }
-            relation_res = requests.get(ConfigClass.NEO4J_SERVICE + 'relations', params=payload)
-            relations = relation_res.json()
+            response = requests.post(url, json=payload)
+            if response.status_code != 200:
+                api_response.code = response.status_code
+                api_response.error_msg = response.json()
+                return api_response.json_response()
+            vfolder = response.json()[0]
+            data = request.get_json()
 
-            if len(relations) == 0:
+            if current_identity["role"] != "admin":
+                payload = {
+                    "start_id": current_identity['user_id'],
+                    "end_id": vfolder["id"] 
+                }
+                relation_res = requests.get(ConfigClass.NEO4J_SERVICE + 'relations', params=payload)
+                relations = relation_res.json()
+
+                if len(relations) == 0:
                     _res.set_code(EAPIResponseCode.bad_request)
                     _res.set_result("no permission for this project")
                     return _res.to_dict, _res.code
-            else:
                 relation = relations[0]
                 project_role = relation['r']['type']
 
-                if project_role == 'owner':
-                    response = requests.delete(url, json=data, headers=headers)
-                    if response.status_code != 200:
-                        _logger.error('Failed to remove files from vfolder:   '+ response.text)
-                        _res.set_code(EAPIResponseCode.internal_error)
-                        _res.set_result("Failed to remove files from vfolder")
-                        return _res.to_dict, _res.code
-                
-                    else:
-                        _logger.info('Successfully remove files from vfolder: {}'.format(json.dumps(response.json())))
-                        return response.json()
-
-                else:
+                if project_role != 'owner':
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_result("no permission to remove files from vfolder")
                     return _res.to_dict, _res.code
 
+            url = ConfigClass.DATA_UTILITY_SERVICE + f"collections/{folder_geid}/files"
+            response = requests.delete(url, json=data, headers=headers)
+            if response.status_code != 200:
+                _logger.error('Failed to remove files from vfolder:   '+ response.text)
+                _res.set_code(EAPIResponseCode.internal_error)
+                _res.set_result("Failed to remove files from vfolder")
+                return _res.to_dict, _res.code
+        
+            else:
+                _logger.info('Successfully remove files from vfolder: {}'.format(json.dumps(response.json())))
+                return response.json()
 
         except Exception as e:
             print(str(e))
@@ -117,15 +133,12 @@ class VirtualFolderFiles(BaseProxyResource):
 class VirtualFolder(BaseProxyResource):
     methods = ["POST", "GET"]
     required_roles = {"GET": "member"}
-    url = ConfigClass.DATA_UTILITY_SERVICE + "vfolders/"
+    url = ConfigClass.DATA_UTILITY_SERVICE + "collections/"
 
 class VirtualFolderInfo(BaseProxyResource):
-    # methods = ["DELETE", "GET"]
-    # required_roles = {"GET": "member"}
-    # url = ConfigClass.DATA_UTILITY_SERVICE + "vfolders/{folderId}"
     def get(self, folderId):
         _res = APIResponse()
-        url = ConfigClass.DATA_UTILITY_SERVICE + "vfolders/{}".format(folderId)
+        url = ConfigClass.DATA_UTILITY_SERVICE + "collections/{}".format(folderId)
         headers = request.headers
 
         try:
@@ -174,7 +187,7 @@ class VirtualFolderInfo(BaseProxyResource):
     
     def delete(self, folderId):
         _res = APIResponse()
-        url = ConfigClass.DATA_UTILITY_SERVICE + "vfolders/{}".format(folderId)
+        url = ConfigClass.DATA_UTILITY_SERVICE + "collections/{}".format(folderId)
         headers = request.headers
 
         try:

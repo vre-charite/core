@@ -104,7 +104,7 @@ function FileStats(props) {
               <span className={styles.fileNumber}>{uploadCount}</span>
             </Row>
             <Row>
-              <span className={styles.fileFont}>Uploaded</span>
+              <span className={styles.fileFont}>Uploaded (Today)</span>
             </Row>
           </Col>
         </Row>
@@ -119,7 +119,7 @@ function FileStats(props) {
               <span className={styles.fileNumber}>{downloadCount}</span>
             </Row>
             <Row>
-              <span className={styles.fileFont}>Downloaded</span>
+              <span className={styles.fileFont}>Downloaded (Today)</span>
             </Row>
           </Col>
         </Row>
@@ -135,7 +135,7 @@ function FileStats(props) {
                 <span className={styles.fileNumber}>{copyCount}</span>
               </Row>
               <Row>
-                <span className={styles.fileFont}>Approved</span>
+                <span className={styles.fileFont}>Approved (Today)</span>
               </Row>
             </Col>
           </Row>

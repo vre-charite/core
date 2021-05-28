@@ -41,7 +41,3 @@ class APIDateSet(metaclass=MetaAPI):
         users_entity_ns.add_resource(
             user_default_dataset, '/<username>/default')
         users_entity_ns.add_resource(ADUserUpdate, '')
-
-        # users management
-        users_entity_ns.add_resource(
-            DatasetUserManagement, '/action')

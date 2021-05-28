@@ -7,3 +7,31 @@
 .no_select::-moz-selection {
   background: none;
 }
+
+.copy_to_core_modal {
+  :global {
+    .ant-modal-content {
+      border-radius: 6px;
+    }
+    .ant-modal-header {
+      border-radius: 6px;
+      padding: 10px 24px;
+    }
+    .ant-modal-close-x {
+      line-height: 43px;
+      width: 50px;
+      height: 40px;
+    }
+  }
+}
+
+.copy_to_core_tree {
+  :global {
+    .ant-tree-node-content-wrapper {
+      margin-top: 2px;
+    }
+    .ant-tree-iconEle {
+      margin-right: 10px;
+    }
+  }
+}

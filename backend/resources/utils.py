@@ -83,6 +83,23 @@ def remove_user_from_project_group(container_id, user_email, logger, access_toke
     if(res.status_code != 200):
         logger.error(f"Error removing user from group in ad: {res.text} {res.status_code}")
 
+def add_user_to_ad_group(user_email, project_code, logger, access_token):
+    payload = {
+        "operation_type": "add",
+        "user_email": user_email,
+        "group_code": project_code,
+    }
+    res = requests.put(
+        url=ConfigClass.AUTH_SERVICE + "user/ad-group",
+        json=payload,
+        headers={
+            "Authorization": access_token
+        }
+    )
+    if(res.status_code != 200):
+        logger.error(f"Error adding user to group in ad: {res.text} {res.status_code}")
+    return res.json().get("entry")
+
 
 def add_user_to_project_group(container_id, username, logger):
     # Add user to keycloak group with the same name as the project
@@ -480,3 +497,35 @@ def helper_now_utc():
     dt = datetime.datetime.now() 
     utc_time = dt.replace(tzinfo = timezone.utc) 
     return utc_time
+
+def http_query_node(primary_label, query_params={}):
+    '''
+    primary_label i.e. Folder, File, Dataset
+    '''
+    payload = {
+        **query_params
+    }
+    node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/{}/query".format(primary_label)
+    response = requests.post(node_query_url, json=payload)
+    return response
+
+
+def get_files_recursive(folder_geid, all_files=[]):
+    query = {
+        "start_label": "Folder",
+        "end_labels": ["File", "Folder"],
+        "query": {
+            "start_params": {
+                "global_entity_id": folder_geid,
+            },
+            "end_params": {
+            }
+        }
+    }
+    resp = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=query)
+    for node in resp.json()["results"]:
+        if "File" in node["labels"]:
+            all_files.append(node)
+        else:
+            get_files_recursive(node["global_entity_id"], all_files=all_files)
+    return all_files

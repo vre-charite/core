@@ -16,6 +16,9 @@ from .api_users import APIUsers
 from .api_provenance import APIProvenance
 from .api_scripts.neo_to_es import APINeo4j2ESScript
 from .api_resource_request.resource_request import APIResourceRequest
+from .api_workbench import APIWorkbench
+from .api_folder_creation.api_folder_ops_v1 import APIFolderCreation
+from .api_data_ops_utility.api_tags import APITagsV2
 
 apis = [
     APIHelloWorld(),
@@ -34,7 +37,10 @@ apis = [
     APIUsers(),
     APIProvenance(),
     APINeo4j2ESScript(),
-    APIResourceRequest()
+    APIResourceRequest(),
+    APIWorkbench(),
+    APIFolderCreation(),
+    # APITagsV2(),
 ]
 
 

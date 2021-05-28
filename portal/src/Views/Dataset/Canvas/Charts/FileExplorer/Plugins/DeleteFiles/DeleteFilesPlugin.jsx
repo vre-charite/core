@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { DeleteOutlined } from '@ant-design/icons';
 import { Button, message } from 'antd';
-
 import { TABLE_STATE } from '../../RawTableValues';
 import DeleteFilesModal from './DeleteFilesModal';
 import i18n from '../../../../../../../i18n';
@@ -24,6 +23,7 @@ const DeleteFilesPlugin = ({
         input_path: v.name,
         fileName: v.fileName,
         uploader: v.owner,
+        geid: v.geid,
         generate_id:
           v.generateId && v.generateId !== 'undefined' ? v.generateId : null,
       };

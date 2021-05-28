@@ -11,6 +11,7 @@ import {
 import styles from './index.module.scss';
 import GeneralInfo from './Tabs/GeneralInfo/GeneralInfo';
 import FileManifest from './Tabs/FileManifest/FileManifest';
+import WorkBench from './Tabs/workBench/workBench';
 import CanvasPageHeader from '../Canvas/PageHeader/CanvasPageHeader';
 import { EditOutlined, SaveOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -214,7 +215,6 @@ function Settings(props) {
               activateKey === 'general_info' && tabBarExtraContent
             }
             renderTabBar={(props, DefaultTabBar) => {
-              console.log(props);
               return (
                 <DefaultTabBar
                   className={styles.tabHeader}
@@ -242,6 +242,11 @@ function Settings(props) {
             <TabPane tab="File Attributes" key="file_manifest">
               <div style={{ backgroundColor: 'white' }}>
                 <FileManifest />
+              </div>
+            </TabPane>
+            <TabPane tab="Workbench" key="work_bench">
+              <div style={{ backgroundColor: 'white' }}>
+                <WorkBench />
               </div>
             </TabPane>
           </Tabs>

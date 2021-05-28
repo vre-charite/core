@@ -7,17 +7,28 @@ import {
   SET_CURRENT_PROJECT_ACTIVE_PANE,
   SET_CURRENT_PROJECT_TREE_CORE,
   CLEAR_CURRENT_PROJECT,
+  SET_PROJECT_WORKBENCH,
 } from '../actionTypes';
 
-const init = {};
+const init = {
+  workbenchDeployedCounter: 0,
+};
 export default function (state = init, action) {
   const { type, payload } = action;
   switch (type) {
     case CLEAR_CURRENT_PROJECT: {
-      return {};
+      return {
+        workbenchDeployedCounter: 0,
+      };
     }
     case SET_CURRENT_PROJECT_PROFILE: {
       return { ...state, profile: payload };
+    }
+    case SET_PROJECT_WORKBENCH: {
+      return {
+        ...state,
+        workbenchDeployedCounter: state.workbenchDeployedCounter + 1,
+      };
     }
     case SET_CURRENT_PROJECT_MANIFEST: {
       return { ...state, manifest: payload };

@@ -131,13 +131,17 @@ function NewProjectPanel({
           (item) => item.code === values.code,
         );
         setContainersPermissionCreator([
-          ...containersPermission,
           {
+            ...newContainer,
+            permission: 'admin',
+          },
+          ...containersPermission,
+          /* {
             id: newContainer.id,
             name: values.name,
             permission: 'admin',
             code: values.code,
-          },
+          }, */
         ]);
         message.success(t('success:createProject'));
         onToggleCreateNewProject();

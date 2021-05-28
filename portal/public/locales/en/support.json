@@ -10,15 +10,15 @@
       "panel": [
         {
           "question": "I forgot my username or password. What should I do?",
-          "answer": "Please contact the VRE Support Team at vre-support@charite.de for assistance with changing your username or password."
+          "answer": "You may log in with your Charité username or email address, to reset your password please visit https://zugang.charite.de/"
         },
         {
           "question": "How can I change my password?",
-          "answer": "After logging in, click on your username in the top right corner of any page and select \"Reset Password\" from the dropdown menu."
+          "answer": "After logging in, click on your username in the top right corner of any page and select \"Reset Password\" from the dropdown menu.   You will be redirected to visit https://zugang.charite.de/ where you can reset your password.  For additional assistance with your account you can contact the Charité help desk by phone at +49 30 450 575444 or by sending an email to helpdesk@charite.de (auskunftssystem@charite.de)."
         },
         {
           "question": "How can I change my email address?",
-          "answer": "Your email address is associated with your approved membership in one or more VRE research projects and is your identity throughout the platform. To change your email address, you will need to request a new user account from your Project Administrator."
+          "answer": "Your email address is your identity throughout the platform and is associated with your Charité account so it cannot be changed directly within the VRE. For assistance with your account, you can contact the Charité Help Desk by phone at +49 30 450 575444 or by sending an email to helpdesk@charite.de (auskunftssystem@charite.de)."
         }
       ]
     },
@@ -47,11 +47,11 @@
         },
         {
           "question": "What is the Members Panel and who can access it?",
-          "answer": "The Members Panel is used to add users to a Project. Project and Platform Administrators can access the Members Panel in the right Sidebar."
+          "answer": "The Members Panel is used to add users to a Project. Project and Platform Administrators can access the Members Panel in the left sidebar."
         },
         {
           "question": "What is in the Project Settings?",
-          "answer": "The Project Settings page is where Project information and File Manifests can be configured by Project Administrators."
+          "answer": "The Project Settings page is where Project information and File Attributes Template can be configured by Project Administrators."
         }
       ]
     },
@@ -73,11 +73,11 @@
         },
         {
           "question": "How do I upload a file?",
-          "answer": "After logging into the VRE, navigate to your Project and click on Upload in the File Explorer card or click on the Upload icon in the Right Sidebar. You can select one or multiple files from your local drive to upload to the VRE."
+          "answer": "After logging into the VRE, navigate to your Project and click on Upload in the File Explorer card. You can select one or multiple files or folders from your local drive to upload to the VRE."
         },
         {
           "question": "How do I know my file uploaded successfully?",
-          "answer": "The Files Panel will appear in the bottom right of your screen after you initiate a file upload. Your most recent upload will appear at the bottom of the list and will have a green \"Success\" indicator if uploaded successfully. If you need to open or close the Files Panel, click on the Files Panel icon at the bottom of the Right Sidebar. Files will be listed as \"Uploading\" if the upload is in progress, \"Success\" if the file was uploaded without issue, or \"Error\" if the attempted upload was unsuccessful."
+          "answer": "The Files Status icon in the main navigation menu will display the status of your file uploads for the current session.  If you click on the File Status card, your most recent upload will appear in the \"In Progress\" section until it has uploaded successfully. The \"Uploaded\", \"Downloaded\", \"Approved\", and \"Trash Bin\" pages will show you the other files that have been successfully processed during your current session.  If any uploads or downloads failed, the File Status icon will turn red and a list of the failed files will appear in the \"In Progress\" tab."
         },
         {
           "question": "Are files encrypted upon upload?",
@@ -89,20 +89,20 @@
       "title": "File Organization",
       "panel": [
         {
-          "question": "What are the default folders in a VRE Project?",
-          "answer": "All Projects are created with three default folders: Raw, Processed, and Trash Bin."
+          "question": "What is the difference between the VRE Green Room and the VRE Core?",
+          "answer": "The Green Room is a segregated data zone for the storage of data with personally identifiable information.  Within the Green Room environment hospital data can be de-identified, transformed, and prepared, prior to being transferred to VRE Core systems. The VRE Core is an environment designed to support the full lifecycle of data after being deidentified in the Green Room. In the VRE Core, de-identified hospital data can be securely stored, federated, and analyzed."
         },
         {
           "question": "How do I move a file from the Green Room to the VRE Core?",
-          "answer": "Project Administrators can copy files from the Green Room Processed subfolder, straightCopy, into the VRE Core, by selecting files in the File Explorer, clicking the 'Copy to Core' button, and inputting the confirmation code."
+          "answer": "Project Administrators can copy files from the Green Room into the VRE Core, by selecting files in the File Explorer, clicking the 'Copy to Core' button, and inputting the confirmation code."
         },
         {
           "question": "What is a Collection?",
           "answer": "A Collection is a personalized group of files that has been created by a user to organize data in the VRE Core without moving or duplicating data.   A single file can be added to multiple Collections and adding or removing files from Collections does not affect the file's storage location or data lineage. Collections are made by selecting files in the VRE Core and selecting \"Add to Collection\". Currently all collections are private and cannot be viewed by other users."
         },
         {
-          "question": "What is a File Manifest?",
-          "answer": "A File Manifest is a list of pre-defined attributes and values specific to the file. File Manifest Templates are configured by Project Administrators in the Project Settings page. File Manifest Templates can be attached to any file(s) during upload or edited while viewing the Properties of a file in the File Explorer."
+          "question": "What is a File Attribute Template?",
+          "answer": "A File Attribute Template is a list of pre-defined attributes and values specific to a file or collection of files. File Attribute Templates are configured by Project Administrators in the Project Settings page. File Attributes can be attached to any file(s) during upload or edited while viewing the Properties of a file in the File Explorer."
         },
         {
           "question": "What happens to files that get moved to the Trash Bin?",
@@ -115,19 +115,23 @@
       "panel": [
         {
           "question": "What are the Project tools are available outside of the Portal?",
-          "answer": "XWiki, Guacamole, and the Command Line Tool are available for Project Members to use. Talk to your Project Administrator about setting up XWiki and Guacamole if not yet available for your Project."
+          "answer": "XWiki, Guacamole, Jupyterhub, Superset and the Command Line Tool are available for Project Members to use. Talk to your Project Administrator about setting up these tools if they are not yet configured for your Project."
         },
         {
           "question": "What is XWiki?",
           "answer": "XWiki is a structured wiki that can be used by Project Members for documentation, knowledge sharing, and collaboration"
         },
         {
-          "question": "What is a Guacamole?",
+          "question": "What is Guacamole?",
           "answer": "Apache Guacamole is a clientless remote desktop gateway that supports standard protocols like VNC, RDP, and SSH. Contact a Platform Administrator for more information about deploying Guacamole for your Project."
         },
         {
-          "question": "What is a JupyterHub?",
+          "question": "What is JupyterHub?",
           "answer": "JupyterHub is an open source, multi-user version of Jupyter Notebook integrated for performing analysis of data in the VRE Core. Contact a Platform Administrator for more information about deploying JupyterHub for your Project."
+        },
+        {
+          "question": "What is Superset?",
+          "answer": "Apache Superset is an open-source software cloud-native application designed for the exploration and visualization of big data.  Contact a Platform Administrator for more information about deploying Superset for your Project."
         },
         {
           "question": "What is the Command Line Tool?",

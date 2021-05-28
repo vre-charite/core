@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense, useContext } from 'react';
 import { Switch, Route, Redirect, withRouter } from 'react-router-dom';
 import { authedRoutes, unAuthedRoutes } from './Routes';
 import './Portal.css';
@@ -31,7 +31,7 @@ import { protectedRoutes, reduxActionWrapper, keepAlive } from './Utility';
 import { message, Modal, Spin, Button, notification } from 'antd';
 import Promise from 'bluebird';
 import _ from 'lodash';
-
+import { UploadQueueContext } from './Context';
 import { namespace, ErrorMessager } from './ErrorMessages';
 import { v4 as uuidv4 } from 'uuid';
 import { history } from './Routes';
@@ -42,6 +42,8 @@ import { tokenTimer } from './Service/keycloak';
 import { Loading } from './Components/Layout/Loading';
 import TermsOfUse from './Views/TermsOfUse/TermsOfUse';
 import semver from 'semver';
+import AccountDisabled from './Views/AccountDisabled/AccountDisabled';
+import { JOB_STATUS } from './Components/Layout/FilePanel/jobStatus';
 
 // router change
 history.listen(() => {
@@ -100,33 +102,25 @@ function Portal(props) {
   const userStatus = user.status;
   const dispatch = useDispatch();
   const { keycloak } = useKeycloak();
+  const q = useContext(UploadQueueContext);
 
   //keycloak event binding
   useEffect(() => {
     // initial logic
     async function initUser() {
-      if (!tokenManager.getCookie('sessionId')&&userStatus==='active') {
-        const sourceId = uuidv4();
-        tokenManager.setCookies({
-          sessionId: `${keycloak?.tokenParsed.preferred_username}-${sourceId}`,
-        });
-        lastLoginAPI(keycloak?.tokenParsed.preferred_username);
-      }
       setUsernameDispatcher(keycloak?.tokenParsed.preferred_username);
       setEmailDispatcher(keycloak?.tokenParsed.email);
       getUserstatus();
     }
     async function getUserstatus() {
-      try{
+      try {
         const res = await getUserstatusAPI();
         if (res && res.data) {
           setUserStatusDispather(res.data.status);
         }
-        
-      }catch(err){
+      } catch (err) {
         message.error('User not found');
       }
-      
     }
     if (keycloak?.tokenParsed) {
       initUser();
@@ -214,15 +208,38 @@ function Portal(props) {
       const sessionId = tokenManager.getCookie('sessionId');
       const res = await checkUploadStatus('*', '*', sessionId);
       const { code, result } = res.data;
-
+      const itemStatus = (status) => {
+        if (status === JOB_STATUS.SUCCEED) {
+          return 'success';
+        } else if (status === JOB_STATUS.TERMINATED) {
+          return 'error';
+        } else {
+          return 'uploading';
+        }
+      };
       if (code === 200) {
         const newUploadList = [];
         for (const item of result) {
-          if (['TERMINATED', 'SUCCEED'].includes(item.status)) {
+          if (
+            [JOB_STATUS.TERMINATED, JOB_STATUS.SUCCEED].includes(item.status)
+          ) {
             newUploadList.push({
               fileName: item.source,
-              status: item.status === 'SUCCEED' ? 'success' : 'error',
+              status: itemStatus(item.status),
               progress: 1,
+              uploadedTime: parseInt(item.updateTimestamp),
+              projectCode: item.projectCode,
+            });
+          } else if (item.status === JOB_STATUS.PRE_UPLOADED) {
+            const task = q.workersList()[0];
+            newUploadList.push({
+              fileName: item.source,
+              status: itemStatus(item.status),
+              progress: 1,
+              uploadKey:
+                task.file.name === item.source
+                  ? task.data.uploadKey
+                  : undefined,
               uploadedTime: parseInt(item.updateTimestamp),
               projectCode: item.projectCode,
             });
@@ -243,36 +260,58 @@ function Portal(props) {
           containersPermission.find((el) => el.id === Number(currentProjectId));
 
         try {
-          const downloadRes = await checkDownloadStatus(
-            sessionId,
-            currentProject.code,
-            username,
+          const pendingDownloadList = downloadList.filter(
+            (el) => el.status === 'pending',
           );
-          if (downloadRes.status === 200) {
-            let downloadList = downloadRes.data && downloadRes.data.result;
-            downloadList = downloadList.map((item) => {
-              if (
-                item.status === 'READY_FOR_DOWNLOADING' ||
-                item.status === 'SUCCESS'
-              ) {
-                item.status = 'success';
-              } else if (item.status === 'ZIPPING') {
-                item.status = 'pending';
-              } else {
-                item.status = 'error';
-              }
-
-              const sourceArray = item.source && item.source.split('/');
-
-              item.filename =
-                sourceArray &&
-                sourceArray.length &&
-                sourceArray[sourceArray.length - 1];
-
-              return item;
-            });
-            setDownloadListDispatcher(downloadList);
+          
+          for (const item of pendingDownloadList) {
+            console.log(item)
+            await checkDownloadStatusAPI(
+              item.downloadKey,
+              item.hashCode,
+              item.namespace,
+              updateDownloadItemDispatch,
+              setSuccessNumDispatcher,
+              successNum,
+            )
           }
+
+          if (pendingDownloadList.length === 0) {
+            const downloadRes = await checkDownloadStatus(
+              sessionId,
+              currentProject.code,
+              username,
+            );
+  
+            if (downloadRes.status === 200) {
+              let newDownloadList =
+                downloadRes.data &&
+                downloadRes.data.result.filter((el) => !el.payload.parentFolder);
+              newDownloadList = newDownloadList.map((item) => {
+                if (
+                  item.status === JOB_STATUS.READY_FOR_DOWNLOADING ||
+                  item.status === JOB_STATUS.SUCCEED
+                ) {
+                  item.status = 'success';
+                } else if (item.status === JOB_STATUS.ZIPPING) {
+                  item.status = 'pending';
+                } else {
+                  item.status = 'error';
+                }
+  
+                const sourceArray = item.source && item.source.split('/');
+  
+                item.filename =
+                  sourceArray &&
+                  sourceArray.length &&
+                  sourceArray[sourceArray.length - 1];
+  
+                return item;
+              });
+              setDownloadListDispatcher(newDownloadList);
+            }
+          }
+          
         } catch (err) {
           if (err.response && err.response.status === 404) {
             console.log('no download history in current session');
@@ -394,50 +433,59 @@ function Portal(props) {
     maxWait: 15 * 1000,
   });
 
-/*   if (userStatus === null) {
+  /*   if (userStatus === null) {
     return null;
   } */
-  return userStatus === 'pending' ? (
-    <TermsOfUse />
-  ) : (
-    <>
-      <Suspense fallback={null}>
-        <Switch>
-          {authedRoutes.map((item) => (
-            <Route
-              path={item.path}
-              key={item.path}
-              exact={item.exact || false}
-              render={(props) => {
-                if (!keycloak.authenticated) {
-                  return <Redirect to="/" />;
-                }
-                if (!containersPermission) {
-                  return <Loading />;
-                }
-                let res = protectedRoutes(
-                  item.protectedType,
-                  keycloak.authenticated,
-                  props.match.params.datasetId,
-                  containersPermission,
-                  role,
-                );
-                if (res === '403') {
-                  return <Redirect to="/error/403" />;
-                } else if (res === '404') {
-                  return <Redirect to="/error/404" />;
-                } else if (res) {
-                  return <item.component />;
-                } else {
-                  return <Redirect to="/" />;
-                }
-              }}
-            ></Route>
-          ))}
-        </Switch>
-      </Suspense>
-    </>
-  );
+  switch (userStatus) {
+    case 'pending': {
+      return <TermsOfUse />;
+    }
+    case 'disabled': {
+      return <AccountDisabled />;
+    }
+
+    default: {
+      return (
+        <>
+          <Suspense fallback={null}>
+            <Switch>
+              {authedRoutes.map((item) => (
+                <Route
+                  path={item.path}
+                  key={item.path}
+                  exact={item.exact || false}
+                  render={(props) => {
+                    if (!keycloak.authenticated) {
+                      return <Redirect to="/" />;
+                    }
+                    if (!containersPermission) {
+                      return <Loading />;
+                    }
+                    let res = protectedRoutes(
+                      item.protectedType,
+                      keycloak.authenticated,
+                      props.match.params.datasetId,
+                      containersPermission,
+                      role,
+                    );
+                    if (res === '403') {
+                      return <Redirect to="/error/403" />;
+                    } else if (res === '404') {
+                      return <Redirect to="/error/404" />;
+                    } else if (res) {
+                      return <item.component />;
+                    } else {
+                      return <Redirect to="/" />;
+                    }
+                  }}
+                ></Route>
+              ))}
+            </Switch>
+          </Suspense>
+        </>
+      );
+    }
+  }
 }
 
 export default withRouter(Portal);

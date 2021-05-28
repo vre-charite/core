@@ -68,9 +68,7 @@ function ContactUsForm(props) {
       });
   }
 
-  function handleChange(value) {
-    console.log(`selected ${value}`);
-  }
+  function handleChange(value) {}
   function resetSubmission() {
     setSuccess(false);
     setAttachments([]);

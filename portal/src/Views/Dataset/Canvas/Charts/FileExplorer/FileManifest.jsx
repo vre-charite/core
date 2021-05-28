@@ -39,16 +39,19 @@ function FileManifest({ currentRecord, permission, updateFileManifest }) {
           setManifests(attributes);
         })
         .catch((err) => {
-          const errorMessage = new ErrorMessager(namespace.manifest.getManifestById);
-          errorMessage.triggerMsg(null,null,{manifestId:manifestId})
+          const errorMessage = new ErrorMessager(
+            namespace.manifest.getManifestById,
+          );
+          errorMessage.triggerMsg(null, null, { manifestId: manifestId });
           //message.error('Failed to get the Manifest id: ' + manifestId);
         });
     }
-  }, [currentRecord]);
+  }, [currentRecord.manifest[0]?.manifest_id]);
 
   const editable =
-    keycloak?.tokenParsed?.preferred_username === currentRecord.owner ||
-    permission === 'admin';
+    currentRecord.nodeLabel.indexOf('TrashFile') === -1 &&
+    (keycloak?.tokenParsed?.preferred_username === currentRecord.owner ||
+      permission === 'admin');
   const onSave = (attrIndex) => {
     const newAttr = [...attributes];
     const isOptional = newAttr[attrIndex].optional;
@@ -115,8 +118,8 @@ function FileManifest({ currentRecord, permission, updateFileManifest }) {
                       handleEdit(e, index);
                     }}
                     placeholder="Please select a attribute"
-                    getPopupContainer={() =>
-                      document.getElementById('rawTable-sidePanel')
+                    getPopupContainer={(trigger) =>
+                      trigger.parentElement.parentElement.parentElement
                     }
                   >
                     {_.find(

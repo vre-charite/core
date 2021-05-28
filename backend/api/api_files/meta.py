@@ -35,7 +35,7 @@ class FileMeta(Resource):
             _res.set_code(EAPIResponseCode.bad_request)
             _res.set_error_msg('Invalid zone')
             return _res.to_dict, _res.code
-        if not source_type in ['Project', 'Folder', 'TrashFile']:
+        if not source_type in ['Project', 'Folder', 'TrashFile', 'Collection']:
             _logger.error('Missing zone')
             _res.set_code(EAPIResponseCode.bad_request)
             _res.set_error_msg('Invalid source_type')
@@ -70,6 +70,17 @@ class FileMeta(Resource):
                         _res.set_error_msg(response.get("error_msg", "Neo4j error"))
                     return _res.to_dict, _res.code
                 dataset_node = response.get("result")
+            elif source_type == "Collection":
+                response = neo4j_client.get_dataset_from_vfolder(geid)
+                if not response.get("result"):
+                    if response.get("error_msg") == "VirtualFolder not found":
+                        _res.set_code(EAPIResponseCode.not_found)
+                        _res.set_error_msg("Folder not found")
+                    else:
+                        _res.set_code(EAPIResponseCode.internal_error)
+                        _res.set_error_msg(response.get("error_msg", "Neo4j error"))
+                    return _res.to_dict, _res.code
+                dataset_node = response.get("result")
             else:
                 response = neo4j_client.get_dataset_by_geid(geid)
                 if not response.get("result"):
@@ -94,7 +105,7 @@ class FileMeta(Resource):
                 return _res.to_dict, _res.code
             project_role = response["result"][0]["r"]["type"]
             query = check_filemeta_permissions(query, zone, project_role, current_identity["username"], _logger)
-            if not query:
+            if query is False:
                 _res.set_code(EAPIResponseCode.forbidden)
                 _res.set_error_msg('Permission Denied')
                 return _res.to_dict, _res.code
@@ -113,7 +124,7 @@ class FileMeta(Resource):
                 'partial': json.dumps(partial),
                 'query': json.dumps(query)
             }
-            url = ConfigClass.FILEINFO_HOST + f'/v1/files/meta/{geid}'
+            url = ConfigClass.ENTITYINFO_SERVICE + f'files/meta/{geid}'
             response = requests.get(url, params=payload)
             _logger.info(f'Calling Entityinfo service, payload is:  ' + str(payload))
             if response.status_code != 200:

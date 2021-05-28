@@ -60,8 +60,7 @@ const VFolderFilesDeleteModal = ({
   };
   useEffect(() => {
     async function loadVFolders() {
-      const containerId = project.profile.id;
-      const res = await listAllVirtualFolder(containerId);
+      const res = await listAllVirtualFolder(project.profile?.globalEntityId);
       const virualFolders = res.data.result;
       setVFolders(virualFolders);
     }

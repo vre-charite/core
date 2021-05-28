@@ -86,7 +86,6 @@ async function fileUpload(data, resolve, reject) {
   const totalSize = file.size;
   let uploadedSize = 0;
   const sessionId = tokenManager.getCookie('sessionId');
-  console.log(sessionId, 'sessionId in upload');
   updateUploadItemDispatcher({
     uploadKey,
     status: 'uploading',

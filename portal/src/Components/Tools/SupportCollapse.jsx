@@ -10,6 +10,7 @@ function SupportCollapse(props) {
   const callback = (v) => {
     console.log(v);
   };
+
   return (
     <>
       <p id="account">
@@ -39,7 +40,8 @@ function SupportCollapse(props) {
               {t('drawers.1.panel.0.Administrator')}
             </li>
             <li>
-              <strong>Collaborator</strong>: {t('drawers.1.panel.0.Collaborator')}
+              <strong>Collaborator</strong>:{' '}
+              {t('drawers.1.panel.0.Collaborator')}
             </li>
             <li>
               <strong>Contributor</strong>: {t('drawers.1.panel.0.Contributor')}
@@ -107,7 +109,10 @@ function SupportCollapse(props) {
         <Panel header={t('drawers.4.panel.3.question')} key="18">
           <p>{t('drawers.4.panel.3.answer')}</p>
         </Panel>
-        <Panel header={t('drawers.4.panel.4.question')} key="file-organization.4">
+        <Panel
+          header={t('drawers.4.panel.4.question')}
+          key="file-organization.4"
+        >
           <p>{t('drawers.4.panel.4.answer')}</p>
         </Panel>
       </Collapse>
@@ -116,21 +121,13 @@ function SupportCollapse(props) {
         <strong>{t('drawers.5.title')}</strong>
       </p>
       <Collapse>
-        <Panel header={t('drawers.5.panel.0.question')} key="19">
-          <p>{t('drawers.5.panel.0.answer')}</p>
-        </Panel>
-        <Panel header={t('drawers.5.panel.1.question')} key="20">
-          <p>{t('drawers.5.panel.1.answer')}</p>
-        </Panel>
-        <Panel header={t('drawers.5.panel.2.question')} key="21">
-          <p>{t('drawers.5.panel.2.answer')}</p>
-        </Panel>
-        <Panel header={t('drawers.5.panel.3.question')} key="22">
-          <p>{t('drawers.5.panel.3.answer')}</p>
-        </Panel>
-        <Panel header={t('drawers.5.panel.4.question')} key="23">
-          <p>{t('drawers.5.panel.4.answer')}</p>
-        </Panel>
+        {t('drawers.5.panel', { returnObjects: true })?.map((panel) => {
+          return (
+            <Panel header={panel.question} key={panel.question}>
+              <p>{panel.answer}</p>
+            </Panel>
+          );
+        })}
       </Collapse>
     </>
   );

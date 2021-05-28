@@ -31,7 +31,7 @@ class APIProject(metaclass=MetaAPI):
         api_ns_projects.add_resource(self.RestfulProjects, '/projects')
         api_ns_project.add_resource(self.RestfulProject, '/project/<project_id>')
         api_ns_project.add_resource(self.RestfulProjectByCode, '/project/code/<project_code>')
-        api_ns_project.add_resource(self.VirtualFolder, '/project/<geid>/vfolders')
+        api_ns_project.add_resource(self.VirtualFolder, '/project/<geid>/collections')
 
     class RestfulProjects(Resource):
         def get(self):
@@ -190,6 +190,7 @@ class APIProject(metaclass=MetaAPI):
                 users = users_res.json()
 
                 # exclude the admin user
+                origin_users = users
                 users = [user for user in users if user['name'] != 'admin']
 
                 for user in users:
@@ -214,19 +215,15 @@ class APIProject(metaclass=MetaAPI):
                         }, 500
                     platform_admin_list.append((ldap.MOD_ADD, 'member', [user_found[0].encode('utf-8')]))
 
-                conn.modify_s(
-                    dn,
-                    platform_admin_list
-                )
+                if len(platform_admin_list) > 0:
+                    conn.modify_s(
+                        dn,
+                        platform_admin_list
+                    )
 
                 conn.unbind_s()
 
                 # Sync group info to keycloak
-                keycloak_url = ConfigClass.AUTH_SERVICE + 'admin/users/group/sync'
-                keycloak_res = requests.post(url=keycloak_url, headers=headers, json={"realm": "vre"})
-
-                if (keycloak_res.status_code != 200):
-                    return {'result': json.loads(keycloak_res.text)}, keycloak_res.status_code
 
                 # Create roles
                 payload = {
@@ -237,10 +234,10 @@ class APIProject(metaclass=MetaAPI):
                 keycloak_roles_url = ConfigClass.AUTH_SERVICE + 'admin/users/realm-roles'
                 keycloak_roles_res = requests.post(url=keycloak_roles_url, headers=headers, json=payload)
                 if keycloak_roles_res.status_code != 200:
-                    return {'result': json.loads(keycloak_roles_res.text)}, keycloak_roles_res.status_code
+                    return {'result': 'create realm role: ' + json.loads(keycloak_roles_res.text)}, keycloak_roles_res.status_code
 
                 # Add admin to new group in keycloak and assign project-admin role
-                for user in users:
+                for user in origin_users:
                     add_admin_to_project_group("vre-{}".format(code), user["name"], _logger)
                     _logger.info('user email: {}'.format(user["email"]))
                     if 'email' in user:
@@ -315,7 +312,7 @@ class APIProject(metaclass=MetaAPI):
                     my_res.set_error_msg("Permission Denied")
                     return my_res.to_dict, my_res.code
 
-            url = ConfigClass.DATA_UTILITY_SERVICE + "vfolders/"
+            url = ConfigClass.DATA_UTILITY_SERVICE + "collections/"
             headers = request.headers
             payload = request.get_json()
             response = requests.put(url, json=payload, headers=headers) 

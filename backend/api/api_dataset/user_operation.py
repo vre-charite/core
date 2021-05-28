@@ -420,49 +420,19 @@ class DatasetUser(Resource):
 
             # Add user to keycloak group
             add_user_to_project_group(dataset_id, username, _logger)
-            ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
-            conn = ldap.initialize(ConfigClass.LDAP_URL)
-            conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN, ConfigClass.LDAP_ADMIN_SECRET)
-            ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
-
-            # Get user from ldap
-            user_query = f'(&(objectClass=user)(mail={user_email}))'
-            ad_response= conn.search_s(
-                "dc={},dc={}".format(ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
-                ldap.SCOPE_SUBTREE,
-                user_query,
-            )
-            user_dn, entry = ad_response[0]
 
             try:
-                group_dn = "CN=vre-{},OU=Gruppen,OU={},DC={},DC={}".format(
-                    dataset_code,
-                    ConfigClass.LDAP_OU,
-                    ConfigClass.LDAP_DC1,
-                    ConfigClass.LDAP_DC2
-                )
-                add_entry = [(ldap.MOD_ADD, 'member', [user_dn.encode('utf-8')])]
-                conn.modify_s(
-                    group_dn,
-                    add_entry
-                )
+                add_user_to_ad_group(user_email, dataset_code, _logger, access_token)
             except Exception as e:
                 error = f'Error adding user to group vre-{dataset_code}: ' + str(e)
                 _logger.info(error)
                 return {'result': error}, 500 
-            conn.unbind_s()
 
-            # Sync group info to keycloak
+            # Add user role
             access_token = request.headers.get("Authorization", None)
             headers = {
                 'Authorization': access_token
             }
-            response = requests.post(ConfigClass.AUTH_SERVICE + "admin/users/group/sync", json={"realm": "vre"}, headers=headers)
-
-            if response.status_code != 200:
-                return {'result': "Error syncing keycloak: " + str(response.text)}, response.status_code
-
-            # Add user role
             payload = {
                 "realm": "vre",
                 "email": user_email,
@@ -762,24 +732,18 @@ class user_dataset_query(Resource):
         _logger.info('Call API for fetching user {} role towards all projects'.format(
             username))
         try:
-            # Get token from reuqest's header
-            access_token = request.headers.get("Authorization", None)
-            headers = {
-                'Authorization': access_token
-            }
-
             # Check if user is admin
             url = ConfigClass.NEO4J_SERVICE + "nodes/User/query"
             res = requests.post(
                 url=url,
-                headers=headers,
                 json={"name": username}
             )
             users = json.loads(res.text)
             if(len(users) == 0):
                 _logger.error("User %s does not exist." % username)
                 return {'result': "User %s does not exist." % username}, 404
-            user_role = users[0]['role']
+            user_node = users[0]
+            user_role = user_node['role']
 
 
             data = request.get_json()
@@ -805,7 +769,7 @@ class user_dataset_query(Resource):
             if user_role != "admin":
                 if not payload["start_params"]:
                     payload["start_params"] = {}
-                    payload["start_params"]["name"] = username
+                    payload["start_params"]["id"] = user_node["id"] 
                 url = ConfigClass.NEO4J_SERVICE + "relations/query"
                 response = neo4j_query_with_pagination(url, payload, partial=True)
                 if(response.code != 200):
@@ -1273,33 +1237,44 @@ class ADUserUpdate(Resource):
             # convert email to lowercase
             email = email.lower()
             if status == 'active':
-                respon_linked_projects = neo4j_client.get_user_linked_projects(user_data['id'])
-                if respon_linked_projects.status_code == 200:
-                    def decode_linked_projects(project_queried):
-                        project_info = project_queried['end_node']
-                        relation = project_queried['r']
-                        decoded = {
-                            "project_code": project_info['code'],
-                            "relation_name": relation['type'],
-                            'relation_status': relation['status'],
-                            "ad_role": "{}-{}".format(project_info['code'], relation['type'])
-                        }
-                        return decoded
-                    linked_projects = [decode_linked_projects(record) for record in respon_linked_projects.json()]
-                    to_assigned_roles = list(set([project_info['ad_role'] for project_info in linked_projects]))
-                    def assign_user_role_ad(role: str):
-                        url = ConfigClass.AUTH_SERVICE + "user/project-role"
-                        request_payload = {
-                            "email": email,
-                            "realm": "vre",
-                            "project_role": role
-                        }
-                        response_assign = requests.post(url, json=request_payload)
-                        if response_assign.status_code != 200:
-                            raise Exception('[Fatal]Assigned project_role Failed: {}: {}: {}'.format(email,
-                            role, response_assign.text))
-                    for role in to_assigned_roles:
-                        assign_user_role_ad(role)
+                if user_data["role"] == "admin": 
+                    # Give platform admin admin role for each project
+                    payload = {
+                        "realm": "vre",
+                        "username": username,
+                    }
+                    response = requests.post(ConfigClass.AUTH_SERVICE + "admin/users/project-role/all", json=payload)
+                    if response.status_code != 200:
+                        _logger.error('Error adding user to all groups')
+                        return {'result': response.json()}, response.status_code
+                else:
+                    respon_linked_projects = neo4j_client.get_user_linked_projects(user_data['id'])
+                    if respon_linked_projects.status_code == 200:
+                        def decode_linked_projects(project_queried):
+                            project_info = project_queried['end_node']
+                            relation = project_queried['r']
+                            decoded = {
+                                "project_code": project_info['code'],
+                                "relation_name": relation['type'],
+                                'relation_status': relation['status'],
+                                "ad_role": "{}-{}".format(project_info['code'], relation['type'])
+                            }
+                            return decoded
+                        linked_projects = [decode_linked_projects(record) for record in respon_linked_projects.json()]
+                        to_assigned_roles = list(set([project_info['ad_role'] for project_info in linked_projects]))
+                        def assign_user_role_ad(role: str):
+                            url = ConfigClass.AUTH_SERVICE + "user/project-role"
+                            request_payload = {
+                                "email": email,
+                                "realm": "vre",
+                                "project_role": role
+                            }
+                            response_assign = requests.post(url, json=request_payload)
+                            if response_assign.status_code != 200:
+                                raise Exception('[Fatal]Assigned project_role Failed: {}: {}: {}'.format(email,
+                                role, response_assign.text))
+                        for role in to_assigned_roles:
+                            assign_user_role_ad(role)
 
             # Update invitation
             query_data = {

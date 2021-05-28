@@ -6,6 +6,7 @@ import { keycloak } from '../../Service/keycloak';
 import { namespace as serviceNamespace } from '../../Service/namespace';
 import { broadcastManager } from '../../Service/broadcastManager';
 import { tokenManager } from '../../Service/tokenManager';
+
 const debouncedBroadcastLogout = _.debounce(
   () => {
     broadcastManager.postMessage('logout', serviceNamespace.broadCast.LOGOUT);
@@ -30,7 +31,7 @@ function refresh() {
   return keycloak.updateToken(-1);
 }
 function login() {
-  return keycloak.login().then((res) => {});
+  return keycloak.login();
 }
 
 export { logout, refresh, login };

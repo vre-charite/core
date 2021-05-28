@@ -1,5 +1,5 @@
 import { serverAxios, axios, devOpServer } from './config';
-import { objectKeysToSnakeCase } from '../Utility';
+import { objectKeysToCamelCase, objectKeysToSnakeCase } from '../Utility';
 /**
  * Get all the datasets
  *
@@ -234,17 +234,17 @@ function updateDatasetIcon(containerId, base64Img) {
 
 function updateVirtualFolder(projectGeid, payload) {
   return serverAxios({
-    url: `/v1/project/${projectGeid}/vfolders`,
+    url: `/v1/project/${projectGeid}/collections`,
     method: 'PUT',
     data: {
-      vfolders: payload,
+      collections: payload,
     },
   });
 }
 
-async function listAllVirtualFolder(containerId) {
+async function listAllVirtualFolder(projectGeid) {
   const res = await serverAxios({
-    url: `/v1/vfolder/?container_id=${containerId}`,
+    url: `/v1/collections?project_geid=${projectGeid}`,
     method: 'GET',
   });
   const vfolders = res.data.result.map((v) => {
@@ -259,13 +259,13 @@ async function listAllVirtualFolder(containerId) {
   return res;
 }
 
-function createVirtualFolder(containerId, name) {
+function createVirtualFolder(projectGeid, name) {
   return serverAxios({
-    url: `/v1/vfolder/`,
+    url: `/v1/collections`,
     method: 'POST',
     data: {
       name: name,
-      container_id: containerId,
+      project_geid: projectGeid,
     },
   });
 }
@@ -281,7 +281,7 @@ async function listAllfilesVfolder(folderId, page, pageSize, order, column) {
   column = column && columnMap[column] ? columnMap[column] : 'time_created';
  */
   const res = await serverAxios({
-    url: `/v1/vfolder/${folderId}`,
+    url: `/v1/collections/${folderId}`,
     method: 'GET',
     params: {
       page: page,
@@ -322,21 +322,21 @@ async function listAllfilesVfolder(folderId, page, pageSize, order, column) {
 
 function deleteVirtualFolder(folderId) {
   return serverAxios({
-    url: `/v1/vfolder/${folderId}`,
+    url: `/v1/collections/${folderId}`,
     method: 'DELETE',
   });
 }
 
 function listAllCopy2CoreFiles(projectCode, sessionId) {
-  return devOpServer({
-    url: `/v1/file/actions/status?action=data_transfer&project_code=${projectCode}&session_id=${sessionId}`,
+  return serverAxios({
+    url: `/v1/files/actions/tasks?action=data_transfer&project_code=${projectCode}&session_id=${sessionId}`,
     method: 'GET',
   });
 }
 
 function loadDeletedFiles(projectCode, sessionId) {
-  return devOpServer({
-    url: `/v1/file/actions/status?action=data_delete&project_code=${projectCode}&session_id=${sessionId}`,
+  return serverAxios({
+    url: `/v1/files/actions/tasks?action=data_delete&project_code=${projectCode}&session_id=${sessionId}`,
     method: 'GET',
   });
 }
@@ -600,6 +600,61 @@ function getAuditLogsApi(projectId, paginationParams, query) {
   });
 }
 
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1431
+ * get the the project's workbench info.
+ */
+function getWorkbenchInfo(projectGeid) {
+  return serverAxios({
+    method: 'get',
+    url: `/v1/${projectGeid}/workbench`,
+  });
+}
+
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1431
+ * deploy a workbench for a project.
+ */
+function deployWorkbenchAPI(projectGeid, workbench) {
+  return serverAxios({
+    method: 'post',
+    url: `/v1/${projectGeid}/workbench`,
+    data: {
+      workbench_resource: workbench,
+      deployed: true,
+    },
+  });
+}
+
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1435
+ * @param {string} folderName
+ * @param {string} destinationGeid
+ * @param {string} projectGeid
+ * @param {string} uploader
+ * @param {"greenroom | vrecore"} zone
+ */
+function createSubFolderApi(
+  folderName,
+  destinationGeid,
+  projectCode,
+  uploader,
+  zone,
+) {
+  return serverAxios({
+    url: '/v1/folder',
+    method: 'post',
+    data: {
+      folder_name: folderName,
+      destination_geid: destinationGeid,
+      project_code: projectCode,
+      uploader,
+      zone,
+      tags: [],
+    },
+  });
+}
+
 export {
   getDatasetsAPI,
   createProjectAPI,
@@ -647,4 +702,7 @@ export {
   getAnnouncementApi,
   getUserAnnouncementApi,
   putUserAnnouncementApi,
+  getWorkbenchInfo,
+  deployWorkbenchAPI,
+  createSubFolderApi,
 };

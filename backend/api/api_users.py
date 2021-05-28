@@ -24,7 +24,7 @@ class APIUsers(metaclass=MetaAPI):
                 api_response.set_error_msg("Username doesn't match current user")
                 api_response.set_code(EAPIResponseCode.forbidden)
                 return api_response.to_dict, api_response.code
-            response = requests.get(ConfigClass.FILEINFO_SERVICE + f"users/{username}", params=data)
+            response = requests.get(ConfigClass.ENTITYINFO_SERVICE + f"users/{username}", params=data)
             return response.json(), response.status_code
 
         @jwt_required()
@@ -40,5 +40,5 @@ class APIUsers(metaclass=MetaAPI):
                 api_response.set_error_msg("Username doesn't match current user")
                 api_response.set_code(EAPIResponseCode.forbidden)
                 return api_response.to_dict, api_response.code
-            response = requests.put(ConfigClass.FILEINFO_SERVICE + f"users/{username}", json=data)
+            response = requests.put(ConfigClass.ENTITYINFO_SERVICE + f"users/{username}", json=data)
             return response.json(), response.status_code

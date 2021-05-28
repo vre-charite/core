@@ -343,7 +343,6 @@ class LandingPageContent extends Component {
       page_size: 10,
     };
 
-    console.log(this.state.orderBy, this.state);
     let params4All = { ...params, type: 'usecase' };
 
     if (Object.keys(filters) && Object.keys(filters).length)
@@ -519,11 +518,7 @@ class LandingPageContent extends Component {
           filtersNameText = (
             <div>
               <span>Project Name:</span>
-              <Tag
-                style={{ marginLeft: 5 }}
-                color="cyan"
-                key="name"
-              >
+              <Tag style={{ marginLeft: 5 }} color="cyan" key="name">
                 {filters[key]}
               </Tag>
             </div>
@@ -593,11 +588,7 @@ class LandingPageContent extends Component {
               <div>
                 <span>Tags:</span>
                 {tags.map((tag) => (
-                  <Tag
-                    style={{ marginLeft: 5 }}
-                    color="cyan"
-                    key={tag}
-                  >
+                  <Tag style={{ marginLeft: 5 }} color="cyan" key={tag}>
                     {tag}
                   </Tag>
                 ))}
@@ -662,7 +653,7 @@ class LandingPageContent extends Component {
           Last created
         </Menu.Item>
         <Menu.Item id="uploadercontent_first_created" key="2" value="time-asc">
-          First Created
+          First created
         </Menu.Item>
         <Menu.Item key="3" value="name-asc">
           Project name A to Z
@@ -846,12 +837,20 @@ class LandingPageContent extends Component {
         >
           <TabPane tab="My Projects" key="My Projects">
             {this.state.isSearch ? <div style={{ height: 208 }}></div> : null}
-            {this.state.createNewProject ? <NewProjectPanel onToggleCreateNewProject={this.onToggleCreateNewProject}/> : null}
+            {this.state.createNewProject ? (
+              <NewProjectPanel
+                onToggleCreateNewProject={this.onToggleCreateNewProject}
+              />
+            ) : null}
             {this.projectListRender()}
           </TabPane>
           <TabPane tab="All Projects" key="All Projects">
             {this.state.isSearch ? <div style={{ height: 208 }}></div> : null}
-            {this.state.createNewProject ? <NewProjectPanel onToggleCreateNewProject={this.onToggleCreateNewProject}/> : null}
+            {this.state.createNewProject ? (
+              <NewProjectPanel
+                onToggleCreateNewProject={this.onToggleCreateNewProject}
+              />
+            ) : null}
             {this.projectListRender()}
           </TabPane>
         </Tabs>
@@ -865,5 +864,9 @@ export default connect(
     const { datasetList, containersPermission, role, username } = state;
     return { datasetList, containersPermission, role, username };
   },
-  { AddDatasetCreator, setDatasetCreator, setCurrentProjectProfile },
+  {
+    AddDatasetCreator,
+    setDatasetCreator,
+    setCurrentProjectProfile,
+  },
 )(LandingPageContent);

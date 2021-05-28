@@ -9,9 +9,11 @@ from resources.swagger_modules import create_invitation_request_model, create_in
 from resources.swagger_modules import read_invitation_return_example
 from resources.utils import check_invite_permissions, fetch_geid
 from resources.validations import boolean_validate_role
+from resources.utils import add_user_to_ad_group
 from services.invitation_services.invitation_manager import SrvInvitationManager
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from services.neo4j_service.neo4j_client import Neo4jClient
+from multiprocessing import Process
 from api import module_api
 from flask import request
 import json
@@ -154,56 +156,28 @@ class APIInvitation(metaclass=MetaAPI):
                     ad_first = entry["sAMAccountName"][0].decode()
 
                 # add user to vre-vre-users group in ldap
-                try:
-                    group_dn = "CN=vre-vre-users,OU=Gruppen,OU={},DC={},DC={}".format(
-                        ConfigClass.LDAP_OU, 
-                        ConfigClass.LDAP_DC1, 
-                        ConfigClass.LDAP_DC2
-                    )
-                    add_entry = [(ldap.MOD_ADD, 'member', [user_dn.encode('utf-8')])]
-                    conn.modify_s(
-                        group_dn,
-                        add_entry
-                    )
-                except Exception as e:
-                    error = 'Error adding user to group vre-vre-users: ' + str(e)
-                    _logger.info(error)
-                    my_res.set_result(error)
-                    my_res.set_code(EAPIResponseCode.internal_error)
-                    return my_res.to_dict, my_res.code
+                add_user_to_ad_group(email, "vre-users", _logger, access_token)
 
-                if relation_data:
-                    # add to the project group
-                    try:
-                        code = dataset_node["code"]
-                        group_dn = "CN=vre-{},OU=Gruppen,OU={},DC={},DC={}".format(
-                            code,
-                            ConfigClass.LDAP_OU, 
-                            ConfigClass.LDAP_DC1, 
-                            ConfigClass.LDAP_DC2
-                        )
-                        add_entry = [(ldap.MOD_ADD, 'member', [user_dn.encode('utf-8')])]
-                        conn.modify_s(
-                            group_dn,
-                            add_entry
-                        )
-                    except Exception as e:
-                        error = f'Error adding user to group vre-{code}: ' + str(e)
-                        _logger.info(error)
-                        my_res.set_result(error)
+                if user_node["role"] == "admin":
+                    # Add platform admin to all groups
+                    response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query", json={})
+                    print(response.json())
+                    if response.status_code != 200:
+                        my_res.set_result("Error fetching projects: " + str(response.text))
                         my_res.set_code(EAPIResponseCode.internal_error)
                         return my_res.to_dict, my_res.code
+                    project_codes = [i["code"] for i in response.json()]
+                    add_entries = []
+                    for code in project_codes:
+                        p = Process(target=add_user_to_ad_group, args=(email, code, _logger, access_token))
+                        p.daemon = True
+                        p.start()
+                elif relation_data:
+                    code = dataset_node["code"]
+                    add_user_to_ad_group(email, code, _logger, access_token)
                 conn.unbind_s()
 
                 # Sync group info to keycloak
-                access_token = request.headers.get("Authorization", None)
-                headers = {
-                    'Authorization': access_token
-                }
-                response = requests.post(ConfigClass.AUTH_SERVICE + "admin/users/group/sync", json={"realm": "vre"}, headers=headers)
-
-                if response.status_code != 200:
-                    return {'result': "Error syncing keycloak: " + str(response.text)}, response.status_code
 
             # init invitation managemer
             invitation_mgr = SrvInvitationManager()
@@ -230,6 +204,11 @@ class APIInvitation(metaclass=MetaAPI):
             my_res = APIResponse()
             _logger = SrvLoggerFactory('api_invitation').get_logger()
             project_geid = request.args.get("project_geid")
+
+            if current_identity["role"] != "admin" and not project_geid:
+                my_res.set_result("Permission denied")
+                my_res.set_code(EAPIResponseCode.unauthorized)
+                return my_res.to_dict, my_res.code
 
             neo4j_client = Neo4jClient()
             response = neo4j_client.get_user_by_email(email)

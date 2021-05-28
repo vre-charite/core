@@ -16,7 +16,7 @@ function SearchResultCard({ record, searchConditions }) {
   const tags = info.tags;
   const zone = info.zone;
   const path = info.path;
-  const location = locationMap(path, zone);
+  const location = locationMap(info.fullPath);
 
   const uploadTime = moment(info.timeCreated * 1000).format(
     'YYYY-MM-DD HH:mm:ss',

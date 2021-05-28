@@ -311,8 +311,8 @@ class TestFolderFileProxy(unittest.TestCase):
         }
         geid = self.folder_1["global_entity_id"]
         response = self.app.get(f"/v1/files/entity/meta/{geid}", query_string=payload, headers=self.headers)
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.get_json()["error_msg"], "Permission Denied")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["result"]["data"], [])
 
     def test_04_dataset_file_query_contributor(self):
         payload = {

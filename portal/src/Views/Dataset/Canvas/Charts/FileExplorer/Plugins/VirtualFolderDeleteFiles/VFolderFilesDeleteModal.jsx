@@ -24,20 +24,25 @@ const VFolderFilesDeleteModal = ({
     setVisible(false);
   }
   async function handleOk() {
+    setConfirmLoading(true);
     const vfolderName = panelKey.split('-').slice(1).join('-');
     const vfolder = vfolders.find((v) => v.name === vfolderName);
+    console.log(vfolder,"vfolder")
     if (vfolder) {
       try {
-        await removeFromVirtualFolder(vfolder.id, files);
+        await removeFromVirtualFolder(vfolder.geid, files);
         clearSelection();
+        message.success(`${i18n.t('success:virtualFolder.removeFiles')}`, 3);
+        dispatch(setSuccessNum(successNum - files.length));
       } catch (e) {
         message.error(
           `${i18n.t('errormessages:removeFromVirtualFolder.default.0')}`,
           3,
         );
+      } finally{
+        setConfirmLoading(false);
       }
-      message.success(`${i18n.t('success:virtualFolder.removeFiles')}`, 3);
-      dispatch(setSuccessNum(successNum - files.length));
+
       closeModal();
     }
   }
@@ -46,8 +51,7 @@ const VFolderFilesDeleteModal = ({
   };
   useEffect(() => {
     async function loadVFolders() {
-      const containerId = project.profile.id;
-      const res = await listAllVirtualFolder(containerId);
+      const res = await listAllVirtualFolder(project.profile?.globalEntityId);
       const virualFolders = res.data.result;
       setVFolders(virualFolders);
     }

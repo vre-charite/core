@@ -48,6 +48,7 @@ import {
   SHOW_SERVICE_REQUEST_RED_DOT,
   CLEAR_CURRENT_PROJECT,
   SET_USER_STATUS,
+  SET_PROJECT_WORKBENCH,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -236,22 +237,30 @@ export const setCurrentProjectTree = (tree) => ({
   payload: tree,
 });
 
+export const setCurrentProjectWorkbench = () => ({
+  type: SET_PROJECT_WORKBENCH,
+});
+
 export const setCurrentProjectTreeVFolder = (vfolders) => ({
   type: SET_CURRENT_PROJECT_TREE_VFOLDER,
   payload: vfolders,
 });
+
 export const setCurrentProjectTreeGreenRoom = (folders) => ({
   type: SET_CURRENT_PROJECT_TREE_GREEN_ROOM,
   payload: folders,
 });
+
 export const setCurrentProjectTreeCore = (folders) => ({
   type: SET_CURRENT_PROJECT_TREE_CORE,
   payload: folders,
 });
+
 export const setCurrentProjectActivePane = (folders) => ({
   type: SET_CURRENT_PROJECT_ACTIVE_PANE,
   payload: folders,
 });
+
 export const setEmailCreator = (email) => ({
   type: SET_EMAIL,
   payload: email,

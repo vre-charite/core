@@ -12,6 +12,13 @@ def get_file_node_bygeid(geid):
         return None
     return response.json()[0] 
 
+def get_trashfile_node_bygeid(geid):
+    post_data = {"global_entity_id": geid}
+    response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/TrashFile/query", json=post_data)
+    if not response.json():
+        return None
+    return response.json()[0] 
+
 def get_file_node(full_path):
     post_data = {"full_path": full_path}
     response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/File/query", json=post_data)
@@ -33,9 +40,14 @@ def has_permissions(manifest_id, file_node):
     if current_identity["role"] != "admin":
         role = get_project_permissions(manifest.project_code, current_identity["user_id"])
         if role != "admin":
-            # contrib and collaborator must own the file to attach manifests
-            if file_node["uploader"] != current_identity["username"]:
-                return False
+            if role == "contributor":
+                # contrib must own the file to attach manifests
+                if file_node["uploader"] != current_identity["username"]:
+                    return False
+            elif role == "collaborator":
+                if is_greenroom(file_node):
+                    if file_node["uploader"] != current_identity["username"]:
+                        return False
     return True
 
 def has_valid_attributes(manifest_id, data):

@@ -87,8 +87,9 @@ export default function (props) {
         location = null;
         fileType = 'Pipeline';
       } else {
-        location = textArr && pathsMap(textArr);
+        location = textArr && pathsMap(displayText);
         fileType = textArr && pathNameMap(textArr);
+        if (location.length > 40) location = location.slice(0, 32) + '.......';
       }
       if (fileManifests.length) {
         fileManifests = fileManifests.map((menifest) => {

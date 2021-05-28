@@ -133,7 +133,7 @@ class FileInfoV2(Resource):
                 'order_type': order_type,
                 'query': query
             }
-            url = ConfigClass.FILEINFO_SERVICE + f'files/{dataset_id}/query'
+            url = ConfigClass.ENTITYINFO_SERVICE + f'files/{dataset_id}/query'
             response = requests.post(url, json=payload)
             _logger.info(f'Calling Neo4j service /v2/neo4j/files/{dataset_id}/query, payload is:  ' + str(payload))
             if response.status_code != 200:

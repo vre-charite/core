@@ -165,7 +165,7 @@ function getFileManifestAttrs(geidsList, lineageView = false) {
 }
 
 /**
- *
+ * https://indocconsortium.atlassian.net/browse/VRE-1314
  * @param {string} geid the geid of a virtual folder or folder, like bcae46e0-916c-11eb-be94-eaff9e667817-1617118177
  * @param {number} page the nth page. start from ?
  * @param {number} pageSize the number of items in each page
@@ -173,7 +173,7 @@ function getFileManifestAttrs(geidsList, lineageView = false) {
  * @param {"desc"|"asc"} orderType
  * @param {*} filters the query filter like {"name":"hello"}
  * @param {"Greenroom"|"VRECore"|"All"} zone if the sourceType is "Trash", the zone is All
- * @param {"Project"|"Folder"|"TrashFile"} sourceType The Folder are the folders inside file explorer.
+ * @param {"Project"|"Folder"|"TrashFile"|"Collection"} sourceType The Folder are the folders inside file explorer.
  * @param {string[]} partial what queries should be partial search.
  */
 async function getFiles(
@@ -186,8 +186,9 @@ async function getFiles(
   zone,
   sourceType,
   partial,
+  archived,
 ) {
-  filters['archived'] = sourceType === 'TrashFile';
+  filters['archived'] = archived;
   const params = {
     page,
     page_size: pageSize,
@@ -218,6 +219,7 @@ async function getFiles(
         owner: item.uploader,
         path: item.path,
         qualifiedName: item.fullPath,
+        folderRelativePath: item.folderRelativePath,
         generateId:
           item.generateId && typeof item.generateId !== 'undefined'
             ? item.generateId
@@ -369,6 +371,7 @@ function downloadFilesAPI(
           namespace,
           createdTime: Date.now(),
           payload: res.data.result.payload,
+          projectCode: res.data.result.projectCode,
         };
         appendDownloadListCreator(item);
 
@@ -414,6 +417,7 @@ function downloadFilesAPI(
           hashCode: res.data.result.payload.hashCode,
           namespace,
           createdTime: Date.now(),
+          projectCode: res.data.result.projectCode,
         };
         appendDownloadListCreator(item);
         return null;
@@ -434,6 +438,7 @@ function downloadFilesAPI(
           namespace,
           createdTime: Date.now(),
           payload: res.data.result.payload,
+          projectCode: res.data.result.projectCode,
         };
         appendDownloadListCreator(item);
 
@@ -590,9 +595,9 @@ function copyFiles(inputFiles, projectCode, operator, sessionId, opType) {
   });
 }
 
-function addToVirtualFolder(folderId, geids) {
+function addToVirtualFolder(folderGeid, geids) {
   return axios({
-    url: `/v1/vfolder/${folderId}/files`,
+    url: `/v1/collections/${folderGeid}/files`,
     method: 'POST',
     data: {
       geids: geids,
@@ -600,13 +605,25 @@ function addToVirtualFolder(folderId, geids) {
   });
 }
 
-function removeFromVirtualFolder(folderId, geids) {
+/**
+ * https://indocconsortium.atlassian.net/browse/VRE-1499
+ * @param {string} folderGeid the vfolder geid
+ * @param {string} geids the files/folders geid
+ * @returns
+ */
+function removeFromVirtualFolder(folderGeid, geids) {
   return axios({
-    url: `/v1/vfolder/${folderId}/files`,
+    url: `/v1/collections/${folderGeid}/files`,
     method: 'DELETE',
     data: {
       geids: geids,
     },
+  });
+}
+
+function getCollectionFiles(folderGeid) {
+  return axios({
+    url: `/v1/collections/${folderGeid}/files`,
   });
 }
 
@@ -632,6 +649,63 @@ function searchFilesAPI(params, datasetId) {
     url: `/v1/${datasetId}/files/search`,
     method: 'GET',
     params,
+  });
+}
+
+function validateFileAction(targets, operator, operation, projectGeid) {
+  return axios({
+    url: `/v1/files/validation`,
+    method: 'POST',
+    data: {
+      payload: {
+        targets,
+      },
+      operator,
+      operation,
+      project_geid: projectGeid,
+    },
+  });
+}
+
+function validateFiles(targets, destination, operator, operation, projectGeid) {
+  let payload = {
+    targets,
+  };
+  if (destination) {
+    payload.destination = destination;
+  }
+  return axios({
+    url: `/v1/files/validation`,
+    method: 'POST',
+    data: {
+      payload,
+      operator,
+      operation,
+      project_geid: projectGeid,
+    },
+  });
+}
+
+function commitFileAction(
+  payload,
+  operator,
+  operation,
+  projectGeid,
+  sessionId,
+) {
+  return axios({
+    url: `/v1/files/actions`,
+    method: 'POST',
+    headers: {
+      'Session-ID': sessionId,
+    },
+    data: {
+      payload,
+      operator,
+      operation,
+      project_geid: projectGeid,
+      session_id: sessionId,
+    },
   });
 }
 
@@ -665,4 +739,8 @@ export {
   getFileManifestAttrs,
   searchFilesAPI,
   getFiles,
+  validateFileAction,
+  validateFiles,
+  commitFileAction,
+  getCollectionFiles,
 };

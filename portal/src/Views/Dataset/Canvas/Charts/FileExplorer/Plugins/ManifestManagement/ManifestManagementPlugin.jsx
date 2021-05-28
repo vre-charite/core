@@ -13,8 +13,19 @@ function ManifestManagementPlugin({
   setTableState,
 }) {
   const [manifestModalVisible, setManifestModalVisible] = useState(false);
+
+  const selFolders = selectedRows.filter((v) => {
+    if (v.nodeLabel.indexOf('Folder') !== -1) {
+      return true;
+    } else {
+      return false;
+    }
+  });
   const selFilesAll = selectedRows.map((v) => {
     if (!v) return null;
+    if (v.nodeLabel.indexOf('Folder') !== -1) {
+      return null;
+    }
     return {
       input_path: v.name,
       uploader: v.owner,
@@ -31,9 +42,12 @@ function ManifestManagementPlugin({
   const withManifest = selFilesAll.filter(
     (v) => !!v && v.manifest && v.manifest.length,
   );
-  const selText = withManifest.length
-    ? `${selectedRowKeys.length} Selected - ${withManifest.length} Unavailable `
-    : `${selectedRowKeys.length} Selected`;
+  const selText =
+    withManifest.length || selFolders.length
+      ? `${selectedRowKeys.length} Selected - ${
+          withManifest.length + selFolders.length
+        } Unavailable `
+      : `${selectedRowKeys.length} Selected`;
 
   function attach(e) {
     if (selFiles.length === 0) {

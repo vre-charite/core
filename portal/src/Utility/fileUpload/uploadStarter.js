@@ -4,8 +4,11 @@ import {
   updateUploadItemCreator,
 } from '../../Redux/actions';
 import { preUpload } from './preUpload';
+import { validateFileAction } from '../../APIs';
 import { message } from 'antd';
+import { FILE_OPERATIONS } from '../../Views/Dataset/Canvas/Charts/FileExplorer/FileOperationValues';
 import { ErrorMessager, namespace } from '../../ErrorMessages';
+import { getPath } from './getPath';
 const [
   appendUploadListDispatcher,
   updateUploadItemDispatcher,
@@ -16,7 +19,7 @@ const [
  * @param {object} data the data from the upload modal form, with the fileList and datasetId, uploader, etc.
  * @param {Async.queue} q the async queue object
  */
-const uploadStarter = (data, q) => {
+const uploadStarter = async (data, q) => {
   const timeStamp = Date.now();
   const fileList = data.fileList;
   const fileActions = fileList.map((item) => {
@@ -34,6 +37,25 @@ const uploadStarter = (data, q) => {
       createdTime: Date.now(),
     };
   });
+  // await validateFileAction(
+  //   fileList.map((f) => {
+  //     const file = f.originFileObj;
+  //     let relativePath = getPath(file.webkitRelativePath);
+  //     if (data.toExistingFolder) {
+  //       if (relativePath === '') {
+  //         relativePath = data.folderPath;
+  //       } else {
+  //         relativePath = data.folderPath + '/' + relativePath;
+  //       }
+  //     }
+  //     return {
+  //       full_path: relativePath ? relativePath + '/' + file.name : file.name,
+  //     };
+  //   }),
+  //   data.uploader,
+  //   FILE_OPERATIONS.UPLOAD,
+  //   data.projectCode,
+  // );
   appendUploadListDispatcher(fileActions);
   preUpload(
     data.projectCode,
@@ -81,7 +103,6 @@ const uploadStarter = (data, q) => {
       }
     })
     .catch((err) => {
-      console.log(err);
       if (err.response?.status === 409) {
         for (const file of err.response?.data?.result?.failed) {
           const { name, relative_path } = file;

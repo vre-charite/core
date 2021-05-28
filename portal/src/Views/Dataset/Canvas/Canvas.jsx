@@ -28,18 +28,18 @@ const defaultLayout = {
   admin: {
     lg: [
       // { i: '0', x: 0, y: 0, w: 12, h: 4 },
-      { i: '2', x: 0, y: 0, w: 8, h: 4 },
-      { i: '3', x: 8, y: 0, w: 16, h: 4 },
+      { i: '2', x: 0, y: 0, w: 9, h: 4 },
+      { i: '3', x: 9, y: 0, w: 15, h: 4 },
       { i: '1', x: 0, y: 7, w: 24, h: 10 },
     ],
     md: [
-      { i: '2', x: 0, y: 0, w: 10, h: 4 },
-      { i: '3', x: 10, y: 0, w: 14, h: 4 },
+      { i: '2', x: 0, y: 0, w: 11, h: 4 },
+      { i: '3', x: 11, y: 0, w: 13, h: 4 },
       { i: '1', x: 0, y: 7, w: 24, h: 10 },
     ],
     sm: [
       // { i: '0', x: 0, y: 0, w: 12, h: 4 },
-      { i: '2', x: 0, y: 4, w: 24, h: 2 },
+      { i: '2', x: 0, y: 4, w: 24, h: 2.5 },
       { i: '3', x: 0, y: 4, w: 24, h: 4 },
       { i: '1', x: 0, y: 8, w: 24, h: 10 },
     ],
@@ -129,7 +129,9 @@ class Canvas extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     let { containersPermission } = this.props;
-    if (prevProps.containersPermission?.length !== containersPermission?.length) {
+    if (
+      prevProps.containersPermission?.length !== containersPermission?.length
+    ) {
       this.updatePermision();
       this.fetchDatasetInfo();
     }

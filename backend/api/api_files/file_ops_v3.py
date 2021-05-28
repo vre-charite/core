@@ -104,7 +104,7 @@ class FileInfoV3(Resource):
                 'order_type': order_type,
                 'query': query
             }
-            url = ConfigClass.FILEINFO_HOST + f'/v2/files/{dataset_id}/query'
+            url = ConfigClass.ENTITYINFO_SERVICE_V2 + f'files/{dataset_id}/query'
             response = requests.post(url, json=payload)
             _logger.info(f'Calling Neo4j service /v2/neo4j/files/{dataset_id}/query, payload is:  ' + str(payload))
             if response.status_code != 200:
@@ -210,7 +210,7 @@ class FolderInfoV3(Resource):
                 'order_type': order_type,
                 'query': query
             }
-            url = ConfigClass.FILEINFO_HOST + f'/v2/files/folder/{folder_geid}/query'
+            url = ConfigClass.ENTITYINFO_SERVICE_V2 + f'files/folder/{folder_geid}/query'
             response = requests.post(url, json=payload)
             _logger.info(f'Calling Neo4j service /v2/neo4j/files/{dataset_id}/query, payload is:  ' + str(payload))
             if response.status_code != 200:

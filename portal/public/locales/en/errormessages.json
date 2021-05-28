@@ -158,6 +158,7 @@
   },
   "downloadFilesAPI": {
     "400": ["Folder is empty"],
+    "404":["file doesn't exist"],
     "403": ["You do not have permission to download files from this project."],
     "500": [
       "Something went wrong while trying to download files, please try again later. Error code: 500"
@@ -408,11 +409,12 @@
     "default": ["Failed to retrieve the attribute template id: "]
   },
   "fileOperations": {
-    "deleteErr": "Error occured when delete files",
-    "noFileToDelete": "Please select files to delete."
+    "deleteErr": "Error occured when delete files/folders",
+    "unauthorizedDelete":"You're not authorized to delete the file(s)/folder(s)",
+    "noFileToDelete": "Please select files/folders to delete."
   },
   "copyFiles": {
-    "default": ["Network error, please try again later"]
+    "default": ["Failed to copy the files, please try again later"]
   },
   "attachManifest": {
     "default": ["Failed to attach attribute template, please try again later"]
@@ -499,5 +501,23 @@
         "Something went wrong while trying to retrieve announcements for this project, please try again later."
       ]
     }
+  },
+  "projectWorkench": {
+    "getWorkbench": {
+      "default": [
+        "Something went wrong while trying to retrieve the workbenches."
+      ]
+    },
+    "deployWorkbench": {
+      "default": [
+        "Something went wrong while deploying the workbench, please try again later."
+      ]
+    }
+  },
+  "createFolder": {
+    "409": ["Folder with same name already existed in destination"],
+    "default": [
+      "Something went wrong while trying to create folder, please try again later."
+    ]
   }
 }

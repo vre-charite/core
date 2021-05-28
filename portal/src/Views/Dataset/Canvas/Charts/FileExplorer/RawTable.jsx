@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Button,
   Collapse,
@@ -13,6 +13,7 @@ import {
   Tooltip as Tip,
   Breadcrumb,
   message,
+  Modal,
 } from 'antd';
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
@@ -26,7 +27,7 @@ import {
   PauseOutlined,
   FileOutlined,
   FolderOutlined,
-  LeftOutlined,
+  EllipsisOutlined,
 } from '@ant-design/icons';
 
 import { ErrorMessager, namespace } from '../../../../../ErrorMessages';
@@ -41,6 +42,7 @@ import {
   getZipContentAPI,
   getFileManifestAttrs,
   getFiles,
+  validateFileAction,
 } from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
 import FilesTable from './FilesTable';
@@ -50,13 +52,19 @@ import {
   getFileSize,
   timeConvert,
   pathsMap,
+  pathsMapV2,
 } from '../../../../../Utility';
 import { setSuccessNum } from '../../../../../Redux/actions';
 import LineageGraph from './LineageGraph';
 import FileBasics from './FileBasics';
 import FileBasicsModal from './FileBasicsModal';
 import LineageGraphModal from './LineageGraphModal';
-import { DataSourceType, TABLE_STATE, SYSTEM_TAGS } from './RawTableValues';
+import {
+  DataSourceType,
+  TABLE_STATE,
+  SYSTEM_TAGS,
+  PanelKey,
+} from './RawTableValues';
 import Copy2CorePlugin from './Plugins/Copy2Core/Copy2CorePlugin';
 import VirtualFolderPlugin from './Plugins/VirtualFolders/VirtualFolderPlugin';
 import VirtualFolderFilesDeletePlugin from './Plugins/VirtualFolderDeleteFiles/VirtualFolderFilesDeletePlugin';
@@ -64,15 +72,20 @@ import VirtualFolderDeletePlugin from './Plugins/VirtualFolderDelete/VirtualFold
 import ZipContentPlugin from './Plugins/ZipContent/ZipContentPlugin';
 import DeleteFilesPlugin from './Plugins/DeleteFiles/DeleteFilesPlugin';
 import ManifestManagementPlugin from './Plugins/ManifestManagement/ManifestManagementPlugin';
+import CreateFolderPlugin from './Plugins/CreateFolder/CreateFolderPlugin';
 import { tokenManager } from '../../../../../Service/tokenManager';
 import FileManifest from './FileManifest';
 import i18n from '../../../../../i18n';
+import { FILE_OPERATIONS } from './FileOperationValues';
+import { JOB_STATUS } from '../../../../../Components/Layout/FilePanel/jobStatus';
+import { hideButton } from './hideButtons';
 const { Panel } = Collapse;
 const { Title } = Typography;
 const _ = require('lodash');
 
 function RawTable(props) {
-  const { panelKey, folderId, removePanel } = props;
+  const { panelKey, folderId, removePanel, geid, titleText } = props;
+
   const dispatch = useDispatch();
   const ref = React.useRef(null);
   const [loading, setLoading] = useState(false);
@@ -90,12 +103,13 @@ function RawTable(props) {
   const [lineageModalVisible, setLineageModalVisible] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
 
-  const [tableWidth, setTableWidth] = useState('90%');
+  const [tableWidth, setTableWidth] = useState('100%');
   const [tableLoading, setTableLoading] = useState(false);
   const [detailsPanelWidth, setDetailsPanelWidth] = useState(300);
   const [tableState, setTableState] = useState(TABLE_STATE.NORMAL);
   const [lineageLoading, setLineageLoading] = useState(false);
   const [direction, setDirection] = useState('INPUT');
+  const [menuItems, setMenuItems] = useState(0);
 
   const sessionId = tokenManager.getCookie('sessionId');
   const currentDataset = getCurrentProject(props.projectId);
@@ -131,6 +145,27 @@ function RawTable(props) {
     }
     return geid;
   };
+  const currentRouteLength = 0 || currentRouting?.length;
+
+  const actionBarRef = useRef(null);
+  const moreActionRef = useRef(null);
+  useEffect(() => {
+    //when routing changes, clear the row selection
+    clearSelection();
+  }, [currentRouteLength]);
+
+  useEffect(() => {
+    const debounced = _.debounce(() => {
+      const menuItems = hideButton(actionBarRef, moreActionRef);
+      setMenuItems(menuItems);
+    }, 1000);
+    window.addEventListener('resize', debounced);
+  }, []);
+  const hasSelected = selectedRowKeys.length > 0;
+  useEffect(() => {
+    const menuItems = hideButton(actionBarRef, moreActionRef);
+    setMenuItems(menuItems);
+  }, [panelKey, hasSelected, props.type, permission, currentRouteLength]);
 
   useEffect(() => {
     if (
@@ -194,6 +229,16 @@ function RawTable(props) {
                   : 'default',
             }}
             onClick={(e) => {
+              if (
+                deletedFileList &&
+                deletedFileList.find(
+                  (el) =>
+                    el.payload?.geid === record.geid &&
+                    el.status === JOB_STATUS.RUNNING,
+                )
+              ) {
+                return;
+              }
               record.nodeLabel.indexOf('Folder') !== -1 &&
                 refreshFiles({
                   geid: record.geid,
@@ -209,9 +254,8 @@ function RawTable(props) {
             {deletedFileList &&
             deletedFileList.find(
               (el) =>
-                el.fileName === record.fileName &&
-                el.source === record.name &&
-                el.status === 'running',
+                el.payload?.geid === record.geid &&
+                el.status === JOB_STATUS.RUNNING,
             ) ? (
               <Tag color="default">to be deleted</Tag>
             ) : null}
@@ -261,7 +305,7 @@ function RawTable(props) {
           ellipsis: true,
           render: (text, record) => {
             if (text === 'undefined') {
-              return 'N/A';
+              return '';
             } else {
               return text;
             }
@@ -353,7 +397,59 @@ function RawTable(props) {
             {!panelKey.includes('trash') && <Menu.Divider />}
             {!panelKey.includes('trash') && (
               <Menu.Item
-                onClick={(e) => {
+                onClick={async (e) => {
+                  // temporarily remove validation for folder downloading
+                  if (files[0].file) {
+                    const validationRes = await validateFileAction(
+                      files.map((v) => {
+                        return {
+                          geid: v.geid,
+                        };
+                      }),
+                      props.username,
+                      FILE_OPERATIONS.DOWNLOAD,
+                      currentDataset.globalEntityId,
+                    );
+                    let invalidList = validationRes.data.result.filter(
+                      (item) => !item.isValid,
+                    );
+                    if (invalidList.length) {
+                      let lockedList = invalidList
+                        .map((v) => {
+                          let paths = v.fullPath.split('/');
+                          if (paths && paths.length) {
+                            return paths[paths.length - 1];
+                          } else {
+                            return null;
+                          }
+                        })
+                        .filter((v) => !!v);
+                      Modal.warning({
+                        title: 'Invalid File/Folder Operation',
+                        content: (
+                          <>
+                            <p>
+                              The following {lockedList.length} file/folders
+                              will be skipped because there are concurrent file
+                              operations are taking place:
+                            </p>
+                            <ul
+                              style={{
+                                maxHeight: 90,
+                                paddingLeft: 16,
+                                overflowY: 'auto',
+                              }}
+                            >
+                              {lockedList.map((v) => {
+                                return <li key={v}>{v}</li>;
+                              })}
+                            </ul>
+                          </>
+                        ),
+                      });
+                      return;
+                    }
+                  }
                   downloadFilesAPI(
                     props.projectId,
                     files,
@@ -420,7 +516,7 @@ function RawTable(props) {
             (el) =>
               el.fileName === record.fileName &&
               el.source === record.name &&
-              el.status === 'running',
+              el.status === JOB_STATUS.RUNNING,
           );
         return (
           <Dropdown
@@ -469,8 +565,9 @@ function RawTable(props) {
         setRefreshing(false);
       }
     } else {
+      const isVFolder = checkIsVirtualFolder(panelKey);
       await refreshFiles({
-        geid: datasetGeid, // TODO: or dataset or folder Geid
+        geid: isVFolder ? geid : datasetGeid, // TODO: or dataset or folder Geid
         sourceType: getSourceType(),
         resetTable: true,
       });
@@ -483,18 +580,13 @@ function RawTable(props) {
     // eslint-disable-next-line
   }, [props.successNum, datasetGeid]);
 
-  /*   //when the copy succeed reload the page
-  useEffect(()=>{
-
-  },[copyEvent]); */
-
   const onSelectChange = (selectedRowKeys, selectedRowsNew) => {
     setSelectedFilesKeys(selectedRowKeys);
     let tmpSelectedRows = selectedRows
       .concat(selectedRowsNew)
       .filter((item) => item !== undefined);
     let totalSelectedRows = selectedRowKeys.map(
-      (key) => tmpSelectedRows.filter((item) => item.key === key)[0],
+      (key) => tmpSelectedRows.filter((item) => item.geid === key)[0],
     );
     setSelectedFiles(totalSelectedRows);
   };
@@ -519,12 +611,8 @@ function RawTable(props) {
     const entities = lineageData && lineageData.guidEntityMap;
     for (const key in entities) {
       const entity = entities[key];
-      const pathArray =
-        entity.attributes && entity.attributes.name
-          ? entity.attributes.name.split('/')
-          : [];
-      const space = pathsMap(pathArray);
-      if (entity && space === 'Green Room/Home') {
+      const space = pathsMap(entity.attributes.name);
+      if (entity && space && space.includes('Green Room/Home')) {
         const data = [];
         data.push(entity.attributes.globalEntityId);
         const manifestRes = await getFileManifestAttrs(data, true);
@@ -563,9 +651,13 @@ function RawTable(props) {
           return {
             disabled: true,
           };
+        } else if (record.nodeLabel.indexOf('Folder') !== -1) {
+          return {
+            disabled: true,
+          };
         }
       }
-      if (
+      /* if (
         record &&
         record.nodeLabel &&
         record.nodeLabel.indexOf('Folder') !== -1
@@ -573,13 +665,13 @@ function RawTable(props) {
         return {
           disabled: true,
         };
-      }
+      } */
       if (deletedFileList) {
         const isDeleted = deletedFileList.find(
           (el) =>
             el.fileName === record.fileName &&
             el.source === record.name &&
-            el.status === 'running',
+            el.status === JOB_STATUS.RUNNING,
         );
 
         if (isDeleted) {
@@ -591,7 +683,7 @@ function RawTable(props) {
     },
   };
 
-  const downloadFiles = () => {
+  const downloadFiles = async () => {
     setLoading(true);
     let files = [];
     selectedRows.forEach((i) => {
@@ -603,6 +695,43 @@ function RawTable(props) {
       });
     });
 
+    const validationRes = await validateFileAction(
+      files.map((v) => {
+        return {
+          geid: v.geid,
+        };
+      }),
+      props.username,
+      FILE_OPERATIONS.DOWNLOAD,
+      currentDataset.globalEntityId,
+    );
+    let invalidList = validationRes.data.result.filter((item) => !item.isValid);
+    if (invalidList.length) {
+      let lockedList = invalidList
+        .map((v) => {
+          return pathsMapV2(v.fullPath);
+        })
+        .filter((v) => !!v);
+      Modal.warning({
+        title: 'Invalid File/Folder Operation',
+        content: (
+          <>
+            <p>
+              The following {lockedList.length} file(s)/folder(s) will be
+              skipped because there are concurrent file operations are taking
+              place:
+            </p>
+            <ul style={{ maxHeight: 90, overflowY: 'auto', paddingLeft: 16 }}>
+              {lockedList.map((v) => {
+                return <li key={v}>{v}</li>;
+              })}
+            </ul>
+          </>
+        ),
+      });
+      setLoading(false);
+      return;
+    }
     downloadFilesAPI(
       props.projectId,
       files,
@@ -636,7 +765,6 @@ function RawTable(props) {
       });
     clearSelection();
   };
-  const hasSelected = selectedRowKeys.length > 0;
 
   const onFold = (key) => {
     const data = [];
@@ -699,7 +827,7 @@ function RawTable(props) {
   useEffect(() => {
     const debounce = _.debounce(
       () => {
-        setTableWidth('90%');
+        setTableWidth('100%');
         setDetailsPanelWidth(300);
       },
       1000,
@@ -718,16 +846,21 @@ function RawTable(props) {
     const folderRoutingTemp = folderRouting || {};
     folderRoutingTemp[panelKey] = null;
     dispatch(setFolderRouting(folderRoutingTemp));
+    const isVFolder = checkIsVirtualFolder(panelKey);
     await refreshFiles({
-      geid: datasetGeid,
-      sourceType: 'Project',
+      geid: isVFolder ? geid : datasetGeid,
+      sourceType: isVFolder
+        ? 'Collection'
+        : panelKey.toLowerCase().includes('trash')
+        ? 'TrashFile'
+        : 'Project',
       resetTable: true,
     });
   }
 
   const getSourceType = () => {
     if (checkIsVirtualFolder(panelKey)) {
-      return null;
+      return 'Collection';
     } else {
       if (currentRouting?.length) {
         return 'Folder';
@@ -765,42 +898,37 @@ function RawTable(props) {
   }) {
     if (tableLoading) return;
     setTableLoading(true);
-    const isVirtualFolder = checkIsVirtualFolder(panelKey);
     let res;
     try {
-      if (isVirtualFolder) {
-        res = await listAllfilesVfolder(
-          folderId,
-          page,
-          pageSize,
-          orderType,
-          mapColumnKey(orderBy),
-        );
-      } else {
-        if (!partial) {
-          partial = [];
-          Object.keys(query).forEach((key) => {
-            partial.push(mapColumnKey(key));
-          });
-        }
-        if (!geid) throw new Error('geid is required');
-        res = await getFiles(
-          geid,
-          page,
-          pageSize,
-          mapColumnKey(orderBy),
-          orderType,
-          mapQueryKeys(query),
-          getZone(panelKey, permission),
-          sourceType,
-          partial,
-        );
+      if (!partial) {
+        partial = [];
+        Object.keys(query).forEach((key) => {
+          partial.push(mapColumnKey(key));
+        });
       }
-      if (props.type === DataSourceType.GREENROOM_HOME) {
-        //only green room home first level files have manifest
+      if (!geid) throw new Error('geid is required');
+      res = await getFiles(
+        geid,
+        page,
+        pageSize,
+        mapColumnKey(orderBy),
+        orderType,
+        mapQueryKeys(query),
+        getZone(panelKey, permission),
+        sourceType,
+        partial,
+        panelKey.toLowerCase().includes('trash') ? true : false,
+      );
+      if (
+        [
+          DataSourceType.GREENROOM_HOME,
+          DataSourceType.CORE_HOME,
+          DataSourceType.CORE_VIRTUAL_FOLDER,
+          DataSourceType.TRASH,
+        ].includes(props.type)
+      ) {
         res = await insertManifest(res);
       }
-
       const { files, total } = resKeyConvert(res);
 
       setRawFiles({
@@ -810,6 +938,7 @@ function RawTable(props) {
 
       updateFolderRouting(res);
     } catch (error) {
+      console.log(error);
       message.error(
         `${i18n.t('errormessages:rawTable.getFilesApi.default.0')}`,
       );
@@ -828,7 +957,8 @@ function RawTable(props) {
     <div style={{ position: 'relative' }}>
       <div
         style={{ marginBottom: 36, marginTop: 20, position: 'relative' }}
-        className={styles.file_explore_actions}
+        className={`${styles.file_explore_actions} file_explorer_header_bar`}
+        ref={actionBarRef}
       >
         {currentRouting?.length ? (
           <>
@@ -842,7 +972,7 @@ function RawTable(props) {
               <Breadcrumb
                 separator=">"
                 style={{ maxWidth: 500, display: 'inline-block' }}
-                className={styles.file_folder_path}
+                className={`${styles.file_folder_path}`}
               >
                 <Breadcrumb.Item
                   style={{
@@ -850,42 +980,50 @@ function RawTable(props) {
                   }}
                   onClick={goHome}
                 >
-                  Home
+                  {checkIsVirtualFolder(panelKey)
+                    ? titleText
+                    : panelKey.toLowerCase().includes('trash')
+                    ? 'Trash'
+                    : 'Home'}
                 </Breadcrumb.Item>
                 {currentRouting.length > 4 ? (
                   <Breadcrumb.Item>...</Breadcrumb.Item>
                 ) : null}
-                {orderRouting.slice(-3).map((v) => {
-                  return (
-                    <Breadcrumb.Item
-                      style={
-                        v.globalEntityId ===
-                        orderRouting[orderRouting.length - 1].globalEntityId
-                          ? null
-                          : { cursor: 'pointer' }
-                      }
-                      onClick={() => {
-                        if (
+                {orderRouting
+                  .slice(checkIsVirtualFolder(panelKey) ? -1 : -3)
+                  .map((v) => {
+                    return (
+                      <Breadcrumb.Item
+                        style={
                           v.globalEntityId ===
                           orderRouting[orderRouting.length - 1].globalEntityId
-                        ) {
-                          return;
+                            ? null
+                            : { cursor: 'pointer' }
                         }
-                        clearFilesSelection();
-                        refreshFiles({
-                          geid: v.globalEntityId,
-                          sourceType: 'Folder',
-                        });
-                      }}
-                    >
-                      {v.name.length > 23 ? (
-                        <Tip title={v.name}>{v.name.slice(0, 20) + '...'}</Tip>
-                      ) : (
-                        v.name
-                      )}
-                    </Breadcrumb.Item>
-                  );
-                })}
+                        onClick={() => {
+                          if (
+                            v.globalEntityId ===
+                            orderRouting[orderRouting.length - 1].globalEntityId
+                          ) {
+                            return;
+                          }
+                          clearFilesSelection();
+                          refreshFiles({
+                            geid: v.globalEntityId,
+                            sourceType: 'Folder',
+                          });
+                        }}
+                      >
+                        {v.name.length > 23 ? (
+                          <Tip title={v.name}>
+                            {v.name.slice(0, 20) + '...'}
+                          </Tip>
+                        ) : (
+                          v.name
+                        )}
+                      </Breadcrumb.Item>
+                    );
+                  })}
               </Breadcrumb>
             </div>
           </>
@@ -899,10 +1037,26 @@ function RawTable(props) {
             }}
             className={styles.file_folder_path}
           >
-            <Breadcrumb.Item onClick={goHome}>Home</Breadcrumb.Item>
+            <Breadcrumb.Item onClick={goHome}>
+              {checkIsVirtualFolder(panelKey)
+                ? titleText
+                : panelKey.toLowerCase().includes('trash')
+                ? 'Trash'
+                : 'Home'}
+            </Breadcrumb.Item>
           </Breadcrumb>
         )}
-
+        {[PanelKey.CORE_HOME, PanelKey.GREENROOM_HOME].includes(panelKey) && (
+          <CreateFolderPlugin
+            refresh={() => {
+              !reFreshing && fetchData();
+            }}
+            currentRouting={currentRouting}
+            projectCode={currentDataset.code}
+            uploader={props.username}
+            panelKey={panelKey}
+          />
+        )}
         {!hasSelected && (
           <Button
             onClick={() => {
@@ -938,8 +1092,7 @@ function RawTable(props) {
           </Button>
         ) : null}
         {props.type === DataSourceType.GREENROOM_HOME &&
-        permission === 'admin' &&
-        !currentRouting?.length ? (
+        permission === 'admin' ? (
           <Copy2CorePlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -947,11 +1100,10 @@ function RawTable(props) {
             clearSelection={clearSelection}
             selectedRows={selectedRows}
             panelKey={panelKey}
+            goHome={goHome}
           />
         ) : null}
-        {props.type === DataSourceType.CORE_HOME &&
-        !currentRouting?.length &&
-        hasSelected ? (
+        {props.type === DataSourceType.CORE_HOME && hasSelected ? (
           <VirtualFolderPlugin
             tableState={tableState}
             setTableState={setTableState}
@@ -972,19 +1124,18 @@ function RawTable(props) {
           />
         ) : null}
         {props.type === DataSourceType.CORE_VIRTUAL_FOLDER &&
-        !currentRouting?.length &&
-        hasSelected ? (
-          <VirtualFolderFilesDeletePlugin
-            tableState={tableState}
-            setTableState={setTableState}
-            selectedRowKeys={selectedRowKeys}
-            clearSelection={clearSelection}
-            selectedRows={selectedRows}
-            panelKey={panelKey}
-          />
-        ) : null}
-        {props.type !== DataSourceType.CORE_VIRTUAL_FOLDER &&
           !currentRouting?.length &&
+          hasSelected && (
+            <VirtualFolderFilesDeletePlugin
+              tableState={tableState}
+              setTableState={setTableState}
+              selectedRowKeys={selectedRowKeys}
+              clearSelection={clearSelection}
+              selectedRows={selectedRows}
+              panelKey={panelKey}
+            />
+          )}
+        {props.type !== DataSourceType.CORE_VIRTUAL_FOLDER &&
           !panelKey.includes('trash') &&
           hasSelected && (
             <DeleteFilesPlugin
@@ -1010,21 +1161,179 @@ function RawTable(props) {
             removePanel={removePanel}
           />
         ) : null}
-        {hasSelected ? (
+        <Dropdown
+          /*           className={styles['hide-more']}*/
+          overlayClassName={styles['drop-down']}
+          overlay={
+            <Menu className={styles[`show-menu-${menuItems}`]}>
+              {[PanelKey.CORE_HOME, PanelKey.GREENROOM_HOME].includes(
+                panelKey,
+              ) && (
+                <Menu.Item>
+                  <CreateFolderPlugin
+                    refresh={() => {
+                      !reFreshing && fetchData();
+                    }}
+                    currentRouting={currentRouting}
+                    projectCode={currentDataset.code}
+                    uploader={props.username}
+                    panelKey={panelKey}
+                  />
+                </Menu.Item>
+              )}
+
+              {!hasSelected && (
+                <Menu.Item>
+                  <Button
+                    onClick={() => {
+                      !reFreshing && fetchData();
+                    }}
+                    type="link"
+                    icon={<SyncOutlined spin={reFreshing} />}
+                    style={{ marginRight: 8 }}
+                  >
+                    Refresh
+                  </Button>
+                </Menu.Item>
+              )}
+              {!hasSelected && props.type === DataSourceType.GREENROOM_HOME && (
+                <Menu.Item>
+                  <Button
+                    id="raw_table_upload"
+                    type="link"
+                    onClick={() => toggleModal(true)}
+                    icon={<UploadOutlined />}
+                    style={{ marginRight: 8 }}
+                  >
+                    Upload
+                  </Button>
+                </Menu.Item>
+              )}
+              {!panelKey.includes('trash') && hasSelected && (
+                <Menu.Item>
+                  <Button
+                    onClick={downloadFiles}
+                    loading={loading}
+                    type="link"
+                    icon={<CloudDownloadOutlined />}
+                    style={{ marginRight: 8 }}
+                  >
+                    Download
+                  </Button>
+                </Menu.Item>
+              )}
+              {props.type === DataSourceType.GREENROOM_HOME &&
+                permission === 'admin' && (
+                  <Menu.Item>
+                    <Copy2CorePlugin
+                      tableState={tableState}
+                      setTableState={setTableState}
+                      selectedRowKeys={selectedRowKeys}
+                      clearSelection={clearSelection}
+                      selectedRows={selectedRows}
+                      panelKey={panelKey}
+                      goHome={goHome}
+                    />
+                  </Menu.Item>
+                )}
+              {props.type === DataSourceType.CORE_HOME && hasSelected && (
+                <Menu.Item>
+                  <VirtualFolderPlugin
+                    tableState={tableState}
+                    setTableState={setTableState}
+                    selectedRowKeys={selectedRowKeys}
+                    clearSelection={clearSelection}
+                    selectedRows={selectedRows}
+                    panelKey={panelKey}
+                  />
+                </Menu.Item>
+              )}
+              {hasSelected && props.type === DataSourceType.GREENROOM_HOME && (
+                <Menu.Item>
+                  <ManifestManagementPlugin
+                    tableState={tableState}
+                    setTableState={setTableState}
+                    selectedRowKeys={selectedRowKeys}
+                    clearSelection={clearSelection}
+                    selectedRows={selectedRows}
+                    panelKey={panelKey}
+                  />
+                </Menu.Item>
+              )}
+              {props.type === DataSourceType.CORE_VIRTUAL_FOLDER &&
+                !currentRouting?.length &&
+                hasSelected && (
+                  <Menu.Item>
+                    <VirtualFolderFilesDeletePlugin
+                      tableState={tableState}
+                      setTableState={setTableState}
+                      selectedRowKeys={selectedRowKeys}
+                      clearSelection={clearSelection}
+                      selectedRows={selectedRows}
+                      panelKey={panelKey}
+                    />
+                  </Menu.Item>
+                )}
+              {props.type !== DataSourceType.CORE_VIRTUAL_FOLDER &&
+                !panelKey.includes('trash') &&
+                hasSelected && (
+                  <Menu.Item>
+                    <DeleteFilesPlugin
+                      tableState={tableState}
+                      selectedRows={selectedRows}
+                      selectedRowKeys={selectedRowKeys}
+                      clearSelection={clearSelection}
+                      setTableState={setTableState}
+                      panelKey={panelKey}
+                      permission={permission}
+                    />
+                  </Menu.Item>
+                )}
+              {props.type === DataSourceType.CORE_VIRTUAL_FOLDER &&
+                !currentRouting?.length &&
+                !hasSelected && (
+                  <Menu.Item>
+                    <VirtualFolderDeletePlugin
+                      tableState={tableState}
+                      setTableState={setTableState}
+                      selectedRowKeys={selectedRowKeys}
+                      clearSelection={clearSelection}
+                      selectedRows={selectedRows}
+                      panelKey={panelKey}
+                      removePanel={removePanel}
+                    />
+                  </Menu.Item>
+                )}
+            </Menu>
+          }
+        >
+          <Button
+            ref={moreActionRef}
+            type="link"
+            icon={<EllipsisOutlined />}
+          ></Button>
+        </Dropdown>
+
+        {
           <div
-            style={{ float: 'right', display: 'inline-block', marginRight: 40 }}
+            style={{
+              float: 'right',
+              marginRight: 40,
+              marginTop: 4,
+              display: `${hasSelected ? 'block' : 'none'}`,
+            }}
           >
-            <CloseOutlined
+            {/* <CloseOutlined
               style={{ marginRight: 10 }}
               onClick={(e) => {
                 clearSelection();
               }}
-            />
+            /> */}
             <span>
               {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
             </span>
           </div>
-        ) : null}
+        }
       </div>
 
       <FilesTable
@@ -1080,19 +1389,18 @@ function RawTable(props) {
         </Collapse>
       )}
 
-      {sidepanel ? (
-        <div id="rawTable-sidePanel" style={{ display: 'flex' }} ref={ref}>
-          <div
-            style={{
-              borderRight: '1px solid rgb(240, 240, 240)',
-              // paddingRight: '16px',
-              marginRight: '16px',
-              width: tableWidth,
-              // overflow: 'scroll',
-            }}
-          >
-            {ToolTipsAndTable}
-          </div>
+      <div id="rawTable-sidePanel" style={{ display: 'flex' }} ref={ref}>
+        <div
+          style={{
+            borderRight: '1px solid rgb(240, 240, 240)',
+            // paddingRight: '16px',
+            marginRight: sidepanel ? '16px' : 0,
+            width: tableWidth,
+          }}
+        >
+          {ToolTipsAndTable}
+        </div>
+        {sidepanel && (
           <div
             style={{
               width: detailsPanelWidth,
@@ -1154,9 +1462,15 @@ function RawTable(props) {
                   panelKey={panelKey}
                   record={currentRecord}
                   pid={props.projectId}
+                  checkIsVirtualFolder={checkIsVirtualFolder}
                 />
               </Panel>
-              {props.type === DataSourceType.GREENROOM_HOME &&
+              {[
+                DataSourceType.CORE_VIRTUAL_FOLDER,
+                DataSourceType.GREENROOM_HOME,
+                DataSourceType.CORE_HOME,
+                DataSourceType.TRASH,
+              ].includes(props.type) &&
               currentRecord.nodeLabel.indexOf('Folder') === -1 ? (
                 <Panel header="File Attributes" key="Manifest">
                   <FileManifest
@@ -1207,14 +1521,8 @@ function RawTable(props) {
               ) : null}
             </Collapse>
           </div>
-        </div>
-      ) : (
-        <div
-        // style={{ overflow: 'scroll' }}
-        >
-          {ToolTipsAndTable}
-        </div>
-      )}
+        )}
+      </div>
       <GreenRoomUploader
         isShown={isShown}
         cancel={() => {
@@ -1302,6 +1610,9 @@ const getZone = (panelKey, role) => {
   if (panelKey.startsWith('core')) {
     return 'VRECore';
   }
+  if (checkIsVirtualFolder(panelKey)) {
+    return 'VRECore';
+  }
   throw new TypeError('only greenroom, core and trash can use getZone');
 };
 
@@ -1324,10 +1635,11 @@ function resKeyConvert(res) {
   const files = result.map((item) => {
     return {
       ...item.attributes,
+      name: item.attributes.name || item.geid,
       tags: item.labels,
       guid: item.guid,
       geid: item.geid,
-      key: item.attributes.name,
+      key: item.attributes.name || item.geid,
       manifest: item.manifest,
     };
   });

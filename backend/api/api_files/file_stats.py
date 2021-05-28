@@ -18,7 +18,7 @@ class FileStatistics(Resource):
         """
         _res = APIResponse()
         try:
-            url = ConfigClass.FILEINFO_HOST + "/v1/project/{}/files/statistics".format(project_geid)
+            url = ConfigClass.ENTITYINFO_SERVICE + "project/{}/files/statistics".format(project_geid)
             current_role = current_identity['role']
             user_id = current_identity["user_id"]
             operator = current_identity['username']

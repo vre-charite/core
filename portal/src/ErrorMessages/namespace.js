@@ -68,6 +68,10 @@ const manifest = {
   getManifestById:'manifest.getManifestById'
 }
 
+const fileExplorer = {
+  createFolder:'fileExplorer.createFolder'
+}
+
 export default {
   common,
   login,
@@ -76,5 +80,5 @@ export default {
   selfRegister,
   teams,
   contactUs,
-  userManagement,announcement,manifest
+  userManagement,announcement,manifest,fileExplorer
 };

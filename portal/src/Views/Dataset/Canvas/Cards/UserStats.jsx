@@ -46,81 +46,79 @@ function UserStats(props) {
   useEffect(() => {
     if (currentDataset) {
       const paginationParams = {
-        "page_size": 50,
-        "page": 0
+        page_size: 10,
+        page: 0,
       };
       const query = {
-        "project_code": currentDataset && currentDataset.code,
-        "start_date": moment().startOf('day').unix(),
-        "end_date": moment().endOf('day').unix(),
-        "resource": "file"
+        project_code: currentDataset && currentDataset.code,
+        start_date: moment('19700101', 'YYYYMMDD').unix(),
+        end_date: moment().endOf('day').unix(),
+        resource: 'file',
       };
 
-      getAuditLogsApi(datasetId, paginationParams, query)
-        .then((res) => {
-          const { result } = res.data;
+      getAuditLogsApi(datasetId, paginationParams, query).then((res) => {
+        const { result } = res.data;
 
-          const deleteList = result.reduce((filtered, el) => {
-            let { action } = el['source'];
+        const deleteList = result.reduce((filtered, el) => {
+          let { action } = el['source'];
 
-            if (action === 'data_delete') {
-              filtered.push({
-                ...el['source'],
-                tag: 'delete',
-                userName: props.username,
-              });
-            }
-            return filtered;
-          }, []);
+          if (action === 'data_delete') {
+            filtered.push({
+              ...el['source'],
+              tag: 'delete',
+              userName: props.username,
+            });
+          }
+          return filtered;
+        }, []);
 
-          const copyList = result.reduce((filtered, el) => {
-            let { action } = el['source'];
+        const copyList = result.reduce((filtered, el) => {
+          let { action } = el['source'];
 
-            if (action === 'data_transfer') {
-              filtered.push({
-                ...el['source'],
-                tag: 'copy',
-                userName: props.username,
-              });
-            }
-            return filtered;
-          }, []);
+          if (action === 'data_transfer') {
+            filtered.push({
+              ...el['source'],
+              tag: 'copy',
+              userName: props.username,
+            });
+          }
+          return filtered;
+        }, []);
 
-          const uploadList = result.reduce((filtered, el) => {
-            let { action } = el['source'];
+        const uploadList = result.reduce((filtered, el) => {
+          let { action } = el['source'];
 
-            if (action === 'data_upload') {
-              filtered.push({
-                ...el['source'],
-                tag: 'upload',
-                userName: props.username,
-              });
-            }
-            return filtered;
-          }, []);
+          if (action === 'data_upload') {
+            filtered.push({
+              ...el['source'],
+              tag: 'upload',
+              userName: props.username,
+            });
+          }
+          return filtered;
+        }, []);
 
-          const downloadList = result.reduce((filtered, el) => {
-            let { action } = el['source'];
+        const downloadList = result.reduce((filtered, el) => {
+          let { action } = el['source'];
 
-            if (action === 'data_download') {
-              filtered.push({
-                ...el['source'],
-                tag: 'download',
-                userName: props.username,
-              });
-            }
-            return filtered;
-          }, []);
+          if (action === 'data_download') {
+            filtered.push({
+              ...el['source'],
+              tag: 'download',
+              userName: props.username,
+            });
+          }
+          return filtered;
+        }, []);
 
-          setDeleteLogs(deleteList);
+        setDeleteLogs(deleteList);
 
-          setUploadLog(uploadList);
+        setUploadLog(uploadList);
 
-          setCopyLogs(copyList);
+        setCopyLogs(copyList);
 
-          setDownloadLog(downloadList);
-
-        });
+        setDownloadLog(downloadList);
+      });
     }
   }, [props.successNum, currentDataset?.code]);
 
@@ -166,7 +164,7 @@ function UserStats(props) {
       const wholePathList = fileLog.outcome.split('/');
       return wholePathList.pop();
     }
-  }
+  };
 
   return (
     <div>
@@ -187,10 +185,7 @@ function UserStats(props) {
                   </Tooltip>
                 </span>
                 <span className={styles.firstSlash}>/</span>
-                <span className={styles.userName}>
-                  {el &&
-                    (el.operator)}
-                </span>
+                <span className={styles.userName}>{el && el.operator}</span>
                 <span className={styles.secondSlash}>/</span>
                 <span className={styles.time}>
                   {el &&

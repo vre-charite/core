@@ -1,7 +1,9 @@
 from .upload_ops import CheckUploadStateRestful, CheckUploadStatusRestful, PreUploadRestful, ChunkUploadSuccessRestful
 from .folder_ops import Folders
 from .vfolder_ops import VirtualFolderFiles, VirtualFolder, VirtualFolderInfo
-from .file_ops import FileExistCheck, FileDownloadLog, FilePreDownload, FileInfo, ProcessedFile, TotalFileCount, DailyFileCount, FileTransfer, FileActionLogs, FileDeletion
+from .file_ops import FileExistCheck, FileDownloadLog, FilePreDownload, FileInfo, \
+    ProcessedFile, TotalFileCount, DailyFileCount, FileTransfer, FileActionLogs, FileActions, \
+    FileActionTasks, FileValidation
 from .file_ops_v2 import TotalFileCountV2, FileInfoV2, FileTags
 from .file_ops_v3 import FileInfoV3, FolderInfoV3
 from .file_ops_v4 import FileInfoV4
@@ -26,11 +28,13 @@ nfs_entity_ns.add_resource(Folders, '/folders')
 nfs_entity_ns.add_resource(FileExistCheck, '/containers/<container_id>/files/exist')
 nfs_entity_ns.add_resource(FileTransfer, '/transfer')
 nfs_entity_ns.add_resource(FileActionLogs, '/actions/logs')
-nfs_entity_ns.add_resource(FileDeletion, '/actions')
+nfs_entity_ns.add_resource(FileActions, '/actions')
+nfs_entity_ns.add_resource(FileActionTasks, '/actions/tasks')
 nfs_entity_ns.add_resource(FoldersEntity, '/entity/folders')
 nfs_entity_ns.add_resource(FolderEntity, '/entity/folder/')
 nfs_entity_ns.add_resource(FileMeta, '/entity/meta/<geid>')
 nfs_entity_ns.add_resource(FileStatistics, '/project/<project_geid>/files/statistics')
+nfs_entity_ns.add_resource(FileValidation, '/validation')
 
 
 nfs_entity_ns_v2 = Namespace(
@@ -54,10 +58,10 @@ nfs_upload_ns.add_resource(CheckUploadStateRestful,
                            '/containers/<container_id>/upload-state')
 
 nfs_vfolder_ns = Namespace(
-    'NFS Data vFolder', description='vFolder on NFS', path='/v1/vfolder')
-nfs_vfolder_ns.add_resource(VirtualFolderFiles, '/<folderId>/files')
-nfs_vfolder_ns.add_resource(VirtualFolder, '/')
-nfs_vfolder_ns.add_resource(VirtualFolderInfo, '/<folderId>')
+    'NFS Data vFolder', description='vFolder on NFS', path='/v1')
+nfs_vfolder_ns.add_resource(VirtualFolderFiles, '/collections/<folder_geid>/files')
+nfs_vfolder_ns.add_resource(VirtualFolder, '/collections')
+nfs_vfolder_ns.add_resource(VirtualFolderInfo, '/collections/<folderId>')
 
 
 nfs_entity_ns_v3 = Namespace(

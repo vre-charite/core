@@ -1,14 +1,16 @@
 import React from 'react';
 import { Modal, message } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  triggerEvent,
-  setDeletedFileList,
-} from '../../../../../../../Redux/actions';
+import { triggerEvent } from '../../../../../../../Redux/actions';
+import { FILE_OPERATIONS } from '../../FileOperationValues';
 import { tokenManager } from '../../../../../../../Service/tokenManager';
-import { deleteFileAPI } from '../../../../../../../APIs';
+import {
+  commitFileAction,
+  validateFileAction,
+} from '../../../../../../../APIs';
 import { useTranslation } from 'react-i18next';
-
+import { JOB_STATUS } from '../../../../../../../Components/Layout/FilePanel/jobStatus';
+import { PanelKey } from '../../RawTableValues';
 const DeleteFilesModal = ({
   visible,
   setVisible,
@@ -21,6 +23,8 @@ const DeleteFilesModal = ({
   const project = useSelector((state) => state.project);
   const username = useSelector((state) => state.username);
   const deletedFileList = useSelector((state) => state.deletedFileList);
+  const [step, setStep] = React.useState(1);
+  const [locked, setLocked] = React.useState([]);
 
   const { t } = useTranslation([
     'tooltips',
@@ -34,75 +38,88 @@ const DeleteFilesModal = ({
   const sessionId = tokenManager.getCookie('sessionId');
 
   const handleCancel = () => {
+    setStep(1);
+    setLocked([]);
     eraseSelect();
     setVisible(false);
   };
 
-  const handleOk = () => {
-    const projectCode = project && project.profile && project.profile.code;
-    const deleteFiles = [];
-    // const allFiles = deletedFileList;
-    const allFiles = [...deletedFileList];
-    if (permission === 'collaborator' && panelKey === 'core-Raw') {
+  const handleOk = async () => {
+    if (step == 2) {
+      handleCancel();
+      return;
+    }
+    if (permission === 'collaborator' && panelKey === PanelKey.CORE_HOME) {
       files = files.filter((el) => el.uploader === username);
     }
-
     if (files && files.length === 0) {
       handleCancel();
       return;
     }
 
-    for (const file of files) {
-      const pathArray = file && file.input_path && file.input_path.split('/');
-      pathArray.pop();
-
-      const isExist = deletedFileList.find(
-        (el) => el.fileName === file.fileName,
-      );
-      
-      if (!isExist) {
-        file.status = 'running';
-        file.projectCode = projectCode;
-        file.panelKey = panelKey;
-        file.source = file.input_path;
-        file.updateTimestamp = `${Date.now()}`;
-        file.createdTime = Date.now();
-        delete file.input_path;
-        allFiles.push(file);
-      }
-
-      deleteFiles.push({
-        path: pathArray && pathArray.join('/'),
-        file_name: file.fileName,
-        namespace: panelKey.includes('greenroom') ? 'greenroom' : 'vrecore',
-        generate_id: file.generate_id,
-        uploader: file.uploader,
-      });
-    }
-
-    const data = {
-      to_delete: deleteFiles,
-      operator: username,
-      session_id: sessionId,
-      project_code: projectCode,
-      job_id: 'test_job',
-    };
-
     setConfirmLoading(true);
 
-    deleteFileAPI(data)
-      .then((res) => {
-        if (res.status === 200)
-          message.success(t('success:fileOperations.delete'));
-        dispatch(triggerEvent('LOAD_DELETED_LIST'));
+    try {
+      const validationRes = await validateFileAction(
+        files.map((file) => {
+          return {
+            geid: file.geid,
+          };
+        }),
+        username,
+        FILE_OPERATIONS.DELETE,
+        project.profile.globalEntityId,
+      );
+      let invalidList = validationRes.data.result.filter(
+        (item) => !item.isValid,
+      );
+      if (invalidList.length) {
+        setStep(2);
         setConfirmLoading(false);
-        handleCancel();
-      })
-      .catch((err) => {
+        let lockedList = invalidList
+          .map((v) => {
+            let paths = v.fullPath.split('/');
+            if (paths && paths.length) {
+              return paths[paths.length - 1];
+            } else {
+              return null;
+            }
+          })
+          .filter((v) => !!v);
+        setLocked(lockedList);
+        return;
+      }
+      const res = await commitFileAction(
+        {
+          targets: files.map((file) => {
+            return {
+              geid: file.geid,
+            };
+          }),
+        },
+        username,
+        FILE_OPERATIONS.DELETE,
+        project.profile.globalEntityId,
+        sessionId,
+      );
+      if (res.code === 202) {
+        message.success(t('success:fileOperations.delete'));
+      }
+
+      dispatch(triggerEvent('LOAD_DELETED_LIST'));
+      setConfirmLoading(false);
+      handleCancel();
+    } catch (err) {
+      console.log(err.response.status);
+      if (err.response.status === 403 || err.response.status === 400) {
+        message.error(t('errormessages:fileOperations.unauthorizedDelete'));
+      } else {
         message.error(t('errormessages:fileOperations.deleteErr'));
-        setConfirmLoading(false);
-        handleCancel();
-      });
+      }
+
+      setConfirmLoading(false);
+      handleCancel();
+    }
   };
 
   let content = null;
@@ -114,7 +131,7 @@ const DeleteFilesModal = ({
   if (files && files.length === 1) {
     content = <p>{`${files[0].fileName} will be sent to Trash Bin`}</p>;
 
-    if (permission === 'collaborator' && panelKey === 'core-Raw') {
+    if (permission === 'collaborator' && panelKey === PanelKey.CORE_HOME) {
       const ownFiles = files.filter((el) => el.uploader === username);
       const otherFiles = files.filter((el) => el.uploader !== username);
 
@@ -129,9 +146,9 @@ const DeleteFilesModal = ({
   } else if (files && files.length > 1) {
     content = (
       <div>
-        <p>{`The following ${files.length} files will be sent to Trash Bin`}</p>
+        <p>{`The following ${files.length} file(s)/folder(s) will be sent to Trash Bin`}</p>
 
-        <ul style={{ maxHeight: 90, overflowY: 'scroll' }}>
+        <ul style={{ maxHeight: 90, overflowY: 'auto' }}>
           {files.map((v) => {
             return <li key={v.name}>{v.fileName}</li>;
           })}
@@ -139,7 +156,7 @@ const DeleteFilesModal = ({
       </div>
     );
 
-    if (permission === 'collaborator' && panelKey === 'core-Raw') {
+    if (permission === 'collaborator' && panelKey === PanelKey.CORE_HOME) {
       const ownFiles = files.filter((el) => el.uploader === username);
       const otherFiles = files.filter((el) => el.uploader !== username);
 
@@ -147,18 +164,21 @@ const DeleteFilesModal = ({
         content = (
           <div>
             <p>
-              {`${otherFiles.length} files will be skipped. Because these files are uploaded by other users.`}
+              {`${otherFiles.length} file(s)/folder(s) will be skipped. Because these files are uploaded by other users.`}
             </p>
 
-            <p>
-              {`The following ${ownFiles.length} files will be sent to ${trashPath} > Trash Bin`}
-            </p>
-
-            <ul style={{ maxHeight: 90, overflowY: 'scroll' }}>
-              {ownFiles.map((v) => {
-                return <li key={v.name}>{v.fileName}</li>;
-              })}
-            </ul>
+            {ownFiles.length ? (
+              <>
+                <p>
+                  {`The following ${ownFiles.length} file(s)/folder(s) will be sent to ${trashPath} > Trash Bin`}
+                </p>
+                <ul style={{ maxHeight: 90, overflowY: 'auto' }}>
+                  {ownFiles.map((v) => {
+                    return <li key={v.name}>{v.fileName}</li>;
+                  })}
+                </ul>
+              </>
+            ) : null}
           </div>
         );
       }
@@ -175,7 +195,22 @@ const DeleteFilesModal = ({
       onOk={handleOk}
       cancelButtonProps={{ style: { display: 'none' } }}
     >
-      {content}
+      {step == 1 && content}
+      {step == 2 && (
+        <>
+          <p>
+            The following {locked.length} file(s)/folder(s) will be skipped
+            because there are concurrent file operations are taking place:
+          </p>
+          {locked && locked.length ? (
+            <ul style={{ maxHeight: 90, overflowY: 'auto' }}>
+              {locked.map((v) => {
+                return <li key={v}>{v}</li>;
+              })}
+            </ul>
+          ) : null}
+        </>
+      )}
     </Modal>
   );
 };

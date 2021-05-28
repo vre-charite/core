@@ -1,6 +1,11 @@
 import React, { useState, Component, useEffect } from 'react';
 import { Menu, message, Spin } from 'antd';
-import { TeamOutlined, SettingOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
+import {
+  TeamOutlined,
+  SettingOutlined,
+  LoadingOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
 import GreenRoomUploader from './GreenRoomUploader';
@@ -10,7 +15,8 @@ import style from './index.module.scss';
 import { useCurrentProject } from '../../../Utility';
 import AnnouncementButton from './AnnouncementButton';
 import RequestAccessModal from './requestAccessModal';
-import { getResourceRequestsAPI } from '../../../APIs';
+import { getResourceRequestsAPI, getWorkbenchInfo } from '../../../APIs';
+import { useTranslation } from 'react-i18next';
 
 const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 
@@ -22,6 +28,7 @@ const ToolBar = ({
   project,
   username,
 }) => {
+  const { t } = useTranslation(['errormessages', 'success']);
   const [isShown, toggleModal] = useState(false);
   const [iconSelected, toggleIcon] = useState(pathname.split('/')[3]);
   const [showRequestModal, toggleRequestModal] = useState(false);
@@ -29,6 +36,10 @@ const ToolBar = ({
   const [requests, setRequests] = useState(null);
   const [superSetActive, setSuperSetActive] = useState(true);
   const [guacamoleActive, setGuacamoleActive] = useState(true);
+  const [guacamoleDeployed, setGuacamoleDeployed] = useState('');
+  const [supersetDeployed, setSupersetDeployed] = useState('');
+  const [jupyterhubDeployed, setJupyterhubDeployed] = useState('');
+
   const adminPermission =
     role === 'admin' ||
     _.some(containersPermission, (item) => {
@@ -39,14 +50,40 @@ const ToolBar = ({
     });
   let currentProject = useCurrentProject();
   currentProject = currentProject[0];
-  const showJupyter = ['tvbcloud', 'indoctestproject', 'retunetest'].includes(
-    currentProject?.code,
-  );
-  const showGuacamole =
-    currentProject?.code === 'tvbcloud' ||
-    currentProject?.code === 'indoctestproject';
 
-  const showSuperset = ['indoctestproject'].includes(currentProject?.code);
+  const getWorkbenchInformation = async () => {
+    try {
+      const res = await getWorkbenchInfo(currentProject?.globalEntityId);
+      const workbenchKeys = Object.keys(res.data.result);
+      if (workbenchKeys.length > 0) {
+        if (workbenchKeys.includes('guacamole')) {
+          setGuacamoleDeployed(res.data.result['guacamole'].deployed);
+        } else {
+          setGuacamoleDeployed(false);
+        }
+        if (workbenchKeys.includes('superset')) {
+          setSupersetDeployed(res.data.result['superset'].deployed);
+        } else {
+          setSupersetDeployed(false);
+        }
+        if (workbenchKeys.includes('jupyterhub')) {
+          setJupyterhubDeployed(res.data.result['jupyterhub'].deployed);
+        } else {
+          setJupyterhubDeployed(false);
+        }
+      } else {
+        setGuacamoleDeployed(false);
+        setSupersetDeployed(false);
+        setJupyterhubDeployed(false);
+      }
+    } catch (error) {
+      message.error(t('errormessages:projectWorkench.getWorkbench.default.0'));
+    }
+  };
+
+  useEffect(() => {
+    getWorkbenchInformation();
+  }, [project.workbenchDeployedCounter]);
 
   useEffect(() => {
     const getResourceRequests = async () => {
@@ -93,9 +130,17 @@ const ToolBar = ({
     getResourceRequests();
   }, [params.datasetId]);
 
-  const superSet = (role, showSuperset, superSetActive) => {
-    if (showSuperset) {
-      if (role === 'admin' || superSetActive === false) {
+  const superSet = (
+    platFormRole,
+    projectRole,
+    supersetDeployed,
+    superSetActive,
+  ) => {
+    if (projectRole === 'contributor') {
+      return null;
+    }
+    if (supersetDeployed === true) {
+      if (platFormRole === 'admin' || superSetActive === false) {
         return (
           <Menu.Item key="superset">
             <a
@@ -133,7 +178,7 @@ const ToolBar = ({
           </Menu.Item>
         );
       }
-    } else {
+    } else if (supersetDeployed === false) {
       return (
         <Menu.Item
           key="superset"
@@ -150,12 +195,22 @@ const ToolBar = ({
           <span>Superset</span>
         </Menu.Item>
       );
+    } else {
+      return null;
     }
   };
 
-  const guacamole = (role, showGuacamole, guacamoleActive) => {
-    if (showGuacamole) {
-      if (role === 'admin' || guacamoleActive === false) {
+  const guacamole = (
+    platFormRole,
+    projectRole,
+    guacamoleDeployed,
+    guacamoleActive,
+  ) => {
+    if (projectRole === 'contributor') {
+      return null;
+    }
+    if (guacamoleDeployed === true) {
+      if (platFormRole === 'admin' || guacamoleActive === false) {
         return (
           <Menu.Item key="guacamole">
             <a
@@ -193,7 +248,7 @@ const ToolBar = ({
           </Menu.Item>
         );
       }
-    } else {
+    } else if (guacamoleDeployed === false) {
       return (
         <Menu.Item
           key="guacamole"
@@ -212,6 +267,55 @@ const ToolBar = ({
           <span>Guacamole</span>
         </Menu.Item>
       );
+    } else {
+      return null;
+    }
+  };
+
+  const jupyterhub = (projectRole, jupyterhubDeployed) => {
+    if (projectRole === 'contributor') {
+      return null;
+    }
+    if (jupyterhubDeployed === true) {
+      return (
+        <Menu.Item key="jupyter">
+          <a
+            href={`/workbench/${currentProject?.code}/j/`}
+            //rel="noopener noreferrer"
+            // eslint-disable-next-line
+            target="_blank"
+          >
+            <span role="img" className="anticon">
+              <img
+                style={{ width: 17 }}
+                src={require('../../../Images/Jupyter.svg')}
+              />
+            </span>
+            <span>Jupyterhub</span>
+          </a>
+        </Menu.Item>
+      );
+    } else if (jupyterhubDeployed === false) {
+      return (
+        <Menu.Item
+          key="jupyter"
+          onClick={() => {
+            message.info(
+              'This project does not have Jupyterhub configured yet.',
+            );
+          }}
+        >
+          <span role="img" className="anticon">
+            <img
+              style={{ width: 17 }}
+              src={require('../../../Images/Jupyter.svg')}
+            />
+          </span>
+          <span>Jupyterhub</span>
+        </Menu.Item>
+      );
+    } else {
+      return null;
     }
   };
 
@@ -279,45 +383,21 @@ const ToolBar = ({
         className={style.lowerMenu}
         selectedKeys={[pathname.split('/')[3]]}
       >
-        {superSet(role, showSuperset, superSetActive)}
-
-        {guacamole(role, showGuacamole, guacamoleActive)}
-
-        {showJupyter ? (
-          <Menu.Item key="jupyter">
-            <a
-              href={`/workbench/${currentProject?.code}/j/`}
-              //rel="noopener noreferrer"
-              // eslint-disable-next-line
-              target="_blank"
-            >
-              <span role="img" className="anticon">
-                <img
-                  style={{ width: 17 }}
-                  src={require('../../../Images/Jupyter.svg')}
-                />
-              </span>
-              <span>Jupyterhub</span>
-            </a>
-          </Menu.Item>
-        ) : (
-          <Menu.Item
-            key="jupyter"
-            onClick={() => {
-              message.info(
-                'This project does not have Jupyterhub configured yet.',
-              );
-            }}
-          >
-            <span role="img" className="anticon">
-              <img
-                style={{ width: 17 }}
-                src={require('../../../Images/Jupyter.svg')}
-              />
-            </span>
-            <span>Jupyterhub</span>
-          </Menu.Item>
+        {superSet(
+          role,
+          currentProject?.permission,
+          supersetDeployed,
+          superSetActive,
         )}
+
+        {guacamole(
+          role,
+          currentProject?.permission,
+          guacamoleDeployed,
+          guacamoleActive,
+        )}
+
+        {jupyterhub(currentProject?.permission, jupyterhubDeployed)}
 
         <Menu.Item key="xwiki">
           <a

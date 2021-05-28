@@ -224,6 +224,9 @@ export default function ErrorMessager(name) {
       400: (err, params) => {
         message.error(`${i18n.t('errormessages:downloadFilesAPI.400.0')}`);
       },
+      404:(err,params)=>{
+        message.error(`${i18n.t('errormessages:downloadFilesAPI.404.0')}`);
+      },
       403: (err, params) => {
         message.error(`${i18n.t('errormessages:downloadFilesAPI.403.0')}`);
       },
@@ -295,9 +298,9 @@ export default function ErrorMessager(name) {
       },
       default: (err, params) => {
         message.error(
-          `${i18n.t('errormessages:inviteUser.500.0')} ${
-            params.email
-          } ${i18n.t('errormessages:inviteUser.500.1')}`,
+          `${i18n.t('errormessages:inviteUser.500.0')} ${params.email} ${i18n.t(
+            'errormessages:inviteUser.500.1',
+          )}`,
         );
       },
     },
@@ -346,9 +349,9 @@ export default function ErrorMessager(name) {
           } ${i18n.t('errormessages:addUsertoDataSet.500.1')}`,
         );
       },
-      "default":(err,parames)=>{
-        message.error(i18n.t('errormessages:addUsertoDataSet.default.0'))
-      }
+      default: (err, parames) => {
+        message.error(i18n.t('errormessages:addUsertoDataSet.default.0'));
+      },
     },
     [namespace.teams.changeRoleInDataset]: {
       403: (err, params) => {
@@ -513,6 +516,14 @@ export default function ErrorMessager(name) {
           i18n.t('errormessages:getManifestById.default.0') +
             parames.manifestId,
         );
+      },
+    },
+    [namespace.fileExplorer.createFolder]: {
+      409: (err, params) => {
+        message.error(i18n.t('errormessages:createFolder.409.0'));
+      },
+      default: (err, params) => {
+        message.error(i18n.t('errormessages:createFolder.default.0'));
       },
     },
   };

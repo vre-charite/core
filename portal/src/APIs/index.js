@@ -28,6 +28,10 @@ import {
   getFileManifestAttrs,
   searchFilesAPI,
   getFiles,
+  validateFileAction,
+  validateFiles,
+  commitFileAction,
+  getCollectionFiles,
 } from './file';
 import {
   getDatasetsAPI,
@@ -76,6 +80,9 @@ import {
   addAnnouncementApi,
   getUserAnnouncementApi,
   putUserAnnouncementApi,
+  getWorkbenchInfo,
+  deployWorkbenchAPI,
+  createSubFolderApi,
 } from './datasetsAPI';
 import {
   getAllUsersAPI,
@@ -218,4 +225,11 @@ export {
   getFiles,
   getUserstatusAPI,
   changeUserStatusAPI,
+  getWorkbenchInfo,
+  deployWorkbenchAPI,
+  createSubFolderApi,
+  validateFileAction,
+  validateFiles,
+  commitFileAction,
+  getCollectionFiles,
 };

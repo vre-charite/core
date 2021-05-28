@@ -16,6 +16,25 @@ function AppFooter(props) {
   const handleOk = () => {
     setModal(false);
   };
+  let documentsLink;
+  switch (process.env.REACT_APP_ENV) {
+    case 'dev':
+      documentsLink =
+        'http://10.3.7.220/xwiki/wiki/vrepublic/view/Main/user_guide/';
+      break;
+    case 'staging':
+      documentsLink =
+        'https://vre-staging.indocresearch.org/xwiki/wiki/vrepublic/view/Main/user_guide/';
+      break;
+    case 'charite':
+      documentsLink =
+        'https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/user_guide/';
+      break;
+    default:
+      documentsLink =
+        'http://10.3.7.220/xwiki/wiki/vrepublic/view/Main/user_guide/';
+      break;
+  }
   return (
     <Footer className={styles.footer}>
       <Space className={styles.menu}>
@@ -31,11 +50,20 @@ function AppFooter(props) {
           onClick={() => {
             dispatch(setIsReleaseNoteShownCreator(true));
           }}
+          style={{ paddingRight: 0 }}
           type="link"
         >
-          {' '}
           <small className={styles.copyright}> Version {version}</small>
-        </Button>{' '}
+        </Button>
+        {' / '}
+        <a
+          style={{ marginRight: 10 }}
+          href={documentsLink}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Documentation
+        </a>
         Copyright © {new Date().getFullYear()},{' '}
         <a
           href="https://www.indocresearch.org/"

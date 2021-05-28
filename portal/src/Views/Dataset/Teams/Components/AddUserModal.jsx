@@ -23,6 +23,43 @@ import { useTranslation } from 'react-i18next';
 import styles from '../index.module.scss';
 import { useKeycloak } from '@react-keycloak/web';
 
+
+function addUserToProject(
+  email,
+  role,
+  currentDataset,
+  username,
+  props,
+  t,
+) {
+  addUserToDatasetAPI(username, currentDataset.id, role)
+    .then(async (res) => {
+      // successfully invited
+      await props.getUsers();
+      message.success(
+        `${t('success:addUser.addUserToDataset.0')} ${username} ${t(
+          'success:addUser.addUserToDataset.1',
+        )} ${currentDataset.name}`,
+      );
+    })
+    .catch((err) => {
+      console.log(err);
+      if (err.response?.status === 403) {
+        //Already Project Member
+        memberWarning(t, email);
+      } else {
+        const errorMessager = new ErrorMessager(
+          namespace.teams.addUsertoDataSet,
+        );
+        errorMessager.triggerMsg(null, null, {
+          email: email,
+        });
+      }
+
+      return Promise.reject();
+    });
+}
+
 function AddUserModal(props) {
   const { isAddUserModalShown, cancelAddUser } = props;
   const [form] = Form.useForm();
@@ -92,19 +129,16 @@ function AddUserModal(props) {
                   className: styles['warning-modal'],
                 });
               } else if (role === 'member') {
-                const inviter = keycloak.tokenParsed?.preferred_username;
                 if (relationship.hasOwnProperty('projectGeid')) {
                   memberWarning(t, values.email);
                 } else {
                   addUserToProject(
                     values.email,
                     values.role,
-                    currentDataset.globalEntityId,
                     currentDataset,
                     name,
                     props,
                     t,
-                    inviter,
                   );
                 }
               }
@@ -288,43 +322,7 @@ export default connect((state) => ({
   containersPermission: state.containersPermission,
 }))(AddUserModal);
 
-function addUserToProject(
-  email,
-  role,
-  projectGeid,
-  currentDataset,
-  username,
-  props,
-  t,
-  inviter,
-) {
-  addUserToDatasetAPI(username, currentDataset.id, role)
-    .then(async (res) => {
-      // successfully invited
-      await props.getUsers();
-      message.success(
-        `${t('success:addUser.addUserToDataset.0')} ${username} ${t(
-          'success:addUser.addUserToDataset.1',
-        )} ${currentDataset.name}`,
-      );
-    })
-    .catch((err) => {
-      console.log(err);
-      if (err.response?.status === 403) {
-        //Already Project Member
-        memberWarning(t, email);
-      } else {
-        const errorMessager = new ErrorMessager(
-          namespace.teams.addUsertoDataSet,
-        );
-        errorMessager.triggerMsg(null, null, {
-          email: email,
-        });
-      }
 
-      return Promise.reject();
-    });
-}
 
 function memberWarning(t, email) {
   Modal.warning({

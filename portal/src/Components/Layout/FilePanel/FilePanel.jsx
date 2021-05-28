@@ -30,6 +30,7 @@ import {
   loadDeletedFiles,
 } from '../../../APIs';
 import { tokenManager } from '../../../Service/tokenManager';
+import { JOB_STATUS } from './jobStatus';
 
 const { TabPane } = Tabs;
 
@@ -48,7 +49,6 @@ function FilePanel(props) {
   const loadDeletedEvent = useSelector(
     (state) => state.events.LOAD_DELETED_LIST,
   );
-
   let deletedFileList = useSelector((state) => state.deletedFileList);
 
   const projectCode = props.projectCode;
@@ -79,7 +79,8 @@ function FilePanel(props) {
       dispatch(updateCopy2CoreList(result));
       if (res.data.result.length) {
         if (
-          res.data.result.filter((v) => v.status === 'running').length !== 0
+          res.data.result.filter((v) => v.status === JOB_STATUS.RUNNING)
+            .length !== 0
         ) {
           refreshJobStart = true;
           keepAlive();
@@ -129,7 +130,8 @@ function FilePanel(props) {
 
       if (res.data.result.length) {
         if (
-          res.data.result.filter((v) => v.status === 'running').length !== 0
+          res.data.result.filter((v) => v.status === JOB_STATUS.RUNNING)
+            .length !== 0
         ) {
           refreshJobStart = true;
           keepAlive();
@@ -393,7 +395,7 @@ function FilePanel(props) {
           <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>Waiting</span>
         </span>
       );
-    } else if (item.status === 'running' && tabName === 'progress') {
+    } else if (item.status === JOB_STATUS.RUNNING && tabName === 'progress') {
       if (item.action === 'data_transfer') {
         return (
           <span>
@@ -428,7 +430,7 @@ function FilePanel(props) {
               <DownloadOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
             {item.filename} {'-'}
-            {` / ${item.projectCode}`}
+            {` / ${item.projectCode}`} {' '}
             <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
               Waiting
             </span>
@@ -528,12 +530,17 @@ function FilePanel(props) {
       );
     } else if (item.status === 'success' && tabName === 'download') {
       const nameZone = (item) => {
+        if (!item.payload) {
+          if (item.namespace === 'greenroom') return 'Green Room';
+          return 'VRE Core';
+        }
+
         if (item.payload.frontendZone === 'Vre Core') {
-          return 'VRE Core'
+          return 'VRE Core';
         }
 
         return item.payload.frontendZone;
-      }
+      };
       return (
         <span>
           <Icon
@@ -546,10 +553,11 @@ function FilePanel(props) {
               />
             )}
           />
-          <span className={styles.fileName}>{item.filename}</span>{' '}{'-'}{' '}<span>{nameZone(item)}</span>
+          <span className={styles.fileName}>{item.filename}</span> {'-'}{' '}
+          <span>{nameZone(item)}</span>
         </span>
       );
-    } else if (item.status === 'succeed' && tabName === 'approved') {
+    } else if (item.status === JOB_STATUS.SUCCEED && tabName === 'approved') {
       return (
         <span>
           <Icon
@@ -569,7 +577,7 @@ function FilePanel(props) {
           </span>
         </span>
       );
-    } else if (item.status === 'succeed' && tabName === 'trashBin') {
+    } else if (item.status === JOB_STATUS.SUCCEED && tabName === 'trashBin') {
       return (
         <span>
           {
@@ -577,7 +585,8 @@ function FilePanel(props) {
               <RestOutlined className={styles.icons} />
             </Tooltip>
           }
-          <span className={styles.fileName}>{item.fileName}</span>{' '}{'-'}{' '}<span>{item.payload.frontendZone}</span>
+          <span className={styles.fileName}>{item.fileName}</span> {'-'}{' '}
+          <span>{item.payload.frontendZone}</span>
         </span>
       );
     } else {
@@ -597,7 +606,12 @@ function FilePanel(props) {
     ...deletedFileList,
   ];
   inProgressList = allFileList.filter((el) => {
-    if (el.status !== 'success' && el.status !== 'succeed') {
+    if (
+      el.status !== 'success' &&
+      el.status !== 'succeed' &&
+      el.status !== JOB_STATUS.SUCCEED &&
+      el.status !== JOB_STATUS.TERMINATED
+    ) {
       return true;
     }
   });
@@ -605,13 +619,13 @@ function FilePanel(props) {
 
   const uploadSuccessList = uploadList.filter((el) => el.status === 'success');
   const approvedSuccessList = approvedList.filter(
-    (el) => el.status === 'succeed',
+    (el) => el.status === JOB_STATUS.SUCCEED,
   );
   const downloadSuccessList = downloadList.filter(
     (el) => el.status === 'success',
   );
   const deletedSuccessList = deletedFileList.filter(
-    (el) => el.status === 'succeed',
+    (el) => el.status === JOB_STATUS.SUCCEED,
   );
 
   // const failedList = allFileList.filter((el) => el.status === 'error');
@@ -628,22 +642,27 @@ function FilePanel(props) {
     }
   };
 
-  let uploadSuccessNum = uploadList.filter((el) => el.status === 'success')
-    .length;
-  let uploadFailureNum = uploadList.filter((el) => el.status === 'error')
-    .length;
-  let approvedSuccessNum = approvedList.filter((el) => el.status === 'succeed')
-    .length;
+  let uploadSuccessNum = uploadList.filter(
+    (el) => el.status === 'success',
+  ).length;
+  let uploadFailureNum = uploadList.filter(
+    (el) => el.status === 'error',
+  ).length;
+  let approvedSuccessNum = approvedList.filter(
+    (el) => el.status === JOB_STATUS.SUCCEED,
+  ).length;
   let approvedToCoreNum = approvedList.filter(
-    (el) => el.status === 'succeed' && el.copyTag === 'Copied to Core',
+    (el) => el.status === JOB_STATUS.SUCCEED && el.copyTag === 'Copied to Core',
   ).length;
-  let approvedFailureNum = approvedList.filter((el) => el.status === 'error')
-    .length;
+  let approvedFailureNum = approvedList.filter(
+    (el) => el.status === JOB_STATUS.TERMINATED,
+  ).length;
   let deletedSuccessNum = deletedFileList.filter(
-    (el) => el.status === 'succeed',
+    (el) => el.status === JOB_STATUS.SUCCEED,
   ).length;
-  let deleteFailureNum = deletedFileList.filter((el) => el.status === 'error')
-    .length;
+  let deleteFailureNum = deletedFileList.filter(
+    (el) => el.status === JOB_STATUS.TERMINATED,
+  ).length;
 
   const uploadSuccessTitle =
     uploadSuccessNum > 0
@@ -756,11 +775,13 @@ function FilePanel(props) {
               }
               split={false}
               dataSource={approvedSuccessList}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta title={listItemTitle(item, 'approved')} />
-                </List.Item>
-              )}
+              renderItem={(item) => {
+                return (
+                  <List.Item>
+                    <List.Item.Meta title={listItemTitle(item, 'approved')} />
+                  </List.Item>
+                );
+              }}
             />
           </TabPane>
         )}

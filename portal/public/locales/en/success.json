@@ -23,7 +23,7 @@
     "default": ["Attribute template has been imported"]
   },
   "fileOperations": {
-    "delete": "Files deleted successfully"
+    "delete": "Files/folders deleted successfully"
   },
   "virtualFolder": {
     "delete": "Collection has been deleted successfully",
@@ -38,5 +38,6 @@
       " VRE Support Team has received your request and will respond through the email address associated with your VRE user account shortly​."
     ],
     "button": "Submit another request"
-  }
+  },
+  "createFolder": "Folder has been created successfully"
 }

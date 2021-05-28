@@ -7,7 +7,8 @@ from models.api_response import APIResponse, EAPIResponseCode
 from models.api_meta_class import MetaAPI
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from models.api_data_manifest import DataAttributeModel, DataManifestModel, TypeEnum, db
-from .utils import has_permissions, is_greenroom, get_file_node_bygeid, has_valid_attributes, check_attributes
+from .utils import has_permissions, is_greenroom, get_file_node_bygeid, get_trashfile_node_bygeid, \
+        has_valid_attributes, check_attributes
 from api import module_api
 from flask import request
 import re
@@ -739,6 +740,9 @@ class APIDataManifest(metaclass=MetaAPI):
             results = {} 
             for geid in geid_list:
                 file_node = get_file_node_bygeid(geid)
+                if not file_node:
+                    file_node = get_trashfile_node_bygeid(geid)
+
                 if file_node and file_node.get("manifest_id"):
                     if not has_permissions(file_node["manifest_id"], file_node) and not lineage_view:
                         api_response.set_code(EAPIResponseCode.forbidden)

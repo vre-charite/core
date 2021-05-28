@@ -89,7 +89,7 @@ const InviteUserModal = (props) => {
                 className: styles['warning-modal'],
               });
             } else if (status === 'pending') {
-              //message.error(t('errormessages:addUser2Project.pending'));
+
               Modal.warning({
                 title: t('errormessages:addUser2Platform.pending.title'),
                 content: `${t(
@@ -100,7 +100,7 @@ const InviteUserModal = (props) => {
                 className: styles['warning-modal'],
               });
             } else if (role === 'admin') {
-              //message.error(t('errormessages:addUser2Project.platformAdmin'));
+
               Modal.warning({
                 title: t('modals:inviteExist.title'),
                 content: `${t('modals:inviteExist.content.0')} ${email} ${t(
@@ -108,37 +108,6 @@ const InviteUserModal = (props) => {
                 )}`,
               });
             } else if (role === 'member') {
-              /* const inviter = keycloak.tokenParsed?.preferred_username;
-              Modal.confirm({
-                title: t('modals:inviteToProject.title'),
-                icon: <ExclamationCircleOutlined />,
-                content: (
-                  <>
-                    <p>{`[${values.email}] ${t(
-                      'modals:inviteToProject.content.0',
-                    )}`}</p>{' '}
-                    <p>{`${t('modals:inviteToProject.content.1')} ${
-                      currentDataset.code
-                    } ${t('modals:inviteToProject.content.2')} ${formatRole(
-                      role,
-                    )}`}</p>
-                  </>
-                ),
-                okText: 'Add',
-                cancelText: 'Cancel',
-                onOk() {
-                  addUserToProject(
-                    values.email,
-                    values.role,
-                    currentDataset.globalEntityId,
-                    currentDataset,
-                    name,
-                    props,
-                    t,
-                    inviter,
-                  );
-                },
-              }); */
               Modal.warning({
                 title: t('modals:inviteExist.title'),
                 content: `${t('modals:inviteExist.content.0')} ${email} ${t(

@@ -137,7 +137,6 @@ const GreenRoomUploader = ({
         setIsloading(false);
       })
       .catch((err) => {
-        console.log(err);
         setIsloading(false);
       });
   };

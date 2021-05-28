@@ -10,10 +10,10 @@ const ZipContentPlugin = (props) => {
   const [defaultKeys, setDefaultKeys] = useState([]);
 
   const fileName = props.record.fileName;
-
   const filePaths = props.record.path;
+  const key = props.record.key;
 
-  const location = filePaths && pathsMap(filePaths);
+  const location = key && pathsMap(key);
 
   const upperZipContent = props.record.zipContent || {};
 

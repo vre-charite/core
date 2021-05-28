@@ -58,9 +58,9 @@ class SetUpTest:
             "folder_parent_geid": "",
             "folder_parent_name": "",
         }
-        testing_api = '/v1/folders'
+        testing_api = 'folders'
         try:
-            res = requests.post(ConfigClass.FILEINFO_HOST + testing_api, json=payload)
+            res = requests.post(ConfigClass.ENTITYINFO_SERVICE + testing_api, json=payload)
             self.log.info(f"RESPONSE DATA: {res.text}")
             self.log.info(f"RESPONSE STATUS: {res.status_code}")
             assert res.status_code == 200
@@ -73,7 +73,7 @@ class SetUpTest:
     def create_project(self, code, discoverable='true'):
         self.log.info("\n")
         self.log.info("Preparing testing project".ljust(80, '-'))
-        testing_api = ConfigClass.NEO4J_SERVICE+ "nodes/Dataset"
+        testing_api = ConfigClass.NEO4J_SERVICE + "nodes/Dataset"
         params = {"name": "BFFProxyUnitTest",
                   "path": code,
                   "code": code,

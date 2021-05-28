@@ -17,7 +17,6 @@ import { broadcastManager } from './Service/broadcastManager';
 import { tokenManager } from './Service/tokenManager';
 import ExpirationNotification from './Components/Modals/ExpirationNotification';
 import { useIdleTimer } from 'react-idle-timer';
-
 import { tokenTimer } from './Service/keycloak';
 import { actionType, debouncedBroadcastAction } from './Utility';
 import { Suspense } from 'react';
@@ -370,13 +369,7 @@ function KeyCloakMiddleware() {
                     key={item.path}
                     exact={item.exact || false}
                     render={(props) => {
-                      // keycloak.authenticated will be undefined when keycloak.login not complete
-
-                      if (!keycloak.authenticated) {
-                        return <item.component />;
-                      } else {
-                        return <Redirect to="/landing" />;
-                      }
+                      return <item.component />;
                     }}
                   ></Route>
                 ))}
