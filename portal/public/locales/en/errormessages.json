@@ -158,7 +158,7 @@
   },
   "downloadFilesAPI": {
     "400": ["Folder is empty"],
-    "404":["file doesn't exist"],
+    "404":["File does not exist"],
     "403": ["You do not have permission to download files from this project."],
     "500": [
       "Something went wrong while trying to download files, please try again later. Error code: 500"
@@ -251,7 +251,7 @@
       "Something went wrong while trying to invite user",
       "to the project, please try again later."
     ],
-    "default": ["failed to add the user to project"]
+    "default": ["Something went wrong while trying to add new project member."]
   },
   "changeRoleInDataset": {
     "403": [
@@ -369,11 +369,11 @@
       "th attribute"
     ],
     "nameLength": [
-      "the \"name\" property length should between 1-32 on the",
+      "the \"name\" property length should be between 1-32 characters on the",
       "th attribute"
     ],
     "nameFormat": [
-      "the \"name\" property should only contains letters, and/or digits on the",
+      "the \"name\" property should only contains letters and numbers on the",
       "th attribute"
     ],
     "optionalNotBoolean": [
@@ -389,15 +389,15 @@
       "th attribute"
     ],
     "valueString": [
-      "the \"value\" should be string when the \"multiple_choice\" is 'text' on the",
+      "the \"value\" should be a string when the \"multiple_choice\" is 'text' on the",
       "th attribute"
     ],
     "choiceLength": [
-      "the choice's length should be between 1-32 on the",
+      "the choice's length should be between 1-32 characters on the",
       "th attribute"
     ],
     "choiceFormat": [
-      "the choice should only contain numbers, digits, and -_!%&/()=?*+#.; on the",
+      "the choice should only contain letters, numbers, and characters in -_!%&/()=?*+#.; on the",
       "th attribute"
     ],
     "uniqueName": ["The \"name\" property should be unique"]
@@ -409,15 +409,15 @@
     "default": ["Failed to retrieve the attribute template id: "]
   },
   "fileOperations": {
-    "deleteErr": "Error occured when delete files/folders",
-    "unauthorizedDelete":"You're not authorized to delete the file(s)/folder(s)",
-    "noFileToDelete": "Please select files/folders to delete."
+    "deleteErr": "Something went wrong while trying to delete a file or folder.",
+    "unauthorizedDelete":"You are not authorized to delete the selected file(s)/folder(s)",
+    "noFileToDelete": "Please select the files or folders you wish to delete."
   },
   "copyFiles": {
-    "default": ["Failed to copy the files, please try again later"]
+    "default": ["Failed to copy the files, please try again later."]
   },
   "attachManifest": {
-    "default": ["Failed to attach attribute template, please try again later"]
+    "default": ["Failed to attach attribute template, please try again later."]
   },
   "deleteManifest": {
     "500": [
@@ -425,18 +425,18 @@
     ]
   },
   "deleteVirtualFolder": {
-    "default": ["Failed to delete collection. Please try again later"]
+    "default": ["Something went wrong while trying to delete the collection. Please try again later"]
   },
   "removeFromVirtualFolder": {
     "default": [
-      "Failed to remove files from collection. Please try again later"
+      "Something went wrong while trying to remove files from collection. Please try again later"
     ]
   },
   "addFilesToVirtualFolder": {
-    "default": ["Failed to add files to collection. Please try again later"]
+    "default": ["Something went wrong while trying to add files to collection. Please try again later"]
   },
   "createVirtualFolder": {
-    "default": ["Failed to create collection. Please try again later"],
+    "default": ["Something went wrong while trying to create collection. Please try again later"],
     "duplicate": [
       "A collection by this name already exists, please enter a new name."
     ],
@@ -449,7 +449,7 @@
     ]
   },
   "addFilesToNewFolder": {
-    "default": ["Failed to add files to new collection. Please try again later"]
+    "default": ["Something went wrong while trying to add files to the new collection. Please try again later"]
   },
   "addUser2Project": {
     "email": "Wrong email format",
@@ -488,7 +488,7 @@
     }
   },
   "userManagement": {
-    "getServiceRequestAPI": "Get service request table resources failed!"
+    "getServiceRequestAPI": "Something went wrong while trying to retrieve service request table resources, please try again later."
   },
   "announcement": {
     "getAnnouncementApi": {
@@ -515,7 +515,7 @@
     }
   },
   "createFolder": {
-    "409": ["Folder with same name already existed in destination"],
+    "409": ["A folder with same name already exists at the specified destination."],
     "default": [
       "Something went wrong while trying to create folder, please try again later."
     ]
