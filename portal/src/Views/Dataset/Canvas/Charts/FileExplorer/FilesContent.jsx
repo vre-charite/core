@@ -171,20 +171,20 @@ function FilesContent(props) {
     if (createCollection && saveBtnLoading) {
       setSaveBtnLoading(false);
       setCreateCollection(false);
-      message.success(`${i18n.t('success:virtualFolder.addFiles')}`);
+      message.success(`${i18n.t('success:collections.addCollection')}`);
     }
 
     if (editCollection) {
       if (deleteBtnLoading) {
         setDeleteBtnLoading(false);
         remove(deletedPaneKey);
-        message.success(`${i18n.t('success:virtualFolder.delete')}`);
+        message.success(`${i18n.t('success:collections.deleteCollection')}`);
       }
 
       if (updateBtnLoading) {
         setUpdateBtnLoading(false);
         setEditCollection(false);
-        message.success(`${i18n.t('success:virtualFolder.updateFiles')}`);
+        message.success(`${i18n.t('success:collections.updateCollections')}`);
       }
     }
   };
@@ -417,7 +417,10 @@ function FilesContent(props) {
       } else {
         return (
           <strong>
-            <EditOutlined onClick={() => setEditCollection(true)} />
+            <EditOutlined onClick={() => {
+              setEditCollection(true);
+              updateVfolders();
+            }} />
           </strong>
         );
       }

@@ -439,6 +439,21 @@ const GreenRoomUploader = ({
                         t('formErrorMessages:project.upload.file.empty'),
                       );
                     } else {
+                      const folderName =
+                        fileList[0].originFileObj.webkitRelativePath.split(
+                          '/',
+                        )[0];
+                      if (!currentRouting || currentRouting.length === 0) {
+                        const reserved = ['raw', 'logs', 'trash', 'workdir'];
+                        if (reserved.indexOf(folderName.toLowerCase()) !== -1) {
+                          return Promise.reject(
+                            t(
+                              'formErrorMessages:project.upload.file.reservedwords',
+                            ),
+                          );
+                        }
+                      }
+
                       return Promise.resolve();
                     }
                   },

@@ -2,39 +2,40 @@ const path = require('path');
 
 exports.pathsMap = (array) => {
   let dirname = path.dirname(array);
-
+  const dirArray = dirname.split('/');
   if (dirname.includes('vre-storage')) {
-    const dirArray = dirname.split('/');
     if (dirArray.length <= 5) {
       if (dirname.includes('raw')) return 'Green Room/Home';
       if (dirname.includes('TRASH')) return 'Green Room/Trash';
     }
 
-    const baseDir = dirArray.slice(5).join('/')
+    const baseDir = dirArray.slice(5).join('/');
     if (dirname.includes('raw')) dirname = 'Green Room/Home/' + baseDir;
     if (dirname.includes('TRASH')) dirname = 'Green Room/TRASH/' + baseDir;
 
     return dirname;
   }
 
-  if (dirname.includes('vre-data')) {
-    const dirArray = dirname.split('/');
-    if (dirArray.length <= 3) {
-      if (dirname.includes('TRASH')) return 'Core/Trash';
-      return 'Core/Home';
+  if (dirArray[1] === 'vre-data') {
+    // file-without raw /vre-data/indoctestproject
+    // file-with raw /vre-data/indoctestproject/raw
+    // folder-without raw /vre-data/indoctestproject/a/b
+    // folder-with raw /vre-data/indoctestproject/raw/a/b
+    // file-trash /vre-data/indoctestproject/TRASH
+    // folder-trash /vre-data/indoctestproject/TRASH/a/b
+
+    if(dirArray[3]==="TRASH"){
+      if(dirArray.length===3) return 'Core/Trash';
+      return "Core/Trash/" + dirArray.slice(4).join('/');
     }
 
-    let baseDir = dirArray.slice(3).join('/')
-    if (dirname.includes('raw')) {
-      dirname = 'Core/Home/' + baseDir;
-    } else if (dirname.includes('TRASH')) {
-      dirname = 'Core/TRASH/' + baseDir;
-    } else {
-      baseDir = dirArray.slice(3).join('/')
-      dirname = 'Core/Home/' + baseDir;
+    if(dirArray[3]==="raw"){
+      dirArray.splice(3,1);
     }
 
-    return dirname;
+    if(dirArray.length===3) return 'Core/Home';
+    return 'Core/Home/' + dirArray.slice(3).join('/')
+
   }
 };
 
@@ -44,27 +45,27 @@ exports.pathsMapV2 = (filePath) => {
 
   if (dirname.includes('vre-storage')) {
     const dirArray = dirname.split('/');
-    if (dirArray.length <= 5) return filename
+    if (dirArray.length <= 5) return filename;
 
-    const baseDir = dirArray.slice(5).join('/')
+    const baseDir = dirArray.slice(5).join('/');
     return baseDir + '/' + filename;
   }
 
   if (dirname.includes('vre-data')) {
     const dirArray = dirname.split('/');
-    if (dirArray.length <= 4) return filename
+    if (dirArray.length <= 4) return filename;
 
-    let baseDir = dirArray.slice(4).join('/')
+    let baseDir = dirArray.slice(4).join('/');
     return baseDir + '/' + filename;
   }
-}
+};
 
 exports.pathNameMap = (array) => {
-
   if (array.includes('vre-storage') && array.includes('raw'))
     return 'Green Room File';
 
-  if (array.includes('vre-data') && !array.includes('TRASH')) return 'Core File';
+  if (array.includes('vre-data') && !array.includes('TRASH'))
+    return 'Core File';
 
   if (array.includes('vre-data') && array.includes('TRASH'))
     return 'Core Trash File';
@@ -73,40 +74,41 @@ exports.pathNameMap = (array) => {
     return 'Green Room Trash File';
 };
 
-exports.locationMap = (array) => {
-  let dirname = path.dirname(array);
-
-  if (dirname.includes('vre-storage')) {
-    const dirArray = dirname.split('/');
+exports.locationMap = (pathString) => {
+  let dirname = path.dirname(pathString);
+  const dirArray = dirname.split('/');
+  if (dirArray[2] === 'vre-storage') {
     if (dirArray.length <= 5) {
       if (dirname.includes('raw')) return 'Home';
       if (dirname.includes('TRASH')) return 'Trash';
     }
 
-    const baseDir = dirArray.slice(5).join('/')
+    const baseDir = dirArray.slice(5).join('/');
     if (dirname.includes('raw')) dirname = 'Home/' + baseDir;
     if (dirname.includes('TRASH')) dirname = 'TRASH/' + baseDir;
 
     return dirname;
   }
 
-  if (dirname.includes('vre-data')) {
-    const dirArray = dirname.split('/');
-    if (dirArray.length <= 3) {
-      if (dirname.includes('TRASH')) return 'Trash';
-      return 'Home';
+  if (dirArray[1] === 'vre-data') {
+    // file-without raw /vre-data/indoctestproject
+    // file-with raw /vre-data/indoctestproject/raw
+    // folder-without raw /vre-data/indoctestproject/a/b
+    // folder-with raw /vre-data/indoctestproject/raw/a/b
+    // file-trash /vre-data/indoctestproject/TRASH
+    // folder-trash /vre-data/indoctestproject/TRASH/a/b
+
+    if(dirArray[3]==="TRASH"){
+      if(dirArray.length===3) return 'Trash';
+      return "Trash/" + dirArray.slice(4).join('/');
     }
 
-    let baseDir = dirArray.slice(3).join('/')
-    if (dirname.includes('raw')) {
-      dirname = 'Home/' + baseDir;
-    } else if (dirname.includes('TRASH')) {
-      dirname = 'TRASH/' + baseDir;
-    } else {
-      baseDir = dirArray.slice(3).join('/')
-      dirname = 'Home/' + baseDir;
+    if(dirArray[3]==="raw"){
+      dirArray.splice(3,1);
     }
 
-    return dirname;
+    if(dirArray.length===3) return 'Home';
+    return 'Home/' + dirArray.slice(3).join('/')
+
   }
 };

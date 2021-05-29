@@ -136,6 +136,17 @@ export default function CreateFolderModal(props) {
                       );
                     }
                   }
+                  if (!currentRouting || currentRouting.length === 0) {
+                    const reserved = ['raw', 'logs', 'trash', 'workdir'];
+                    if (reserved.indexOf(collection.toLowerCase()) !== -1) {
+                      return Promise.reject(
+                        `Following folder name is reserved: ${reserved.join(
+                          ' ',
+                        )}`,
+                      );
+                    }
+                  }
+
                   return Promise.resolve();
                 }
               },

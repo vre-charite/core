@@ -72,7 +72,8 @@
     "upload": {
       "file": {
         "empty": "Please select a file or folder for upload",
-        "valid": "File already selected for uploading. Please select a different file."
+        "valid": "File already selected for uploading. Please select a different file.",
+        "reservedwords": "Following folder name is reserved: raw logs trash workdir"
       },
       "tags": {
         "limit": "A maximum of 10 tags are allowed per file.",

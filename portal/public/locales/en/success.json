@@ -32,6 +32,11 @@
     "addFiles": "Files have been added successfully",
     "updateFiles": "Files have been updated successfully"
   },
+  "collections": {
+    "updateCollections": "Collections have been updated successfully",
+    "addCollection": "Collection has been added successfully",
+    "deleteCollection": "Collection has been deleted successfully"
+  },
   "contactUs": {
     "text": [
       "Thank you for submitting a request!",

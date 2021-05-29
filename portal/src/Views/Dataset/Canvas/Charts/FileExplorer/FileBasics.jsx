@@ -3,9 +3,11 @@ import { Descriptions } from 'antd';
 import FileTags from './FileTags';
 import { getFileSize, timeConvert } from '../../../../../Utility';
 import { useSelector } from 'react-redux';
+const { locationMap } = require('../../../../../Utility/pathsMap');
 function FileBasics(props) {
   const { record, panelKey, checkIsVirtualFolder } = props;
-  const filePath = record?.path; // the file's parent directory absolute path, format "/vre-data/may25/hello1234", hello1234 is the parent directory, only for file
+  const fileFullPath = record?.name; // /vre-data/may25/hello1234/hello.txt, only for file
+  const type = record?.nodeLabel.includes('Folder')?"Folder":"File";
   const folderRelativePath = record?.folderRelativePath; // the folder's relative path, only for folder. format "hello1234/inner"
   const folderRouting = useSelector(
     (state) => state.fileExplorer && state.fileExplorer.folderRouting,
@@ -20,7 +22,7 @@ function FileBasics(props) {
         </Descriptions.Item>
         {checkIsVirtualFolder(panelKey) && (
           <Descriptions.Item label="Path">
-            {'Home/' + getPath(filePath, folderRelativePath)}
+            {getPath(type,fileFullPath, folderRelativePath)}
           </Descriptions.Item>
         )}
         <Descriptions.Item label="Added by">{record.owner}</Descriptions.Item>
@@ -57,20 +59,19 @@ function FileBasics(props) {
   );
 }
 
-const getPath = (filePath, folderPath) => {
+const getPath = (type,filePath, folderPath) => {
   if (filePath === undefined && folderPath === undefined) {
     throw new Error(
       'file path and folder path can not be undefined at the same time',
     );
   }
-  if (filePath !== undefined) {
-    const arr = filePath.split('/');
-    arr.splice(0, 3);
-    return arr.join('/');
+  if (type==="File") {
+    return locationMap(filePath);
   }
 
-  if (folderPath !== undefined) {
-    return folderPath;
+  if (type === "Folder") {
+    if (folderPath === '') return 'Home';
+    return 'Home/' + folderPath;
   }
 };
 
