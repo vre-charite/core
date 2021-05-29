@@ -263,9 +263,9 @@ function Portal(props) {
           const pendingDownloadList = downloadList.filter(
             (el) => el.status === 'pending',
           );
-          
+
           for (const item of pendingDownloadList) {
-            console.log(item)
+            console.log(item);
             await checkDownloadStatusAPI(
               item.downloadKey,
               item.hashCode,
@@ -273,7 +273,7 @@ function Portal(props) {
               updateDownloadItemDispatch,
               setSuccessNumDispatcher,
               successNum,
-            )
+            );
           }
 
           if (pendingDownloadList.length === 0) {
@@ -282,11 +282,13 @@ function Portal(props) {
               currentProject.code,
               username,
             );
-  
+
             if (downloadRes.status === 200) {
               let newDownloadList =
                 downloadRes.data &&
-                downloadRes.data.result.filter((el) => !el.payload.parentFolder);
+                downloadRes.data.result.filter(
+                  (el) => !el.payload.parentFolder,
+                );
               newDownloadList = newDownloadList.map((item) => {
                 if (
                   item.status === JOB_STATUS.READY_FOR_DOWNLOADING ||
@@ -298,20 +300,19 @@ function Portal(props) {
                 } else {
                   item.status = 'error';
                 }
-  
+
                 const sourceArray = item.source && item.source.split('/');
-  
+
                 item.filename =
                   sourceArray &&
                   sourceArray.length &&
                   sourceArray[sourceArray.length - 1];
-  
+
                 return item;
               });
               setDownloadListDispatcher(newDownloadList);
             }
           }
-          
         } catch (err) {
           if (err.response && err.response.status === 404) {
             console.log('no download history in current session');

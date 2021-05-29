@@ -134,6 +134,7 @@ const GreenRoomUploader = ({
         form.resetFields();
         setIsFiles(false);
         cancel();
+        setAttrForm({});
         setIsloading(false);
       })
       .catch((err) => {
@@ -223,6 +224,7 @@ const GreenRoomUploader = ({
         closable={false}
         onCancel={() => {
           cancel();
+          setAttrForm({});
           setSelManifest(null);
           form.resetFields();
         }}
@@ -233,6 +235,7 @@ const GreenRoomUploader = ({
             key="back"
             onClick={() => {
               cancel();
+              setAttrForm({});
               setSelManifest(null);
               form.resetFields();
             }}

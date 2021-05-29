@@ -32,11 +32,16 @@ class FilesTable extends React.Component {
         tags: this.props.tags,
       });
     }
-    if (
-      this.props.currentRouting === null &&
-      prevProps.currentRouting &&
-      prevProps.currentRouting.length >= 1
-    ) {
+    function isRouteChange(prevRouting, curRouting) {
+      let cur = !curRouting || curRouting.length === 0 ? [] : curRouting;
+      let prev = !prevRouting || prevRouting.length === 0 ? [] : prevRouting;
+      if (cur.length !== prev.length) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    if (isRouteChange(prevProps.currentRouting, this.props.currentRouting)) {
       // empty params when user leave folder
       this.setState({
         page: 0,
@@ -49,6 +54,7 @@ class FilesTable extends React.Component {
         inputValue: '',
         tags: this.props.tags,
       });
+      return;
     }
   }
 
