@@ -60,35 +60,35 @@ const DeleteFilesModal = ({
     setConfirmLoading(true);
 
     try {
-      const validationRes = await validateFileAction(
-        files.map((file) => {
-          return {
-            geid: file.geid,
-          };
-        }),
-        username,
-        FILE_OPERATIONS.DELETE,
-        project.profile.globalEntityId,
-      );
-      let invalidList = validationRes.data.result.filter(
-        (item) => !item.isValid,
-      );
-      if (invalidList.length) {
-        setStep(2);
-        setConfirmLoading(false);
-        let lockedList = invalidList
-          .map((v) => {
-            let paths = v.fullPath.split('/');
-            if (paths && paths.length) {
-              return paths[paths.length - 1];
-            } else {
-              return null;
-            }
-          })
-          .filter((v) => !!v);
-        setLocked(lockedList);
-        return;
-      }
+      // const validationRes = await validateFileAction(
+      //   files.map((file) => {
+      //     return {
+      //       geid: file.geid,
+      //     };
+      //   }),
+      //   username,
+      //   FILE_OPERATIONS.DELETE,
+      //   project.profile.globalEntityId,
+      // );
+      // let invalidList = validationRes.data.result.filter(
+      //   (item) => !item.isValid,
+      // );
+      // if (invalidList.length) {
+      //   setStep(2);
+      //   setConfirmLoading(false);
+      //   let lockedList = invalidList
+      //     .map((v) => {
+      //       let paths = v.fullPath.split('/');
+      //       if (paths && paths.length) {
+      //         return paths[paths.length - 1];
+      //       } else {
+      //         return null;
+      //       }
+      //     })
+      //     .filter((v) => !!v);
+      //   setLocked(lockedList);
+      //   return;
+      // }
       const res = await commitFileAction(
         {
           targets: files.map((file) => {
