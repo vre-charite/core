@@ -70,6 +70,13 @@ class FileMeta(Resource):
                         _res.set_error_msg(response.get("error_msg", "Neo4j error"))
                     return _res.to_dict, _res.code
                 dataset_node = response.get("result")
+                response = neo4j_client.node_query("Folder", {"global_entity_id": geid})
+                if not response.get("result"):
+                    _res.set_code(EAPIResponseCode.internal_error)
+                    _res.set_error_msg(response.get("error_msg", "Neo4j error"))
+                    return _res.to_dict, _res.code
+                folder_node = response["result"][0]
+                zone = get_zone(folder_node["labels"])
             elif source_type == "Collection":
                 response = neo4j_client.get_dataset_from_vfolder(geid)
                 if not response.get("result"):

@@ -1218,11 +1218,11 @@ class ADUserUpdate(Resource):
                     '[UserUpdateByEmail] Require field email/username/first_name/last_name.')
                 return {'result': 'Required information is not sufficient.'}, 400
 
-            username_pattern = re.compile(ConfigClass.USERNAME_REGEX)
-            match = re.search(username_pattern, username)
-            if not match:
-                _logger.error('[UserUpdateByEmail] Invalid username')
-                return {'result': '[Username Validation] lenght required: 6-20,  all lowercase, no special characters, only letters and numbers'}, 403
+            # username_pattern = re.compile(ConfigClass.USERNAME_REGEX)
+            # match = re.search(username_pattern, username)
+            # if not match:
+            #     _logger.error('[UserUpdateByEmail] Invalid username')
+            #     return {'result': '[Username Validation] lenght required: 6-20,  all lowercase, no special characters, only letters and numbers'}, 403
 
             # init neo4j client
             neo4j_client = Neo4jClient()
