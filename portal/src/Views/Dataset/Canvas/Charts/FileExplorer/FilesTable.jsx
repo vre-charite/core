@@ -169,6 +169,7 @@ class FilesTable extends React.Component {
 
     this.setState({ searchText: searchText });
 
+    // update table
     this.props.updateTable({
       geid: this.props.getCurrentGeid(),
       page: pagination.current - 1,
