@@ -21,10 +21,9 @@ function SearchConditions(props) {
 
   useEffect(() => {
     props.setConditions([{ cid: uuidv4() }]);
-    getProjectManifestList(currentDataset.code)
-      .then((res) => {
-        setAttributes(res.data.result);
-      })
+    getProjectManifestList(currentDataset.code).then((res) => {
+      setAttributes(res.data.result);
+    });
   }, []);
   function addCondition() {
     props.setConditions([...conditions, { cid: uuidv4() }]);
@@ -114,9 +113,11 @@ function SearchConditions(props) {
   };
 
   const submitForm = (values) => {
+    props.setPage(0);
+    props.setPageSize(10);
     props.searchFiles();
     props.setSearchConditions(_.cloneDeep(props.conditions));
-  }
+  };
 
   return (
     <div style={{ padding: '10px 25px', borderBottom: '1px solid #f1f1f1' }}>
@@ -140,8 +141,18 @@ function SearchConditions(props) {
                   updateCondition={updateCondition}
                   clearCondition={clearCondition}
                   last={last}
-                  barRender={(condition, clearTrigger, form, setClearTrigger) => {
-                    return renderConditionBar(condition, clearTrigger, form, setClearTrigger);
+                  barRender={(
+                    condition,
+                    clearTrigger,
+                    form,
+                    setClearTrigger,
+                  ) => {
+                    return renderConditionBar(
+                      condition,
+                      clearTrigger,
+                      form,
+                      setClearTrigger,
+                    );
                   }}
                   form={form}
                   attributes={attributes}

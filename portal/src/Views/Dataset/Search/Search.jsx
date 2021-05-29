@@ -20,7 +20,9 @@ function Search(props) {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
-  const [filters, setFilters] = useState([{ category: 'zone', value: 'greenroom' }]);
+  const [filters, setFilters] = useState([
+    { category: 'zone', value: 'greenroom' },
+  ]);
   const [loading, setLoading] = useState(false);
   const [attributeList, setAttributeList] = useState([]);
 
@@ -57,8 +59,7 @@ function Search(props) {
           if (condition.unit === 'mb') fileSize2 = fileSize2 * 1024 * 1024;
           if (condition.unit === 'gb')
             fileSize2 = fileSize2 * 1024 * 1024 * 1024;
-          
-          
+
           return {
             value: [toFixedNumber(fileSize), toFixedNumber(fileSize2)],
             condition: condition.condition,
@@ -75,18 +76,21 @@ function Search(props) {
           condition: condition.condition,
         };
       case 'attributes':
-        const containAttributes = attributeList.some(el => el.name);
-        const attributes = containAttributes && attributeList && attributeList.map((el) => {
-          return {
-            attribute_name: el.name,
-            value: el.value,
-            type: el.type,
-            condition: el.condition,
-          }
-        });
+        const containAttributes = attributeList.some((el) => el.name);
+        const attributes =
+          containAttributes &&
+          attributeList &&
+          attributeList.map((el) => {
+            return {
+              attribute_name: el.name,
+              value: el.value,
+              type: el.type,
+              condition: el.condition,
+            };
+          });
         return {
           name: condition.name,
-          attributes: attributes || []
+          attributes: attributes || [],
         };
       case 'zone':
         return {
@@ -126,8 +130,8 @@ function Search(props) {
     } else if (permission === 'collaborator') {
       if (query['zone']['value'] === 'greenroom') {
         query['uploader'] = {
-          "value": username,
-          "condition": "equal"
+          value: username,
+          condition: 'equal',
         };
       }
     }
@@ -139,8 +143,8 @@ function Search(props) {
   };
 
   useEffect(() => {
-    const validCondition = conditions.filter(el => el.category);
-    if (validCondition.length) searchFiles({page, pageSize}, filters);
+    const validCondition = conditions.filter((el) => el.category);
+    if (validCondition.length) searchFiles({ page, pageSize }, filters);
   }, [filters]);
 
   const onTableChange = (pagination) => {
@@ -164,7 +168,7 @@ function Search(props) {
     setTotal(0);
     setFiles([]);
     setPage(0);
-  }
+  };
 
   return (
     <>
@@ -233,6 +237,8 @@ function Search(props) {
           setAttributeList={setAttributeList}
           searchConditions={searchConditions}
           setSearchConditions={setSearchConditions}
+          setPage={setPage}
+          setPageSize={setPageSize}
         />
         <SearchResultTable
           files={files}
