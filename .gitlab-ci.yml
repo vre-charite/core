@@ -12,15 +12,15 @@ build-portal:
   only:
     changes:
       - kubernetes/portal-deployment.yaml
-      - portal/public/*
-      - portal/public/*/*
-      - portal/public/*/*/*
-      - portal/src/*
-      - portal/src/*/*
-      - portal/src/*/*/*
-      - portal/src/*/*/*/*
-      - portal/src/*/*/*/*/*
       - portal/*
+      - portal/*/*
+      - portal/*/*/*
+      - portal/*/*/*/*
+      - portal/*/*/*/*/*
+      - portal/*/*/*/*/*/*
+      - portal/*/*/*/*/*/*/*
+      - portal/*/*/*/*/*/*/*/*
+      - portal/*/*/*/*/*/*/*/*/*
   script:
     - export PORTAL_ENV=build-charite
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
@@ -35,15 +35,15 @@ deploy-portal:
   only:
     changes:
       - kubernetes/portal-deployment.yaml
-      - portal/public/*
-      - portal/public/*/*
-      - portal/public/*/*/*
-      - portal/src/*
-      - portal/src/*/*
-      - portal/src/*/*/*
-      - portal/src/*/*/*/*
-      - portal/src/*/*/*/*/*
       - portal/*
+      - portal/*/*
+      - portal/*/*/*
+      - portal/*/*/*/*
+      - portal/*/*/*/*/*
+      - portal/*/*/*/*/*/*
+      - portal/*/*/*/*/*/*/*
+      - portal/*/*/*/*/*/*/*/*
+      - portal/*/*/*/*/*/*/*/*/*
   script:
     - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/portal-deployment.yaml
     - kubectl apply -f kubernetes/portal-deployment.yaml
