@@ -97,7 +97,9 @@ class FileMeta(Resource):
             if source_type == "Folder":
                 zone = get_zone(dataset_node["labels"])
                 if not zone:
-                    raise Exception('Invalid dataset_node, neo id: ' + dataset_node["id"])
+                    _res.set_code(EAPIResponseCode.internal_error)
+                    _res.set_result('Invalid dataset_node, neo id: ' + str(dataset_node.get("id")))
+                    return _res.to_dict, _res.code
             if not response.get("result"):
                 _logger.error('User not a member of the project')
                 if response.get("error_msg"):

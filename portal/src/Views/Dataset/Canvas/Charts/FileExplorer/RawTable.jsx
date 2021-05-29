@@ -243,6 +243,7 @@ function RawTable(props) {
                 refreshFiles({
                   geid: record.geid,
                   sourceType: 'Folder',
+                  resetTable: true,
                 });
             }}
           >
@@ -1011,6 +1012,7 @@ function RawTable(props) {
                           refreshFiles({
                             geid: v.globalEntityId,
                             sourceType: 'Folder',
+                            resetTable: true,
                           });
                         }}
                       >
