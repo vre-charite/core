@@ -51,6 +51,7 @@ class FileMeta(Resource):
 
         try:
             query = json.loads(query)
+            archived = query.get("archived", False)
         except Exception as e:
             _logger.error(f'Error parsing query json {query}')
             _res.set_code(EAPIResponseCode.bad_request)
@@ -104,7 +105,6 @@ class FileMeta(Resource):
                     _res.set_error_msg('Permission Denied')
                 return _res.to_dict, _res.code
             project_role = response["result"][0]["r"]["type"]
-            archived = request.args.get('query', {}).get("archived", False)
             query = check_filemeta_permissions(query, zone, project_role, current_identity["username"], _logger, archived=archived)
             if query is False:
                 _res.set_code(EAPIResponseCode.forbidden)
