@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import G6 from '@antv/g6';
 import moment from 'moment';
-import { pathsMap, pathNameMap } from '../../../../../Utility';
+import { locationMap, pathNameMap } from '../../../../../Utility';
 const { detect } = require('detect-browser');
 const browser = detect();
 const toolBarNotSupported =
@@ -87,7 +87,7 @@ export default function (props) {
         location = null;
         fileType = 'Pipeline';
       } else {
-        location = textArr && pathsMap(displayText);
+        location = textArr && locationMap(displayText);
         fileType = textArr && pathNameMap(textArr);
         if (location.length > 40) location = location.slice(0, 32) + '.......';
       }
