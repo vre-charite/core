@@ -94,6 +94,10 @@ class FileMeta(Resource):
                 dataset_node = response.get("result")
 
             response = neo4j_client.get_relation(current_identity["user_id"], dataset_node["id"])
+            if source_type == "Folder":
+                zone = get_zone(dataset_node["labels"])
+                if not zone:
+                    raise Exception('Invalid dataset_node, neo id: ' + dataset_node["id"])
             if not response.get("result"):
                 _logger.error('User not a member of the project')
                 if response.get("error_msg"):
@@ -142,3 +146,12 @@ class FileMeta(Resource):
             return _res.to_dict, _res.code
         
 
+def get_zone(labels: list):
+    '''
+    Get resource type by neo4j labels
+    '''
+    zones = ['Greenroom', 'VRECore']
+    for label in labels:
+        if label in zones:
+            return label
+    return None
