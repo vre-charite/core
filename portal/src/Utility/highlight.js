@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const getHighlightedText = (text, highlight) => {
- /*  console.log("This is text!");
+  /*  console.log("This is text!");
   console.log(text);
   console.log("This is highlight!");
   console.log(highlight); */
@@ -22,6 +22,16 @@ export const getHighlightedText = (text, highlight) => {
           </>
         );
       })}{' '}
+    </span>
+  );
+};
+export const hightLightCaseInsensitive = (text, highlight) => {
+  console.log(text.replace(new RegExp(highlight, 'gi'), (str) => <b>{str}</b>));
+  return (
+    <span className="file-name-val">
+      {text.replace(new RegExp(highlight, 'gi'), (str) => (
+        <b>{str}</b>
+      ))}
     </span>
   );
 };

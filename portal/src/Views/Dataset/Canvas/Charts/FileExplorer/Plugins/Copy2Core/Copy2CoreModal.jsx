@@ -10,6 +10,7 @@ import {
 import Icon from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { validateFiles } from '../../../../../../../APIs';
+import { trimString } from '../../../../../../../Utility';
 import { triggerEvent } from '../../../../../../../Redux/actions';
 import { useEffect } from 'react';
 import { tokenManager } from '../../../../../../../Service/tokenManager';
@@ -459,7 +460,23 @@ const Copy2CoreModal = ({
     }
   };
 
-  const validateFolderName = (renameStr, geid) => {
+  const validateFolderName = (value, geid) => {
+    const renameStr = value ? trimString(value) : null;
+    if (!renameStr) {
+      setNameFormatFailedObj({
+        ...nameFormatFailedObj,
+        [geid]: 'Folder name should be 1 ~ 20 characters',
+      });
+      return;
+    }
+    const isLengthValid = renameStr.length >= 1 && renameStr.length <= 20;
+    if (!isLengthValid) {
+      setNameFormatFailedObj({
+        ...nameFormatFailedObj,
+        [geid]: 'Folder name should be 1 ~ 20 characters',
+      });
+      return;
+    }
     const specialChars = [
       '\\',
       '/',

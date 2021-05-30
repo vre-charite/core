@@ -7,11 +7,15 @@ import {
   locationMap,
   getFileSize,
 } from '../../../../Utility';
-import  _ from 'lodash';
+import _ from 'lodash';
 
 function SearchResultCard({ record, searchConditions }) {
-  const attributeConditions = searchConditions.find(el => el.category === 'attributes');
-  const attributeList = attributeConditions ? attributeConditions.attributes : [];
+  const attributeConditions = searchConditions.find(
+    (el) => el.category === 'attributes',
+  );
+  const attributeList = attributeConditions
+    ? attributeConditions.attributes
+    : [];
   const info = record.source;
   const attributes = info.attributes;
   const tags = info.tags;
@@ -23,16 +27,18 @@ function SearchResultCard({ record, searchConditions }) {
     'YYYY-MM-DD HH:mm:ss',
   );
   const hightLightTemplateName = (name) => {
-    if (searchConditions.find((el) => el.category === 'attributes') &&
-    searchConditions.find((el) => el.category === 'attributes')['name']) {
+    if (
+      searchConditions.find((el) => el.category === 'attributes') &&
+      searchConditions.find((el) => el.category === 'attributes')['name']
+    ) {
       return getHighlightedText(
         info.attributes[0].name,
         searchConditions.find((el) => el.category === 'attributes')['name'],
-      )
+      );
     } else {
-      return (<p>{name}</p>)
+      return <p>{name}</p>;
     }
-  }
+  };
 
   return (
     <div className={styles.search_result_card}>
@@ -48,7 +54,9 @@ function SearchResultCard({ record, searchConditions }) {
           >
             <span className="row-label">File Name:</span>
             {searchConditions.find((el) => el.category === 'file_name') &&
-            searchConditions.find((el) => el.category === 'file_name')['keywords'] ? (
+            searchConditions.find((el) => el.category === 'file_name')[
+              'keywords'
+            ] ? (
               getHighlightedText(
                 info.fileName,
                 searchConditions.find((el) => el.category === 'file_name')[
@@ -86,10 +94,16 @@ function SearchResultCard({ record, searchConditions }) {
           <div style={{ width: '20%', whiteSpace: 'nowrap' }}>
             <span className="uploader-label">Uploaded By:</span>
             {searchConditions.find((el) => el.category === 'uploader') &&
-            searchConditions.find((el) => el.category === 'uploader')['keywords'] ? (
+            searchConditions.find((el) => el.category === 'uploader')[
+              'keywords'
+            ] ? (
               getHighlightedText(
                 info.uploader,
-                _.lowerCase(searchConditions.find((el) => el.category === 'uploader')['keywords']),
+                _.lowerCase(
+                  searchConditions.find((el) => el.category === 'uploader')[
+                    'keywords'
+                  ],
+                ),
               )
             ) : (
               <>
@@ -109,20 +123,24 @@ function SearchResultCard({ record, searchConditions }) {
           <div className="manifest-row">
             <span className="row-label_FileAttribute">File Attribute:</span>
             <ul className="manifest-val">
-              <li style={{display: 'flex', flexDirection: 'column'}}>
+              <li style={{ display: 'flex', flexDirection: 'column' }}>
                 <h4>Template Name</h4>
-                {
-                  hightLightTemplateName(attributes[0].name)
-                }
+                {hightLightTemplateName(attributes[0].name)}
               </li>
               <li>
                 <h4>Attribute Name</h4>
                 {attributes.map((el) => {
-                  const attributeNameList = attributeList.filter(attribute => attribute.name).map(attribute => attribute.name);
+                  const attributeNameList = attributeList
+                    .filter((attribute) => attribute.name)
+                    .map((attribute) => attribute.name);
                   if (attributeNameList.includes(el.attributeName)) {
-                    return <p><b>{el.attributeName}</b></p>
+                    return (
+                      <p>
+                        <b>{el.attributeName}</b>
+                      </p>
+                    );
                   } else {
-                    return <p>{el.attributeName}</p>
+                    return <p>{el.attributeName}</p>;
                   }
                 })}
               </li>
@@ -130,18 +148,30 @@ function SearchResultCard({ record, searchConditions }) {
                 <h4>Value</h4>
                 {attributes.map((el) => {
                   if (el.value && Array.isArray(el.value)) {
-                    const searchCondition = attributeList.some(attribute => attribute.name === el.attributeName);
-                    if (searchCondition) return <p><b>{el.value[0]}</b></p>;
+                    const searchCondition = attributeList.some(
+                      (attribute) => attribute.name === el.attributeName,
+                    );
+                    if (searchCondition)
+                      return (
+                        <p>
+                          <b>{el.value[0]}</b>
+                        </p>
+                      );
                     return <p>{el.value[0]}</p>;
                   } else {
-                    const searchCondition = attributeList.find(attribute => attribute.name === el.attributeName);
-                    
-                    if (searchCondition && el.value)  return getHighlightedText(el.value, searchCondition.value);
+                    const searchCondition = attributeList.find(
+                      (attribute) => attribute.name === el.attributeName,
+                    );
+
+                    if (searchCondition && el.value)
+                      return getHighlightedText(
+                        el.value,
+                        searchCondition.value,
+                      );
 
                     return <p>{el.value}</p>;
                   }
                 })}
-
               </li>
             </ul>
           </div>

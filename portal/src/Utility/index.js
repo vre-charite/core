@@ -24,7 +24,7 @@ import { convertUTCDateToLocalDate, timeConvert, timezone } from './timeCovert';
 import { partialString } from './column';
 import { nestedLoop } from './fileTree';
 import { pathsMap, pathNameMap, locationMap, pathsMapV2 } from './pathsMap';
-import { getHighlightedText } from './highlight';
+import { getHighlightedText, hightLightCaseInsensitive } from './highlight';
 import { checkIsVirtualFolder } from './panelKey';
 export {
   fileUpload,
@@ -54,6 +54,7 @@ export {
   nestedLoop,
   pathNameMap,
   getHighlightedText,
+  hightLightCaseInsensitive,
   locationMap,
   currentBrowser,
   toFixedNumber,
