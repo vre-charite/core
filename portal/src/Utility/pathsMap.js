@@ -21,20 +21,20 @@ exports.pathsMap = (array) => {
     // file-with raw /vre-data/indoctestproject/raw
     // folder-without raw /vre-data/indoctestproject/a/b
     // folder-with raw /vre-data/indoctestproject/raw/a/b
-    // file-trash /vre-data/indoctestproject/TRASH
-    // folder-trash /vre-data/indoctestproject/TRASH/a/b
+    // file-trash /vre-data/TRASH/indoctestproject
+    // folder-trash /vre-data/TRASH/indoctestproject/a/b
 
-    if (dirArray[3] === 'TRASH') {
-      if (dirArray.length === 3) return 'Core/Trash';
-      return 'Core/Trash/' + dirArray.slice(4).join('/');
+    if (dirArray[2] === 'TRASH') {
+      if (dirArray.length === 4) return 'Trash';
+      return 'Trash/' + dirArray.slice(4).join('/');
     }
 
     if (dirArray[3] === 'raw') {
       dirArray.splice(3, 1);
     }
 
-    if (dirArray.length === 3) return 'Core/Home';
-    return 'Core/Home/' + dirArray.slice(3).join('/');
+    if (dirArray.length === 3) return 'Home';
+    return 'Home/' + dirArray.slice(3).join('/');
   }
 };
 

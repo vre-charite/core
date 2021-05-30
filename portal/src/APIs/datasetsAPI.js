@@ -478,6 +478,7 @@ function attachManifest(manifestId, geids, attributes) {
       attributes: attributes,
     };
   });
+  console.log(data);
   return serverAxios({
     url: `/v1/file/manifest/attach`,
     method: 'POST',

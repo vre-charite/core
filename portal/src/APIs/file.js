@@ -627,11 +627,12 @@ function getCollectionFiles(folderGeid) {
   });
 }
 
-function getZipContentAPI(file) {
+function getZipContentAPI(file, projectGeid) {
   return devOpServerNoIntercept({
     url: '/v1/archive',
     params: {
       file_path: file,
+      project_geid: projectGeid,
     },
   });
 }

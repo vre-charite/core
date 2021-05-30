@@ -497,7 +497,8 @@ function RawTable(props) {
                   style={{ textAlign: 'center' }}
                   onClick={async () => {
                     const { name } = record;
-                    const zipRes = await getZipContentAPI(name);
+                    const geid = getCurrentGeid();
+                    const zipRes = await getZipContentAPI(name, geid);
                     if (zipRes.status === 200)
                       record = {
                         ...record,

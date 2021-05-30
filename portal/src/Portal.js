@@ -265,7 +265,6 @@ function Portal(props) {
           );
 
           for (const item of pendingDownloadList) {
-            console.log(item);
             await checkDownloadStatusAPI(
               item.downloadKey,
               item.hashCode,
@@ -395,12 +394,10 @@ function Portal(props) {
                 const manifestItem = uploadFileManifest.find((x) => {
                   const fileArr = x.files[0].split('/');
                   const fileNameFromPath = fileArr[fileArr.length - 1];
-                  if (fileNameFromPath === fileName) {
-                    x.geid = fileStatus.payload.sourceGeid;
-                  }
-                  return fileNameFromPath === fileName;
+                  return fileNameFromPath.normalize() == fileName.normalize();
                 });
                 if (manifestItem && manifestItem.manifestId) {
+                  manifestItem.geid = fileStatus.payload.sourceGeid;
                   await attachManifest(
                     manifestItem.manifestId,
                     [manifestItem.geid],
