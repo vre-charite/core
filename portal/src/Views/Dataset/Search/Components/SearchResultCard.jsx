@@ -7,6 +7,7 @@ import {
   locationMap,
   getFileSize,
 } from '../../../../Utility';
+import  _ from 'lodash';
 
 function SearchResultCard({ record, searchConditions }) {
   const attributeConditions = searchConditions.find(el => el.category === 'attributes');
@@ -88,7 +89,7 @@ function SearchResultCard({ record, searchConditions }) {
             searchConditions.find((el) => el.category === 'uploader')['keywords'] ? (
               getHighlightedText(
                 info.uploader,
-                searchConditions.find((el) => el.category === 'uploader')['keywords'],
+                _.lowerCase(searchConditions.find((el) => el.category === 'uploader')['keywords']),
               )
             ) : (
               <>
