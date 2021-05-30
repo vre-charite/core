@@ -242,6 +242,8 @@ class FileValidation(Resource):
             _logger.info('file validation api: get file path')
             for target in targets:
                 # get source file
+                if operation == "upload":
+                    continue
                 source_file_res = http_query_node(
                     "File", {"global_entity_id": target['geid']})
                 if source_file_res.status_code != 200:

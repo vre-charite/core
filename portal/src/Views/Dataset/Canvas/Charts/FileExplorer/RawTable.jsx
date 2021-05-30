@@ -53,6 +53,7 @@ import {
   timeConvert,
   pathsMap,
   pathsMapV2,
+  checkIsVirtualFolder,
 } from '../../../../../Utility';
 import { setSuccessNum } from '../../../../../Redux/actions';
 import LineageGraph from './LineageGraph';
@@ -1464,7 +1465,6 @@ function RawTable(props) {
                   panelKey={panelKey}
                   record={currentRecord}
                   pid={props.projectId}
-                  checkIsVirtualFolder={checkIsVirtualFolder}
                 />
               </Panel>
               {[
@@ -1616,19 +1616,6 @@ const getZone = (panelKey, role) => {
     return 'VRECore';
   }
   throw new TypeError('only greenroom, core and trash can use getZone');
-};
-
-/**
- *
- * @param {string} panelKey the current open panel key
- * @returns {boolean} true if the current panel is a virtual folder
- */
-const checkIsVirtualFolder = (panelKey) => {
-  return !(
-    panelKey.includes('trash') ||
-    panelKey.startsWith('greenroom') ||
-    panelKey.startsWith('core')
-  );
 };
 
 function resKeyConvert(res) {

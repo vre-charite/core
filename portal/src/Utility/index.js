@@ -4,7 +4,13 @@ import { objectKeysToCamelCase, objectKeysToSnakeCase } from './caseConvert';
 import getChildrenTree from './getChildrenTree';
 import protectedRoutes from './protectedRoutes';
 import { validateEmail } from './tokenRefresh';
-import { sleep, getFileSize, trimString, currentBrowser, toFixedNumber } from './common';
+import {
+  sleep,
+  getFileSize,
+  trimString,
+  currentBrowser,
+  toFixedNumber,
+} from './common';
 import {
   useCurrentProject,
   withCurrentProject,
@@ -17,9 +23,9 @@ import { formatRole, convertRole } from './roleConvert';
 import { convertUTCDateToLocalDate, timeConvert, timezone } from './timeCovert';
 import { partialString } from './column';
 import { nestedLoop } from './fileTree';
-import { pathsMap, pathNameMap, locationMap, pathsMapV2, } from './pathsMap';
+import { pathsMap, pathNameMap, locationMap, pathsMapV2 } from './pathsMap';
 import { getHighlightedText } from './highlight';
-
+import { checkIsVirtualFolder } from './panelKey';
 export {
   fileUpload,
   uploadStarter,
@@ -52,6 +58,7 @@ export {
   currentBrowser,
   toFixedNumber,
   pathsMapV2,
+  checkIsVirtualFolder,
 };
 
 export { logout, refresh, login } from './keycloakActions';

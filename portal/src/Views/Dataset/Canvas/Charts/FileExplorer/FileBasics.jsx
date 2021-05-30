@@ -1,13 +1,17 @@
 import React from 'react';
 import { Descriptions } from 'antd';
 import FileTags from './FileTags';
-import { getFileSize, timeConvert } from '../../../../../Utility';
+import {
+  getFileSize,
+  timeConvert,
+  checkIsVirtualFolder,
+} from '../../../../../Utility';
 import { useSelector } from 'react-redux';
 const { locationMap } = require('../../../../../Utility/pathsMap');
 function FileBasics(props) {
-  const { record, panelKey, checkIsVirtualFolder } = props;
+  const { record, panelKey } = props;
   const fileFullPath = record?.name; // /vre-data/may25/hello1234/hello.txt, only for file
-  const type = record?.nodeLabel.includes('Folder')?"Folder":"File";
+  const type = record?.nodeLabel.includes('Folder') ? 'Folder' : 'File';
   const folderRelativePath = record?.folderRelativePath; // the folder's relative path, only for folder. format "hello1234/inner"
   const folderRouting = useSelector(
     (state) => state.fileExplorer && state.fileExplorer.folderRouting,
@@ -22,7 +26,7 @@ function FileBasics(props) {
         </Descriptions.Item>
         {checkIsVirtualFolder(panelKey) && (
           <Descriptions.Item label="Path">
-            {getPath(type,fileFullPath, folderRelativePath)}
+            {getPath(type, fileFullPath, folderRelativePath)}
           </Descriptions.Item>
         )}
         <Descriptions.Item label="Added by">{record.owner}</Descriptions.Item>
@@ -59,17 +63,17 @@ function FileBasics(props) {
   );
 }
 
-const getPath = (type,filePath, folderPath) => {
+const getPath = (type, filePath, folderPath) => {
   if (filePath === undefined && folderPath === undefined) {
     throw new Error(
       'file path and folder path can not be undefined at the same time',
     );
   }
-  if (type==="File") {
+  if (type === 'File') {
     return locationMap(filePath);
   }
 
-  if (type === "Folder") {
+  if (type === 'Folder') {
     if (folderPath === '') return 'Home';
     return 'Home/' + folderPath;
   }

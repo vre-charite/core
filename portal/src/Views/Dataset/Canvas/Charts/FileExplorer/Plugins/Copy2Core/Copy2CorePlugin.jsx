@@ -28,6 +28,7 @@ function Copy2CorePlugin({
         input_path: v.name,
         uploader: v.owner,
         geid: v.geid,
+        nodeLabel: v.nodeLabel,
         generate_id:
           v.generateId && v.generateId !== 'undefined' ? v.generateId : null,
       };

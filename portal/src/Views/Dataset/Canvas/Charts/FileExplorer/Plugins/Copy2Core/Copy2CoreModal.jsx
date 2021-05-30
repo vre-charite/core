@@ -42,6 +42,7 @@ const Copy2CoreModal = ({
   const [renameValidateFailedObj, setRenameValidateFailedObj] = React.useState(
     {},
   );
+  const [nameFormatFailedObj, setNameFormatFailedObj] = React.useState({});
   const [BtnDisabled, setBtnDisabled] = React.useState(false);
   const [locked, setLocked] = React.useState([]);
   const [destination, setDestination] = React.useState(null);
@@ -458,12 +459,58 @@ const Copy2CoreModal = ({
     }
   };
 
+  const validateFolderName = (renameStr, geid) => {
+    const specialChars = [
+      '\\',
+      '/',
+      ':',
+      '?',
+      '*',
+      '<',
+      '>',
+      '|',
+      '"',
+      "'",
+      '.',
+    ];
+    for (let char of specialChars) {
+      if (renameStr.indexOf(char) !== -1) {
+        setNameFormatFailedObj({
+          ...nameFormatFailedObj,
+          [geid]: `Following character is forbidden: ${specialChars.join(' ')}`,
+        });
+        return;
+      }
+    }
+    if (
+      !destination ||
+      !destination.routes ||
+      destination.routes.length === 0
+    ) {
+      const reserved = ['raw', 'logs', 'trash', 'workdir'];
+      if (reserved.indexOf(renameStr.toLowerCase()) !== -1) {
+        setNameFormatFailedObj({
+          ...nameFormatFailedObj,
+          [geid]: `Following folder name is reserved: ${reserved.join(' ')}`,
+        });
+        return;
+      }
+    }
+    const obj = { ...nameFormatFailedObj };
+    delete obj[geid];
+    setNameFormatFailedObj(obj);
+  };
   const handleRenameOnChange = (e, geid) => {
+    const renameStr = e.target.value;
+    const renameItem = files.find((x) => x.geid === geid);
     let obj = { ...renamedFilesObj };
-    obj[geid] = e.target.value;
+    obj[geid] = renameStr;
     setRenamedFilesObj({
       ...obj,
     });
+    if (renameItem && renameItem.nodeLabel?.indexOf('Folder') !== -1) {
+      validateFolderName(renameStr, geid);
+    }
   };
 
   const renameFile = async (geid, type) => {
@@ -543,36 +590,52 @@ const Copy2CoreModal = ({
         return (
           <div
             style={{
-              display: 'flex',
-              alignItems: 'baseline',
               marginBottom: '10px',
             }}
           >
-            <li key={v.geid} style={{width: '160px'}}>
-              <Input
-                defaultValue={v.name}
-                onChange={(e) => {
-                  handleRenameOnChange(e, v.geid);
+            <div style={{ display: 'flex', alignItems: 'baseline' }}>
+              <li key={v.geid} style={{ width: '200px' }}>
+                <Input
+                  defaultValue={v.name}
+                  onChange={(e) => {
+                    handleRenameOnChange(e, v.geid);
+                  }}
+                  style={{ borderRadius: '6px', height: '30px' }}
+                ></Input>
+              </li>
+              <Button
+                icon={<CheckOutlined />}
+                type="primary"
+                onClick={() => {
+                  if (!nameFormatFailedObj[v.geid]) {
+                    renameFile(v.geid, type);
+                  }
                 }}
-                style={{ borderRadius: '6px', height: '30px' }}
-              ></Input>
-            </li>
-            <Button
-              icon={<CheckOutlined />}
-              type="primary"
-              onClick={() => {
-                renameFile(v.geid, type);
-              }}
-              style={{
-                borderRadius: '6px',
-                marginLeft: '15px',
-                width: '85px',
-                height: '25px',
-                padding: '0px',
-              }}
-            >
-              Confirm
-            </Button>
+                style={{
+                  borderRadius: '6px',
+                  marginLeft: '15px',
+                  width: '85px',
+                  height: '25px',
+                  padding: '0px',
+                }}
+              >
+                Confirm
+              </Button>
+            </div>
+            {nameFormatFailedObj[v.geid] && (
+              <p
+                style={{
+                  color: '#FF6D72',
+                  fontStyle: 'italic',
+                  marginLeft: '10px',
+                  marginBottom: '0px',
+                  marginTop: 0,
+                }}
+              >
+                {nameFormatFailedObj[v.geid]}
+              </p>
+            )}
+
             {renameValidateFailedObj[v.geid] && (
               <p
                 style={{
@@ -580,9 +643,10 @@ const Copy2CoreModal = ({
                   fontStyle: 'italic',
                   marginLeft: '10px',
                   marginBottom: '0px',
+                  marginTop: 0,
                 }}
               >
-                * Name already exist
+                Name already exist
               </p>
             )}
           </div>
