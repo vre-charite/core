@@ -99,11 +99,9 @@ function SearchResultCard({ record, searchConditions }) {
             ] ? (
               getHighlightedText(
                 info.uploader,
-                _.lowerCase(
-                  searchConditions.find((el) => el.category === 'uploader')[
-                    'keywords'
-                  ],
-                ),
+                searchConditions
+                  .find((el) => el.category === 'uploader')
+                  ['keywords'].toLowerCase(),
               )
             ) : (
               <>
