@@ -1,10 +1,6 @@
 import React from 'react';
 
 export const getHighlightedText = (text, highlight) => {
-  /*  console.log("This is text!");
-  console.log(text);
-  console.log("This is highlight!");
-  console.log(highlight); */
   // Split on highlight term and include term into parts, ignore case
   const parts = text.split(highlight);
 
@@ -25,13 +21,14 @@ export const getHighlightedText = (text, highlight) => {
     </span>
   );
 };
+
+// this function needs to be modified and might be used in the future
 export const hightLightCaseInsensitive = (text, highlight) => {
-  console.log(text.replace(new RegExp(highlight, 'gi'), (str) => <b>{str}</b>));
+  const regObj = new RegExp(highlight, 'gi');
+  const hightlightText = <b>{highlight.toLowerCase()}</b>;
   return (
     <span className="file-name-val">
-      {text.replace(new RegExp(highlight, 'gi'), (str) => (
-        <b>{str}</b>
-      ))}
+      {text.replace(regObj, hightlightText)}
     </span>
   );
 };

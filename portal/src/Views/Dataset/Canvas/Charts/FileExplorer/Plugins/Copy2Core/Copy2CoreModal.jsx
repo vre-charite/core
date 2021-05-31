@@ -521,7 +521,7 @@ const Copy2CoreModal = ({
     const renameStr = e.target.value;
     const renameItem = files.find((x) => x.geid === geid);
     let obj = { ...renamedFilesObj };
-    obj[geid] = renameStr;
+    obj[geid] = trimString(renameStr);
     setRenamedFilesObj({
       ...obj,
     });

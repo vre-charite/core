@@ -6,12 +6,12 @@ exports.pathsMap = (array) => {
   if (dirname.includes('vre-storage')) {
     if (dirArray.length <= 5) {
       if (dirname.includes('raw')) return 'Green Room/Home';
-      if (dirname.includes('TRASH')) return 'Green Room/Trash';
+      if (dirname.includes('TRASH')) return 'Trash';
     }
 
     const baseDir = dirArray.slice(5).join('/');
     if (dirname.includes('raw')) dirname = 'Green Room/Home/' + baseDir;
-    if (dirname.includes('TRASH')) dirname = 'Green Room/TRASH/' + baseDir;
+    if (dirname.includes('TRASH')) dirname = 'TRASH/' + baseDir;
 
     return dirname;
   }
@@ -33,8 +33,8 @@ exports.pathsMap = (array) => {
       dirArray.splice(3, 1);
     }
 
-    if (dirArray.length === 3) return 'Home';
-    return 'Home/' + dirArray.slice(3).join('/');
+    if (dirArray.length === 3) return 'Core/Home';
+    return 'Core/Home/' + dirArray.slice(3).join('/');
   }
 };
 
