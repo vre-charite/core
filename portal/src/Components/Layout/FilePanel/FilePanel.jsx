@@ -103,7 +103,6 @@ function FilePanel(props) {
       const projectCode = project.profile.code;
 
       let res = await loadDeletedFiles(projectCode, sessionId);
-
       const files = [];
       for (const item of res.data.result) {
         const filePaths = item.source.split('/');
@@ -174,7 +173,6 @@ function FilePanel(props) {
 
   const cleanUploadList = async () => {
     const res = await deleteUploadStatus(0, sessionId);
-
     if (res.status === 200 && res.data.code === 200) {
       dispatch(setUploadListCreator([]));
     }
@@ -182,7 +180,6 @@ function FilePanel(props) {
 
   const cleanDownloadList = async () => {
     const res = await deleteDownloadStatus(sessionId);
-
     if (res.status === 200) {
       dispatch(setDownloadListCreator([]));
     }
@@ -294,29 +291,7 @@ function FilePanel(props) {
   if (uploadingList && uploadingList.length > 0) defaultKey = ['upload'];
   // eslint-disable-next-line
   copy2CoreList = copy2CoreList.filter((item) => {
-    const sourcePath = item.source;
-    const pathArray = sourcePath.split('/');
-
-    if (
-      pathArray.includes('vre-storage') &&
-      pathArray.includes('raw') &&
-      item.projectCode === projectCode
-    )
-      return true;
-    if (
-      pathArray.includes('vre-storage') &&
-      pathArray.includes('processed') &&
-      pathArray.includes('straight_copy') &&
-      item.projectCode === projectCode
-    )
-      return true;
-    if (
-      pathArray.includes('vre-storage') &&
-      pathArray.includes('processed') &&
-      pathArray.includes('dicom_edit') &&
-      item.projectCode === projectCode
-    )
-      return true;
+    if (item.projectCode === projectCode) return true;
   });
 
   const title = (
@@ -379,6 +354,14 @@ function FilePanel(props) {
     }
   };
 
+  const displayName = (fileName) => {
+    if (fileName.length > 40) {
+      return <Tooltip title={fileName}>{`${fileName.slice(0, 32)}...`}</Tooltip>;
+    } else {
+      return fileName;
+    }
+  };
+
   const listItemTitle = (item, tabName) => {
     let copyFileName = '';
     if (item && item.source) {
@@ -390,8 +373,8 @@ function FilePanel(props) {
           <Tooltip title="file upload">
             <CloudUploadOutlined className={styles.icons} />
           </Tooltip>
-          {item.fileName}
-          {` / ${item.projectCode}`} {'-'}{' '}
+          {displayName(item.fileName)}
+          {'-'}{' '}
           <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>Waiting</span>
         </span>
       );
@@ -402,8 +385,8 @@ function FilePanel(props) {
             <Tooltip title="file copy">
               <CopyOutlined className={styles.icons} />
             </Tooltip>
-            {copyFileName}
-            {` / ${item.projectCode}`} {'-'}{' '}
+            {displayName(copyFileName)}
+            {'-'}{' '}
             <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
               Waiting
             </span>
@@ -415,7 +398,7 @@ function FilePanel(props) {
             <Tooltip title="file delete">
               <RestOutlined className={styles.icons} />
             </Tooltip>
-            {item.fileName} {'-'}{' '}
+            {displayName(item.fileName)} {'-'}{' '}
             <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
               Waiting
             </span>
@@ -429,8 +412,7 @@ function FilePanel(props) {
             <Tooltip title="file download">
               <DownloadOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
-            {item.filename} {'-'}
-            {` / ${item.projectCode}`} {' '}
+            {displayName(item.filename)}{'-'}{' '}
             <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
               Waiting
             </span>
@@ -442,8 +424,7 @@ function FilePanel(props) {
             <Tooltip title="file upload">
               <CloudUploadOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
-            {item.fileName}
-            {` / ${item.projectCode}`}
+            {displayName(item.fileName)}
             {'-'}{' '}
             <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
               pending
@@ -457,8 +438,7 @@ function FilePanel(props) {
           <Tooltip title="file upload">
             <CloudUploadOutlined className={styles.icons} />
           </Tooltip>
-          {item.fileName}
-          {` / ${item.projectCode}`}
+          {displayName(item.fileName)}
         </span>
       );
     } else if (item.status === 'error' && tabName === 'progress') {
@@ -468,8 +448,8 @@ function FilePanel(props) {
             <Tooltip title="file upload">
               <CloudUploadOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
-            {item.fileName}
-            {` / ${item.projectCode}`} {'-'}{' '}
+            {displayName(item.fileName)}
+            {'-'}{' '}
             <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
@@ -480,8 +460,8 @@ function FilePanel(props) {
             <Tooltip title="file download">
               <DownloadOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
-            {item.filename}
-            {` / ${item.projectCode}`} {'-'}{' '}
+            {displayName(item.filename)}
+            {'-'}{' '}
             <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
@@ -492,8 +472,8 @@ function FilePanel(props) {
             <Tooltip title="file copy">
               <CopyOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
-            {copyFileName}
-            {` / ${item.projectCode}`} {'-'}{' '}
+            {displayName(copyFileName)}
+            {'-'}{' '}
             <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
@@ -504,8 +484,8 @@ function FilePanel(props) {
             <Tooltip title="file delete">
               <RestOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
-            {item.fileName} {` / ${item.projectCode}`}
-            {'-'} <span style={{ fontStyle: 'Italic' }}>Failed</span>
+            {displayName(item.fileName)}
+            {'-'}{' '} <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
       }
@@ -522,10 +502,7 @@ function FilePanel(props) {
               />
             )}
           />
-          <span className={styles.fileName}>
-            {item.fileName}
-            {` / ${item.projectCode}`}
-          </span>
+          <span className={styles.fileName}>{displayName(item.fileName)}</span>
         </span>
       );
     } else if (item.status === 'success' && tabName === 'download') {
@@ -553,8 +530,10 @@ function FilePanel(props) {
               />
             )}
           />
-          <span className={styles.fileName}>{item.filename}</span> {'-'}{' '}
-          <span>{nameZone(item)}</span>
+          <span className={styles.fileName}>
+            {displayName(item.filename)}
+          </span>{' '}
+          {'-'} <span>{nameZone(item)}</span>
         </span>
       );
     } else if (item.status === JOB_STATUS.SUCCEED && tabName === 'approved') {
@@ -570,7 +549,9 @@ function FilePanel(props) {
               />
             )}
           />
-          <span className={styles.fileName}>{copyFileName}</span>
+          <span className={styles.fileName}>
+            {displayName(copyFileName)}
+          </span>
           <span className={styles.slash}>/</span>
           <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
             {item.copyTag}
@@ -585,8 +566,10 @@ function FilePanel(props) {
               <RestOutlined className={styles.icons} />
             </Tooltip>
           }
-          <span className={styles.fileName}>{item.fileName}</span> {'-'}{' '}
-          <span>{item.payload.frontendZone}</span>
+          <span className={styles.fileName}>
+            {displayName(item.fileName)}
+          </span>{' '}
+          {'-'} <span>{item.payload.frontendZone}</span>
         </span>
       );
     } else {

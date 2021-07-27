@@ -5,9 +5,9 @@ from flask import request
 
 from models.api_response import APIResponse, EAPIResponseCode
 from api import module_api
-from api.api_files.proxy import BaseProxyResource
 from config import ConfigClass
 from resources.utils import get_project_permissions
+from services.permissions_service.decorators import permissions_check
 import requests
 
 
@@ -20,8 +20,9 @@ class APIAnnouncement(metaclass=MetaAPI):
         api_ns_report.add_resource(
             self.AnnouncementRestful, '/announcements')
 
-    class AnnouncementRestful(BaseProxyResource):
+    class AnnouncementRestful(Resource):
         @jwt_required()
+        @permissions_check("announcement", "*", "view")
         def get(self):
             api_response = APIResponse()
             data = request.args
@@ -29,26 +30,6 @@ class APIAnnouncement(metaclass=MetaAPI):
                 api_response.set_error_msg("Missing project code")
                 api_response.set_code(EAPIResponseCode.bad_request)
                 return api_response.to_dict, api_response.code
-
-            if current_identity["role"] != "admin":
-                # Get Dataset
-                response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query", json={"code": data["project_code"]})
-                if not response.json():
-                    api_response.set_error_msg("Dataset not found")
-                    api_response.set_code(EAPIResponseCode.not_found)
-                    return api_response.to_dict, api_response.code
-                dataset_id = response.json()[0]["id"]
-
-                # Get relation between user and dataset
-                params = {
-                    "start_id": current_identity["user_id"],
-                    "end_id": dataset_id
-                }
-                relation = requests.get(ConfigClass.NEO4J_SERVICE + "relations", params=params)
-                if not relation.json():
-                    api_response.set_error_msg("User not in project")
-                    api_response.set_code(EAPIResponseCode.forbidden)
-                    return api_response.to_dict, api_response.code
 
             response = requests.get(ConfigClass.NOTIFY_SERVICE + "/v1/announcements", params=data)
             if response.status_code != 200:
@@ -58,6 +39,7 @@ class APIAnnouncement(metaclass=MetaAPI):
             return api_response.to_dict, api_response.code
 
         @jwt_required()
+        @permissions_check("announcement", "*", "create")
         def post(self):
             api_response = APIResponse()
             data = request.get_json()
@@ -67,24 +49,13 @@ class APIAnnouncement(metaclass=MetaAPI):
                 return api_response.to_dict, api_response.code
 
             # Get Dataset
-            response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query", json={"code": data["project_code"]})
+            response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Container/query", json={"code": data["project_code"]})
             if not response.json():
                 api_response.set_error_msg("Dataset not found")
                 api_response.set_code(EAPIResponseCode.not_found)
                 return api_response.to_dict, api_response.code
             dataset_id = response.json()[0]["id"]
 
-            if current_identity["role"] != "admin":
-                # Get relation between user and dataset
-                params = {
-                    "start_id": current_identity["user_id"],
-                    "end_id": dataset_id
-                }
-                relation = requests.get(ConfigClass.NEO4J_SERVICE + "relations", params=params)
-                if not relation.json() or relation.json()[0]["r"]["type"] != "admin":
-                    api_response.set_error_msg("Permission denied")
-                    api_response.set_code(EAPIResponseCode.forbidden)
-                    return api_response.to_dict, api_response.code
             data["publisher"] = current_identity["username"]
             response = requests.post(ConfigClass.NOTIFY_SERVICE + "/v1/announcements", json=data)
             if response.status_code != 200:

@@ -79,7 +79,7 @@ class LandingPageContent extends Component {
         }
       });
     } else if (selectedTab === 'All Projects') {
-      params = { ...params, ...filters, type: 'usecase' };
+      params = { ...params, ...filters };
 
       getDatasetsAPI(params).then((res) => {
         const { code, result, total } = res.data;
@@ -96,7 +96,7 @@ class LandingPageContent extends Component {
         }
       });
 
-      params = { ...params, ...filters, type: 'usecase' };
+      params = { ...params, ...filters };
       getDatasetsAPI(params).then((res) => {
         const { code, result, total } = res.data;
 
@@ -343,7 +343,7 @@ class LandingPageContent extends Component {
       page_size: 10,
     };
 
-    let params4All = { ...params, type: 'usecase' };
+    let params4All = { ...params };
 
     if (Object.keys(filters) && Object.keys(filters).length)
       params['end_params'] = filters;

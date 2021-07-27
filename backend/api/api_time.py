@@ -1,6 +1,5 @@
 from flask_restx import Api, Resource, fields
 from flask_jwt import jwt_required, current_identity
-from resources.decorator import check_role
 from config import ConfigClass
 from models.api_response import APIResponse, EAPIResponseCode
 from models.api_meta_class import MetaAPI

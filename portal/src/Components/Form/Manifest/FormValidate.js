@@ -1,4 +1,4 @@
-import { MANIFEST_ATTR_TYPE } from '../../../Views/Dataset/Settings/Tabs/manifest.values';
+import { MANIFEST_ATTR_TYPE } from '../../../Views/Project/Settings/Tabs/manifest.values';
 import i18n from '../../../i18n';
 export function validateForm(attrForm, manifest) {
   const maxHave = manifest.attributes.filter((attr) => !attr.optional);

@@ -102,12 +102,6 @@ function NewProjectPanel({
       return;
     }
 
-    const metadatas = {};
-    values.metadatas &&
-      values.metadatas.forEach(({ key, value }) => {
-        metadatas[key] = value;
-      });
-
     if (values.description) values.description = trimString(values.description);
 
     createProjectAPI(
@@ -116,11 +110,9 @@ function NewProjectPanel({
         code: values.code,
         tags: values.tags,
         discoverable: discoverable,
-        type: 'Usecase',
+        type: 'project',
         icon: imgURL,
-        metadatas,
         description: values.description,
-        roles: ['admin', 'collaborator', 'contributor'],
       },
       cancelAxios,
     )

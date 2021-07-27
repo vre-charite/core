@@ -7,12 +7,14 @@ from services.logger_services.logger_factory_service import SrvLoggerFactory
 from services.notifier_services.email_service import SrvEmail
 from services.container_services.container_manager import SrvContainerManager
 from services.user_services.user_manager import SrvUserManager
+from services.permissions_service.decorators import permissions_check
 from models.api_response import APIResponse, EAPIResponseCode
 from flask_jwt import jwt_required, current_identity
-from resources.decorator import check_role
 from config import ConfigClass
 import jwt as pyjwt
 
+# init logger
+_logger = SrvLoggerFactory('api_auth_service').get_logger()
 
 api_ns_auth = module_api.namespace(
     'Auth Service Restful', description='Auth Service Restful', path='/v1')
@@ -21,7 +23,8 @@ api_ns_auth = module_api.namespace(
 class APIAuthService(metaclass=MetaAPI):
     def api_registry(self):
         api_ns_auth.add_resource(
-            self.AdminRestful, '/datasets/<dataset_id>/users/email')
+            # self.AdminRestful, '/containers/<dataset_id>/users/email')
+            self.AdminRestful, '/containers/users/email')
         api_ns_auth.add_resource(
             self.LastLoginRestful, '/users/lastlogin')
         api_ns_auth.add_resource(self.UserStatus, '/user/status')
@@ -29,8 +32,8 @@ class APIAuthService(metaclass=MetaAPI):
 
     class AdminRestful(Resource):
         @jwt_required()
-        @check_role("admin")
-        def get(self, dataset_id):
+        @permissions_check('users', '*', 'view')
+        def get(self):
             '''
             This method allow to check email in keycloak. More information refers to auth service.
             '''
@@ -45,8 +48,6 @@ class APIAuthService(metaclass=MetaAPI):
             except Exception as e:
                 return {'result': str(e)}, 403
 
-
-
     class LastLoginRestful(Resource):
         @jwt_required()
         def post(self):
@@ -58,7 +59,7 @@ class APIAuthService(metaclass=MetaAPI):
                 payload = request.get_json()
                 headers = request.headers
                 res = requests.post(ConfigClass.AUTH_SERVICE+'users/lastlogin',
-                                   json=payload, headers=headers)
+                                    json=payload, headers=headers)
 
                 return res.json(), res.status_code
             except Exception as e:
@@ -81,7 +82,8 @@ class APIAuthService(metaclass=MetaAPI):
                 payload = {
                     "email": email
                 }
-                response = requests.get(ConfigClass.AUTH_SERVICE + "user/status", params=payload)
+                response = requests.get(
+                    ConfigClass.AUTH_SERVICE + "user/status", params=payload)
                 return response.json(), response.status_code
             except Exception as e:
                 return {'result': "Error calling auth service" + str(e)}, 500
@@ -122,7 +124,8 @@ class APIAuthService(metaclass=MetaAPI):
                     "payload": operation_payload
                 }
                 headers = request.headers
-                response = requests.put(ConfigClass.AUTH_SERVICE + "user/account", json=payload, headers=headers)
+                response = requests.put(
+                    ConfigClass.AUTH_SERVICE + "user/account", json=payload, headers=headers)
 
                 # send email
                 user_mgr = SrvUserManager()
@@ -142,6 +145,13 @@ class APIAuthService(metaclass=MetaAPI):
                             "support_email": ConfigClass.EMAIL_SUPPORT,
                         },
                     )
+
+                    # check if platform admin
+                    if user_info['role'] == 'admin':
+                        _logger.info(f"User status is changed to enabled , hence creating namespace folder for : {user_info['name']}")
+                        # create namespace folder for all platform admin  once enabled
+                        self.create_usernamespace_folder_admin(username=user_info['name'])
+
                 elif operation_type == "disable":
                     subject = "VRE User disabled"
                     email_sender = SrvEmail()
@@ -160,8 +170,10 @@ class APIAuthService(metaclass=MetaAPI):
                 elif operation_type == "restore":
                     project_code = operation_payload.get("project_code")
                     container_mgr = SrvContainerManager()
-                    project = container_mgr.get_by_project_code(project_code)[1][0]
-                    subject = "VRE access restored to {}".format(project["name"])
+                    project = container_mgr.get_by_project_code(project_code)[
+                        1][0]
+                    subject = "VRE access restored to {}".format(
+                        project["name"])
                     email_sender = SrvEmail()
                     email_result = email_sender.send(
                         subject,
@@ -179,3 +191,41 @@ class APIAuthService(metaclass=MetaAPI):
                 return response.json(), response.status_code
             except Exception as e:
                 return {'result': "Error calling user account management service" + str(e)}, 500
+
+        def create_usernamespace_folder_admin(self, username):
+            try:
+                url = ConfigClass.NEO4J_SERVICE + 'nodes/Container/query'
+                res = requests.post(url, json={})
+                if res.status_code == 200 and len(res.json()) > 0:
+                    for project in res.json():
+                        project_code = project["code"]
+                        self.create_folder(folder_name=username, project_code=project_code)
+            except Exception as error:
+                _logger.error(f"Error while querying Container details : {error}")
+
+        def create_folder(self, folder_name, project_code):
+            try:
+                _logger.info(
+                    f"creating namespace folder in greenroom and vrecore for user : {folder_name} under {project_code}")
+                zone_list = ["greenroom", "vrecore"]
+                for zone in zone_list:
+                    payload = {
+                        "folder_name": folder_name,
+                        "project_code": project_code,
+                        "zone": zone,
+                        "uploader": folder_name,
+                        "tags": []
+                    }
+                    folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_GREENROOM + '/folder'
+                    res = requests.post(
+                        url=folder_creation_url,
+                        json=payload
+                    )
+                    if res.status_code == 200:
+                        _logger.info(
+                            f"Namespace folder created successfully for user : {folder_name} under {project_code}")
+                    elif res.status_code == 409:
+                        _logger.info(f"Namespace folder already exists for user : {folder_name} under {project_code}")
+            except Exception as error:
+                _logger.error(
+                    f"Error while trying to create namespace folder for user : {folder_name} under {project_code} : {error}")

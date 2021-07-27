@@ -6,6 +6,7 @@ import {
   UserOutlined,
   ExclamationCircleOutlined,
   ControlOutlined,
+  DeploymentUnitOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withCookies } from 'react-cookie';
@@ -267,6 +268,14 @@ class AppHeader extends Component {
               </Link>
             </Menu.Item>
           )}
+          {!this.props.unauthorized && (
+            <Menu.Item key="datasets">
+              <Link to="/datasets">
+                <DeploymentUnitOutlined /> Datasets
+              </Link>
+            </Menu.Item>
+          )}
+
           {this.props.role === 'admin' && !this.props.unauthorized ? (
             <Menu.Item key="users">
               <Link to="/users">

@@ -1,0 +1,17 @@
+$headerFooterHeight:165px; //need to change this value when the top yellow banner is removed in the future
+
+.content {
+  min-height: calc(100vh - #{$headerFooterHeight});
+  .menu {
+    padding-left: 30px;
+    padding-top: 0px;
+    line-height: 42px;
+    :global {
+      .ant-menu-item {
+        padding: 0;
+        margin: 0 20px;
+        line-height: 32px;
+      }
+    }
+  }
+}

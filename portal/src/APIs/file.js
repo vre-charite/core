@@ -6,13 +6,9 @@ import {
   kongAPI,
   uploadAxios,
 } from './config';
-import { objectKeysToSnakeCase, objectKeysToCamelCase } from '../Utility';
+import { objectKeysToSnakeCase, checkGreenAndCore } from '../Utility';
 import { message } from 'antd';
 import _ from 'lodash';
-import { pipelines } from '../Utility/pipelines';
-const mockData = objectKeysToCamelCase(require('./mock.json'));
-const GREENROOM_DOWNLOAD_URL = kongAPI + '/download/gr/v1/download';
-const VRE_CORE_DOWNLOAD_URL = kongAPI + '/download/vre/v1/download';
 
 function uploadFileApi(containerId, data, cancelToken) {
   return devOpAxios({
@@ -186,9 +182,17 @@ async function getFiles(
   zone,
   sourceType,
   partial,
-  archived,
+  panelKey,
+  projectGeid,
 ) {
+  const archived = panelKey.toLowerCase().includes('trash') ? true : false;
   filters['archived'] = archived;
+  let url;
+  if (checkGreenAndCore(panelKey) && geid === null) {
+    url = `/v1/files/entity/meta/`;
+  } else {
+    url = `/v1/files/entity/meta/${geid}`;
+  }
   const params = {
     page,
     page_size: pageSize,
@@ -198,34 +202,40 @@ async function getFiles(
     query: _.omit(filters, ['tags']),
     zone: zone,
     sourceType,
+    project_geid: projectGeid,
   };
-  const res = await axios({
-    url: `/v1/files/entity/meta/${geid}`,
+  let res;
+  res = await axios({
+    url,
     params: objectKeysToSnakeCase(params),
   });
+
   res.data.result.entities = res.data.result.data;
   res.data.result.entities = res.data.result.entities.map((item) => {
     res.data.result.approximateCount = res.data.total;
     let formatRes = {
-      displayText: item.fullPath,
       guid: item.guid,
       geid: item.globalEntityId,
       attributes: {
         createTime: item.timeCreated,
         nodeLabel: item.labels,
+        displayPath: item.displayPath,
         fileName: item.name,
         fileSize: item.fileSize,
         name: item.fullPath,
         owner: item.uploader,
         path: item.path,
-        qualifiedName: item.fullPath,
+        location: item.location,
         folderRelativePath: item.folderRelativePath,
         generateId:
           item.generateId && typeof item.generateId !== 'undefined'
             ? item.generateId
             : 'undefined',
       },
-      labels: item.tags,
+      labels:
+        item.systemTags && item.systemTags.length
+          ? item.tags.concat(item.systemTags)
+          : item.tags,
     };
     return formatRes;
   });
@@ -246,29 +256,33 @@ function checkDownloadStatusAPI(
   setSuccessNumDispatcher,
   successNum,
 ) {
-  if (namespace === 'greenroom') {
-    return axios({
-      url: `/download/gr/v1/download/status/${hashCode}`,
-      method: 'GET',
+  const urlNameSpace = namespace === 'greenroom' ? 'gr' : 'vre';
+  return axios({
+    url: `/download/${urlNameSpace}/v1/download/status/${hashCode}`,
+    method: 'GET',
+  })
+    .then((res) => {
+      const { status } = res.data.result;
+      if (status === 'READY_FOR_DOWNLOADING') {
+        updateDownloadItemDispatch({ key: taskId, status: 'success' });
+        const hashCode = res.data.result?.payload?.hashCode;
+        const urlNameSpace =
+          res.data.result?.payload?.zone === 'vre' ? 'vre' : 'gr';
+        const url = `/vre/api/vre/portal/download/${urlNameSpace}/v1/download/${hashCode}`;
+        // Start to download zip file
+        window.open(url, '_blank');
+        setTimeout(() => {
+          setSuccessNumDispatcher(successNum + 1);
+        }, 3000);
+      } else if (status === 'error') {
+        // Stop check status
+      }
     })
-      .then((res) => {
-        const { status } = res.data.result;
-        if (status === 'READY_FOR_DOWNLOADING') {
-          updateDownloadItemDispatch({ key: taskId, status: 'success' });
+    .catch((err) => {
+      console.log(err);
+    });
+  /*   if (namespace === 'greenroom') {
 
-          // Start to download zip file
-          const url = `${GREENROOM_DOWNLOAD_URL}/${hashCode}`;
-          window.open(url, '_blank');
-          setTimeout(() => {
-            setSuccessNumDispatcher(successNum + 1);
-          }, 3000);
-        } else if (status === 'error') {
-          // Stop check status
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
   } else {
     return axios({
       url: `/download/vre/v1/download/status/${hashCode}`,
@@ -292,7 +306,7 @@ function checkDownloadStatusAPI(
       .catch((err) => {
         console.log(err);
       });
-  }
+  } */
 }
 
 /**
@@ -300,8 +314,9 @@ function checkDownloadStatusAPI(
  * @param {number} containerId
  * @param {number} path
  * @param {number} fileName
+ * @returns {string} url string
  */
-function downloadFilesAPI(
+async function downloadFilesAPI(
   containerId,
   files,
   setLoading,
@@ -311,143 +326,44 @@ function downloadFilesAPI(
   operator,
   namespace,
 ) {
-  if (namespace === 'greenroom') {
-    return axios({
-      url: 'download/gr/v1/download/pre/',
-      method: 'POST',
-      data: {
-        files: files,
-        project_code: projectCode,
-        operator,
-        session_id: sessionId,
-      },
-      timeout: 10000000000000000,
-      headers: {
-        'Session-ID': `${sessionId}`,
-      },
-    }).then((res) => {
-      if (setLoading) {
-        setLoading(false);
-      }
-      if (res.data.result.status !== 'READY_FOR_DOWNLOADING') {
-        message.info(
-          "Your download is being prepared...The file will start to download when it's ready.",
-          6,
-        );
+  const urlNameSpace = namespace === 'greenroom' ? 'gr' : 'vre';
+  return axios({
+    url: `/v2/download/pre`,
+    method: 'post',
+    data: {
+      files,
+      project_code: projectCode,
+      operator: operator,
+      session_id: sessionId,
+    },
+  }).then((res) => {
+    let fileName = res.data.result.source;
+    const status = res.data.result.status;
+    const fileNamesArr = fileName.split('/') || [];
+    fileName = fileNamesArr.length && fileNamesArr[fileNamesArr.length - 1];
 
-        let fileName = res.data.result.source;
-        const fileNamesArr = fileName.split('/') || [];
-        fileName = fileNamesArr.length && fileNamesArr[fileNamesArr.length - 1];
+    if (status === 'READY_FOR_DOWNLOADING') {
+      const hashCode = res.data.result.payload.hashCode;
+      const url = `/vre/api/vre/portal/download/${urlNameSpace}/v1/download/${hashCode}`;
+      return url;
+    }
 
-        let item = {
-          downloadKey: res.data.result['jobId'],
-          container: res.data.result.projectCode,
-          projectCode: res.data.result.projectCode,
-          status: 'pending',
-          filename: fileName,
-          projectId: containerId,
-          hashCode: res.data.result.payload.hashCode,
-          namespace,
-          createdTime: Date.now(),
-        };
+    let item = {
+      downloadKey: res.data.result['jobId'],
+      container: res.data.result.projectCode,
+      projectCode: res.data.result.projectCode,
+      status: 'pending',
+      filename: fileName,
+      projectId: containerId,
+      hashCode: res.data.result.payload.hashCode,
+      namespace,
+      createdTime: Date.now(),
+    };
 
-        appendDownloadListCreator(item);
+    appendDownloadListCreator(item);
 
-        return null;
-      } else {
-        const token =
-          res.data.result.payload && res.data.result.payload.hashCode;
-
-        let fileName = res.data.result.source;
-        const fileNamesArr = fileName.split('/') || [];
-        fileName = fileNamesArr.length && fileNamesArr[fileNamesArr.length - 1];
-
-        let item = {
-          downloadKey: res.data.result.jobId,
-          container: res.data.result.project_code,
-          status: 'success',
-          filename: fileName,
-          projectId: containerId,
-          namespace,
-          createdTime: Date.now(),
-          payload: res.data.result.payload,
-          projectCode: res.data.result.projectCode,
-        };
-        appendDownloadListCreator(item);
-
-        const url = `${GREENROOM_DOWNLOAD_URL}/${token}`;
-        // window.open(url, '_blank');
-        return url;
-      }
-    });
-  } else {
-    return axios({
-      url: 'download/vre/v1/download/pre/',
-      method: 'POST',
-      data: {
-        files: files,
-        project_code: projectCode,
-        operator,
-        session_id: sessionId,
-      },
-      timeout: 10000000000000000,
-      headers: {
-        'Session-ID': `${sessionId}`,
-      },
-    }).then((res) => {
-      if (setLoading) {
-        setLoading(false);
-      }
-      if (res.data.result.status !== 'READY_FOR_DOWNLOADING') {
-        message.info(
-          "Your download is being prepared...The file will start to download when it's ready.",
-          6,
-        );
-
-        let fileName = res.data.result.source;
-        const fileNamesArr = fileName.split('/') || [];
-        fileName = fileNamesArr.length && fileNamesArr[fileNamesArr.length - 1];
-
-        let item = {
-          downloadKey: res.data.result['jobId'],
-          container: res.data.result.project_code,
-          status: 'pending',
-          filename: fileName,
-          projectId: containerId,
-          hashCode: res.data.result.payload.hashCode,
-          namespace,
-          createdTime: Date.now(),
-          projectCode: res.data.result.projectCode,
-        };
-        appendDownloadListCreator(item);
-        return null;
-      } else {
-        const token =
-          res.data.result.payload && res.data.result.payload.hashCode;
-
-        let fileName = res.data.result.source;
-        const fileNamesArr = fileName.split('/') || [];
-        fileName = fileNamesArr.length && fileNamesArr[fileNamesArr.length - 1];
-
-        let item = {
-          downloadKey: res.data.result.jobId,
-          container: res.data.result.project_code,
-          status: 'success',
-          filename: fileName,
-          projectId: containerId,
-          namespace,
-          createdTime: Date.now(),
-          payload: res.data.result.payload,
-          projectCode: res.data.result.projectCode,
-        };
-        appendDownloadListCreator(item);
-
-        const url = `${VRE_CORE_DOWNLOAD_URL}/${token}`;
-        // window.open(url, '_blank');
-        return url;
-      }
-    });
-  }
+    return null;
+  });
 }
 
 /**
@@ -509,40 +425,23 @@ function projectFileCountTotal(geid, params) {
 }
 
 /**
- * Get summary of the file download/upload
- *
- * @param {int} containerId containerId
- * @param {string} startDate startDate
- * @param {string} endDate endDate
- * @param {string} user user
- * @param {int} page page
- * @VRE-315
- */
-function projectFileSummary(containerId, admin_view, params) {
-  if (admin_view === false) {
-    return axios({
-      url: `v1/files/containers/${containerId}/files/count/daily?admin_view=false`,
-      params: objectKeysToSnakeCase({ ...params }),
-    });
-  } else {
-    return axios({
-      url: `v1/files/containers/${containerId}/files/count/daily`,
-      params: objectKeysToSnakeCase({ ...params }),
-    });
-  }
-}
-
-/**
  * Add new tags to existed file entities
  *
  * @param {int} containerId containerId
  * @param {dict} data data
  * @VRE-314
  */
-function updateProjectTagsAPI(containerId, data) {
-  data['internal'] = true;
+function updateProjectTagsAPI(fileType, geid, data) {
   return axios({
-    url: `/v2/files/containers/${containerId}/files/tags`,
+    url: `/v2/${fileType}/${geid}/tags`,
+    method: 'POST',
+    data,
+  });
+}
+
+function batchTagsAPI(data) {
+  return axios({
+    url: '/v2/entity/tags',
     method: 'POST',
     data,
   });
@@ -569,7 +468,7 @@ function fileLineageAPI(key, typeName, direction) {
   return axios({
     url: `/v1/lineage`,
     method: 'GET',
-    params: { full_path: key, direction, type_name: typeName },
+    params: { geid: key, direction, type_name: typeName },
   });
 }
 
@@ -627,12 +526,12 @@ function getCollectionFiles(folderGeid) {
   });
 }
 
-function getZipContentAPI(file, projectGeid) {
-  return devOpServerNoIntercept({
-    url: '/v1/archive',
+function getZipContentAPI(fileGeid, projectGeid) {
+  return serverAxiosNoIntercept({
+    url: '/v1/archive/',
     params: {
-      file_path: file,
       project_geid: projectGeid,
+      file_geid: fileGeid,
     },
   });
 }
@@ -723,10 +622,10 @@ export {
   preUploadApi,
   uploadFileApi2,
   combineChunksApi,
-  projectFileSummary,
   checkUploadStatus,
   deleteUploadStatus,
   updateProjectTagsAPI,
+  batchTagsAPI,
   deleteProjectTagsAPI,
   fileLineageAPI,
   checkDownloadStatus,

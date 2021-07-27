@@ -24,7 +24,7 @@ new_user_module = module_api.model("new_user", {
     "email": fields.String,
     "first_name": fields.String,
     "last_name": fields.String,
-    "project_id":fields.Integer,
+    # "project_id":fields.Integer,
     "role":fields.String,
     "portal_role":fields.String,
     "token":fields.String
@@ -33,7 +33,7 @@ new_user_module = module_api.model("new_user", {
 ## Invitation CRUD
 create_invitation_request_model = module_api.model("create_invitation_form", {
     "email": fields.String,
-    "projectId": fields.Integer,
+    # "projectId": fields.Integer,
     "role": fields.String,
 })
 
@@ -190,20 +190,29 @@ users_sample_return = '''
 
 user_sample_return = '''
     {
-        result: {
-            "time_created": "2020-07-03T18:23:15",
-            "first_name": "admin",
-            "name": "admin",
-            "time_lastmodified": "2020-07-03T18:23:15",
-            "last_name": "admin",
-            "path": "users",
-            "role": "admin",
-            "labels": [
-                "User"
-            ],
-            "id": 46
-        }
+    "result": {
+        "id": 1422,
+        "labels": [
+            "User"
+        ],
+        "global_entity_id": "5d0f8ecb-3ddf-49eb-9363-f67a488965bb-1620676609",
+        "role": "member",
+        "last_login": "2021-06-17T14:12:32.589815",
+        "last_name": "gmccoy",
+        "time_lastmodified": "2021-06-22T12:12:10",
+        "name": "gmccoy",
+        "time_created": "2021-05-10T19:56:49",
+        "announcement_gregtest": 251,
+        "first_name": "gmccoy",
+        "email": "test@gkmc.ca",
+        "username": "gmccoy",
+        "status": "active",
+        "project_geids": [
+            "5baeb6a1-559b-4483-aadf-ef60519584f3-1620404058",
+            "b38c26d0-1d51-44f1-9ab6-3175bd41ccc9-1620668865"
+        ]
     }
+}
     '''
 
 permission_return = '''

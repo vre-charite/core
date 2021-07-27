@@ -6,7 +6,7 @@ import {
 import { preUpload } from './preUpload';
 import { validateFileAction } from '../../APIs';
 import { message } from 'antd';
-import { FILE_OPERATIONS } from '../../Views/Dataset/Canvas/Charts/FileExplorer/FileOperationValues';
+import { FILE_OPERATIONS } from '../../Views/Project/Canvas/Charts/FileExplorer/FileOperationValues';
 import { ErrorMessager, namespace } from '../../ErrorMessages';
 import { getPath } from './getPath';
 const [
@@ -25,37 +25,23 @@ const uploadStarter = async (data, q) => {
   const fileActions = fileList.map((item) => {
     const file = item.originFileObj;
     const uploadKey = getUploadKey(item, timeStamp);
+    const relativePath = getPath(file.webkitRelativePath);
+
     return {
       uploadKey,
       status: 'waiting',
       progress: null,
       projectId: data.dataset,
-      fileName: file.name,
+      fileName: relativePath
+        ? data.folderPath + '/' + relativePath + '/' + file.name
+        : data.folderPath + '/' + file.name,
       projectName: data.projectName,
       generateID: data.gid ? data.gid : null,
       projectCode: data.projectCode,
       createdTime: Date.now(),
     };
   });
-  // await validateFileAction(
-  //   fileList.map((f) => {
-  //     const file = f.originFileObj;
-  //     let relativePath = getPath(file.webkitRelativePath);
-  //     if (data.toExistingFolder) {
-  //       if (relativePath === '') {
-  //         relativePath = data.folderPath;
-  //       } else {
-  //         relativePath = data.folderPath + '/' + relativePath;
-  //       }
-  //     }
-  //     return {
-  //       full_path: relativePath ? relativePath + '/' + file.name : file.name,
-  //     };
-  //   }),
-  //   data.uploader,
-  //   FILE_OPERATIONS.UPLOAD,
-  //   data.projectCode,
-  // );
+
   appendUploadListDispatcher(fileActions);
   preUpload(
     data.projectCode,

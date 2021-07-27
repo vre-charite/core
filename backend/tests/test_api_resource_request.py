@@ -7,6 +7,7 @@ import json
 
 
 class TestResourceRequestAPI(unittest.TestCase):
+    project2 , project= None, None
     log = Logger(name='test_api_resource_request.log')
     test = SetUpTest(log)
     app = PrepareTest().app
@@ -159,5 +160,5 @@ class TestResourceRequestAPI(unittest.TestCase):
         id = self.resource_requests[0]
         response = self.app.put(f"/v1/resource-request/{id}/complete", headers=headers)
         self.assertEqual(response.status_code, 403)
-        self.assertTrue("Permissions denied" in response.get_json()["error_msg"])
+        self.assertTrue("Permission Denied" in response.get_json()["error_msg"])
 

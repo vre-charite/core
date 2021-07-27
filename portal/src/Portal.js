@@ -389,16 +389,16 @@ function Portal(props) {
               if (item.generateID) fileName = `${item.generateID}_${fileName}`;
               const fileStatus = result?.find((el) => el.jobId === item.jobId);
               const isSuccess = fileStatus && fileStatus.status === 'SUCCEED';
-
               if (isSuccess) {
                 const manifestItem = uploadFileManifest.find((x) => {
-                  const fileArr = x.files[0].split('/');
-                  const fileNameFromPath = fileArr[fileArr.length - 1];
+                  const fileNameFromPath = x.files[0];
                   return fileNameFromPath.normalize() == fileName.normalize();
                 });
                 if (manifestItem && manifestItem.manifestId) {
                   manifestItem.geid = fileStatus.payload.sourceGeid;
+
                   await attachManifest(
+                    item.projectCode,
                     manifestItem.manifestId,
                     [manifestItem.geid],
                     manifestItem.attributes,
@@ -488,4 +488,4 @@ function Portal(props) {
 
 export default withRouter(Portal);
 
-// trigger cicd
+// trigger cicd +6

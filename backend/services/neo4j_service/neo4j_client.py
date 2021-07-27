@@ -28,6 +28,17 @@ class Neo4jClient(object):
 
     ### Shared
     @catch_internal
+    def node_get(self, label, id):
+        response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/{label}/node/{id}")
+        result = self.result.copy()
+        if not response.json():
+            result["error_msg"] = "Node not found"
+            result["code"] = 404
+            return result
+        result["result"] = response.json()[0]
+        return result
+
+    @catch_internal
     def node_create(self, label, data):
         response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/{label}", json=data)
         result = self.result.copy()
@@ -68,31 +79,32 @@ class Neo4jClient(object):
         return result
 
 
-    ### Datasets
-    def get_dataset_by_geid(self, geid):
-        response = self.node_query("Dataset", {"global_entity_id": geid})
+    ### Containers
+    def get_container_by_geid(self, geid):
+        response = self.node_query("Container", {"global_entity_id": geid})
         if not response.get("result"):
             if not response.get("error_msg"):
-                self.result["error_msg"] = "Dataset not found"
+                self.result["error_msg"] = "Container not found"
                 self.result["code"] = 404
             return self.result
         dataset_node = response["result"][0]
         self.result["result"] = response["result"][0]
         return self.result
 
-    def get_dataset_by_code(self, code):
-        response = self.node_query("Dataset", {"code": code})
+
+    def get_container_by_code(self, code):
+        response = self.node_query("Container", {"code": code})
         if not response.get("result"):
             if not response.get("error_msg"):
-                response["error_msg"] = "Dataset not found"
+                response["error_msg"] = "Container not found"
                 response["code"] = 404
             return response
         dataset_node = response["result"][0]
         response["result"] = dataset_node
         return response
 
-    def get_dataset_role(self, dataset_geid, user_id):
-        response = self.get_dataset_by_geid(dataset_geid)
+    def get_container_role(self, dataset_geid, user_id):
+        response = self.get_container_by_geid(dataset_geid)
         if response.get("error_msg"):
             return response
         dataset_node = response["result"]
@@ -104,7 +116,7 @@ class Neo4jClient(object):
         self.result["result"] = relation["result"][0]['r']['type']
         return self.result
 
-    def get_dataset_from_folder(self, geid):
+    def get_container_from_folder(self, geid):
         response = self.node_query("Folder", {"global_entity_id": geid})
         if not response.get("result"):
             if not response.get("error_msg"):
@@ -113,16 +125,16 @@ class Neo4jClient(object):
             return self.result 
         folder_node = response["result"][0]
 
-        response = self.node_query("Dataset", {"code": folder_node["project_code"]})
+        response = self.node_query("Container", {"code": folder_node["project_code"]})
         if not response.get("result"):
             if not response.get("error_msg"):
-                self.result["error_msg"] = "Dataset not found"
+                self.result["error_msg"] = "Container not found"
                 self.result["code"] = 404
             return self.result
         self.result["result"] = response["result"][0]
         return self.result
 
-    def get_dataset_from_vfolder(self, geid):
+    def get_container_from_vfolder(self, geid):
         response = self.node_query("VirtualFolder", {"global_entity_id": geid})
         if not response.get("result"):
             if not response.get("error_msg"):
@@ -131,10 +143,10 @@ class Neo4jClient(object):
             return self.result 
         folder_node = response["result"][0]
 
-        response = self.node_query("Dataset", {"id": folder_node["container_id"]})
+        response = self.node_query("Container", {"id": folder_node["container_id"]})
         if not response.get("result"):
             if not response.get("error_msg"):
-                self.result["error_msg"] = "Dataset not found"
+                self.result["error_msg"] = "Container not found"
                 self.result["code"] = 404
             return self.result
         self.result["result"] = response["result"][0]
@@ -178,7 +190,7 @@ class Neo4jClient(object):
         url = ConfigClass.NEO4J_SERVICE + "relations/query"
         payload = {
             "start_label": "User",
-            "end_label": "Dataset",
+            "end_label": "Container",
             "start_params": {"id": user_id}
         }
         response = requests.post(
@@ -186,3 +198,22 @@ class Neo4jClient(object):
             json=payload
         )
         return response
+
+    def get_dataset_from_folder(self, geid):
+        response = self.node_query("Folder", {"global_entity_id": geid})
+        if not response.get("result"):
+            if not response.get("error_msg"):
+                self.result["error_msg"] = "Folder not found"
+                self.result["code"] = 404
+            return self.result 
+        folder_node = response["result"][0]
+
+        response = self.node_query("Container", {"code": folder_node["project_code"]})
+        if not response.get("result"):
+            if not response.get("error_msg"):
+                self.result["error_msg"] = "Container not found"
+                self.result["code"] = 404
+            return self.result
+        self.result["result"] = response["result"][0]
+        return self.result
+

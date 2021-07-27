@@ -1,17 +1,18 @@
 from flask_restx import Api, Resource, fields
 from flask_jwt import jwt_required, current_identity
-from resources.decorator import check_role
 from config import ConfigClass
 from models.api_response import APIResponse, EAPIResponseCode
 from models.api_meta_class import MetaAPI
 from models.invitation import db, InvitationModel, InvitationForm
 from resources.swagger_modules import create_invitation_request_model, create_invitation_return_example
 from resources.swagger_modules import read_invitation_return_example
-from resources.utils import check_invite_permissions, fetch_geid
+from resources.utils import check_invite_permissions, fetch_geid, get_container_id
 from resources.validations import boolean_validate_role
 from resources.utils import add_user_to_ad_group
 from services.invitation_services.invitation_manager import SrvInvitationManager
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from services.neo4j_service.neo4j_client import Neo4jClient
+from services.permissions_service.utils import has_permission
 from services.neo4j_service.neo4j_client import Neo4jClient
 from multiprocessing import Process
 from api import module_api
@@ -28,6 +29,7 @@ api_ns_invitations = module_api.namespace(
     'Invitation Restful', description='Portal Invitation Restful', path='/v1')
 api_ns_invitation = module_api.namespace(
     'Invitation Restful', description='Portal Invitation Restful', path='/v1')
+
 
 class APIInvitation(metaclass=MetaAPI):
     def api_registry(self):
@@ -60,7 +62,7 @@ class APIInvitation(metaclass=MetaAPI):
                     my_res.set_code(EAPIResponseCode.bad_request)
                     return my_res.to_dict, my_res.code
 
-            email = post_json["email"] 
+            email = post_json["email"]
             ad_account_created = post_json["ad_account_created"]
             ad_user_dn = post_json.get("ad_user_dn", None)
             relation_data = post_json.get("relationship")
@@ -73,10 +75,12 @@ class APIInvitation(metaclass=MetaAPI):
                 required_fields = ["project_geid", "project_role", "inviter"]
                 for field in required_fields:
                     if not relation_data.get(field):
-                        my_res.set_result(f'missing required relation field {field}')
+                        my_res.set_result(
+                            f'missing required relation field {field}')
                         my_res.set_code(EAPIResponseCode.bad_request)
                         return my_res.to_dict, my_res.code
-                response = neo4j_client.get_dataset_by_geid(relation_data.get("project_geid"))
+                response = neo4j_client.get_container_by_geid(
+                    relation_data.get("project_geid"))
                 if response.get("code") != 200:
                     return response, response.get("code")
                 dataset_node = response["result"]
@@ -85,7 +89,7 @@ class APIInvitation(metaclass=MetaAPI):
                 invite_data["inviter"] = relation_data["inviter"]
             invitation_form = InvitationForm(invite_data)
 
-            # Make sure the user doesn't always exist
+            # Make sure the user doesn't already exist
             response = neo4j_client.get_user_by_email(email)
             if response.get("code") != 404:
                 _logger.info('User already exists in platform')
@@ -93,7 +97,7 @@ class APIInvitation(metaclass=MetaAPI):
                 my_res.set_code(EAPIResponseCode.bad_request)
                 return my_res.to_dict, my_res.code
 
-            if not check_invite_permissions(invitation_form, current_identity):
+            if not check_invite_permissions(dataset_node, current_identity):
                 my_res.set_result('Permission denied')
                 my_res.set_code(EAPIResponseCode.forbidden)
                 return my_res.to_dict, my_res.code
@@ -106,7 +110,8 @@ class APIInvitation(metaclass=MetaAPI):
                 "global_entity_id": fetch_geid("User"),
             })
             if response.get("code") != 200:
-                my_res.set_result('Error creating user in neo4j' + str(response.get("result")))
+                my_res.set_result(
+                    'Error creating user in neo4j' + str(response.get("result")))
                 my_res.set_code(EAPIResponseCode.internal_error)
                 return my_res.to_dict, my_res.code
             user_node = response["result"]
@@ -117,13 +122,14 @@ class APIInvitation(metaclass=MetaAPI):
             }
             if relation_data:
                 response = neo4j_client.create_relation(
-                    user_node["id"], 
-                    dataset_node["id"], 
+                    user_node["id"],
+                    dataset_node["id"],
                     relation_data["project_role"],
                     properties=properties
                 )
                 if response.get("code") != 200:
-                    my_res.set_result('Error creating relation in neo4j' + str(response.get("result")))
+                    my_res.set_result(
+                        'Error creating relation in neo4j' + str(response.get("result")))
                     my_res.set_code(EAPIResponseCode.internal_error)
                     return my_res.to_dict, my_res.code
 
@@ -136,7 +142,8 @@ class APIInvitation(metaclass=MetaAPI):
                     return my_res.to_dict, my_res.code
 
                 conn = ldap.initialize(ConfigClass.LDAP_URL)
-                conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN, ConfigClass.LDAP_ADMIN_SECRET)
+                conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN,
+                                   ConfigClass.LDAP_ADMIN_SECRET)
 
                 # Get user from ldap
                 email = user_node["email"]
@@ -160,16 +167,19 @@ class APIInvitation(metaclass=MetaAPI):
 
                 if user_node["role"] == "admin":
                     # Add platform admin to all groups
-                    response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query", json={})
+                    response = requests.post(
+                        ConfigClass.NEO4J_SERVICE + "nodes/Container/query", json={})
                     print(response.json())
                     if response.status_code != 200:
-                        my_res.set_result("Error fetching projects: " + str(response.text))
+                        my_res.set_result(
+                            "Error fetching projects: " + str(response.text))
                         my_res.set_code(EAPIResponseCode.internal_error)
                         return my_res.to_dict, my_res.code
                     project_codes = [i["code"] for i in response.json()]
                     add_entries = []
                     for code in project_codes:
-                        p = Process(target=add_user_to_ad_group, args=(email, code, _logger, access_token))
+                        p = Process(target=add_user_to_ad_group, args=(
+                            email, code, _logger, access_token))
                         p.daemon = True
                         p.start()
                 elif relation_data:
@@ -182,9 +192,9 @@ class APIInvitation(metaclass=MetaAPI):
             # init invitation managemer
             invitation_mgr = SrvInvitationManager()
             invitation_mgr.save_invitation(
-                invitation_form, 
-                access_token, 
-                current_identity, 
+                invitation_form,
+                access_token,
+                current_identity,
                 ad_account_created=ad_account_created,
                 ad_first=ad_first,
             )
@@ -193,7 +203,6 @@ class APIInvitation(metaclass=MetaAPI):
             _logger.info('Invitation Saved, Email Sent')
             my_res.set_code(EAPIResponseCode.success)
             return my_res.to_dict, my_res.code
-
 
     class CheckUserPlatformRole(Resource):
         @jwt_required()
@@ -213,17 +222,19 @@ class APIInvitation(metaclass=MetaAPI):
             neo4j_client = Neo4jClient()
             response = neo4j_client.get_user_by_email(email)
 
-            # Check if user exists in ad  
+            # Check if user exists in ad
             ad_account_created = False
             ad_user_dn = None
             ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
             conn = ldap.initialize(ConfigClass.LDAP_URL)
-            conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN, ConfigClass.LDAP_ADMIN_SECRET)
+            conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN,
+                               ConfigClass.LDAP_ADMIN_SECRET)
             user_query = f'(&(objectClass=user)(mail={email}))'
 
             users = conn.search_s(
-                "dc={},dc={}".format(ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2), 
-                ldap.SCOPE_SUBTREE, 
+                "dc={},dc={}".format(ConfigClass.LDAP_DC1,
+                                     ConfigClass.LDAP_DC2),
+                ldap.SCOPE_SUBTREE,
                 user_query
             )
 
@@ -235,7 +246,8 @@ class APIInvitation(metaclass=MetaAPI):
                         break
 
             if response.get("code") == 404:
-                my_res.set_result({ 'msg': 'User does not exist in platform', 'ad_account_created': ad_account_created, 'ad_user_dn': ad_user_dn })
+                my_res.set_result({'msg': 'User does not exist in platform',
+                                  'ad_account_created': ad_account_created, 'ad_user_dn': ad_user_dn})
                 my_res.set_code(EAPIResponseCode.not_found)
                 return my_res.to_dict, my_res.code
             elif response.get("code") != 200:
@@ -247,27 +259,21 @@ class APIInvitation(metaclass=MetaAPI):
             result["ad_user_dn"] = ad_user_dn
 
             if project_geid:
-                response = neo4j_client.get_dataset_by_geid(project_geid)
+                response = neo4j_client.get_container_by_geid(project_geid)
                 if response.get("code") == 404:
-                    my_res.set_result('Dataset does not exist in platform')
+                    my_res.set_result('Container does not exist in platform')
                     my_res.set_code(EAPIResponseCode.not_found)
                     return my_res.to_dict, my_res.code
                 elif response.get("code") != 200:
                     return response
                 dataset_node = response["result"]
 
-                if current_identity["role"] != "admin":
-                    valid, project_role = boolean_validate_role(
-                        "admin", 
-                        current_identity["role"], 
-                        current_identity["user_id"], 
-                        project_geid
-                    )
-                    if not valid:
-                        my_res.set_result("Permission denied")
-                        my_res.set_code(EAPIResponseCode.unauthorized)
-                        return my_res.to_dict, my_res.code
-                response = neo4j_client.get_relation(user_node["id"], dataset_node["id"])
+                if not has_permission(dataset_node["code"], 'invite', '*', 'create'):
+                    my_res.set_result("Permission denied")
+                    my_res.set_code(EAPIResponseCode.unauthorized)
+                    return my_res.to_dict, my_res.code
+                response = neo4j_client.get_relation(
+                    user_node["id"], dataset_node["id"])
                 if response.get("code") == 200 and response["result"]:
                     result["relationship"] = {
                         "project_code": dataset_node["code"],
@@ -287,10 +293,8 @@ class APIInvitation(metaclass=MetaAPI):
             my_res.set_code(EAPIResponseCode.success)
             return my_res.to_dict, my_res.code
 
-
     class PendingUserRestful(Resource):
         @jwt_required()
-        # @check_role("admin")
         def post(self):
             '''
             This method allow to get all pending users from invitation links.
@@ -313,32 +317,36 @@ class APIInvitation(metaclass=MetaAPI):
                 order_type = post_json.get('order_type', None)
 
                 filters = post_json.get('filters', None)
-                project_id = filters.get("project_id")
-
+                # project_id = filters.get("project_id")
+                project_geid = filters["project_id"]
+                query_params = {"global_entity_id": project_geid}
+                container_id = get_container_id(query_params)
+                _logger.info('container_id: {}'.format(container_id))
                 if current_identity["role"] != "admin":
-                    params = {
-                        "start_id": current_identity["user_id"],
-                        "end_id": project_id
-                    }
-                    res = requests.get(ConfigClass.NEO4J_SERVICE + "relations", params=params)
-                    relations = json.loads(res.text)
-                    if not relations:
+                    client = Neo4jClient()
+                    result = client.node_get("Container", container_id)
+                    if result.get("code") != 200:
+                        error_msg = result.get("error_msg")
+                        _logger.error(
+                            f"Couldn't get project for invite permissions check - {error_msg}")
                         my_res.set_code(EAPIResponseCode.forbidden)
                         my_res.set_error_msg('Permission denied')
                         return my_res.to_dict, my_res.code
-                    role = relations[0]["r"]["type"]
-                    # Only project admin or platform admin can access this API
-                    if role != "admin":
+                    project = result.get("result")
+                    _logger.info('project["code"]: {}'.format(project["code"]))
+                    if not has_permission(project["code"], 'invite', '*', 'view'):
                         my_res.set_code(EAPIResponseCode.forbidden)
                         my_res.set_error_msg('Permission denied')
                         return my_res.to_dict, my_res.code
 
-                records, count = invitation_mgr.get_invitations(page, page_size, filters, order_by, order_type)
+                filters['project_id'] = container_id
+                records, count = invitation_mgr.get_invitations(
+                    page, page_size, filters, order_by, order_type)
                 result = []
-
+                _logger.info('records: {}'.format(records))
                 for record in records:
                     detail = json.loads(record.invitation_detail)
-                    user_info = { 
+                    user_info = {
                         'create_timestamp': record.create_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
                         'invited_by': record.invited_by,
                         'status': record.status,
@@ -349,11 +357,10 @@ class APIInvitation(metaclass=MetaAPI):
                 my_res.set_total(count)
                 my_res.set_num_of_pages(math.ceil(count/page_size))
                 my_res.set_page(page)
-                
+
                 return my_res.to_dict, my_res.code
             except Exception as e:
                 _logger.error('error in pending users' + str(e))
                 my_res.set_code(EAPIResponseCode.internal_error)
                 my_res.set_error_msg('Internal Error' + str(e))
                 return my_res.to_dict, my_res.code
-

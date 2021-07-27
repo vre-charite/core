@@ -9,6 +9,7 @@ class CheckUploadStatusRestful(BaseProxyResource):
 
 
 class PreUploadRestful(BaseProxyResource):
+    # deprecated in Dataops_gr
     methods = ["POST"]
     required_roles = {"POST": "uploader"}
     url = ConfigClass.DATA_SERVICE + "upload/containers/{dataset_id}/pre" 
@@ -16,6 +17,7 @@ class PreUploadRestful(BaseProxyResource):
 
 
 class ChunkUploadSuccessRestful(BaseProxyResource):
+    # deprecated in dataops_gr
     methods = ["POST"]
     required_roles = {"POST": "uploader"}
     url = ConfigClass.DATA_SERVICE + "upload/containers/{dataset_id}/on-success" 

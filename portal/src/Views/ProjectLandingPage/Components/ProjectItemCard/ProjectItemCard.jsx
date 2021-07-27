@@ -25,11 +25,11 @@ function ProjectItemCard({ item, currentRole, platformRole }) {
   const [usersInfo, setUsersInfo] = useState(null);
   const [userListOnDataset, setUserListOnDataset] = useState(null);
   async function loadAdmin() {
-    const users = await getAdminsOnDatasetAPI(item.id);
+    const users = await getAdminsOnDatasetAPI(item.globalEntityId);
     setUserListOnDataset(objectKeysToCamelCase(users.data.result));
   }
   async function loadUsersInfo() {
-    const usersInfo = await getUsersOnDatasetAPI(item.id);
+    const usersInfo = await getUsersOnDatasetAPI(item.globalEntityId);
     if (usersInfo && usersInfo.data && usersInfo.data.result) {
       setUsersInfo(usersInfo.data.result);
     }

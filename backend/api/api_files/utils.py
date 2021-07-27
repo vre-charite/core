@@ -1,17 +1,19 @@
+import json
+from flask_jwt import current_identity
 
-def check_filemeta_permissions(query, zone, project_role, username, _logger):
-    if project_role == 'contributor':
-        if zone in ["VRECore", "All"]:
-            _logger.error('uploader cannot fetch vre core files or processed files')
-            return False
-        if query.get('uploader') and query.get('uploader') != username:
-            _logger.error('Non-admin user can only fetch their own file info')
-            return False
-        query["permissions_uploader"] = username
-    elif project_role == 'collaborator':
-        if zone in ["Greenroom", "All"]:
-            if query.get('uploader') and query.get('uploader') != username:
-                _logger.error('Non-admin user can only fetch their own file info')
-                return False
-            query["permissions_uploader"] = username
-    return query 
+
+def check_folder_permissions(folder_node):
+    if folder_node["folder_relative_path"]:
+        root_folder = folder_node["folder_relative_path"].split("/")[0]
+    else:
+        root_folder = folder_node["name"]
+    if root_folder != current_identity["username"]:
+        return False
+    return True
+
+def parse_json(data):
+    try:
+        return json.loads(data) 
+    except Exception as e:
+        return False
+

@@ -1,0 +1,25 @@
+.annotate_modal {
+  :global {
+    .ant-modal-content {
+      border-radius: 6px;
+    }
+    .ant-modal-header {
+      border-radius: 6px;
+      padding: 10px 24px;
+    }
+    .ant-modal-close-x {
+      line-height: 43px;
+      width: 50px;
+      height: 40px;
+    }
+  }
+}
+
+.annotate_select {
+    width: 100%;
+    :global {
+        .ant-select-selector {
+            border-radius: 6px !important;
+        }
+    }
+}

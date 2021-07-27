@@ -16,9 +16,9 @@ _logger = SrvLoggerFactory('api_files_ops_v2').get_logger()
 class TotalFileCountV2(Resource):
     @jwt_required()
     @check_role('uploader')
-    def get(self, dataset_id):
+    def get(self, project_geid):
         _res = APIResponse()
-        url = ConfigClass.DATA_SERVICE_V2 + f"containers/{dataset_id}/files/count"
+        url = ConfigClass.DATA_SERVICE_V2 + f"containers/{project_geid}/files/count"
         payload = {}
         try:
             if current_identity['role'] != 'admin':
@@ -42,115 +42,6 @@ class TotalFileCountV2(Resource):
             return _res.to_dict, _res.code
         return result.json()
 
-
-class FileInfoV2(Resource):
-    @jwt_required()
-    @check_role('uploader')
-    def get(self, dataset_id):
-
-        """
-            Fetch file info by project_id
-        """
-        _res = APIResponse()
-        _logger.info(f'Call API for fetching file info for container: {dataset_id}')
-        try:
-            page_size = int(request.args.get('page_size', 25))
-            page = int(request.args.get('page', 0))
-            partial = request.args.get('partial', True)
-            order_by = request.args.get('order_by', 'createTime')
-            order_type = request.args.get('order_type', 'desc')
-            query = request.args.get('query', '{}')
-        except Exception as e:
-            _logger.error(f'Failed to reterive the parameters')
-
-        try:
-            query = json.loads(query)
-        except Exception as e:
-            _logger.warning(
-                'Failed to convert query into json.')
-            query = {}
-
-        if 'labels' not in query:
-            _logger.error('Missing labels in query')
-            _res.set_code(EAPIResponseCode.bad_request)
-            _res.set_error_msg('Missing required parameter labels')
-            return _res.to_dict, _res.code
-        else:
-            labels = query['labels']
-
-        if current_identity['role'] != 'admin':
-            if current_identity['project_role'] == 'contributor':
-                if 'uploader' not in query:
-                    _logger.error('Non-admin user does not have access to query all user file info')
-                    _res.set_code(EAPIResponseCode.forbidden)
-                    _res.set_error_msg('Permission Deined')
-                    return _res.to_dict, _res.code
-
-                if query['uploader'] != current_identity['username']:
-                    _logger.error('Non-admin user can only fetch their own file info')
-                    _res.set_code(EAPIResponseCode.forbidden)
-                    _res.set_error_msg('Permission Deined')
-                    return _res.to_dict, _res.code
-
-                if 'VRECore' in labels or 'Processed' in labels:
-                    _logger.error('uploader cannot fetch vre core files or processed files')
-                    _res.set_code(EAPIResponseCode.forbidden)
-                    _res.set_error_msg('Permission Deined')
-                    return _res.to_dict, _res.code
-                # Disable fuzzy search for uploader
-                query['uploader'] = "==" + query['uploader']
-            elif current_identity['project_role'] == 'collaborator':
-                if 'uploader' not in query:
-                    if "Greenroom" in labels:
-                        _logger.error('collaborator can only fetch their own greenroom files')
-                        _res.set_code(EAPIResponseCode.forbidden)
-                        _res.set_error_msg('Permission Deined')
-                        return _res.to_dict, _res.code
-                else:
-                    if query['uploader'] != current_identity['username']:
-                        if "Greenroom" in labels:
-                            _logger.error('collaborator can only fetch their own greenroom files')
-                            _res.set_code(EAPIResponseCode.forbidden)
-                            _res.set_error_msg('Permission Deined')
-                            return _res.to_dict, _res.code
-
-                    if "Greenroom" in labels:
-                        # Disable fuzzy search for uploader
-                        query['uploader'] = "==" + query['uploader']
-
-        if 'Processed' in labels and 'process_pipeline' not in query:
-            _logger.error('Missing required information process_pipeline')
-            _res.set_code(EAPIResponseCode.bad_request)
-            _res.set_error_msg('Missing pipeline name when trying to fetch Processed data info')
-            return _res.to_dict, _res.code
-
-        try:
-            payload = {
-                'page': page,
-                'page_size': page_size,
-                'partial': bool(partial),
-                'order_by': order_by,
-                'order_type': order_type,
-                'query': query
-            }
-            url = ConfigClass.ENTITYINFO_SERVICE + f'files/{dataset_id}/query'
-            response = requests.post(url, json=payload)
-            _logger.info(f'Calling Neo4j service /v2/neo4j/files/{dataset_id}/query, payload is:  ' + str(payload))
-            if response.status_code != 200:
-                _logger.error('Failed to query data from neo4j service:   '+ response.text)
-                _res.set_code(EAPIResponseCode.internal_error)
-                _res.set_result("Failed to query data from neo4j service")
-                return _res.to_dict, _res.code
-            else:
-                _logger.info('Successfully Fetched file information: {}'.format(json.dumps(response.json())))
-                return response.json()
-        except Exception as e:
-            _logger.error('Failed to query data from neo4j service:   ' + str(e))
-            _res.set_code(EAPIResponseCode.internal_error)
-            _res.set_result("Failed to query data from neo4j service")
-            return _res.to_dict, _res.code
-            
-        
 
 class FileTags(Resource):
     @jwt_required()
@@ -209,7 +100,7 @@ class FileTags(Resource):
 
                 payload = {
                     "start_label": "User",
-                    "end_label": "Dataset",
+                    "end_label": "Container",
                     "start_params": {
                         "name": current_identity['username']
                     },
@@ -384,7 +275,7 @@ class FileTags(Resource):
 
                 payload = {
                     "start_label": "User",
-                    "end_label": "Dataset",
+                    "end_label": "Container",
                     "start_params": {
                         "name": current_identity['username']
                     },

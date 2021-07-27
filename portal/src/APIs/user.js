@@ -16,16 +16,16 @@ function createUserAPI(data) {
   });
 }
 
-function getUsersOnDatasetAPI(datasetId, params) {
+function getUsersOnDatasetAPI(projectGeid, params) {
   return axios({
-    url: `/v1/datasets/${datasetId}/users`,
+    url: `/v1/containers/${projectGeid}/users`,
     params: objectKeysToSnakeCase(params),
   });
 }
 
-function getUserOnProjectAPI(datasetId, data) {
+function getUserOnProjectAPI(projectGeid, data) {
   return axios({
-    url: `/v1/datasets/${datasetId}/users/query`,
+    url: `/v1/containers/${projectGeid}/users/query`,
     method: 'POST',
     data: objectKeysToSnakeCase(data),
   });
@@ -58,13 +58,6 @@ function checkIsUserExistAPI(username, code) {
  * @param {int} containerId
  * @returns username/error
  */
-function checkEmailExistAPI(email, datasetId) {
-  return axios({
-    url: `/v1/datasets/${datasetId}/users/email`,
-    params: { email, realm: 'vre' },
-    method: 'GET',
-  });
-}
 
 /**
  * invite a new user to platform, and to a specified project if available.
@@ -150,9 +143,9 @@ function contactUsApi(data) {
 /* list admins under specific project
  * @param {string} datasetId
  */
-function getAdminsOnDatasetAPI(datasetId) {
+function getAdminsOnDatasetAPI(projectGeid) {
   return axios({
-    url: `/v1/datasets/${datasetId}/admins`,
+    url: `/v1/containers/${projectGeid}/admins`,
   });
 }
 
@@ -186,7 +179,7 @@ function checkUserPlatformRole(email, projectGeid) {
  */
 function getUserProjectListAPI(username) {
   return axios({
-    url: `/v1/users/${username}/datasets`,
+    url: `/v1/users/${username}/containers`,
     method: 'POST',
     data: {
       is_all: true,
@@ -288,7 +281,6 @@ export {
   createUserAPI,
   getUsersOnDatasetAPI,
   checkIsUserExistAPI,
-  checkEmailExistAPI,
   inviteUserApi,
   parseInviteHashAPI,
   UserSelfRegistrationAPI,

@@ -130,6 +130,20 @@ def create_app(extra_config_settings={}):
         except Exception as e:
             _logger.error(str(e))
             raise JWTError(description='Error', error=e)
-        return {"user_id": user_id, "username": username, "role": role, "email": email, "first_name": first_name, "last_name": last_name}
+        try:
+            realm_roles = payload["realm_access"]["roles"]
+        except Exception as e:
+            _logger.error("Couldn't get realm roles" + str(e))
+            realm_roles = []
+
+        return {
+            "user_id": user_id, 
+            "username": username, 
+            "role": role, 
+            "email": email, 
+            "first_name": first_name, 
+            "last_name": last_name,
+            "realm_roles": realm_roles
+        }
 
     return app

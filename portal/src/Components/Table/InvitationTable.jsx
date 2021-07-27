@@ -31,7 +31,8 @@ function InvitationTable(props) {
   useEffect(() => {
     if (props.projectId) {
       const filtersWithProject = filters;
-      filtersWithProject.filters.projectId = props.projectId;
+      filtersWithProject.filters.projectId =
+        props.currentProject.globalEntityId;
       setFilters(filtersWithProject);
     }
     // eslint-disable-next-line

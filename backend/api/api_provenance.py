@@ -1,30 +1,40 @@
 from flask import request
 from flask_restx import Resource
 from flask_jwt import jwt_required, current_identity
-from resources.decorator import check_role
+from .api_files.proxy import BaseProxyResource
 from models.api_response import APIResponse, EAPIResponseCode
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from models.api_meta_class import MetaAPI
 from config import ConfigClass
+from resources.utils import get_container_id
 import json
 import requests
 from api import module_api
+from services.permissions_service.decorators import permissions_check
 
 _logger = SrvLoggerFactory('api_provenance').get_logger()
 
-api_provenance = module_api.namespace('Provenance', description='Provenance API', path='/v1')
+api_provenance = module_api.namespace(
+    'Provenance', description='Provenance API', path='/v1')
+
+
 class APIProvenance(metaclass=MetaAPI):
     def api_registry(self):
-        api_provenance.add_resource(self.AuditLog, '/audit-logs/<dataset_id>')
+        # api_provenance.add_resource(self.AuditLog, '/audit-logs/<dataset_id>')
+        api_provenance.add_resource(
+            self.AuditLog, '/audit-logs/<project_geid>')
+        api_provenance.add_resource(self.DataLineage, '/lineage')
+
     class AuditLog(Resource):
         @jwt_required()
-        @check_role('uploader')
-        def get(self, dataset_id):
+        @permissions_check('audit_logs', '*', 'view')
+        def get(self, project_geid):
             """
                 Fetch audit logs of a container
             """
             _res = APIResponse()
-            _logger.info(f'Call API for fetching file info for container: {dataset_id}')
+            _logger.info(
+                f'Call API for fetching file info for container: {project_geid}')
 
             url = ConfigClass.PROVENANCE_SERVICE + 'audit-logs'
 
@@ -56,7 +66,8 @@ class APIProvenance(metaclass=MetaAPI):
                 if 'project_code' not in query:
                     _logger.error('Missing labels in query')
                     _res.set_code(EAPIResponseCode.bad_request)
-                    _res.set_error_msg('Missing required parameter project_code')
+                    _res.set_error_msg(
+                        'Missing required parameter project_code')
                     return _res.to_dict, _res.code
                 else:
                     project_code = query['project_code']
@@ -76,27 +87,30 @@ class APIProvenance(metaclass=MetaAPI):
                     params['action'] = action
 
                 if current_identity['role'] != 'admin':
+                    query_params = {"global_entity_id": project_geid}
+                    container_id = get_container_id(query_params)
                     payload = {
                         "start_label": "User",
-                        "end_label": "Dataset",
+                        "end_label": "Container",
                         "start_params": {
                             "name": current_identity['username']
                         },
                         "end_params": {
-                            "id": int(dataset_id)
+                            "id": int(container_id)
                         }
                     }
-                    
-                    relation_res = requests.post(ConfigClass.NEO4J_SERVICE + 'relations/query', json=payload)
+
+                    relation_res = requests.post(
+                        ConfigClass.NEO4J_SERVICE + 'relations/query', json=payload)
                     relations = relation_res.json()
 
-                    if len(relations) == 0 :
+                    if len(relations) == 0:
                         _res.set_code(EAPIResponseCode.bad_request)
                         _res.set_result("no permission for this project")
                         return _res.to_dict, _res.code
 
                     relation = relations[0]
-                    project_role = relation['r']['type'] 
+                    project_role = relation['r']['type']
 
                     if project_role != 'admin':
                         operator = current_identity['username']
@@ -111,16 +125,24 @@ class APIProvenance(metaclass=MetaAPI):
                 response = requests.get(url, params=params)
 
                 if response.status_code != 200:
-                    _logger.error('Failed to query audit log from provenance service:   '+ response.text)
+                    _logger.error(
+                        'Failed to query audit log from provenance service:   ' + response.text)
                     _res.set_code(EAPIResponseCode.internal_error)
-                    _res.set_result('Failed to query audit log from provenance service:   '+ response.text)
+                    _res.set_result(
+                        'Failed to query audit log from provenance service:   ' + response.text)
                     return _res.to_dict, _res.code
                 else:
                     return response.json()
 
-
             except Exception as e:
-                _logger.error('Failed to query audit log from provenance service:   ' + str(e))
+                _logger.error(
+                    'Failed to query audit log from provenance service:   ' + str(e))
                 _res.set_code(EAPIResponseCode.internal_error)
-                _res.set_result('Failed to query audit log from provenance service:   '+ str(e))
+                _res.set_result(
+                    'Failed to query audit log from provenance service:   ' + str(e))
                 return _res.to_dict, _res.code
+
+    class DataLineage(BaseProxyResource):
+        url = ConfigClass.PROVENANCE_SERVICE + "lineage/"
+        methods = ["GET"]
+        required_roles = {"GET": "member"}

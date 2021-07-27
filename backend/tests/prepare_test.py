@@ -43,19 +43,19 @@ class SetUpTest:
         self.log.info(response.json())
         return response.json()[0]
 
-    def create_folder(self, geid, project_code):
+    def create_folder(self, geid, project_code, zone="greenroom", path="", name="bff_proxy_unittest_folder", parent_geid=""):
         self.log.info("\n")
         self.log.info("Creating testing folder".ljust(80, '-'))
         payload = {
             "global_entity_id": geid,
-            "folder_name": "bff_proxy_unittest_folder",
+            "folder_name": name,
             "folder_level": 0,
             "uploader": "BFFUnittest",
-            "folder_relative_path": "",
-            "zone": "greenroom",
+            "folder_relative_path": path,
+            "zone": zone,
             "project_code": project_code,
             "folder_tags": [],
-            "folder_parent_geid": "",
+            "folder_parent_geid": parent_geid,
             "folder_parent_name": "",
         }
         testing_api = 'folders'
@@ -73,7 +73,8 @@ class SetUpTest:
     def create_project(self, code, discoverable='true'):
         self.log.info("\n")
         self.log.info("Preparing testing project".ljust(80, '-'))
-        testing_api = ConfigClass.NEO4J_SERVICE + "nodes/Dataset"
+        self.log.info("Project code: {}".format(code))
+        testing_api = ConfigClass.NEO4J_SERVICE + "nodes/Container"
         params = {"name": "BFFProxyUnitTest",
                   "path": code,
                   "code": code,
@@ -98,7 +99,7 @@ class SetUpTest:
     def delete_project(self, node_id):
         self.log.info("\n")
         self.log.info("Preparing delete project".ljust(80, '-'))
-        delete_api = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/node/%s" % str(node_id)
+        delete_api = ConfigClass.NEO4J_SERVICE + "nodes/Container/node/%s" % str(node_id)
         try:
             delete_res = requests.delete(delete_api)
             self.log.info(f"DELETE STATUS: {delete_res.status_code}")
@@ -117,6 +118,49 @@ class SetUpTest:
         if response.status_code != 200:
             raise Exception(f"Error adding user to project: {response.json()}")
 
+        response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/User/node/{user_id}")
+        if response.status_code != 200:
+            raise Exception(f"Error geting user: {response.json()}")
+        user_node = response.json()[0]
+
+        response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/Container/node/{project_id}")
+        if response.status_code != 200:
+            raise Exception(f"Error getting project: {response.json()}")
+        project_node = response.json()[0]
+
+        # Add role to keycloak
+        try:
+            payload = {
+                "project_roles": ["admin", "contributor", "collaborator"],
+                "project_code": project_node["code"],
+                "realm": "vre",
+            }
+            response = requests.post(ConfigClass.AUTH_SERVICE + f"admin/users/realm-roles", json=payload)
+            if response.status_code != 200:
+                raise Exception(f"Error adding keycloak role: {response.json()}")
+        except Exception as e:
+            # Will except if the role already exists
+            pass
+
+        # Add keycloak role to user
+        payload = {
+            "email": user_node["email"],
+            "realm": "vre",
+        }
+        # Add the correct role and remove the other project roles
+        for project_role in ["admin", "contributor", "collaborator"]:
+            payload["project_role"] = project_node["code"] + "-" + project_role
+            if project_role == role:
+                response = requests.post(ConfigClass.AUTH_SERVICE + f"user/project-role", json=payload)
+            else:
+                try:
+                    response = requests.delete(ConfigClass.AUTH_SERVICE + f"user/project-role", json=payload)
+                except Exception as e:
+                    # will except if user doesn't have that role
+                    continue
+        if response.status_code != 200:
+            raise Exception(f"Error adding keycloak role to user: {response.json()}")
+
 
     def remove_user_from_project(self, user_id, project_id):
         payload = {
@@ -127,8 +171,37 @@ class SetUpTest:
         if response.status_code != 200:
             raise Exception(f"Error removing user from project: {response.json()}")
 
+        response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/User/node/{user_id}")
+        if response.status_code != 200:
+            raise Exception(f"Error geting user: {response.json()}")
+        user_node = response.json()[0]
+
+        response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/Container/node/{project_id}")
+        if response.status_code != 200:
+            raise Exception(f"Error getting project: {response.json()}")
+        project_node = response.json()[0]
+
+        # remove keycloak role from user
+        payload = {
+            "email": user_node["email"],
+            "realm": "vre",
+        }
+        # Add the correct role and remove the other project roles
+        for project_role in ["admin", "contributor", "collaborator"]:
+            payload["project_role"] = project_node["code"] + "-" + project_role
+            print(payload)
+            print("***")
+            try:
+                response = requests.delete(ConfigClass.AUTH_SERVICE + f"user/project-role", json=payload)
+            except Exception as e:
+                print(str(e))
+                # will except if user doesn't have that role
+                continue
+        if response.status_code != 200:
+            raise Exception(f"Error adding keycloak role to user: {response.json()}")
+
     def get_projects(self):
-        all_project_url = ConfigClass.NEO4J_SERVICE + 'nodes/Dataset/properties'
+        all_project_url = ConfigClass.NEO4J_SERVICE + 'nodes/Container/properties'
         try:
             response = requests.get(all_project_url)
             if response.status_code == 200:
@@ -173,7 +246,7 @@ class SetUpTest:
             self.log.info(f"DELETE RESPONSE: {delete_res.text}")
         except Exception as e:
             self.log.info(f"ERROR DELETING FILE: {e}")
-            self.log.info(f"PLEASE DELETE THE FILE MANUALLY WITH ID: {node_id}")
+            self.log.info(f"PLEASE DELETE THE FILE MANUALLY WITH ID: {user_node['id']}")
             raise e
 
 

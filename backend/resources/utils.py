@@ -4,41 +4,34 @@ from config import ConfigClass
 import requests
 import json
 import math
-from datetime import timezone 
+from datetime import timezone
 import datetime
 import pytz
 from models.api_response import APIResponse, EAPIResponseCode
+from services.permissions_service.utils import has_permission
 
 
-def check_invite_permissions(invitation_form, current_identity):
-    if not invitation_form.project_id:
-        # Only platform admin can invite with a project
+def check_invite_permissions(dataset_node, current_identity):
+    if not dataset_node:
+        # Only platform admin can invite without a project
         if current_identity["role"] != "admin":
             return False
-    else:
-        if current_identity["role"] != "admin":
-            params = {
-                "start_id": current_identity["user_id"],
-                "end_id": invitation_form.project_id 
-            }
-            res = requests.get(ConfigClass.NEO4J_SERVICE + "relations", params=params)
-            relations = json.loads(res.text)
-            if not relations:
-                return False
-            role = relations[0]["r"]["type"]
-            # Check project permissions
-            if role != "admin":
-                return False
+    if current_identity["role"] != "admin":
+        if not has_permission(dataset_node["code"], 'invite', '*', 'create'):
+            return False
     return True
 
+
 def fetch_geid(id_type):
-    ## fetch global entity id
-    entity_id_url = ConfigClass.UTILITY_SERVICE + "/v1/utility/id?entity_type={}".format(id_type)
+    # fetch global entity id
+    entity_id_url = ConfigClass.UTILITY_SERVICE + \
+        "/v1/utility/id?entity_type={}".format(id_type)
     respon_entity_id_fetched = requests.get(entity_id_url)
     if respon_entity_id_fetched.status_code == 200:
         pass
     else:
-        raise Exception('Entity id fetch failed: ' + entity_id_url + ": " + str(respon_entity_id_fetched.text))
+        raise Exception('Entity id fetch failed: ' + entity_id_url +
+                        ": " + str(respon_entity_id_fetched.text))
     geid = respon_entity_id_fetched.json()['result']
     return geid
 
@@ -46,7 +39,7 @@ def fetch_geid(id_type):
 def get_project_permissions(project_code, user_id):
     # Get dataset
     res = requests.post(
-        url=ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/query",
+        url=ConfigClass.NEO4J_SERVICE + f"nodes/Container/query",
         json={"code": project_code}
     )
     dataset = res.json()[0]
@@ -54,8 +47,8 @@ def get_project_permissions(project_code, user_id):
         url=ConfigClass.NEO4J_SERVICE + f"relations/query",
         json={
             "start_label": "User",
-            "end_label": "Dataset",
-            "start_params": {"id": user_id}, 
+            "end_label": "Container",
+            "start_params": {"id": user_id},
             "end_params": {"id": dataset["id"]}
         }
     )
@@ -65,7 +58,7 @@ def get_project_permissions(project_code, user_id):
 def remove_user_from_project_group(container_id, user_email, logger, access_token):
     # Remove user from keycloak group with the same name as the project
     res = requests.get(
-        url=ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/node/{container_id}",
+        url=ConfigClass.NEO4J_SERVICE + f"nodes/Container/node/{container_id}",
     )
     project_code = json.loads(res.content)[0]["code"]
     payload = {
@@ -81,7 +74,9 @@ def remove_user_from_project_group(container_id, user_email, logger, access_toke
         }
     )
     if(res.status_code != 200):
-        logger.error(f"Error removing user from group in ad: {res.text} {res.status_code}")
+        logger.error(
+            f"Error removing user from group in ad: {res.text} {res.status_code}")
+
 
 def add_user_to_ad_group(user_email, project_code, logger, access_token):
     payload = {
@@ -97,16 +92,17 @@ def add_user_to_ad_group(user_email, project_code, logger, access_token):
         }
     )
     if(res.status_code != 200):
-        logger.error(f"Error adding user to group in ad: {res.text} {res.status_code}")
+        logger.error(
+            f"Error adding user to group in ad: {res.text} {res.status_code}")
     return res.json().get("entry")
 
 
 def add_user_to_project_group(container_id, username, logger):
     # Add user to keycloak group with the same name as the project
     res = requests.get(
-        url=ConfigClass.NEO4J_SERVICE + f"nodes/Dataset/node/{container_id}",
+        url=ConfigClass.NEO4J_SERVICE + f"nodes/Container/node/{container_id}",
     )
-    project_name = json.loads(res.content)[0]["code"]
+    project_name = 'vre-' + json.loads(res.content)[0]["code"]
     payload = {
         "realm": "vre",
         "username": username,
@@ -117,7 +113,9 @@ def add_user_to_project_group(container_id, username, logger):
         json=payload
     )
     if(res.status_code != 200):
-        logger.error(f"Error adding user to group in keycloak: {res.text} {res.status_code}")
+        logger.error(
+            f"Error adding user to group in keycloak: {res.text} {res.status_code}")
+
 
 def add_admin_to_project_group(groupname, username, logger):
     # Add user to keycloak group with the same name as the project
@@ -131,7 +129,8 @@ def add_admin_to_project_group(groupname, username, logger):
         json=payload
     )
     if(res.status_code != 200):
-        logger.error(f"Error adding user to group in keycloak: {res.text} {res.status_code}")
+        logger.error(
+            f"Error adding user to group in keycloak: {res.text} {res.status_code}")
 
 
 def assign_project_role(email, project_role, logger):
@@ -145,8 +144,8 @@ def assign_project_role(email, project_role, logger):
         json=payload
     )
     if(res.status_code != 200):
-        logger.error(f"Error assign user group role in keycloak: {res.text} {res.status_code}")
-
+        logger.error(
+            f"Error assign user group role in keycloak: {res.text} {res.status_code}")
 
 
 ######################################################### DATASET API #################################################
@@ -168,6 +167,7 @@ def check_user_exists(token, username):
         json={"name": username}
     )
     return json.loads(res.text)
+
 
 def list_containers(token, label, payload=None):
     url = ConfigClass.NEO4J_SERVICE + "nodes/%s/query" % label
@@ -219,9 +219,13 @@ def check_container_exist(token, label, container_id):
     )
     return json.loads(res.text)
 
+
 def neo4j_query_with_pagination(url, data, partial=False):
     page = int(data.get('page', 0))
-    page_size = int(data.get('page_size', 25))
+    if data.get("page_size"):
+        page_size = int(data.get('page_size', 25))
+    else:
+        page_size = None
     data = data.copy()
     if "page" in data:
         del data["page"]
@@ -231,11 +235,13 @@ def neo4j_query_with_pagination(url, data, partial=False):
     # Get token from reuqest's header
     access_token = request.headers.get("Authorization", None)
     page_data = {
-        "limit": page_size,
-        "skip": page * page_size,
         "partial": partial,
         **data
     }
+    if page_size:
+        page_data["limit"] = page_size
+    if page and page_size:
+        page_data["skip"] = page * page_size
     headers = {
         'Authorization': access_token
     }
@@ -245,8 +251,10 @@ def neo4j_query_with_pagination(url, data, partial=False):
         headers=headers,
         json=page_data,
     )
-    del page_data["limit"]
-    del page_data["skip"]
+    if page_data.get("limit"):
+        del page_data["limit"]
+    if page_data.get("skip"):
+        del page_data["skip"]
     if "order_by" in page_data:
         del page_data["order_by"]
     if "order_type" in page_data:
@@ -264,7 +272,11 @@ def neo4j_query_with_pagination(url, data, partial=False):
     response.set_result(json.loads(res.content))
     response.set_page(page)
     response.set_total(total)
-    response.set_num_of_pages(math.ceil(total / page_size))
+    if page_size:
+        num_of_pages = math.ceil(total / page_size)
+    else:
+        num_of_pages = 1
+    response.set_num_of_pages(num_of_pages)
     return response
 
 ################################################### User Function ########################################
@@ -321,7 +333,7 @@ def create_dataset(dataset_name, params):
 
     neo4j_session = neo4j_connection.session()
     # not the dataset name will be unique
-    neo4j_session.run('create(node:Dataset) set node = {param}',
+    neo4j_session.run('create(node:Container) set node = {param}',
                       param=params)
 
     # let the hdfs create a dataset
@@ -331,7 +343,7 @@ def create_dataset(dataset_name, params):
 # This function will fetch datasets that user has permission to
 def get_datasets(username):
     neo4j_session = neo4j_connection.session()
-    res = neo4j_session.run("MATCH (:User { name:{username}} )-[r]->(d:Dataset) return d,r",
+    res = neo4j_session.run("MATCH (:User { name:{username}} )-[r]->(d:Container) return d,r",
                             username=username
                             )
     neo4j_session.close()
@@ -350,53 +362,60 @@ def filter_datasets_by_args(args):
     time_created = args.get("time_created", None)
 
     # Format query string
-    query = "MATCH (n:Dataset) WHERE NOT 'default' IN n._type OR n._type is null "
+    query = "MATCH (n:Container) WHERE NOT 'default' IN n._type OR n._type is null "
     if(name is not None):
-        query+="WITH * WHERE n.name CONTAINS '{name}' ".format(name = name)
-    
+        query += "WITH * WHERE n.name CONTAINS '{name}' ".format(name=name)
+
     if(types is not None):
-        query+="WITH * WHERE n.type IN {types} ".format(types = types)
+        query += "WITH * WHERE n.type IN {types} ".format(types=types)
 
     if(tags is not None):
-        query+="WITH * WHERE "
+        query += "WITH * WHERE "
         for tag in tags:
-            query+="'{tag}' in n.tags OR ".format(tag=tag)
+            query += "'{tag}' in n.tags OR ".format(tag=tag)
         query = query[:-3]
 
     if(metadatas is not None):
-        query+="WITH * WHERE "
+        query += "WITH * WHERE "
         for k in metadatas:
-            query+="n._{key} IN {value} OR ".format(key=k, value=str(metadatas[k])) 
-        query = query[:-3]  
+            query += "n._{key} IN {value} OR ".format(
+                key=k, value=str(metadatas[k]))
+        query = query[:-3]
 
     if(file_count is not None):
-        query+="WITH * WHERE n.file_count >= {mix} AND n.file_count <= {max} ".format(mix=file_count[0], max=file_count[1])
+        query += "WITH * WHERE n.file_count >= {mix} AND n.file_count <= {max} ".format(
+            mix=file_count[0], max=file_count[1])
 
     if(time_lastmodified is not None):
-        query+="WITH * WHERE datetime(n.time_created) >= datetime('{timestamp}') ".format(timestamp = time_lastmodified[0])
-        query+="AND datetime(n.time_created) <= datetime('{timestamp}') ".format(timestamp = time_lastmodified[1])
-    
+        query += "WITH * WHERE datetime(n.time_created) >= datetime('{timestamp}') ".format(
+            timestamp=time_lastmodified[0])
+        query += "AND datetime(n.time_created) <= datetime('{timestamp}') ".format(
+            timestamp=time_lastmodified[1])
+
     if(time_created is not None):
-        query+="WITH * WHERE datetime(n.time_created) >= datetime('{timestamp}') ".format(timestamp = time_created[0])
-        query+="AND datetime(n.time_created) <= datetime('{timestamp}') ".format(timestamp = time_created[1])
-    
-    query+="SET n.time_created = toString(n.time_created), \
+        query += "WITH * WHERE datetime(n.time_created) >= datetime('{timestamp}') ".format(
+            timestamp=time_created[0])
+        query += "AND datetime(n.time_created) <= datetime('{timestamp}') ".format(
+            timestamp=time_created[1])
+
+    query += "SET n.time_created = toString(n.time_created), \
             n.time_lastmodified = toString(n.time_lastmodified) \
-            RETURN n"    
+            RETURN n"
     print(query)
 
     # Connect to neo4j server and load query results
     neo4j_session = neo4j_connection.session()
     res = neo4j_session.run(query)
-   
-    # Format results 
+
+    # Format results
     record = [x for x in res]
     result = dataset_obj_2_json(record)
 
     return result
 
+
 def dataset_obj_2_json(query_result):
-    
+
     def o2j(dataset_object):
         temp = {
             'id': dataset_object.id,
@@ -427,8 +446,10 @@ def dataset_obj_2_json(query_result):
 
 # function will turn the neo4j query result of user
 # and transform into user json object
+
+
 def user_obj_2_json(query_result):
-    
+
     def o2j(user_ob, role=None):
         print("here")
         temp = {
@@ -470,7 +491,7 @@ def user_obj_2_json(query_result):
 def create_user(params):
     username = params.get("name")
     neo4j_session = neo4j_connection.session()
-    neo4j_session.run("MATCH (d:Dataset { admin:[{username}]} ) \
+    neo4j_session.run("MATCH (d:Container { admin:[{username}]} ) \
                 CREATE (u:User)-[:admin {type: 'default'}]->(d) \
                 SET u = {params}",
                       params=params,
@@ -494,18 +515,20 @@ def get_user(username):
 ################################################### Simple Helpers ########################################
 
 def helper_now_utc():
-    dt = datetime.datetime.now() 
-    utc_time = dt.replace(tzinfo = timezone.utc) 
+    dt = datetime.datetime.now()
+    utc_time = dt.replace(tzinfo=timezone.utc)
     return utc_time
+
 
 def http_query_node(primary_label, query_params={}):
     '''
-    primary_label i.e. Folder, File, Dataset
+    primary_label i.e. Folder, File, Container
     '''
     payload = {
         **query_params
     }
-    node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/{}/query".format(primary_label)
+    node_query_url = ConfigClass.NEO4J_SERVICE + \
+        "nodes/{}/query".format(primary_label)
     response = requests.post(node_query_url, json=payload)
     return response
 
@@ -522,10 +545,39 @@ def get_files_recursive(folder_geid, all_files=[]):
             }
         }
     }
-    resp = requests.post(ConfigClass.NEO4J_SERVICE_V2 + "relations/query", json=query)
+    resp = requests.post(ConfigClass.NEO4J_SERVICE_V2 +
+                         "relations/query", json=query)
     for node in resp.json()["results"]:
         if "File" in node["labels"]:
             all_files.append(node)
         else:
             get_files_recursive(node["global_entity_id"], all_files=all_files)
     return all_files
+
+
+def get_container_id(query_params):
+    url = ConfigClass.NEO4J_SERVICE + f"nodes/Container/query"
+    payload = {
+        **query_params
+    }
+    result = requests.post(url, json=payload)
+    if result.status_code != 200 or result.json() == []:
+        return None
+    result = result.json()[0]
+    container_id = result["id"]
+    return str(container_id)
+
+
+def get_relation(start_label, end_label, start_params, end_params):
+    payload = {
+        "start_label": start_label,
+        "end_label": end_label,
+        "start_params": start_params,
+        "end_params": end_params
+    }
+
+    relation_res = requests.post(
+        ConfigClass.NEO4J_SERVICE + 'relations/query', json=payload)
+    relations = relation_res.json()
+
+    return relations

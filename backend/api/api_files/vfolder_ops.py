@@ -1,9 +1,10 @@
-from .proxy import BaseProxyResource
 from config import ConfigClass
 from flask_jwt import jwt_required, current_identity
-from resources.decorator import check_role
 from models.api_response import APIResponse, EAPIResponseCode
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from services.permissions_service.decorators import permissions_check
+from services.permissions_service.utils import has_permission 
+from services.neo4j_service.neo4j_client import Neo4jClient
 from flask_restx import Resource
 import requests
 from flask import request
@@ -11,9 +12,13 @@ import json
 
 _logger = SrvLoggerFactory('api_files_ops_v1').get_logger()
 
-class VirtualFolderFiles(BaseProxyResource):
+class VirtualFolderFiles(Resource):
 
+    @jwt_required()
     def post(self, folder_geid):
+        """
+            Add files to vfolder
+        """
         _res = APIResponse()
         headers = request.headers
 
@@ -63,17 +68,16 @@ class VirtualFolderFiles(BaseProxyResource):
                 return response.json()
 
         except Exception as e:
-            print(str(e))
             _logger.error("errors in add files to vfolder: {}".format(str(e)))
             _res.set_code(EAPIResponseCode.internal_error)
             _res.set_result("Failed to add files to vfolder")
             return _res.to_dict, _res.code
 
 
+    @jwt_required()
     def delete(self, folder_geid):
         _res = APIResponse()
         headers = request.headers
-        
 
         try:
             # Get vfolder
@@ -122,7 +126,6 @@ class VirtualFolderFiles(BaseProxyResource):
                 return response.json()
 
         except Exception as e:
-            print(str(e))
             _logger.error("errors in remove files from vfolder: {}".format(str(e)))
             _res.set_code(EAPIResponseCode.internal_error)
             _res.set_result("Failed to remove files from vfolder")
@@ -130,13 +133,33 @@ class VirtualFolderFiles(BaseProxyResource):
     
 
 
-class VirtualFolder(BaseProxyResource):
-    methods = ["POST", "GET"]
-    required_roles = {"GET": "member"}
+class VirtualFolder(Resource):
     url = ConfigClass.DATA_UTILITY_SERVICE + "collections/"
 
-class VirtualFolderInfo(BaseProxyResource):
+    @jwt_required()
+    @permissions_check('collections', 'vrecore', 'view')
+    def get(self):
+        payload = {
+            "username": current_identity['username'],
+            **request.args
+        }
+        response = requests.get(self.url, params=payload, headers=request.headers)
+        return response.json(), response.status_code
+
+    @jwt_required()
+    @permissions_check('collections', 'vrecore', 'create')
+    def post(self):
+        payload = {
+            "username": current_identity['username'],
+            **request.get_json()
+        }
+        response = requests.post(self.url, json=payload, headers=request.headers)
+        return response.json(), response.status_code
+
+
+class VirtualFolderInfo(Resource):
     def get(self, folderId):
+        # deprecated
         _res = APIResponse()
         url = ConfigClass.DATA_UTILITY_SERVICE + "collections/{}".format(folderId)
         headers = request.headers
@@ -151,9 +174,9 @@ class VirtualFolderInfo(BaseProxyResource):
             relations = relation_res.json()
 
             if len(relations) == 0:
-                    _res.set_code(EAPIResponseCode.bad_request)
-                    _res.set_result("no permission for this project")
-                    return _res.to_dict, _res.code
+                _res.set_code(EAPIResponseCode.bad_request)
+                _res.set_result("no permission for this project")
+                return _res.to_dict, _res.code
             else:
                 relation = relations[0]
                 project_role = relation['r']['type']
@@ -185,10 +208,31 @@ class VirtualFolderInfo(BaseProxyResource):
             return _res.to_dict, _res.code
 
     
+    @jwt_required()
     def delete(self, folderId):
         _res = APIResponse()
         url = ConfigClass.DATA_UTILITY_SERVICE + "collections/{}".format(folderId)
         headers = request.headers
+
+        neo4j_client = Neo4jClient()
+        response = neo4j_client.node_get("VirtualFolder", folderId)
+        if not response.get("result"):
+            _res.set_code(response.get("code", 500))
+            _res.set_error_msg(response.get("error_msg"))
+            return _res.to_dict, _res.code
+        vfolder_node = response.get("result")
+
+        neo4j_client = Neo4jClient()
+        response = neo4j_client.node_get("Container", vfolder_node["container_id"])
+        if not response.get("result"):
+            _res.set_code(response.get("code", 500))
+            _res.set_error_msg(response.get("error_msg"))
+            return _res.to_dict, _res.code
+        dataset_node = response.get("result")
+        if not has_permission(dataset_node["code"], "collections", "vrecore", "view"):
+            _res.set_code(EAPIResponseCode.forbidden)
+            _res.set_error_msg("Permission Denied")
+            return _res.to_dict, _res.code
 
         try:
             data = request.get_json()

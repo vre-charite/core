@@ -13,6 +13,7 @@ import json
 import base64
 from datetime import timedelta, datetime
 
+
 class SrvInvitationManager(metaclass=MetaService):
 
     def __init__(self):
@@ -20,7 +21,8 @@ class SrvInvitationManager(metaclass=MetaService):
 
     def update_invitation(self, query_data, update_data):
         try:
-            db.session.query(InvitationModel).filter_by(**query_data).update(update_data)
+            db.session.query(InvitationModel).filter_by(
+                **query_data).update(update_data)
             db.session.commit()
         except Exception as e:
             self._logger.error("Failed to update SQL record: " + str(e))
@@ -40,7 +42,7 @@ class SrvInvitationManager(metaclass=MetaService):
         sql_params = {
             "invitation_detail": form_data_json,
             "create_timestamp": create_timestamp,
-            "expiry_timestamp": create_timestamp, #TODO remove when SQL is updated
+            "expiry_timestamp": create_timestamp,  # TODO remove when SQL is updated
             "invited_by": invitor_name,
             "email": invitation.email,
             "role": invitation.platform_role,
@@ -63,11 +65,12 @@ class SrvInvitationManager(metaclass=MetaService):
 
         self._logger.info(f'Invitation {inserted.id} Saved To Database')
         if invitation.project_id:
-            my_project = container_mgr.check_container_exist(access_token, "Dataset", invitation.project_id)[0]
+            my_project = container_mgr.check_container_exist(
+                access_token, "Container", invitation.project_id)[0]
             my_project_name = my_project['name']
             self._logger.info(my_project)
             subject = "Welcome to the {} project!".format(my_project_name)
-            if not ad_account_created: 
+            if not ad_account_created:
                 template = "invitation/ad_invite_project.html"
             else:
                 template = "invitation/ad_existing_invite_project.html"
@@ -87,7 +90,7 @@ class SrvInvitationManager(metaclass=MetaService):
             }
         else:
             subject = "Welcome to VRE!"
-            if not ad_account_created: 
+            if not ad_account_created:
                 template = "invitation/ad_invite_without_project.html"
             else:
                 template = "invitation/ad_existing_invite_without_project.html"
@@ -111,7 +114,8 @@ class SrvInvitationManager(metaclass=MetaService):
         with open("attachments/Invite-AD-Application.pdf", 'rb') as f:
             if not ad_account_created:
                 data = base64.b64encode(f.read()).decode()
-                attachment = [{"name": "Charite AD Request Form.pdf", "data": data}]
+                attachment = [
+                    {"name": "Charite AD Request Form.pdf", "data": data}]
             else:
                 attachment = []
             email_sender.send(
@@ -122,7 +126,7 @@ class SrvInvitationManager(metaclass=MetaService):
                 template_kwargs=template_kwargs,
                 attachments=attachment,
             )
-            if not ad_account_created: 
+            if not ad_account_created:
                 # send copy to admin
                 email_sender.send(
                     subject,
@@ -146,9 +150,11 @@ class SrvInvitationManager(metaclass=MetaService):
 
         invites = db.session.query(InvitationModel).filter_by(**sql_filter)
         if "email" in filters:
-            invites = invites.filter(InvitationModel.invitation_detail.like("%" + filters["email"] + "%"))
+            invites = invites.filter(
+                InvitationModel.invitation_detail.like("%" + filters["email"] + "%"))
         if "invited_by" in filters:
-            invites = invites.filter(InvitationModel.invited_by.like("%" + filters["invited_by"] + "%"))
+            invites = invites.filter(InvitationModel.invited_by.like(
+                "%" + filters["invited_by"] + "%"))
 
         if not order_by:
             order_by = "create_timestamp"

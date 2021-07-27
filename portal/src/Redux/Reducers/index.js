@@ -28,16 +28,9 @@ import uploadFileManifest from './uploadFileManifest';
 import fileExplorer from './fileExplorer';
 import serviceRequestRedDot from './serviceRequest';
 import user from './user';
-// export default combineReducers({
-//   datasetList,
-//   userList,
-//   tags,
-//   metadatas,
-//   personalDatasetId,
-//   containersPermission,
-//   role,
-//   uploadList,newUploadIndicator
-// });
+import { datasetData } from './datasetData';
+import { myDatasetList } from './myDatasetList';
+import { datasetInfo } from './datasetInfo';
 
 const appReducer = combineReducers({
   datasetList,
@@ -68,6 +61,9 @@ const appReducer = combineReducers({
   fileExplorer,
   serviceRequestRedDot,
   user,
+  datasetData,
+  myDatasetList,
+  datasetInfo,
 });
 
 const rootReducer = (state, action) => {

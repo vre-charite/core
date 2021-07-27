@@ -28,18 +28,20 @@ import requests
 
 from file_ops.util import upload_HDFS
 
+
 def check(username, password):
-    # data to be sent to api 
+    # data to be sent to api
     data = {
         "username": username,
         "password": password
     }
     data = json.dumps(data)
     headers = {'Content-type': 'application/json'}
-    # sending post request and saving response as response object 
-    r = requests.post(url = 'http://10.3.9.240:5060/users/auth', data = data, headers=headers) 
+    # sending post request and saving response as response object
+    r = requests.post(url='http://10.3.9.240:5060/users/auth',
+                      data=data, headers=headers)
     return r.json()['result']
-    
+
 # def upload(dataset_name, path, username, password):
 #     # add the check the role of the user
 #     # result = check(username, password)
@@ -51,14 +53,14 @@ def check(username, password):
 #     # define path to saved file
 #     file_name = os.path.basename(path)
 #     client = InsecureClient('http://10.3.9.241:9870/', user=username)
-    
+
 #     # TODO I think this should be update into the configure file <------------------------------
 #     # check the dataset exist
 #     # DATASET_PATH = '/dataset/'
 #     # datasets = client.list(DATASET_PATH)
 
 #     # first get the dataset info from server
-#     res = requests.get('http://10.3.9.240:5060/datasets/%s'%(dataset_name))
+#     res = requests.get('http://10.3.9.240:5060/containers/%s'%(dataset_name))
 #     if res.status_code != 200:
 #         print("ERROR: dataset %s does not find. Please create one."%dataset_name)
 #         return
@@ -72,6 +74,7 @@ def check(username, password):
 
 #     # after that upload to server
 #     client.upload(hdfs_path, path)
+
 
 def main():
     args = docopt(__doc__, version='0.9')
@@ -87,5 +90,6 @@ def main():
     upload_HDFS(dataset_name, path, username)
     # upload(dataset_name, path, username, password)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()

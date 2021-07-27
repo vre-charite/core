@@ -49,6 +49,9 @@ import {
   CLEAR_CURRENT_PROJECT,
   SET_USER_STATUS,
   SET_PROJECT_WORKBENCH,
+  DATASET_DATA,
+  MY_DATASET_LIST,
+  DATASET_INFO,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -324,3 +327,68 @@ export const setUserStatus = (payload) => ({
   type: SET_USER_STATUS,
   payload,
 });
+
+export const datasetDataActions = {
+  setTreeData: (payload) => ({
+    type: DATASET_DATA.SET_TREE_DATA,
+    payload,
+  }),
+  setSelectedData: (payload) => ({
+    type: DATASET_DATA.SET_SELECTED_DATA,
+    payload,
+  }),
+  setUniqeSelectedData: (payload) => ({
+    type: DATASET_DATA.SET_UNIQE_SELECTED_DATA,
+    payload,
+  }),
+  setMode: (payload) => ({
+    type: DATASET_DATA.SET_MODE,
+    payload,
+  }),
+  setHightLighted: (payload) => ({
+    type: DATASET_DATA.SET_HIGHLIGHTED,
+    payload,
+  }),
+  setPreviewFile: (payload) => ({
+    type: DATASET_DATA.SET_PREVIEW_FILE,
+    payload,
+  }),
+  clearData: (payload) => ({
+    type: DATASET_DATA.CLEAR_DATA,
+    payload,
+  }),
+};
+
+export const myDatasetListCreators = {
+  setLoading: (payload) => ({
+    type: MY_DATASET_LIST.SET_LOADING,
+    payload,
+  }),
+  setDatasets: (payload) => ({
+    type: MY_DATASET_LIST.SET_DATASETS,
+    payload,
+  }),
+  setTotal: (payload) => ({
+    type: MY_DATASET_LIST.SET_TOTAL,
+    payload,
+  }),
+};
+
+export const datasetInfoCreators = {
+  setBasicInfo: (payload) => ({
+    type: DATASET_INFO.SET_BASIC_INFO,
+    payload,
+  }),
+  setProjectName: (payload) => ({
+    type: DATASET_INFO.SET_PROJECT_NAME,
+    payload,
+  }),
+  setLoading: (payload) => ({
+    type: DATASET_INFO.SET_LOADING,
+    payload,
+  }),
+  setHasInit: (payload) => ({
+    type: DATASET_INFO.SET_HAS_INIT,
+    payload,
+  }),
+};

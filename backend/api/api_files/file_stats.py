@@ -4,6 +4,7 @@ from flask_jwt import jwt_required, current_identity
 from resources.validations import boolean_validate_role
 from models.api_response import APIResponse, EAPIResponseCode
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from services.permissions_service.decorators import permissions_check
 from config import ConfigClass
 import json
 import requests
@@ -12,6 +13,7 @@ _logger = SrvLoggerFactory('api_file_statistics').get_logger()
 
 class FileStatistics(Resource):
     @jwt_required()
+    @permissions_check('file_stats', '*', 'view')
     def get(self, project_geid):
         """
             Return file statistics to the frontend, proxy entity info service, add permission control

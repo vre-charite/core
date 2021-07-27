@@ -29,7 +29,7 @@ class SrvContainerManager(metaclass=MetaService):
         return json.loads(res.text)
 
     def get_by_project_code(self, project_code):
-        url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query" 
+        url = ConfigClass.NEO4J_SERVICE + "nodes/Container/query" 
         payload = {
             "code": project_code
         }
@@ -45,7 +45,7 @@ class SrvContainerManager(metaclass=MetaService):
             return False, error_msg
 
     def get_by_project_id(self, project_id):
-        url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query" 
+        url = ConfigClass.NEO4J_SERVICE + "nodes/Container/query" 
         payload = {
             "id": int(project_id)
         }
@@ -61,7 +61,7 @@ class SrvContainerManager(metaclass=MetaService):
             return False, error_msg
 
     def get_by_project_geid(self, geid):
-        url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query" 
+        url = ConfigClass.NEO4J_SERVICE + "nodes/Container/query" 
         payload = {
             "global_entity_id": geid
         }

@@ -27,10 +27,10 @@
   },
   "virtualFolder": {
     "delete": "Collection has been deleted successfully",
-    "removeFiles": "Files have been removed successfully",
-    "addFilesDuplicate": "Files added successfully with existing files skipped",
-    "addFiles": "Files have been added successfully",
-    "updateFiles": "Files have been updated successfully"
+    "removeFiles": "Files/Folders have been removed successfully",
+    "addFilesDuplicate": "Files/Folders added successfully with existing files skipped",
+    "addFiles": "Files/Folders have been added successfully",
+    "updateFiles": "Files/Folders have been updated successfully"
   },
   "collections": {
     "updateCollections": "Collections have been updated successfully",
@@ -44,5 +44,17 @@
     ],
     "button": "Submit another request"
   },
-  "createFolder": "Folder has been created successfully"
+  "createFolder": "Folder has been created successfully",
+  "createDataset": "Dataset has been created successfully",
+  "addToDataset": "The file(s)/folder(s) have been added to the dataset successfully.",
+  "datasetFileDelete": {
+    "default": [
+      "Deleting files and folders may take some time, please refresh afterwards."
+    ]
+  },
+  "datasetFileMove": {
+    "default": [
+      "Moving files and folders may take some time, please refresh afterwards."
+    ]
+  }
 }

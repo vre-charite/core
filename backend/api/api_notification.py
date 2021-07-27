@@ -1,11 +1,11 @@
 from flask_restx import Api, Resource, fields
 from flask_jwt import jwt_required, current_identity
-from resources.decorator import check_role
 from config import ConfigClass
 from models.api_response import APIResponse, EAPIResponseCode
 from models.api_meta_class import MetaAPI
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from services.notifier_services.email_service import SrvEmail
+from services.permissions_service.decorators import permissions_check 
 from api import module_api
 from flask import request
 import requests
@@ -25,7 +25,7 @@ class APINotification(metaclass=MetaAPI):
         #@api_ns_contact.expect(contact_us_model)
         #@api_ns_contact.response(200, contact_us_return_example)
         @jwt_required()
-        @check_role('admin')
+        @permissions_check('notification', '*', 'create')
         def post(self):
             '''
             Send notification email to platform users

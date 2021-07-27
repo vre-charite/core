@@ -7,6 +7,7 @@ from config import ConfigClass
 from models.api_meta_class import MetaAPI
 from api import module_api
 from resources.validations import boolean_validate_role
+from services.permissions_service.decorators import permissions_check
 
 api_ns = module_api.namespace('Workbench', description='Workbench API', path='/v1')
 
@@ -17,19 +18,9 @@ class APIWorkbench(metaclass=MetaAPI):
 
     class WorkbenchRestful(Resource):
         @jwt_required()
+        @permissions_check("workbench", "*", "view")
         def get(self, project_geid):
-
             api_response = APIResponse()
-            valid, project_role = boolean_validate_role(
-                "contributor",
-                current_identity["role"],
-                current_identity["user_id"],
-                project_geid
-            )
-            if not valid:
-                api_response.set_error_msg("Permission denied")
-                api_response.set_code(EAPIResponseCode.forbidden)
-                return api_response.to_dict, api_response.code
             try:
                 response = requests.get(ConfigClass.ENTITYINFO_SERVICE + f"{project_geid}/workbench")
             except Exception as e:
@@ -39,13 +30,10 @@ class APIWorkbench(metaclass=MetaAPI):
             return response.json(), response.status_code
 
         @jwt_required()
+        @permissions_check("workbench", "*", "create")
         def post(self, project_geid):
             api_response = APIResponse()
             data = request.get_json()
-            if current_identity["role"] != "admin":
-                api_response.set_error_msg("Permission denied")
-                api_response.set_code(EAPIResponseCode.forbidden)
-                return api_response.to_dict, api_response.code
             payload = {
                 **data,
                 "deployed_by": current_identity["username"],

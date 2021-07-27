@@ -1,0 +1,13 @@
+$textAreaHeight: 400px;
+.form{
+ 
+  textArea {
+    resize: none;
+    height: $textAreaHeight !important;
+  }
+  .description-paragraph {
+    height: $textAreaHeight;
+    overflow-y: auto;
+  }
+}
+

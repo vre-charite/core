@@ -1,9 +1,10 @@
 from config import ConfigClass
 from .proxy import BaseProxyResource
 from flask_jwt import jwt_required, current_identity
-from resources.decorator import check_role
 from models.api_response import APIResponse, EAPIResponseCode
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from services.permissions_service.decorators import permissions_check
+from services.permissions_service.utils import has_permission 
 from flask_restx import Resource
 import requests
 from flask import request
@@ -15,7 +16,7 @@ _logger = SrvLoggerFactory('api_files_ops_v1').get_logger()
 class FilePreDownload(BaseProxyResource):
     methods = ["GET", "POST"]
     required_roles = {"GET": "member", "POST": "uploader"}
-    url = ConfigClass.DATA_SERVICE + "containers/{dataset_id}/file"
+    url = ConfigClass.DATA_SERVICE + "containers/{project_geid}/file"
 
 
 class FileDownloadLog(BaseProxyResource):
@@ -27,30 +28,18 @@ class FileDownloadLog(BaseProxyResource):
 class FileInfo(BaseProxyResource):
     methods = ["GET"]
     required_roles = {"GET": "uploader"}
-    url = ConfigClass.DATA_SERVICE + "containers/{dataset_id}/files/meta"
+    url = ConfigClass.DATA_SERVICE + "containers/{project_geid}/files/meta"
 
 class ProcessedFile(BaseProxyResource):
     methods = ["GET"]
     required_roles = {"GET": "member"}
     url = ConfigClass.DATA_SERVICE + "files/processed"
 
-
-class TotalFileCount(BaseProxyResource):
-    methods = ["GET"]
-    required_roles = {"GET": "admin"}
-    url = ConfigClass.DATA_SERVICE + "containers/{dataset_id}/files/count/total"
-
-
-class DailyFileCount(BaseProxyResource):
-    methods = ["GET"]
-    required_roles = {"GET": "uploader"}
-    url = ConfigClass.DATA_SERVICE + "containers/{dataset_id}/files/count/daily"
-
-
 class FileExistCheck(BaseProxyResource):
+    # cannot find in data_service
     methods = ["GET"]
     required_roles = {"GET": "member"}
-    url = ConfigClass.DATA_SERVICE + "containers/{dataset_id}/files/exist"
+    url = ConfigClass.DATA_SERVICE + "containers/{project_geid}/files/exist"
 
 class FileTransfer(BaseProxyResource):
     methods = ["POST"]
@@ -64,6 +53,7 @@ class FileActionLogs(BaseProxyResource):
 
 class FileActionTasks(BaseProxyResource):
     @jwt_required()
+    @permissions_check('tasks', '*', 'view')
     def get(self):
         request_params = request.args
         url = ConfigClass.DATA_UTILITY_SERVICE + "tasks"
@@ -74,6 +64,7 @@ class FileActionTasks(BaseProxyResource):
             return response.text, 500
     
     @jwt_required()
+    @permissions_check('tasks', '*', 'delete')
     def delete(self):
         request_body = request.get_json()
         url = ConfigClass.DATA_UTILITY_SERVICE + "tasks"
@@ -109,17 +100,21 @@ class FileActions(Resource):
             return "project_geid required", EAPIResponseCode.bad_request.value
         # validate project
         project_res = http_query_node(
-            "Dataset", {"global_entity_id": project_geid})
+            "Container", {"global_entity_id": project_geid})
         if project_res.status_code != 200:
             return  "Query node error: " + str(project_res.text), EAPIResponseCode.internal_error.value
         project_found = project_res.json()
         if len(project_found) == 0:
             return "Invalid project_geid, Project not found: " + project_geid, EAPIResponseCode.bad_request.value
         project_info = project_found[0]
+
+        if not has_permission(project_info["code"], 'file', '*', operation.lower()):
+            return "Permission denied", EAPIResponseCode.forbidden.value
+
         # validate user
         payload = {
             "start_label": "User",
-            "end_label": "Dataset",
+            "end_label": "Container",
             "start_params": {
                 "name": current_identity['username']
             },
@@ -162,12 +157,15 @@ class FileActions(Resource):
                     source = source_file_found[0]
                 if user_project_role == 'contributor':
                     neo4j_labels = source["labels"]
-                    if source['uploader'] != current_identity['username']:
+
+                    root_folder = source["display_path"].split("/")[0]
+                    if root_folder != current_identity['username']:
                         return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                     if 'Greenroom' not in neo4j_labels:
                         return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                 if user_project_role == 'collaborator':
-                    if source['uploader'] != current_identity['username']:
+                    root_folder = source["display_path"].split("/")[0]
+                    if root_folder != current_identity['username']:
                         return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
         # request action utility API
         payload = request_body
@@ -204,7 +202,7 @@ class FileValidation(Resource):
             # validate project
             _logger.info('file validation api: validate project')
             project_res = http_query_node(
-                "Dataset", {"global_entity_id": project_geid})
+                "Container", {"global_entity_id": project_geid})
             if project_res.status_code != 200:
                 _logger.error('file validation api: Query node error')
                 return  "Query node error: " + str(project_res.text), EAPIResponseCode.internal_error.value
@@ -213,10 +211,14 @@ class FileValidation(Resource):
                 return "Invalid project_geid, Project not found: " + project_geid, EAPIResponseCode.bad_request.value
             project_info = project_found[0]
             _logger.info('file validation api: project info' + str(project_info))
+
+            if not has_permission(project_info["code"], 'file', '*', operation.lower()):
+                return "Permission denied", EAPIResponseCode.forbidden.value
+
             # validate user
             payload = {
                 "start_label": "User",
-                "end_label": "Dataset",
+                "end_label": "Container",
                 "start_params": {
                     "name": current_identity['username']
                 },
@@ -267,12 +269,14 @@ class FileValidation(Resource):
                         user_project_role = relation['r']['type']
                         if user_project_role == 'contributor':
                             neo4j_labels = source["labels"]
-                            if source['uploader'] != current_identity['username']:
+                            root_folder = source["display_path"].split("/")[0]
+                            if root_folder != current_identity['username']:
                                 return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                             if 'Greenroom' not in neo4j_labels:
                                 return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                         if user_project_role == 'collaborator':
-                            if source['uploader'] != current_identity['username']:
+                            root_folder = source["display_path"].split("/")[0]
+                            if root_folder != current_identity['username']:
                                 return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                             
                 

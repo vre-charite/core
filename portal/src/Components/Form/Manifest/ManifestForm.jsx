@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './index.module.scss';
-import { MANIFEST_ATTR_TYPE } from '../../../Views/Dataset/Settings/Tabs/manifest.values';
+import { MANIFEST_ATTR_TYPE } from '../../../Views/Project/Settings/Tabs/manifest.values';
 import { Form, Select, Input } from 'antd';
 function ManifestForm(props) {
   function renderAttr(attr) {

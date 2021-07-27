@@ -145,7 +145,7 @@ class Auth extends Component {
   };
 
   initApis = async (username) => {
-    getDatasetsAPI({ type: 'usecase' })
+    getDatasetsAPI({})
       .then((res) => {
         this.props.AddDatasetCreator(res.data.result, 'All Use Cases');
       })

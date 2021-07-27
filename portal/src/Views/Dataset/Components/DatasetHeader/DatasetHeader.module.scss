@@ -1,0 +1,32 @@
+.dataset-header-card {
+  background: #ffffff;
+  box-shadow: 0px 1px 7px #0000001a;
+  position: relative;
+  letter-spacing: 0.4px;
+
+  :global {
+    .ant-card-body {
+      padding: 5px 0;
+      padding-top: 12px !important;
+    }
+  }
+
+  .back-button {
+    float: left;
+    width: 50px;
+    padding-left: 20px;
+    font-size: 16px;
+    margin-top: 4px;
+  }
+}
+
+.right {
+  position: absolute;
+  right: 35px;
+  height: 100%;
+}
+
+.left{
+  float: left;
+  max-width: calc(100% - 280px);
+}

@@ -11,7 +11,6 @@ import { FolderOpenOutlined, ContainerOutlined } from '@ant-design/icons';
  */
 const getChildrenTree = (data, layer = 0, path) => {
   if (!data || data.length === 0) {
-    // console.log("!data || data.length === 0");
     /* return [
       {
         title: "New",

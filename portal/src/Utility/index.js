@@ -23,9 +23,16 @@ import { formatRole, convertRole } from './roleConvert';
 import { convertUTCDateToLocalDate, timeConvert, timezone } from './timeCovert';
 import { partialString } from './column';
 import { nestedLoop } from './fileTree';
-import { pathsMap, pathNameMap, locationMap, pathsMapV2 } from './pathsMap';
+import { pathsMap } from './pathsMap';
 import { getHighlightedText, hightLightCaseInsensitive } from './highlight';
-import { checkIsVirtualFolder } from './panelKey';
+
+import {
+  checkIsVirtualFolder,
+  checkUserHomeFolder,
+  checkRootFolder,
+  checkGreenAndCore,
+} from './panelKey';
+export { useQueryParams } from './useQueryParams';
 export {
   fileUpload,
   uploadStarter,
@@ -52,14 +59,14 @@ export {
   partialString,
   pathsMap,
   nestedLoop,
-  pathNameMap,
   getHighlightedText,
   hightLightCaseInsensitive,
-  locationMap,
   currentBrowser,
   toFixedNumber,
-  pathsMapV2,
   checkIsVirtualFolder,
+  checkUserHomeFolder,
+  checkRootFolder,
+  checkGreenAndCore,
 };
 
 export { logout, refresh, login } from './keycloakActions';

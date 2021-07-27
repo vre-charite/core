@@ -122,9 +122,9 @@
       "You do not have permission to access child datasets in this project."
     ],
     "500": [
-      "Something went wrong while trying to fetch child datasets, please try again later. Error code: 500"
+      "Something went wrong while trying to retrieve child datasets, please try again later. Error code: 500"
     ],
-    "default": ["Something went wrong while getting children dataset."]
+    "default": ["Something went wrong while attempting to retrive the child datasets, please try again later."]
   },
   "traverseFoldersContainersAPI": {
     "403": ["You do not have permission to access this folder."],
@@ -158,7 +158,7 @@
   },
   "downloadFilesAPI": {
     "400": ["Folder is empty"],
-    "404":["File does not exist"],
+    "404": ["File does not exist"],
     "403": ["You do not have permission to download files from this project."],
     "500": [
       "Something went wrong while trying to download files, please try again later. Error code: 500"
@@ -403,18 +403,36 @@
     "uniqueName": ["The \"name\" property should be unique"]
   },
   "importManifestAPI": {
-    "default": ["Failed to upload the attribute template"]
+    "default": ["Something went wrong while trying to upload the attribute template"]
   },
   "getManifestById": {
-    "default": ["Failed to retrieve the attribute template id: "]
+    "default": ["Something went wrong while trying to retrieve the attribute template id: "]
   },
   "fileOperations": {
     "deleteErr": "Something went wrong while trying to delete a file or folder.",
-    "unauthorizedDelete":"You are not authorized to delete the selected file(s)/folder(s)",
+    "unauthorizedDelete": "You are not authorized to delete the selected file(s)/folder(s)",
     "noFileToDelete": "Please select the files or folders you wish to delete."
   },
   "copyFiles": {
     "default": ["Failed to copy the files, please try again later."]
+  },
+  "addToDataset": {
+    "default": [
+      "Failed to import the file(s)/folder(s) to the dataset, please try again later!"
+    ],
+    "403": ["This dataset has already been taken by another project."]
+  },
+  "listDatasets": {
+    "default": ["Failed to list all of the datasets, please try again later."]
+  },
+  "updateFileTags": {
+    "default": ["Failed to update the tags, please try again later."]
+  },
+  "addFileTags": {
+    "default": ["Failed to add the tags, please try again later."]
+  },
+  "deleteFileTags": {
+    "default": ["Failed to delete the tags, please try again later."]
   },
   "attachManifest": {
     "default": ["Failed to attach attribute template, please try again later."]
@@ -425,7 +443,9 @@
     ]
   },
   "deleteVirtualFolder": {
-    "default": ["Something went wrong while trying to delete the collection. Please try again later"]
+    "default": [
+      "Something went wrong while trying to delete the collection. Please try again later"
+    ]
   },
   "removeFromVirtualFolder": {
     "default": [
@@ -433,10 +453,14 @@
     ]
   },
   "addFilesToVirtualFolder": {
-    "default": ["Something went wrong while trying to add files to collection. Please try again later"]
+    "default": [
+      "Something went wrong while trying to add files to collection. Please try again later"
+    ]
   },
   "createVirtualFolder": {
-    "default": ["Something went wrong while trying to create collection. Please try again later"],
+    "default": [
+      "Something went wrong while trying to create collection. Please try again later"
+    ],
     "duplicate": [
       "A collection by this name already exists, please enter a new name."
     ],
@@ -449,7 +473,9 @@
     ]
   },
   "addFilesToNewFolder": {
-    "default": ["Something went wrong while trying to add files to the new collection. Please try again later"]
+    "default": [
+      "Something went wrong while trying to add files to the new collection. Please try again later"
+    ]
   },
   "addUser2Project": {
     "email": "Wrong email format",
@@ -515,9 +541,34 @@
     }
   },
   "createFolder": {
-    "409": ["A folder with same name already exists at the specified destination."],
+    "409": [
+      "A folder with same name already exists at the specified destination."
+    ],
     "default": [
       "Something went wrong while trying to create folder, please try again later."
     ]
+  },
+  "getDatasets": {
+    "500": ["Something went wrong while trying to retrieve datasets.  Error code: 500"],
+    "default": ["Something went wrong while trying to retrieve datasets, please try again later."]
+  },
+  "downloadDataset": {
+    "default": ["Failed to retrieve download url"]
+  },
+  "createDataset": {
+    "409": ["This dataset code has been taken"],
+    "default": ["Something went wrong while trying to create the dataset, please try again later."]
+  },
+  "updateDatasetInfo":{
+    "default":["Something went wrong while trying to update the dataset info, please try again later."]
+  },
+  "getDatasetInfo":{
+    "default":["Something went wrong while trying to get dataset information, please try again later."]
+  },
+  "datasetDelete":{
+    "default":["Something went wrong while trying to delete the file or folder, please try again later."]
+  },
+  "datasetDownloadFile":{
+    "default":["Something went wrong while trying to retrieve the download url, please try again later."]
   }
 }

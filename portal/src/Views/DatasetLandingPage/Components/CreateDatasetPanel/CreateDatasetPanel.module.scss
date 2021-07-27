@@ -1,0 +1,59 @@
+.card {
+  box-shadow: 0px 1px 7px #0000001a;
+  border-radius: 6px;
+  margin: 0 30px;
+
+  :global {
+    .ant-card-body {
+      position: relative;
+    }
+  }
+  .button-group {
+    position: absolute;
+    right: 0px;
+    top: -55px;
+    :global {
+      .ant-btn-primary {
+        border-radius: 6px;
+      }
+    }
+  }
+  .form {
+    :global {
+      h2 {
+        font-size: 21px;
+        font-weight: 600;
+        letter-spacing: 0px;
+        color: #003262;
+        margin-left: 35px;
+      }
+
+      .ant-select-selector {
+        border: 1px solid #d4d4d4;
+        border-radius: 6px;
+      }
+    }
+    .input {
+      border: 1px solid #d4d4d4;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .select {
+      border-radius: 6px;
+    }
+    .spacing {
+      height: 50px;
+    }
+    .collection-method {
+      div:first-child {
+        overflow: visible;
+        label {
+          span {
+            position: relative;
+            bottom: 8px;
+          }
+        }
+      }
+    }
+  }
+}

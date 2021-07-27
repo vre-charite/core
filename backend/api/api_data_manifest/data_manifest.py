@@ -8,7 +8,9 @@ from models.api_meta_class import MetaAPI
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from models.api_data_manifest import DataAttributeModel, DataManifestModel, TypeEnum, db
 from .utils import has_permissions, is_greenroom, get_file_node_bygeid, get_trashfile_node_bygeid, \
-        has_valid_attributes, check_attributes
+    has_valid_attributes, check_attributes, get_folder_node_bygeid
+from services.permissions_service.decorators import permissions_check
+from services.permissions_service.utils import has_permission
 from api import module_api
 from flask import request
 import re
@@ -17,132 +19,105 @@ import requests
 import json
 import time
 
-api_ns_data_manifests = module_api.namespace('Data Manifests Restful', description='For data manifest feature', path ='/v1')
-api_ns_data_manifest = module_api.namespace('Data Manifest Restful', description='For data manifest feature', path ='/v1')
+api_ns_data_manifests = module_api.namespace(
+    'Data Manifests Restful', description='For data manifest feature', path='/v1')
+api_ns_data_manifest = module_api.namespace(
+    'Data Manifest Restful', description='For data manifest feature', path='/v1')
 
 _logger = SrvLoggerFactory('api_data_manifest').get_logger()
 
+
 class APIDataManifest(metaclass=MetaAPI):
     def api_registry(self):
-        api_ns_data_manifests.add_resource(self.RestfulManifests, '/data/manifests')
-        api_ns_data_manifest.add_resource(self.RestfulManifest, '/data/manifest/<manifest_id>')
-        api_ns_data_manifest.add_resource(self.RestfulAttributes, '/data/attributes')
-        api_ns_data_manifest.add_resource(self.RestfulAttribute, '/data/attribute/<id>')
-        api_ns_data_manifest.add_resource(self.FileManifests, '/file/manifest/attach')
-        api_ns_data_manifest.add_resource(self.FileManifest, '/file/manifest')
-        api_ns_data_manifest.add_resource(self.ValidateManifest, '/file/manifest/validate')
-        api_ns_data_manifest.add_resource(self.ImportManifest, '/import/manifest')
-        api_ns_data_manifest.add_resource(self.ExportManifest, '/export/manifest')
-        api_ns_data_manifest.add_resource(self.FileManifestQuery, '/file/manifest/query')
+        api_ns_data_manifests.add_resource(
+            self.RestfulManifests, '/data/manifests')
+        api_ns_data_manifest.add_resource(
+            self.RestfulManifest, '/data/manifest/<manifest_id>')
+        api_ns_data_manifest.add_resource(
+            self.RestfulAttributes, '/data/attributes')
+        api_ns_data_manifest.add_resource(
+            self.RestfulAttribute, '/data/attribute/<id>')
+        api_ns_data_manifest.add_resource(
+            self.FileManifests, '/file/manifest/attach')
+        api_ns_data_manifest.add_resource(self.FileManifest, '/file/<file_geid>/manifest')
+        api_ns_data_manifest.add_resource(
+            self.ValidateManifest, '/file/manifest/validate')
+        api_ns_data_manifest.add_resource(
+            self.ImportManifest, '/import/manifest')
+        api_ns_data_manifest.add_resource(
+            self.ExportManifest, '/export/manifest')
+        api_ns_data_manifest.add_resource(
+            self.FileManifestQuery, '/file/manifest/query')
+        api_ns_data_manifest.add_resource(
+            self.AttachAttributes, '/file/attributes/attach')
 
     class RestfulManifests(Resource):
         @api_ns_data_manifest.expect(data_manifests)
         @api_ns_data_manifest.response(200, data_manifests_return)
         @jwt_required()
+        @permissions_check('file_attribute_template', '*', 'view')
         def get(self):
             """
             List manifests by project_code
             """
-            my_res = APIResponse()
-            project_code = request.args.get('project_code')
-            page = int(request.args.get('page', 1))
-            page_size = int(request.args.get('page_size', 25))
-            if not project_code:
-                my_res.set_code(EAPIResponseCode.bad_request)
-                my_res.set_result("project_code is required")
-                return my_res.to_dict, my_res.code
-
-            # Query psql for manifests
-            # paginated
-            #manifests = db.session.query(DataManifestModel).filter_by(
-            #        project_code=project_code).paginate(page=page, per_page=page_size, error_out=False)
-            manifests = db.session.query(DataManifestModel).filter_by(project_code=project_code)
-            results = []
-            for manifest in manifests:
-            #for manifest in manifests.items:
-                result = manifest.to_dict()
-                result["attributes"] = []
-                attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest.id).\
-                        order_by(DataAttributeModel.id.asc())
-                for atr in attributes:
-                    result["attributes"].append(atr.to_dict())
-                results.append(result)
-            #my_res.set_page(manifests.page)
-            #my_res.set_num_of_pages(manifests.pages)
-            my_res.set_total(len(results))
-            my_res.set_result(results)
-            return my_res.to_dict, my_res.code
+            try:
+                response = requests.get(
+                    ConfigClass.ENTITYINFO_SERVICE + "manifests", params=request.args)
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
         @jwt_required()
+        @permissions_check('file_attribute_template', '*', 'create')
         def post(self):
             """
             Create a data manifest
             """
-            api_response = APIResponse()
-            data = request.get_json()
-            required_fields = ["name", "project_code"]
-            model_data = {}
-            for field in required_fields:
-                if not field in data:
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_result(f"Missing required field {field}")
-                    return api_response.to_dict, api_response.code
-                model_data[field] = data[field]
-
-            if current_identity["role"] != "admin":
-                role = get_project_permissions(model_data["project_code"], current_identity["user_id"])
-                if role != "admin":
-                    api_response.set_code(EAPIResponseCode.forbidden)
-                    api_response.set_result("Permission Denied")
-                    return api_response.to_dict, api_response.code
-            manifests = db.session.query(DataManifestModel).filter_by(project_code=data["project_code"])
-            if manifests.count() > 9:
-                api_response.set_code(EAPIResponseCode.forbidden)
-                api_response.set_result("Manifest limit reached")
-                return api_response.to_dict, api_response.code
-
-            for item in manifests:
-                result = item.to_dict()
-                if data["name"] == result["name"]:
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_result("duplicate manifest name")
-                    return api_response.to_dict, api_response.code
-
-            manifest = DataManifestModel(**model_data)
-            db.session.add(manifest)
-            db.session.commit()
-            db.session.refresh(manifest)
-
-            api_response.set_result(manifest.to_dict())
-            return api_response.to_dict, api_response.code
-
+            try:
+                response = requests.post(
+                    ConfigClass.ENTITYINFO_SERVICE + "manifests", json=request.get_json())
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
     class RestfulManifest(Resource):
+        # @jwt_required()
         def get(self, manifest_id):
             """
             Get a data manifest and list attributes
             """
             my_res = APIResponse()
-            page = int(request.args.get('page', 1))
-            page_size = int(request.args.get('page_size', 25))
             manifest = db.session.query(DataManifestModel).get(manifest_id)
             if not manifest:
                 my_res.set_code(EAPIResponseCode.not_found)
                 my_res.set_error_msg('Manifest not found')
             else:
                 result = manifest.to_dict()
-                result["attributes"] = []
-                #paginated
-                #attributes = db.session.query(DataAttributeModel).filter_by(
-                #        manifest_id=manifest_id).paginate(page=page, per_page=page_size, error_out=False)
-                #my_res.set_page(attributes.page)
-                #my_res.set_num_of_pages(attributes.pages)
-                attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest_id).\
-                        order_by(DataAttributeModel.id.asc())
-                for atr in attributes:
-                    result["attributes"].append(atr.to_dict())
-                my_res.set_result(result)
-            return my_res.to_dict, my_res.code
+                # if not has_permission(result.get("project_code"), 'file_attribute_template', '*', 'view'):
+                #    my_res.set_code(EAPIResponseCode.forbidden)
+                #    my_res.set_error_msg('Permission Denied')
+                #    return my_res.to_dict, my_res.code
+            try:
+                response = requests.get(
+                    ConfigClass.ENTITYINFO_SERVICE + f"manifest/{manifest_id}")
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
         @jwt_required()
         def put(self, manifest_id):
@@ -156,28 +131,22 @@ class APIDataManifest(metaclass=MetaAPI):
                 return my_res.to_dict, my_res.code
 
             # Permissions check
-            if current_identity["role"] != "admin":
-                role = get_project_permissions(manifest.project_code, current_identity["user_id"])
-                if role != "admin":
-                    my_res.set_code(EAPIResponseCode.forbidden)
-                    my_res.set_result("Permission Denied")
-                    return my_res.to_dict, my_res.code
+            if not has_permission(manifest.project_code, 'file_attribute_template', '*', 'update'):
+                my_res.set_code(EAPIResponseCode.forbidden)
+                my_res.set_result("Permission Denied")
+                return my_res.to_dict, my_res.code
 
-            if "type" in data:
-                try:
-                    manifest.type = getattr(TypeEnum, data["type"])
-                except AttributeError:
-                    my_res.set_code(EAPIResponseCode.bad_request)
-                    my_res.set_result("Invalid type")
-                    return my_res.to_dict, my_res.code
-            for field in update_fields:
-                if field in data:
-                    setattr(manifest, field, data[field])
-            db.session.add(manifest)
-            db.session.commit()
-            db.session.refresh(manifest)
-            my_res.set_result(manifest.to_dict())
-            return my_res.to_dict, my_res.code
+            try:
+                response = requests.put(
+                    ConfigClass.ENTITYINFO_SERVICE + f"manifest/{manifest_id}", json=data)
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
         @jwt_required()
         def delete(self, manifest_id):
@@ -189,32 +158,25 @@ class APIDataManifest(metaclass=MetaAPI):
             if not manifest:
                 my_res.set_code(EAPIResponseCode.not_found)
                 my_res.set_error_msg('Manifest not found')
-                return my_res
-
-            # check if connect to any files
-            response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/File/query/count", json={"manifest_id": int(manifest_id)})
-            if response.json()["count"] > 0:
-                my_res.set_code(EAPIResponseCode.forbidden)
-                my_res.set_result("Can't delete manifest attached to files")
                 return my_res.to_dict, my_res.code
 
             # Permissions check
-            if current_identity["role"] != "admin":
-                role = get_project_permissions(manifest.project_code, current_identity["user_id"])
-                if role != "admin":
-                    my_res.set_code(EAPIResponseCode.forbidden)
-                    my_res.set_result("Permission Denied")
-                    return my_res.to_dict, my_res.code
+            if not has_permission(manifest.project_code, 'file_attribute_template', '*', 'delete'):
+                my_res.set_code(EAPIResponseCode.forbidden)
+                my_res.set_result("Permission Denied")
+                return my_res.to_dict, my_res.code
 
-            attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest.id)
-            for atr in attributes:
-                db.session.delete(atr)
-            db.session.commit()
-            db.session.delete(manifest)
-            db.session.commit()
-            my_res.set_result("Success")
-            return my_res.to_dict, my_res.code
-
+            try:
+                response = requests.delete(
+                    ConfigClass.ENTITYINFO_SERVICE + f"manifest/{manifest_id}")
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
     class RestfulAttributes(Resource):
         @jwt_required()
@@ -225,35 +187,26 @@ class APIDataManifest(metaclass=MetaAPI):
             api_response = APIResponse()
             attributes = request.get_json()
             for data in attributes:
-                required_fields = ["manifest_id", "name", "type", "value", "optional", "project_code"]
-                model_data = {}
-                for field in required_fields:
-                    if not field in data:
-                        api_response.set_code(EAPIResponseCode.bad_request)
-                        api_response.set_result(f"Missing required field {field}")
-                        return api_response.to_dict, api_response.code
-                    model_data[field] = data[field]
                 # Permissions check
-                if current_identity["role"] != "admin":
-                    role = get_project_permissions(model_data["project_code"], current_identity["user_id"])
-                    if role != "admin":
-                        api_response.set_code(EAPIResponseCode.forbidden)
-                        api_response.set_result("Permission Denied")
-                        return api_response.to_dict, api_response.code
-                # check if connect to any files
-                if not model_data["optional"]:
-                    response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/File/query/count", json={"manifest_id": model_data["manifest_id"]})
-                    if response.json()["count"] > 0:
-                        api_response.set_code(EAPIResponseCode.forbidden)
-                        api_response.set_result("Can't add required attributes to manifest attached to files")
-                        return api_response.to_dict, api_response.code
-                attribute = DataAttributeModel(**model_data)
-                db.session.add(attribute)
-                db.session.commit()
-                db.session.refresh(attribute)
-            api_response.set_result("Success")
-            return api_response.to_dict, api_response.code
+                if not has_permission(data.get("project_code"), 'file_attribute_template', '*', 'create'):
+                    api_response.set_code(EAPIResponseCode.forbidden)
+                    api_response.set_result("Permission Denied")
+                    return api_response.to_dict, api_response.code
+            data = {
+                "attributes": attributes
+            }
 
+            try:
+                response = requests.post(
+                    ConfigClass.ENTITYINFO_SERVICE + "attributes", json=data)
+                return api_response.to_dict, api_response.code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
     class RestfulAttribute(Resource):
         @jwt_required()
@@ -263,37 +216,32 @@ class APIDataManifest(metaclass=MetaAPI):
             """
             my_res = APIResponse()
             data = request.get_json()
-            update_fields = ["name", "attribute", "value", "optional", "project_code"]
+            update_fields = ["name", "attribute",
+                             "value", "optional", "project_code"]
             attribute = db.session.query(DataAttributeModel).get(id)
             if not attribute:
                 my_res.set_code(EAPIResponseCode.not_found)
                 my_res.set_error_msg('Attribute not found')
-                return my_res
+                return my_res.to_dict, my_res.code
 
-            manifest = db.session.query(DataManifestModel).get(attribute.manifest_id)
-            # Permissions check
-            if current_identity["role"] != "admin":
-                role = get_project_permissions(manifest.project_code, current_identity["user_id"])
-                if role != "admin":
-                    my_res.set_code(EAPIResponseCode.forbidden)
-                    my_res.set_result("Permission Denied")
-                    return my_res.to_dict, my_res.code
+            manifest = db.session.query(
+                DataManifestModel).get(attribute.manifest_id)
+            if not has_permission(manifest.project_code, "file_attribute", "*", "update"):
+                my_res.set_code(EAPIResponseCode.forbidden)
+                my_res.set_error_msg('Permission Denied')
+                return my_res.to_dict, my_res.code
 
-            if "type" in data:
-                try:
-                    attribute.type = getattr(TypeEnum, data["type"])
-                except AttributeError:
-                    my_res.set_code(EAPIResponseCode.bad_request)
-                    my_res.set_result("Invalid type")
-                    return my_res.to_dict, my_res.code
-            for field in update_fields:
-                if field in data:
-                    setattr(attribute, field, data[field])
-            db.session.add(attribute)
-            db.session.commit()
-            db.session.refresh(attribute)
-            my_res.set_result(attribute.to_dict())
-            return my_res.to_dict, my_res.code
+            try:
+                response = requests.put(
+                    ConfigClass.ENTITYINFO_SERVICE + f"attribute/{id}", json=data)
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
         @jwt_required()
         def delete(self, id):
@@ -306,24 +254,30 @@ class APIDataManifest(metaclass=MetaAPI):
                 my_res.set_code(EAPIResponseCode.not_found)
                 my_res.set_error_msg('Attribute not found')
                 return my_res.to_dict, my_res.code
-            manifest = db.session.query(DataManifestModel).get(attribute.manifest_id)
-
-            # Permissions check
-            if current_identity["role"] != "admin":
-                role = get_project_permissions(manifest.project_code, current_identity["user_id"])
-                if role != "admin":
-                    my_res.set_code(EAPIResponseCode.forbidden)
-                    my_res.set_result("Permission Denied")
-                    return my_res.to_dict, my_res.code
-            db.sssion.delete(attribute)
-            db.session.commit()
-            my_res.set_result("Success")
-            return my_res.to_dict, my_res.code
-
+            manifest = db.session.query(
+                DataManifestModel).get(attribute.manifest_id)
+            if not has_permission(manifest.project_code, "file_attribute", "*", "delete"):
+                my_res.set_code(EAPIResponseCode.forbidden)
+                my_res.set_error_msg('Permission Denied')
+                return my_res.to_dict, my_res.code
+            try:
+                response = requests.delete(
+                    ConfigClass.ENTITYINFO_SERVICE + f"attribute/{id}")
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
     class FileManifests(Resource):
         @jwt_required()
         def post(self):
+            """
+                Attach file manifest
+            """
             api_response = APIResponse()
             manifests = request.get_json()
             results = {
@@ -348,10 +302,12 @@ class APIDataManifest(metaclass=MetaAPI):
                         results["error"].append(data["name"])
                         print("missing manifest id or manifest_name and project_code")
                         api_response.set_code(EAPIResponseCode.bad_request)
-                        api_response.set_error_msg("missing manifest id or manifest_name and project_code")
+                        api_response.set_error_msg(
+                            "missing manifest id or manifest_name and project_code")
                         return api_response.to_dict, api_response.code
 
-                    manifest = db.session.query(DataManifestModel).filter_by(name=data["manifest_name"], project_code=data["project_code"]).first()
+                    manifest = db.session.query(DataManifestModel).filter_by(
+                        name=data["manifest_name"], project_code=data["project_code"]).first()
                     manifest_id = manifest.id
                 if not manifest_id:
                     results["error"].append(data["name"])
@@ -384,306 +340,123 @@ class APIDataManifest(metaclass=MetaAPI):
                     api_response.set_error_msg("Permission denied")
                     return api_response.to_dict, api_response.code
 
-                post_data = {
-                    "manifest_id": manifest_id,
-                }
-
-                attributes = []
                 manifest = db.session.query(DataManifestModel).get(manifest_id)
-
-                for key, value in data.get("attributes", {}).items():
-                    post_data["attr_" + key] = value
-
-                    sql_attribute = db.session.query(DataAttributeModel).filter_by(name=key, manifest_id=manifest_id)
-                    sql_attribute = sql_attribute[0]
-                    if sql_attribute.type.value == 'multiple_choice':
-                        attribute_value = []
-                        attribute_value.append(value)
-
-                        attributes.append({
-                            "attribute_name": key,
-                            "name": manifest.name,
-                            "value": attribute_value
-                        })
-                    else:
-                        attributes.append({
-                            "attribute_name": key,
-                            "name": manifest.name,
-                            "value": value
-                        })
-
-                # Check required attributes 
-                valid, error_msg = has_valid_attributes(manifest_id, data)
-                if not valid:
-                    results["error"].append(file_node["name"])
-                    print("Mising required attributes")
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_error_msg("Mising required attributes")
+                if is_greenroom(file_node):
+                    zone = "greenroom"
+                else:
+                    zone = "vrecore"
+                if not has_permission(manifest.project_code, 'file_attribute_template', zone, 'attach'):
+                    api_response.set_code(EAPIResponseCode.forbidden)
+                    api_response.set_error_msg("Permission denied")
                     return api_response.to_dict, api_response.code
-
-                file_id = file_node["id"]
-                response = requests.put(ConfigClass.NEO4J_SERVICE + f"nodes/File/node/{file_id}", json=post_data)
-                results["success"].append(file_node["name"])
-
-                # Update Elastic Search Entity
-                es_payload = {
-                    "global_entity_id": file_node["global_entity_id"],
-                    "updated_fields": {
-                        "attributes": attributes,
-                        "time_lastmodified": time.time()
-                    }
+            payload = {
+                "manifests": manifests
+            }
+            try:
+                response = requests.post(
+                    ConfigClass.ENTITYINFO_SERVICE + "file/manifest/attach", json=payload)
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
                 }
-                es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
-                if es_res.status_code != 200:
-                    api_response.set_code = EAPIResponseCode.internal_error
-                    api_response.set_error_msg = f"Elastic Search Error: {es_res.json()}"
-                    return api_response.to_dict, api_response.code
-
-
-            api_response.set_result(results)
-            return api_response.to_dict, api_response.code
-            
+                return error_msg, 500
 
     class FileManifest(Resource):
         """
         Edit a manifest attached to a file
         """
         @jwt_required()
-        def put(self):
+        def put(self, file_geid):
             api_response = APIResponse()
-            data = request.get_json()
-            if not "global_entity_id" in data:
-                api_response.set_code(EAPIResponseCode.bad_request)
-                api_response.set_result("Missing required parameter global_entity_id")
-                return api_response.to_dict, api_response.code
 
-            file_node = get_file_node_bygeid(data.pop("global_entity_id"))
+            # data = request.get_json()
+
+            # if not "global_entity_id" in data:
+            #     api_response.set_code(EAPIResponseCode.bad_request)
+            #     api_response.set_result(
+            #         "Missing required parameter global_entity_id")
+            #     return api_response.to_dict, api_response.code
+
+            file_node = get_file_node_bygeid(file_geid)
 
             # Permissions check
-            manifest = db.session.query(DataManifestModel).get(file_node["manifest_id"])
+            manifest = db.session.query(DataManifestModel).get(
+                file_node["manifest_id"])
             if current_identity["role"] != "admin":
-                role = get_project_permissions(manifest.project_code, current_identity["user_id"])
+                role = get_project_permissions(
+                    manifest.project_code, current_identity["user_id"])
                 if role != "admin":
-                    # contrib and collaborator must own the file to attach manifests
-                    if file_node["uploader"] != current_identity["username"]:
-                        api_response.set_code(EAPIResponseCode.forbidden)
-                        api_response.set_result("Permission Denied")
-                        return api_response.to_dict, api_response.code
-
-            # Check required attributes 
-            attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=file_node["manifest_id"]).\
-                    order_by(DataAttributeModel.id.asc())
-            valid_attributes = []
-            es_attributes = []
-            for attr in attributes:
-                valid_attributes.append(attr.name)
-                if not attr.optional and not attr.name in data:
-                    api_response.set_result("Missing required attribute")
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    return api_response.to_dict, api_response.code
-                if attr.type.value == "multiple_choice":
-                    if not data[attr.name] in attr.value.split(","):
-                        if not data[attr.name] and attr.optional:
-                            continue
-                        api_response.set_result("Invalid attribute value")
-                        api_response.set_code(EAPIResponseCode.bad_request)
-                        return api_response.to_dict, api_response.code
-                    attribute_value = []
-                    attribute_value.append(data[attr.name])
-                    es_attributes.append({
-                        "attribute_name": attr.name,
-                        "name": manifest.name,
-                        "value": attribute_value
-                    })
-                if attr.type.value == "text":
-                    value = data[attr.name]
-                    if value:
-                        if len(value) > 100:
-                            api_response.set_result("text to long")
-                            api_response.set_code(EAPIResponseCode.bad_request)
+                    if role != "collaborator" or "Greenroom" in file_node["labels"]:
+                        # contrib must own the file to attach manifests
+                        # collab can edit core files and there own greenroom files
+                        if file_node["uploader"] != current_identity["username"]:
+                            api_response.set_code(EAPIResponseCode.forbidden)
+                            api_response.set_result("Permission Denied")
                             return api_response.to_dict, api_response.code
-                        es_attributes.append({
-                            "attribute_name": attr.name,
-                            "name": manifest.name,
-                            "value": value
-                        })
-            post_data = {
-                "manifest_id": file_node["manifest_id"],
-            }
-            for key, value in data.items():
-                if key not in valid_attributes:
-                    api_response.set_result("Not a valid attribute")
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    return api_response.to_dict, api_response.code
-                post_data["attr_" + key] = value
 
-            file_id = file_node["id"]
-            response = requests.put(ConfigClass.NEO4J_SERVICE + f"nodes/File/node/{file_id}", json=post_data)
-            api_response.set_result(response.json()[0])
-
-            # Update Elastic Search Entity
-            es_payload = {
-                "global_entity_id": file_node["global_entity_id"],
-                "updated_fields": {
-                    "attributes": es_attributes,
-                    "time_lastmodified": time.time()
-                }
-            }
-            es_res = requests.put(ConfigClass.PROVENANCE_SERVICE + 'entity/file', json=es_payload)
-            if es_res.status_code != 200:
-                api_response.set_code = EAPIResponseCode.internal_error
-                api_response.set_error_msg = f"Elastic Search Error: {es_res.json()}"
+            if is_greenroom(file_node):
+                zone = "greenroom"
+            else:
+                zone = "vrecore"
+            if not has_permission(manifest.project_code, 'file_attribute', zone, 'update'):
+                api_response.set_code(EAPIResponseCode.forbidden)
+                api_response.set_result("Permission Denied")
                 return api_response.to_dict, api_response.code
-
-            return api_response.to_dict, api_response.code
-
+            # payload = {
+            #     "payload": request.get_json()
+            # }
+            try:
+                response = requests.put(
+                    ConfigClass.ENTITYINFO_SERVICE + f"file/{file_geid}/manifest", json=request.get_json())
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
     class ValidateManifest(Resource):
         """
         Validate the input to attach a file manifest
         """
         @jwt_required()
+        @permissions_check('file_attribute_template', '*', 'attach')
         def post(self):
-            api_response = APIResponse()
             data = request.get_json()
-            required_fields = ["manifest_name", "project_code"]
-
-            # Check required fields
-            for field in required_fields:
-                if not field in data:
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_result(f"Missing required field: {field}")
-                    return api_response.to_dict, api_response.code
-
-            manifest_name = data["manifest_name"]
-            project_code = data["project_code"]
-            manifest = db.session.query(DataManifestModel).filter_by(project_code=project_code, name=manifest_name).first()
-            if not manifest:
-                api_response.set_code(EAPIResponseCode.not_found)
-                api_response.set_result(f"Manifest not found")
-                return api_response.to_dict, api_response.code
-
-            attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest.id)
-            valid_attributes = []
-            for attr in attributes:
-                valid_attributes.append(attr.name)
-
-            for key, value in data.get("attributes", {}).items():
-                if key not in valid_attributes:
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_result("Invalid attribute")
-                    return api_response.to_dict, api_response.code
-
-            valid, error_msg = check_attributes(data.get("attributes", {}))
-            if not valid:
-                api_response.set_code(EAPIResponseCode.bad_request)
-                api_response.set_result(error_msg)
-                return api_response.to_dict, api_response.code
-
-            # Check required attributes 
-            valid, error_msg = has_valid_attributes(manifest.id, data)
-            if not valid:
-                api_response.set_result(error_msg)
-                api_response.set_code(EAPIResponseCode.bad_request)
-                return api_response.to_dict, api_response.code
-            api_response.set_result("Success")
-            return api_response.to_dict, api_response.code
-
+            try:
+                response = requests.post(
+                    ConfigClass.ENTITYINFO_SERVICE + "file/manifest/validate", json=data)
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
     class ImportManifest(Resource):
         @jwt_required()
+        @permissions_check("file_attribute_template", "*", "import")
         def post(self):
             api_response = APIResponse()
             data = request.get_json()
-            # permissions check
-            if current_identity["role"] != "admin":
-                role = get_project_permissions(data["project_code"], current_identity["user_id"])
-                if role != "admin":
-                    api_response.set_code(EAPIResponseCode.forbidden)
-                    api_response.set_result("Permission Denied")
-                    return api_response.to_dict, api_response.code
-
-            # limit check
-            manifests = db.session.query(DataManifestModel).filter_by(project_code=data["project_code"])
-            if manifests.count() > 9:
-                api_response.set_code(EAPIResponseCode.forbidden)
-                api_response.set_result("Manifest limit reached")
-                return api_response.to_dict, api_response.code
-
-            for manifest in manifests:
-                result = manifest.to_dict()
-                if data["name"] == result["name"]:
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_result("duplicate manifest name")
-                    return api_response.to_dict, api_response.code
-
-            manifest_data = {
-                "name": data["name"],
-                "project_code": data["project_code"]
-            }
-            # Create manifest in psql
-            manifest = DataManifestModel(**manifest_data)
-            db.session.add(manifest)
-            db.session.commit()
-            db.session.refresh(manifest)
-
-            attributes = data.get("attributes", [])
-            attr_data = {}
-            mutli_requirement = re.compile("^[a-zA-z0-9-_!%&/()=?*+#.;,]{1,32}$")
-            for attr in attributes:
-                if attr["name"] in attr_data:
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_result("duplicate attribute")
-                    return api_response.to_dict, api_response.code
-                if attr["type"] == "multiple_choice":
-                    if not re.search(mutli_requirement, attr["value"]):
-                        api_response.set_code(EAPIResponseCode.bad_request)
-                        api_response.set_result("regex value error")
-                        return api_response.to_dict, api_response.code
-                else:
-                    if attr["value"] and len(attr["value"]) > 100:
-                        api_response.set_code(EAPIResponseCode.bad_request)
-                        api_response.set_result("text to long")
-                        return api_response.to_dict, api_response.code
-                attr_data[attr["name"]] = attr["value"]
-            valid, error_msg = check_attributes(attr_data)
-            if not valid:
-                api_response.set_code(EAPIResponseCode.bad_request)
-                api_response.set_result(error_msg)
-                return api_response.to_dict, api_response.code
-
-            required_fields = ["name", "type", "value", "optional"]
-            attr_list = []
-            # required attrbiute check
-            for attribute in attributes:
-                attr_data = {
-                    "manifest_id": manifest.id, 
-                    "project_code": data.get("project_code"), 
+            try:
+                response = requests.post(
+                    ConfigClass.ENTITYINFO_SERVICE + "file/manifest/import", json=data)
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
                 }
-                for field in required_fields:
-                    if not field in attribute:
-                        api_response.set_code(EAPIResponseCode.bad_request)
-                        api_response.set_result(f"Missing required field {field}")
-                        return api_response.to_dict, api_response.code
-                    attr_data[field] = attribute[field]
-                # check if connect to any files
-                if not attr_data["optional"]:
-                    response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/File/query/count", json={"manifest_id": manifest.id})
-                    if response.json()["count"] > 0:
-                        api_response.set_code(EAPIResponseCode.forbidden)
-                        api_response.set_result("Can't add required attributes to manifest attached to files")
-                        return api_response.to_dict, api_response.code
-                attr_list.append(attr_data)
-
-            # Create create attributes in psql
-            for attr in attr_list:
-                attribute = DataAttributeModel(**attr)
-                db.session.add(attribute)
-                db.session.commit()
-                db.session.refresh(attribute)
-            api_response.set_result("Success")
-            return api_response.to_dict, api_response.code
-
+                return error_msg, 500
 
     class ExportManifest(Resource):
         @jwt_required()
@@ -699,27 +472,27 @@ class APIDataManifest(metaclass=MetaAPI):
                 return api_response.to_dict, api_response.code
 
             manifest = db.session.query(DataManifestModel).get(manifest_id)
+            if not manifest:
+                api_response.set_code(EAPIResponseCode.not_found)
+                api_response.set_result(f"Maniefst not found")
+                return api_response.to_dict, api_response.code
 
-            if current_identity["role"] != "admin":
-                role = get_project_permissions(manifest.project_code, current_identity["user_id"])
-                if role != "admin":
-                    api_response.set_code(EAPIResponseCode.forbidden)
-                    api_response.set_result("Permission Denied")
-                    return api_response.to_dict, api_response.code
+            if not has_permission(manifest.project_code, "file_attribute_template", "*", "export"):
+                api_response.set_code(EAPIResponseCode.forbidden)
+                api_response.set_result("Permission Denied")
+                return api_response.to_dict, api_response.code
 
-            attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest.id).\
-                    order_by(DataAttributeModel.id.asc())
-            for attribute in attributes:
-                response_data["attributes"].append({
-                    "name": attribute.name,
-                    "type": attribute.type.value,
-                    "value": attribute.value,
-                    "optional": attribute.optional,
-                })
-            response_data["name"] = manifest.name
-            response_data["project_code"] = manifest.project_code
-            return response_data, 200
-
+            try:
+                response = requests.get(
+                    ConfigClass.ENTITYINFO_SERVICE + "file/export/manifest", params={"manifest_id": manifest_id})
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
 
     class FileManifestQuery(Resource):
         @jwt_required()
@@ -727,17 +500,15 @@ class APIDataManifest(metaclass=MetaAPI):
             api_response = APIResponse()
             required_fields = ["geid_list"]
             data = request.get_json()
-            # Check required fields
-            for field in required_fields:
-                if not field in data:
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_result(f"Missing required field: {field}")
-                    return api_response.to_dict, api_response.code
+            if not "geid_list" in data:
+                api_response.set_code(EAPIResponseCode.bad_request)
+                api_response.set_result(f"Missing required field: geid_list")
+                return api_response.to_dict, api_response.code
 
             geid_list = data.get("geid_list")
             lineage_view = data.get("lineage_view")
 
-            results = {} 
+            results = {}
             for geid in geid_list:
                 file_node = get_file_node_bygeid(geid)
                 if not file_node:
@@ -750,20 +521,126 @@ class APIDataManifest(metaclass=MetaAPI):
                         return api_response.to_dict, api_response.code
                     attributes = []
                     manifest_id = file_node["manifest_id"]
-                    manifest = db.session.query(DataManifestModel).get(manifest_id)
-                    sql_attributes = db.session.query(DataAttributeModel).filter_by(manifest_id=manifest_id)
-                    for sql_attribute in sql_attributes:
-                        attributes.append({
-                            "id": sql_attribute.id,
-                            "name": sql_attribute.name,
-                            "manifest_name": manifest.name,
-                            "value": file_node.get("attr_" + sql_attribute.name, ""),
-                            "type": sql_attribute.type.value,
-                            "optional": sql_attribute.optional,
-                            "manifest_id": manifest_id,
-                        })
-                    results[geid] = attributes 
-                else:
-                    results[geid] = {} 
-            api_response.set_result(results)
+                    manifest = db.session.query(
+                        DataManifestModel).get(manifest_id)
+                    if is_greenroom(file_node):
+                        zone = "greenroom"
+                    else:
+                        zone = "vrecore"
+                    if not has_permission(manifest.project_code, 'file_attribute_template', zone, 'view'):
+                        api_response.set_code(EAPIResponseCode.forbidden)
+                        api_response.set_result("Permission Denied")
+                        return api_response.to_dict, api_response.code
+            try:
+                response = requests.post(
+                    ConfigClass.ENTITYINFO_SERVICE + "manifest/query", json=data)
+                return response.json(), response.status_code
+            except Exception as e:
+                _logger.error(
+                    f"Error when calling entityinfo service: {str(e)}")
+                error_msg = {
+                    "result": str(e)
+                }
+                return error_msg, 500
+
+    class AttachAttributes(Resource):
+        @jwt_required()
+        def post(self):
+            api_response = APIResponse()
+            required_fields = ["manifest_id", "global_entity_id",
+                               "attributes", "inherit", "project_code"]
+            data = request.get_json()
+            # Check required fields
+            for field in required_fields:
+                if not field in data:
+                    api_response.set_code(EAPIResponseCode.bad_request)
+                    api_response.set_result(f"Missing required field: {field}")
+                    return api_response.to_dict, api_response.code
+
+            global_entity_id = data.get('global_entity_id')
+            project_code = data.get('project_code')
+
+            project_role = 'admin'
+            if current_identity['role'] != 'admin':
+                try:
+                    project_role = get_project_permissions(
+                        project_code, current_identity["user_id"])
+                except Exception as e:
+                    api_response.set_code(EAPIResponseCode.forbidden)
+                    api_response.set_result(
+                        f"User do not have access to this project")
+                    return api_response.to_dict, api_response.code
+
+                for geid in global_entity_id:
+                    file_node = get_file_node_bygeid(geid)
+
+                    if not file_node:
+                        folder_node = get_folder_node_bygeid(geid)
+
+                        if not folder_node:
+                            api_response.set_code(EAPIResponseCode.not_found)
+                            api_response.set_result(f"File/Folder not found")
+                            return api_response.to_dict, api_response.code
+
+                        root_folder = folder_node["display_path"].split("/")[0]
+
+                        if project_role == 'collaborator':
+                            if "VRECore" not in folder_node['labels'] and root_folder != current_identity['username']:
+                                api_response.set_code(
+                                    EAPIResponseCode.forbidden)
+                                api_response.set_result(f"Permission denied")
+                                return api_response.to_dict, api_response.code
+                        elif project_role == 'contributor':
+                            if root_folder != current_identity['username']:
+                                api_response.set_code(
+                                    EAPIResponseCode.forbidden)
+                                api_response.set_result(f"Permission denied")
+                                return api_response.to_dict, api_response.code
+                    else:
+                        root_folder = file_node["display_path"].split("/")[0]
+                        if project_role == 'collaborator':
+                            if "VRECore" not in file_node['labels'] and root_folder != current_identity['username']:
+                                api_response.set_code(
+                                    EAPIResponseCode.forbidden)
+                                api_response.set_result(f"Permission denied")
+                                return api_response.to_dict, api_response.code
+                        elif project_role == 'contributor':
+                            if root_folder != current_identity['username']:
+                                api_response.set_code(
+                                    EAPIResponseCode.forbidden)
+                                api_response.set_result(f"Permission denied")
+                                return api_response.to_dict, api_response.code
+            else:
+                for geid in global_entity_id:
+                    file_node = get_file_node_bygeid(geid)
+
+                    if not file_node:
+                        folder_node = get_folder_node_bygeid(geid)
+
+                        if not folder_node:
+                            api_response.set_code(EAPIResponseCode.not_found)
+                            api_response.set_result(f"File/Folder not found")
+                            return api_response.to_dict, api_response.code
+
+            post_data = {
+                "manifest_id": data["manifest_id"],
+                "global_entity_id": global_entity_id,
+                "attributes": data["attributes"],
+                "inherit": data["inherit"],
+                "project_role": project_role,
+                "username": current_identity['username']
+            }
+
+            res = requests.post(ConfigClass.ENTITYINFO_SERVICE +
+                                'file/attributes/attach', json=post_data)
+
+            print(post_data)
+            if res.status_code != 200:
+                _logger.error('Attach attribtues failed: {}'.format(res.text))
+
+                api_response.set_code(res.status_code)
+                api_response.set_result(res.text)
+                return api_response.to_dict, api_response.code
+
+            api_response.set_result(res.json())
             return api_response.to_dict, api_response.code

@@ -3,12 +3,13 @@ import { Layout, Button } from 'antd';
 import AppHeader from '../../Components/Layout/Header';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import { useKeycloak } from '@react-keycloak/web';
-import { changeUserStatusAPI } from '../../APIs';
+import { changeUserStatusAPI, createSubFolderApi } from '../../APIs';
 const { Content } = Layout;
 function TermsOfUse(props) {
   const { keycloak } = useKeycloak();
   const [visible, setVisible] = useState(true);
   const [btnDisable, setBtnDisable] = useState(true);
+  const [acceptLoading, setAcceptLoading] = useState(false);
   const onCancel = () => {
     setVisible(false);
     setBtnDisable(true);
@@ -29,6 +30,32 @@ function TermsOfUse(props) {
       user.given_name,
     );
     if (res.status === 200) {
+      // if (res.data.result.projectDetails.length) {
+      //   try {
+      //     const { name, globalEntityId, projectDetails } = res.data.result;
+      //     setAcceptLoading(true);
+      //     for (let i = 0; i < projectDetails.length; i++) {
+      //       await createSubFolderApi(
+      //         name,
+      //         globalEntityId,
+      //         projectDetails[i].projectCode,
+      //         name,
+      //         'Greenroom',
+      //       );
+      //       await createSubFolderApi(
+      //         name,
+      //         globalEntityId,
+      //         projectDetails[i].projectCode,
+      //         name,
+      //         'VRECore',
+      //       );
+      //     }
+      //     setAcceptLoading(false);
+      //   } catch (error) {
+      //     setAcceptLoading(false);
+      //     console.log(error);
+      //   }
+      // }
       window.location.reload();
     }
   };
@@ -98,6 +125,7 @@ function TermsOfUse(props) {
               key="submit"
               type="primary"
               disabled={btnDisable}
+              loading={acceptLoading}
               onClick={onOk}
             >
               Accept

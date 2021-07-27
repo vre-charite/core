@@ -8,6 +8,19 @@ from models.user_type import EUserRole, map_role_front_to_sys, map_role_neo4j_to
 from services.user_services.user_authorization import user_accessible
 
 
+def get_container_id(query_params):
+    url = ConfigClass.NEO4J_SERVICE + f"nodes/Container/query"
+    payload = {
+        **query_params
+    }
+    result = requests.post(url, json=payload)
+    if result.status_code != 200 or result.json() == []:
+        return None
+    result = result.json()[0]
+    container_id = result["id"]
+    return container_id
+
+
 def check_role(required_role, parent=None):
     def inner_function(function):
         required_role_mapped = map_role_front_to_sys(required_role)
@@ -30,9 +43,13 @@ def check_role(required_role, parent=None):
             if required_role_mapped == EUserRole.site_admin:
                 return {'result': 'Permission Denied'}, 401
 
-            if(parent):
-                dataset_id = request.get_json().get("parent_id")
-            else:
+            dataset_id = None
+            if 'project_geid' in kwargs:
+                payload = {"global_entity_id": kwargs["project_geid"]}
+                dataset_id = get_container_id(payload)
+            elif 'dataset_id' in kwargs:
+                dataset_id = kwargs['dataset_id']
+            elif (parent):
                 dataset_id = kwargs['dataset_id']
 
             # check if the relation is existed in neo4j

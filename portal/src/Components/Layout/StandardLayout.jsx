@@ -13,6 +13,7 @@ function StandardLayout(props) {
     initFunc = () => {},
     leftContent,
     children,
+    leftMargin=true,
   } = props;
 
   useEffect(() => {
@@ -25,7 +26,7 @@ function StandardLayout(props) {
       <AppHeader />
       <Content>
         <Layout>
-          <Layout style={{ marginLeft: '50px' }}>
+          <Layout style={{ marginLeft: leftMargin?'50px':0 }}>
             {children}
             <Footer />
           </Layout>

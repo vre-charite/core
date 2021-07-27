@@ -12,6 +12,7 @@ from models.api_resource_request import ResourceRequest, db
 from config import ConfigClass
 from services.notifier_services.email_service import SrvEmail
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from services.permissions_service.decorators import permissions_check
 
 api_resource = module_api.namespace('ResourceRequest', description='Resource Request API', path='/v1')
 
@@ -27,7 +28,11 @@ class APIResourceRequest(metaclass=MetaAPI):
 
     class ResourceRequest(Resource):
         @jwt_required()
+        @permissions_check('resource_request', '*', 'view')
         def get(self, id):
+            """
+             Get a single resource request
+            """
             api_response = APIResponse()
             _logger.info("ResourceRequest get called")
 
@@ -51,14 +56,10 @@ class APIResourceRequest(metaclass=MetaAPI):
             return api_response.to_dict, api_response.code
 
         @jwt_required()
+        @permissions_check('resource_request', '*', 'delete')
         def delete(self, id):
             api_response = APIResponse()
             _logger.info("ResourceRequest get called")
-
-            if current_identity["role"] != "admin":
-                api_response.set_error_msg("Permissions denied")
-                api_response.set_code(EAPIResponseCode.forbidden)
-                return api_response.to_dict, api_response.code
 
             try:
                 resource_request = db.session.query(ResourceRequest).get(id)
@@ -77,14 +78,13 @@ class APIResourceRequest(metaclass=MetaAPI):
 
     class ResourceRequestComplete(Resource):
         @jwt_required()
+        @permissions_check('resource_request', '*', 'update')
         def put(self, id):
+            """
+                Update an existing resource request as complete
+            """
             api_response = APIResponse()
             _logger.info("ResourceRequestComplete put called")
-
-            if current_identity["role"] != "admin":
-                api_response.set_error_msg("Permissions denied")
-                api_response.set_code(EAPIResponseCode.forbidden)
-                return api_response.to_dict, api_response.code
 
             try:
                 resource_request = db.session.query(ResourceRequest).get(id)
@@ -106,10 +106,10 @@ class APIResourceRequest(metaclass=MetaAPI):
             try:
                 # Get dataset
                 payload = {"global_entity_id": resource_request.project_geid}
-                response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query", json=payload)
+                response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Container/query", json=payload)
                 if not response.json():
                     api_response.set_code(EAPIResponseCode.forbidden)
-                    api_response.set_result("Dataset not found in neo4j")
+                    api_response.set_result("Container not found in neo4j")
                     return api_response.to_dict, api_response.code
                 dataset_node = response.json()[0]
             except Exception as e:
@@ -147,6 +147,9 @@ class APIResourceRequest(metaclass=MetaAPI):
     class ResourceRequestsQuery(Resource):
         @jwt_required()
         def post(self):
+            """
+                List resource requests
+            """
             _logger.info("ResourceRequestsQuery post called")
             api_response = APIResponse()
             data = request.get_json()
@@ -191,7 +194,11 @@ class APIResourceRequest(metaclass=MetaAPI):
 
     class ResourceRequests(Resource):
         @jwt_required()
+        @permissions_check('resource_request', '*', 'create')
         def post(self):
+            """
+                Create a new resource request, send email notification
+            """
             _logger.info("ResourceRequests post called")
             api_response = APIResponse()
             data = request.get_json()
@@ -250,10 +257,10 @@ class APIResourceRequest(metaclass=MetaAPI):
 
                 # Get dataset
                 payload = {"global_entity_id": data["project_geid"]}
-                response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query", json=payload)
+                response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/Container/query", json=payload)
                 if not response.json():
                     api_response.set_code(EAPIResponseCode.forbidden)
-                    api_response.set_result("Dataset not found in neo4j")
+                    api_response.set_result("Container not found in neo4j")
                     return api_response.to_dict, api_response.code
                 dataset_node = response.json()[0]
 

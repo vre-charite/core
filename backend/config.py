@@ -3,7 +3,7 @@ import os
 
 # os.environ['env'] = "test"
 class ConfigClass(object):
-    env = os.environ.get('env')
+    env = os.environ.get('env', "test")
 
     # the packaged modules
     # api_modules = ["dataset"]
@@ -22,6 +22,7 @@ class ConfigClass(object):
     CATALOGUING_SERVICE = "http://cataloguing:5064/v1/"
     CATALOGUING_SERVICE_v2 = "http://cataloguing:5064/v2/"
     DATA_UTILITY_SERVICE = "http://dataops-ut.utility:5063/v1/"
+    DATA_UTILITY_SERVICE_v2 = "http://dataops-ut.utility:5063/v2/"
     NEO4J_SERVICE_V2 = "http://neo4j.utility:5062/v2/neo4j/"
     NEO4J_SERVICE = "http://neo4j.utility:5062/v1/neo4j/"
     AUTH_SERVICE = "http://auth.utility:5061/v1/"
@@ -31,7 +32,10 @@ class ConfigClass(object):
     EMAIL_SERVICE = "http://notification.utility:5065/v1/email"
     DATA_UPLOAD_SERVICE_VRE = "http://upload.vre:5079/v1"
     DATA_UPLOAD_SERVICE_GREENROOM = "http://upload.greenroom:5079/v1"
-    
+    DATASET_SERVICE = "http://dataset.utility:5081/v1/"
+    DOWNLOAD_SERVICE_VRE_V2 = "http://download.vre:5077/v2/"
+    DOWNLOAD_SERVICE_GR_V2 = "http://download.greenroom:5077/v2/"
+
     if env == "test":
         AUTH_SERVICE = "http://10.3.7.217:5061/v1/"
         NEO4J_SERVICE = "http://10.3.7.216:5062/v1/neo4j/"
@@ -44,9 +48,11 @@ class ConfigClass(object):
         CATALOGUING_SERVICE = "http://cataloguing:5064/v1/"
         CATALOGUING_SERVICE_v2 = "http://cataloguing:5064/v2/"
         DATA_UTILITY_SERVICE = "http://10.3.7.239:5063/v1/"
+        DATA_UTILITY_SERVICE_v2 = "http://10.3.7.239:5063/v2/"
         PROVENANCE_SERVICE = "http://10.3.7.202:5077/v1/"
         DATA_UPLOAD_SERVICE_VRE = "http://10.3.7.200:5079/v1"
         DATA_UPLOAD_SERVICE_GREENROOM = "http://10.3.7.201:5079/v1"
+        DATASET_SERVICE = "http://10.3.7.209:5081/v1/"
 
     # KONG API Gateway
     KONG_BASE = "http://kong-proxy.utility:8000/vre/"

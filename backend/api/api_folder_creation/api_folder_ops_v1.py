@@ -118,7 +118,7 @@ def get_project_role(project_code):
     _res = APIResponse()
     payload = {
         "start_label": "User",
-        "end_label": "Dataset",
+        "end_label": "Container",
         "start_params": {
             "name": current_identity['username']
         },
@@ -144,7 +144,7 @@ def get_project_geid(project_code):
         payload = {
             "code": project_code
         }
-        node_query_url = ConfigClass.NEO4J_SERVICE + "/nodes/Dataset/query"
+        node_query_url = ConfigClass.NEO4J_SERVICE + "/nodes/Container/query"
         response = requests.post(node_query_url, json=payload)
         if response.status_code != 200:
             _logger.error('Failed to query project from neo4j service:   ' + response.text)

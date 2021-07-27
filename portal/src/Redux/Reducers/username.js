@@ -1,4 +1,4 @@
-import { SET_USER_NAME } from "../actionTypes";
+import { SET_USER_NAME } from '../actionTypes';
 
 const init = null;
 function username(state = init, action) {

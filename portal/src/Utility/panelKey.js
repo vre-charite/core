@@ -13,3 +13,15 @@ export const checkIsVirtualFolder = (panelKey) => {
     panelKey.startsWith('core')
   );
 };
+
+export const checkUserHomeFolder = (tabPanelKey) => {
+  return tabPanelKey === 'greenroom-home' || tabPanelKey === 'core-home';
+};
+
+export const checkRootFolder = (tabPanelKey) => {
+  return tabPanelKey === 'greenroom' || tabPanelKey === 'core';
+};
+
+export const checkGreenAndCore = (tabPanelKey) => {
+  return checkUserHomeFolder(tabPanelKey) || checkRootFolder(tabPanelKey);
+};
