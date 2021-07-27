@@ -4,10 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { triggerEvent } from '../../../../../../../Redux/actions';
 import { FILE_OPERATIONS } from '../../FileOperationValues';
 import { tokenManager } from '../../../../../../../Service/tokenManager';
-import {
-  commitFileAction,
-  validateFileAction,
-} from '../../../../../../../APIs';
+import { commitFileAction } from '../../../../../../../APIs';
 import { useTranslation } from 'react-i18next';
 import { PanelKey } from '../../RawTableValues';
 import { DeleteModalFirstStep } from './DeleteModalFirstStep';
@@ -61,40 +58,6 @@ const DeleteFilesModal = ({
     setConfirmLoading(true);
 
     try {
-/*       const validationRes = await validateFileAction(
-        authorizedFilesToDelete.map((file) => {
-          return {
-            geid: file.geid,
-          };
-        }),
-        username,
-        FILE_OPERATIONS.DELETE,
-        project.profile.globalEntityId,
-      );
-      let invalidList = validationRes.data.result.filter(
-        (item) => !item.isValid,
-      );
-      if (invalidList.length) {
-        setStep(2);
-        setConfirmLoading(false);
-        let lockedList = invalidList
-          .map((v) => {
-            const selFileItem = authorizedFilesToDelete.find(
-              (selFile) => selFile.geid === v.geid,
-            );
-            if (selFileItem) {
-              return selFileItem.fileName;
-            } else {
-              return null;
-            }
-          })
-          .filter((v) => !!v);
-        lockedList = lockedList.filter(function (locItem, pos) {
-          return lockedList.indexOf(locItem) == pos;
-        });
-        setLocked(lockedList);
-        return;
-      } */
       const res = await commitFileAction(
         {
           targets: authorizedFilesToDelete.map((file) => {
@@ -133,7 +96,7 @@ const DeleteFilesModal = ({
     authorizedFilesToDelete,
     unauthorizedFilesToDelete,
   };
-  
+
   return (
     <Modal
       title="Delete Files"

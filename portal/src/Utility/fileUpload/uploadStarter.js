@@ -4,15 +4,12 @@ import {
   updateUploadItemCreator,
 } from '../../Redux/actions';
 import { preUpload } from './preUpload';
-import { validateFileAction } from '../../APIs';
 import { message } from 'antd';
 import { FILE_OPERATIONS } from '../../Views/Project/Canvas/Charts/FileExplorer/FileOperationValues';
 import { ErrorMessager, namespace } from '../../ErrorMessages';
 import { getPath } from './getPath';
-const [
-  appendUploadListDispatcher,
-  updateUploadItemDispatcher,
-] = reduxActionWrapper([appendUploadListCreator, updateUploadItemCreator]);
+const [appendUploadListDispatcher, updateUploadItemDispatcher] =
+  reduxActionWrapper([appendUploadListCreator, updateUploadItemCreator]);
 
 /**
  * start the upload process

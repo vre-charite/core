@@ -552,22 +552,14 @@ function searchFilesAPI(params, datasetId) {
   });
 }
 
-function validateFileAction(targets, operator, operation, projectGeid) {
-  return axios({
-    url: `/v1/files/validation`,
-    method: 'POST',
-    data: {
-      payload: {
-        targets,
-      },
-      operator,
-      operation,
-      project_geid: projectGeid,
-    },
-  });
-}
-
-function validateFiles(targets, destination, operator, operation, projectGeid) {
+function validateRepeatFiles(
+  targets,
+  destination,
+  operator,
+  operation,
+  projectGeid,
+  sessionId,
+) {
   let payload = {
     targets,
   };
@@ -575,13 +567,17 @@ function validateFiles(targets, destination, operator, operation, projectGeid) {
     payload.destination = destination;
   }
   return axios({
-    url: `/v1/files/validation`,
+    url: `/v1/files/repeatcheck`,
     method: 'POST',
+    headers: {
+      'Session-ID': sessionId,
+    },
     data: {
       payload,
       operator,
       operation,
       project_geid: projectGeid,
+      session_id: sessionId,
     },
   });
 }
@@ -639,8 +635,7 @@ export {
   getFileManifestAttrs,
   searchFilesAPI,
   getFiles,
-  validateFileAction,
-  validateFiles,
+  validateRepeatFiles,
   commitFileAction,
   getCollectionFiles,
 };

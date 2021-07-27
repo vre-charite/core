@@ -64,6 +64,10 @@ class SrvInvitationManager(metaclass=MetaService):
         inviter_node = response["result"]
 
         self._logger.info(f'Invitation {inserted.id} Saved To Database')
+        first_name = inviter_node.get("first_name", inviter_node["name"])
+        last_name = inviter_node.get("last_name", "")
+        inviter_name = f"{first_name} {last_name}"
+
         if invitation.project_id:
             my_project = container_mgr.check_container_exist(
                 access_token, "Container", invitation.project_id)[0]
@@ -74,9 +78,10 @@ class SrvInvitationManager(metaclass=MetaService):
                 template = "invitation/ad_invite_project.html"
             else:
                 template = "invitation/ad_existing_invite_project.html"
+
             template_kwargs = {
                 "inviter_email": inviter_node["email"],
-                "inviter_name": inviter_node["name"],
+                "inviter_name": inviter_name,
                 "project_name": my_project_name,
                 "project_code": my_project["code"],
                 "project_role": map_neo4j_to_frontend(invitation.project_role),
@@ -101,7 +106,7 @@ class SrvInvitationManager(metaclass=MetaService):
                 platform_role = "Platform User"
             template_kwargs = {
                 "inviter_email": inviter_node["email"],
-                "inviter_name": inviter_node["name"],
+                "inviter_name": inviter_name,
                 "support_email": ConfigClass.EMAIL_SUPPORT,
                 "admin_email": ConfigClass.EMAIL_ADMIN,
                 "platform_role": platform_role,

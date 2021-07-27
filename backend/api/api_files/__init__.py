@@ -3,7 +3,7 @@ from .folder_ops import Folders
 from .vfolder_ops import VirtualFolderFiles, VirtualFolder, VirtualFolderInfo
 from .file_ops import FileExistCheck, FileDownloadLog, FilePreDownload, FileInfo, \
     ProcessedFile, FileTransfer, FileActionLogs, FileActions, \
-    FileActionTasks, FileValidation
+    FileActionTasks, FileValidation, FileRepeatedCheck
 from .file_ops_v2 import TotalFileCountV2, FileTags
 from .file_ops_v4 import FileInfoV4
 from .meta import FileMeta, FileMetaHome
@@ -34,6 +34,7 @@ nfs_entity_ns.add_resource(FileMetaHome, '/entity/meta/')
 nfs_entity_ns.add_resource(FileMeta, '/entity/meta/<geid>')
 nfs_entity_ns.add_resource(FileStatistics, '/project/<project_geid>/files/statistics')
 nfs_entity_ns.add_resource(FileValidation, '/validation')
+nfs_entity_ns.add_resource(FileRepeatedCheck, '/repeatcheck')
 
 
 nfs_entity_ns_v2 = Namespace(

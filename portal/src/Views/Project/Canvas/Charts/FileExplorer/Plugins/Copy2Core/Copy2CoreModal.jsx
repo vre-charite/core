@@ -9,7 +9,6 @@ import {
 } from '@ant-design/icons';
 import Icon from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
-import { validateFiles } from '../../../../../../../APIs';
 import { trimString } from '../../../../../../../Utility';
 import { triggerEvent } from '../../../../../../../Redux/actions';
 import { useEffect } from 'react';
@@ -17,7 +16,10 @@ import { tokenManager } from '../../../../../../../Service/tokenManager';
 import { FILE_OPERATIONS } from '../../FileOperationValues';
 import i18n from '../../../../../../../i18n';
 import styles from './index.module.scss';
-import { commitFileAction } from '../../../../../../../APIs';
+import {
+  commitFileAction,
+  validateRepeatFiles,
+} from '../../../../../../../APIs';
 import CoreDirTree from './CoreDirTree';
 
 const Copy2CoreModal = ({
@@ -515,68 +517,79 @@ const Copy2CoreModal = ({
     let obj1 = { ...renamedFilesObj };
     const fileNewName = renamedFilesObj[geid];
     if (type === 'skippedList') {
-      const validationRes = await validateFiles(
-        [{ geid, rename: fileNewName }],
-        destination.geid,
-        username,
-        FILE_OPERATIONS.COPY,
-        project.profile.globalEntityId,
-      );
-      let existingFilesList = validationRes.data.result.filter(
-        (item) => item.isValid === false && item.error === 'entity-exist',
-      );
-      if (existingFilesList.length) {
-        obj[geid] = true;
-        setRenameValidateFailedObj({ ...obj });
-      } else {
-        setRenameSuccessList([
-          ...renameSuccessList,
-          { name: fileNewName, geid },
-        ]);
-
-        // reset the renamedFiles object when a file has successfully renamed.
-        delete obj1[geid];
-        setRenamedFilesObj(obj1);
-
-        if (obj[geid]) {
-          delete obj[geid];
-          setRenameValidateFailedObj({ ...obj });
-        }
-        const newSkippedFile = skipped.filter((el) => el.geid !== geid);
-        setSkipped(newSkippedFile);
-        setBtnDisabled(false);
-      }
-    } else if (type === 'succeedList') {
-      const validationRes = await validateFiles(
-        [{ geid, rename: fileNewName }],
-        destination.geid,
-        username,
-        FILE_OPERATIONS.COPY,
-        project.profile.globalEntityId,
-      );
-      let existingFilesList = validationRes.data.result.filter(
-        (item) => item.isValid === false && item.error === 'entity-exist',
-      );
-      if (existingFilesList.length) {
-        obj[geid] = true;
-        setRenameValidateFailedObj({ ...obj });
-      } else {
-        let newSuccessList = renameSuccessList.map((el) => {
-          if (el.geid === geid) {
-            return {
-              name: fileNewName,
-              geid,
-            };
-          } else {
-            return el;
+      try {
+        await validateRepeatFiles(
+          [{ geid, rename: fileNewName }],
+          destination.geid,
+          username,
+          FILE_OPERATIONS.COPY,
+          project.profile.globalEntityId,
+          sessionId,
+        );
+      } catch (err) {
+        if (err.response && err.response.status === 409) {
+          const responseData = JSON.parse(err.response.data);
+          let existingFilesList = responseData.result.filter(
+            (item) => item.is_valid === false && item.error === 'entity-exist',
+          );
+          if (existingFilesList.length) {
+            obj[geid] = true;
+            setRenameValidateFailedObj({ ...obj });
+            return;
           }
-        });
-        setRenameSuccessList(newSuccessList);
-        // reset the renamedFiles object when a file has successfully renamed.
-        delete obj1[geid];
-        setRenamedFilesObj(obj1);
-        setBtnDisabled(false);
+        }
       }
+      setRenameSuccessList([...renameSuccessList, { name: fileNewName, geid }]);
+
+      // reset the renamedFiles object when a file has successfully renamed.
+      delete obj1[geid];
+      setRenamedFilesObj(obj1);
+
+      if (obj[geid]) {
+        delete obj[geid];
+        setRenameValidateFailedObj({ ...obj });
+      }
+      const newSkippedFile = skipped.filter((el) => el.geid !== geid);
+      setSkipped(newSkippedFile);
+      setBtnDisabled(false);
+    } else if (type === 'succeedList') {
+      try {
+        await validateRepeatFiles(
+          [{ geid, rename: fileNewName }],
+          destination.geid,
+          username,
+          FILE_OPERATIONS.COPY,
+          project.profile.globalEntityId,
+          sessionId,
+        );
+      } catch (err) {
+        if (err.response && err.response.status === 409) {
+          const responseData = JSON.parse(err.response.data);
+          let existingFilesList = responseData.result.filter(
+            (item) => item.is_valid === false && item.error === 'entity-exist',
+          );
+          if (existingFilesList.length) {
+            obj[geid] = true;
+            setRenameValidateFailedObj({ ...obj });
+            return;
+          }
+        }
+      }
+      let newSuccessList = renameSuccessList.map((el) => {
+        if (el.geid === geid) {
+          return {
+            name: fileNewName,
+            geid,
+          };
+        } else {
+          return el;
+        }
+      });
+      setRenameSuccessList(newSuccessList);
+      // reset the renamedFiles object when a file has successfully renamed.
+      delete obj1[geid];
+      setRenamedFilesObj(obj1);
+      setBtnDisabled(false);
     }
   };
 

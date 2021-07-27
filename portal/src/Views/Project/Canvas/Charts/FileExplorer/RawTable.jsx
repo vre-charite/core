@@ -42,7 +42,6 @@ import {
   getZipContentAPI,
   getFileManifestAttrs,
   getFiles,
-  validateFileAction,
   createSubFolderApi,
 } from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
@@ -563,58 +562,6 @@ function RawTable(props) {
                 {!panelKey.includes('trash') && (
                   <Menu.Item
                     onClick={async (e) => {
-                      // temporarily remove validation for folder downloading
-                      if (files[0].file) {
-                        const validationRes = await validateFileAction(
-                          files.map((v) => {
-                            return {
-                              geid: v.geid,
-                            };
-                          }),
-                          props.username,
-                          FILE_OPERATIONS.DOWNLOAD,
-                          currentDataset.globalEntityId,
-                        );
-                        let invalidList = validationRes.data.result.filter(
-                          (item) => !item.isValid,
-                        );
-                        if (invalidList.length) {
-                          let lockedList = invalidList
-                            .map((v) => {
-                              let paths = v.fullPath.split('/');
-                              if (paths && paths.length) {
-                                return paths[paths.length - 1];
-                              } else {
-                                return null;
-                              }
-                            })
-                            .filter((v) => !!v);
-                          Modal.warning({
-                            title: 'Invalid File/Folder Operation',
-                            content: (
-                              <>
-                                <p>
-                                  The following {lockedList.length} file/folders
-                                  will be skipped because there are concurrent
-                                  file operations are taking place:
-                                </p>
-                                <ul
-                                  style={{
-                                    maxHeight: 90,
-                                    paddingLeft: 16,
-                                    overflowY: 'auto',
-                                  }}
-                                >
-                                  {lockedList.map((v) => {
-                                    return <li key={v}>{v}</li>;
-                                  })}
-                                </ul>
-                              </>
-                            ),
-                          });
-                          return;
-                        }
-                      }
                       downloadFilesAPI(
                         props.projectId,
                         files,
@@ -899,49 +846,6 @@ function RawTable(props) {
         location: file.location,
       });
     });
-
-    const validationRes = await validateFileAction(
-      files.map((v) => {
-        return {
-          geid: v.geid,
-        };
-      }),
-      props.username,
-      FILE_OPERATIONS.DOWNLOAD,
-      currentDataset.globalEntityId,
-    );
-    let invalidList = validationRes.data.result.filter((item) => !item.isValid);
-    if (invalidList.length) {
-      let lockedList = invalidList
-        .map((v) => {
-          let paths = v.fullPath.split('/');
-          if (paths && paths.length) {
-            return paths[paths.length - 1];
-          } else {
-            return null;
-          }
-        })
-        .filter((v) => !!v);
-      Modal.warning({
-        title: 'Invalid File/Folder Operation',
-        content: (
-          <>
-            <p>
-              The following {lockedList.length} file(s)/folder(s) will be
-              skipped because there are concurrent file operations are taking
-              place:
-            </p>
-            <ul style={{ maxHeight: 90, overflowY: 'auto', paddingLeft: 16 }}>
-              {lockedList.map((v) => {
-                return <li key={v}>{v}</li>;
-              })}
-            </ul>
-          </>
-        ),
-      });
-      setLoading(false);
-      return;
-    }
     downloadFilesAPI(
       props.projectId,
       files,
