@@ -233,12 +233,12 @@ class Auth extends Component {
     }
     return (
       <>
-        <Alert
+        {/* <Alert
           message="This release of the VRE is exclusively for testing purposes. The upload of files containing clinical and/or research data of any type is strictly forbidden. By proceeding, you are agreeing to these terms."
           type="warning"
           showIcon
           style={{ float: 'right', width: '100%', zIndex: '10' }}
-        />
+        /> */}
         <div className={styles.bg}>
           <Card
             className={styles.card}

@@ -226,14 +226,14 @@ class AppHeader extends Component {
         }}
         id="global_site_header"
       >
-        <div style={{ marginLeft: -50 }}>
+        {/* <div style={{ marginLeft: -50 }}>
           <Alert
             message="This release of the VRE is exclusively for testing purposes. The upload of files containing clinical and/or research data of any type is strictly forbidden. By proceeding, you are agreeing to these terms."
             type="warning"
             showIcon
             style={{ fontSize: '12px' }}
           />
-        </div>
+        </div> */}
         <Menu
           mode="horizontal"
           getPopupContainer={(node) => node.parentNode}
