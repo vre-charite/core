@@ -7,7 +7,6 @@ import {
   trimString,
   objectKeysToSnakeCase,
   objectKeysToCamelCase,
-  
 } from '../../../Utility';
 import styles from './index.module.scss';
 import GeneralInfo from './Tabs/GeneralInfo/GeneralInfo';
@@ -189,6 +188,8 @@ function Settings(props) {
       <Button
         onClick={() => {
           setEditMode(false);
+          // reset dataset to be same with datasetInfo
+          setDatasetUpdate({ ...datasetInfo });
         }}
         type="link"
       >

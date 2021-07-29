@@ -122,16 +122,25 @@ function GeneralInfo(props) {
         </div>
         <div style={{ width: 320, paddingRight: 10, marginTop: 38 }}>
           <div style={{ display: 'inline-block' }}>
-            <Switch
-              style={{ marginTop: 8 }}
-              disabled={!editMode}
-              defaultChecked={datasetInfo.discoverable}
-              onChange={(checked, e) =>
-                updateDatasetInfo('discoverable', checked)
-              }
-              checkedChildren="on"
-              unCheckedChildren="off"
-            />
+            {editMode ? (
+              <Switch
+                style={{ marginTop: 8 }}
+                checked={datasetUpdate.discoverable}
+                onChange={(checked, e) =>
+                  updateDatasetInfo('discoverable', checked)
+                }
+                checkedChildren="on"
+                unCheckedChildren="off"
+              />
+            ) : (
+              <Switch
+                style={{ marginTop: 8 }}
+                disabled={true}
+                checked={datasetInfo.discoverable}
+                checkedChildren="on"
+                unCheckedChildren="off"
+              />
+            )}
           </div>
 
           <div style={{ display: 'inline-block', marginLeft: 17 }}>

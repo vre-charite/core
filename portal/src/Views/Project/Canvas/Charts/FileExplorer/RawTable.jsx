@@ -805,14 +805,7 @@ function RawTable(props) {
     onChange: onSelectChange,
     getCheckboxProps: (record) => {
       if (tableState === TABLE_STATE.MANIFEST_APPLY) {
-        if (
-          currentDataset.permission !== 'admin' &&
-          record.owner !== props.username
-        ) {
-          return {
-            disabled: true,
-          };
-        } else if (record.manifest && record.manifest.length !== 0) {
+        if (record.manifest && record.manifest.length !== 0) {
           return {
             disabled: true,
           };
