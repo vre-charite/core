@@ -3,8 +3,15 @@ import {
   SET_SELECTED_FILES_KEYS,
   CLEAN_FILES_SELECTION,
   SET_FOLDER_ROUTING,
+  SET_TABLE_RESET,
 } from '../actionTypes';
-const init = { selFiles: [], selFilesKeys: [], folderRouting: {} };
+import _ from 'lodash';
+const init = {
+  selFiles: [],
+  selFilesKeys: [],
+  folderRouting: {},
+  tableResetMap: {},
+};
 export default function (state = init, action) {
   const { type, payload } = action;
   switch (type) {
@@ -22,7 +29,20 @@ export default function (state = init, action) {
       };
     }
     case SET_FOLDER_ROUTING: {
-      return { ...state, folderRouting: payload };
+      return Object.assign(
+        { ...state },
+        { folderRouting: _.cloneDeep(payload) },
+      );
+    }
+    case SET_TABLE_RESET: {
+      let tableResetMap = { ...state.tableResetMap };
+      if (tableResetMap[payload]) {
+        tableResetMap[payload] = tableResetMap[payload] + 1;
+      } else {
+        tableResetMap[payload] = 1;
+      }
+
+      return Object.assign({ ...state }, { tableResetMap: tableResetMap });
     }
     default: {
       return state;

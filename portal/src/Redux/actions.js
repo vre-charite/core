@@ -52,6 +52,7 @@ import {
   DATASET_DATA,
   MY_DATASET_LIST,
   DATASET_INFO,
+  SET_TABLE_RESET,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -316,6 +317,10 @@ export const clearFilesSelection = (payload) => ({
 
 export const setFolderRouting = (payload) => ({
   type: SET_FOLDER_ROUTING,
+  payload,
+});
+export const setTableLayoutReset = (payload) => ({
+  type: SET_TABLE_RESET,
   payload,
 });
 export const setServiceRequestRedDot = (payload) => ({

@@ -35,6 +35,7 @@ import { ErrorMessager, namespace } from '../../../../../ErrorMessages';
 import {
   appendDownloadListCreator,
   setFolderRouting,
+  setTableLayoutReset,
 } from '../../../../../Redux/actions';
 import {
   downloadFilesAPI,
@@ -353,12 +354,14 @@ function RawTable(props) {
               ) {
                 recordGeid = null;
               }
-              record.nodeLabel.indexOf('Folder') !== -1 &&
+              if (record.nodeLabel.indexOf('Folder') !== -1) {
+                dispatch(setTableLayoutReset(panelKey));
                 refreshFiles({
                   geid: recordGeid,
                   sourceType: 'Folder',
                   resetTable: true,
                 });
+              }
             }}
           >
             {record.tags &&
@@ -677,6 +680,7 @@ function RawTable(props) {
           sourceType: 'Folder',
           resetTable: true,
         });
+        dispatch(setTableLayoutReset(panelKey));
         setRefreshing(false);
       }
     } else {
@@ -686,6 +690,7 @@ function RawTable(props) {
         sourceType: getSourceType(),
         resetTable: true,
       });
+      dispatch(setTableLayoutReset(panelKey));
       setRefreshing(false);
     }
   }
@@ -959,6 +964,7 @@ function RawTable(props) {
     const folderRoutingTemp = folderRouting || {};
     folderRoutingTemp[panelKey] = null;
     dispatch(setFolderRouting(folderRoutingTemp));
+    dispatch(setTableLayoutReset(panelKey));
     const isVFolder = checkIsVirtualFolder(panelKey);
 
     if (isVFolder) {
@@ -1335,6 +1341,7 @@ function RawTable(props) {
                             sourceType: 'Folder',
                             resetTable: true,
                           });
+                          dispatch(setTableLayoutReset(panelKey));
                         }}
                       >
                         {v.name.length > 23 ? (
@@ -1427,7 +1434,6 @@ function RawTable(props) {
       <FilesTable
         columns={columns}
         dataSource={rawFiles.data}
-        currentRouting={currentRouting}
         totalItem={rawFiles.total}
         updateTable={refreshFiles}
         projectId={props.projectId}

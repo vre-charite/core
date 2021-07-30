@@ -3,6 +3,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import React from 'react';
 import styles from './index.module.scss';
 import { TABLE_STATE } from './RawTableValues';
+import { connect } from 'react-redux';
 class FilesTable extends React.Component {
   constructor(props) {
     super(props);
@@ -17,31 +18,29 @@ class FilesTable extends React.Component {
       tags: [],
     };
   }
-
   componentDidUpdate(prevProps, prevState) {
-    function isRouteChange(prevRouting, curRouting) {
-      let cur = !curRouting || curRouting.length === 0 ? [] : curRouting;
-      let prev = !prevRouting || prevRouting.length === 0 ? [] : prevRouting;
-      if (cur.length !== prev.length) {
-        return true;
-      } else {
-        return false;
+    if (prevProps.tableResetMap && this.props.tableResetMap) {
+      const previousResetNum = prevProps.tableResetMap[prevProps.panelKey]
+        ? prevProps.tableResetMap[prevProps.panelKey]
+        : null;
+      const currentResetNum = this.props.tableResetMap[this.props.panelKey]
+        ? this.props.tableResetMap[this.props.panelKey]
+        : null;
+      if (previousResetNum !== currentResetNum) {
+        // empty params when user leave folder
+        this.setState({
+          page: 0,
+          pageSize: 10,
+          order: 'desc',
+          sortColumn: 'createTime',
+          searchedColumn: '',
+          searchText: '',
+          inputVisible: false,
+          inputValue: '',
+          tags: this.props.tags,
+        });
+        return;
       }
-    }
-    if (isRouteChange(prevProps.currentRouting, this.props.currentRouting)) {
-      // empty params when user leave folder
-      this.setState({
-        page: 0,
-        pageSize: 10,
-        order: 'desc',
-        sortColumn: 'createTime',
-        searchedColumn: '',
-        searchText: '',
-        inputVisible: false,
-        inputValue: '',
-        tags: this.props.tags,
-      });
-      return;
     }
   }
 
@@ -243,4 +242,6 @@ const convertFilter = (searchText) => {
   return filters;
 };
 
-export default FilesTable;
+export default connect((state) => ({
+  tableResetMap: state.fileExplorer.tableResetMap,
+}))(FilesTable);

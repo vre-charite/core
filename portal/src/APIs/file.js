@@ -209,7 +209,6 @@ async function getFiles(
     url,
     params: objectKeysToSnakeCase(params),
   });
-
   res.data.result.entities = res.data.result.data;
   res.data.result.entities = res.data.result.entities.map((item) => {
     res.data.result.approximateCount = res.data.total;
