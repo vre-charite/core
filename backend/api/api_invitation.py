@@ -317,11 +317,15 @@ class APIInvitation(metaclass=MetaAPI):
                 order_type = post_json.get('order_type', None)
 
                 filters = post_json.get('filters', None)
-                # project_id = filters.get("project_id")
-                project_geid = filters["project_id"]
-                query_params = {"global_entity_id": project_geid}
-                container_id = get_container_id(query_params)
-                _logger.info('container_id: {}'.format(container_id))
+                project_geid = filters.get("project_id", None)
+
+                # is filters has project_id, query project's invitations
+                if project_geid:
+                    query_params = {"global_entity_id": project_geid}
+                    container_id = get_container_id(query_params)
+                    filters['project_id'] = container_id
+                    _logger.info('container_id: {}'.format(container_id))
+
                 if current_identity["role"] != "admin":
                     client = Neo4jClient()
                     result = client.node_get("Container", container_id)
@@ -339,7 +343,6 @@ class APIInvitation(metaclass=MetaAPI):
                         my_res.set_error_msg('Permission denied')
                         return my_res.to_dict, my_res.code
 
-                filters['project_id'] = container_id
                 records, count = invitation_mgr.get_invitations(
                     page, page_size, filters, order_by, order_type)
                 result = []
