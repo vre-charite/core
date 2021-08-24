@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Card, Col, Row } from 'antd';
 import { Button, Modal, notification, Alert } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
+import Icon from '@ant-design/icons';
 import { instanceOf } from 'prop-types';
 import { withCookies, Cookies } from 'react-cookie';
 import styles from './index.module.scss';
