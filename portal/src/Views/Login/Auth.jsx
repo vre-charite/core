@@ -231,6 +231,36 @@ class Auth extends Component {
           'http://10.3.7.220/xwiki/wiki/vrepublic/view/Main/user_guide/';
         break;
     }
+    const alertMessage = (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div>
+          <Icon
+            component={() => (
+              <img
+                className="pic"
+                style={{width: '44px', height: '44px'}}
+                src={require('../../Images/auth_alert.png')}
+              />
+            )}
+          />
+        </div>
+        <div style={{marginLeft: '20px', marginTop: '-3px'}}>
+          <p
+            style={{
+              margin: '0px',
+              color: '#5BAB58',
+              fontSize: '20px',
+              fontWeight: 'bold',
+            }}
+          >
+            GDPR READY
+          </p>
+          <p style={{ margin: '-7px 0px 0px 0px', color: '#FFFFFF', fontSize: '16px' }}>
+            The VRE has undergone a successful GDPR Service Readiness Audit
+          </p>
+        </div>
+      </div>
+    );
     return (
       <>
         {/* <Alert
@@ -239,6 +269,11 @@ class Auth extends Component {
           showIcon
           style={{ float: 'right', width: '100%', zIndex: '10' }}
         /> */}
+	 <Alert
+          className={styles.login_alert}
+          message={alertMessage}
+          style={{ width: '100%', zIndex: '10' }}
+        />
         <div className={styles.bg}>
           <Card
             className={styles.card}
