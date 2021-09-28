@@ -6,9 +6,10 @@ import {
   CloseOutlined,
   DownloadOutlined,
   ImportOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 
-export const datasetUpdateInfoDisplay = (caseType) => {
+const datasetUpdateInfoDisplay = (caseType) => {
   let type;
   if (caseType === 'Dataset.Title') {
     type = 'Title';
@@ -28,7 +29,7 @@ export const datasetUpdateInfoDisplay = (caseType) => {
   );
 };
 
-export const datasetDownloadInfoDisplay = (details) => {
+const datasetDownloadInfoDisplay = (details) => {
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
       <DownloadOutlined style={{ color: '#003262', marginRight: '10px' }} />
@@ -46,7 +47,23 @@ export const datasetDownloadInfoDisplay = (details) => {
   );
 };
 
-export const datasetCreateInfoDisplay = () => {
+const datasetVersionInfoDisplay = (details) => {
+  return (
+    <div>
+      <p
+        style={{
+          fontWeight: 'bold',
+          color: '#003262',
+          margin: '0px 0px 0px 23px',
+        }}
+      >
+        Version {details.source}
+      </p>
+    </div>
+  );
+};
+
+const datasetCreateInfoDisplay = () => {
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
       <PlusOutlined style={{ color: '#003262', marginRight: '10px' }} />
@@ -143,7 +160,7 @@ const datasetAddAndRemoveInfoDisplayHelper = (caseType, action, details) => {
   );
 };
 
-export const datasetAddAndRemoveInfoDisplay = (caseType, action, details) => {
+const datasetAddAndRemoveInfoDisplay = (caseType, action, details) => {
   if (caseType === 'Dataset.Authors') {
     if (
       action === 'ADD' &&
@@ -249,7 +266,102 @@ const fileInfoDisplayHelper = (details) => {
   );
 };
 
-export const fileInfoDisplay = (caseType, action, details) => {
+const schemaInfoDisplay = {
+  schemaCreateInfoDisplay: (details) => {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <PlusOutlined style={{ color: '#003262', marginRight: '10px' }} />
+        <p style={{ margin: '0px' }}>
+          Create a schema:{' '}
+          <span style={{ fontWeight: 600 }}>
+            {details.name.length > 40 ? (
+              <Tooltip title={details.name}>{`${details.name.slice(
+                0,
+                40,
+              )}...`}</Tooltip>
+            ) : (
+              details.name
+            )}
+          </span>
+        </p>
+      </div>
+    );
+  },
+  schemaRemoveInfoDisplay: (details) => {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <CloseOutlined style={{ color: '#FF6D72', marginRight: '10px' }} />
+        <p style={{ margin: '0px' }}>
+          Removed a schema:{' '}
+          <span style={{ fontWeight: 600 }}>
+            {details.name.length > 40 ? (
+              <Tooltip title={details.name}>{`${details.name.slice(
+                0,
+                40,
+              )}...`}</Tooltip>
+            ) : (
+              details.name
+            )}
+          </span>
+        </p>
+      </div>
+    );
+  },
+  schemaUpdateInfoDisplay: (details) => {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <SyncOutlined style={{ color: '#003262', marginRight: '10px' }} />
+        <p style={{ margin: '0px' }}>
+          {`Updated a schema (${
+            details.name.length > 40 ? (
+              <Tooltip title={details.name}>{`${details.name.slice(
+                0,
+                40,
+              )}...`}</Tooltip>
+            ) : (
+              details.name
+            )
+          })`}
+          {details.targets && details.targets.length ? ': ' : ''}
+          <span style={{ fontWeight: 600 }}>
+            {details.targets.join(', ').length > 80 ? (
+              <Tooltip title={details.targets.join(', ')}>{`${details.targets
+                .join(', ')
+                .slice(0, 80)}...`}</Tooltip>
+            ) : (
+              details.targets.join(', ')
+            )}
+          </span>
+        </p>
+      </div>
+    );
+  },
+};
+
+const schemaTemplateInfoDisplay = {
+  schemaTemplateCreateInfoDisplay: (details) => {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <PlusOutlined style={{ color: '#003262', marginRight: '10px' }} />
+        <p style={{ margin: '0px' }}>
+          Added a Custom Schema Template:{' '}
+          <span style={{ fontWeight: 600 }}>
+            {details.name.length > 40 ? (
+              <Tooltip title={details.name}>{`${details.name.slice(
+                0,
+                40,
+              )}...`}</Tooltip>
+            ) : (
+              details.name
+            )}
+          </span>
+        </p>
+      </div>
+    );
+  },
+};
+
+const fileInfoDisplay = (caseType, action, details) => {
   if (caseType === 'File') {
     if (
       action === 'MOVE' &&
@@ -261,8 +373,27 @@ export const fileInfoDisplay = (caseType, action, details) => {
           <ImportOutlined style={{ color: '#003262', marginRight: '10px' }} />
           <p style={{ margin: '0px' }}>
             Moved a file/folder from:{' '}
-            <span style={{ fontWeight: 600 }}>{details.from}</span> to{' '}
-            <span style={{ fontWeight: 600 }}>{details.to}</span>
+            <span style={{ fontWeight: 600 }}>
+              {details.from.length > 40 ? (
+                <Tooltip title={details.from}>{`${details.from.slice(
+                  0,
+                  40,
+                )}...`}</Tooltip>
+              ) : (
+                details.from
+              )}
+            </span>{' '}
+            to{' '}
+            <span style={{ fontWeight: 600 }}>
+              {details.to.length > 40 ? (
+                <Tooltip title={details.to}>{`${details.to.slice(
+                  0,
+                  40,
+                )}...`}</Tooltip>
+              ) : (
+                details.to
+              )}
+            </span>
           </p>
         </div>
       );
@@ -288,6 +419,150 @@ export const fileInfoDisplay = (caseType, action, details) => {
           </p>
         </div>
       );
+    } else if (
+      action === 'UPDATE' &&
+      details.hasOwnProperty('from') &&
+      details.hasOwnProperty('to')
+    ) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <EditOutlined style={{ color: '#003262', marginRight: '10px' }} />
+          <p style={{ margin: '0px' }}>
+            Renamed a file/folder from:{' '}
+            <span style={{ fontWeight: 600 }}>
+              {details.from.length > 40 ? (
+                <Tooltip title={details.from}>{`${details.from.slice(
+                  0,
+                  40,
+                )}...`}</Tooltip>
+              ) : (
+                details.from
+              )}
+            </span>{' '}
+            to{' '}
+            <span style={{ fontWeight: 600 }}>
+              {details.to.length > 40 ? (
+                <Tooltip title={details.to}>{`${details.to.slice(
+                  0,
+                  40,
+                )}...`}</Tooltip>
+              ) : (
+                details.to
+              )}
+            </span>
+          </p>
+        </div>
+      );
     }
   }
 };
+
+//display logs information
+const logsInfo = (action, detail, resource) => {
+  switch (resource) {
+    case 'Dataset.Title':
+      return datasetUpdateInfoDisplay('Dataset.Title');
+    case 'Dataset.License':
+      return datasetUpdateInfoDisplay('Dataset.License');
+    case 'Dataset.Type':
+      return datasetUpdateInfoDisplay('Dataset.Type');
+    case 'Dataset.Description':
+      return datasetUpdateInfoDisplay('Dataset.Description');
+    case 'Dataset.Authors':
+      switch (action) {
+        case 'ADD':
+          return datasetAddAndRemoveInfoDisplay(
+            'Dataset.Authors',
+            'ADD',
+            detail,
+          );
+        case 'REMOVE':
+          return datasetAddAndRemoveInfoDisplay(
+            'Dataset.Authors',
+            'REMOVE',
+            detail,
+          );
+      }
+    case 'Dataset.Modality':
+      switch (action) {
+        case 'ADD':
+          return datasetAddAndRemoveInfoDisplay(
+            'Dataset.Modality',
+            'ADD',
+            detail,
+          );
+        case 'REMOVE':
+          return datasetAddAndRemoveInfoDisplay(
+            'Dataset.Modality',
+            'REMOVE',
+            detail,
+          );
+      }
+    case 'Dataset.CollectionMethod':
+      switch (action) {
+        case 'ADD':
+          return datasetAddAndRemoveInfoDisplay(
+            'Dataset.CollectionMethod',
+            'ADD',
+            detail,
+          );
+        case 'REMOVE':
+          return datasetAddAndRemoveInfoDisplay(
+            'Dataset.CollectionMethod',
+            'REMOVE',
+            detail,
+          );
+      }
+    case 'Dataset.Tags':
+      switch (action) {
+        case 'ADD':
+          return datasetAddAndRemoveInfoDisplay('Dataset.Tags', 'ADD', detail);
+        case 'REMOVE':
+          return datasetAddAndRemoveInfoDisplay(
+            'Dataset.Tags',
+            'REMOVE',
+            detail,
+          );
+      }
+    case 'Dataset':
+      switch (action) {
+        case 'CREATE':
+          return datasetCreateInfoDisplay();
+        case 'DOWNLOAD':
+          return datasetDownloadInfoDisplay(detail);
+        case 'PUBLISH':
+          return datasetVersionInfoDisplay(detail);
+      }
+    case 'File':
+      switch (action) {
+        case 'MOVE':
+          return fileInfoDisplay('File', 'MOVE', detail);
+        case 'ADD':
+          return fileInfoDisplay('File', 'ADD', detail);
+        case 'REMOVE':
+          return fileInfoDisplay('File', 'REMOVE', detail);
+        case 'UPDATE':
+          return fileInfoDisplay('File', 'UPDATE', detail);
+      }
+    case 'Schema':
+      switch (action) {
+        case 'CREATE':
+          return schemaInfoDisplay.schemaCreateInfoDisplay(detail);
+        case 'REMOVE':
+          return schemaInfoDisplay.schemaRemoveInfoDisplay(detail);
+        case 'UPDATE':
+          return schemaInfoDisplay.schemaUpdateInfoDisplay(detail);
+      }
+    case 'Dataset.Schema.Template':
+      switch (action) {
+        case 'CREATE':
+          return schemaTemplateInfoDisplay.schemaTemplateCreateInfoDisplay(
+            detail,
+          );
+      }
+    default:
+      return null;
+  }
+};
+
+export default logsInfo;

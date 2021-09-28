@@ -16,8 +16,10 @@ import re
 import ldap.modlist as modlist
 from resources.utils import fetch_geid, add_admin_to_project_group, assign_project_role, add_user_to_ad_group
 
-api_ns_projects = module_api.namespace('Project Restful', description='For project feature', path='/v1')
-api_ns_project = module_api.namespace('Project Restful', description='For project feature', path='/v1')
+api_ns_projects = module_api.namespace(
+    'Project Restful', description='For project feature', path='/v1')
+api_ns_project = module_api.namespace(
+    'Project Restful', description='For project feature', path='/v1')
 
 _logger = SrvLoggerFactory('api_project').get_logger()
 
@@ -30,10 +32,13 @@ class APIProject(metaclass=MetaAPI):
     '''
 
     def api_registry(self):
-        api_ns_projects.add_resource(self.RestfulProjects, '/projects')
-        api_ns_project.add_resource(self.RestfulProject, '/project/<project_geid>')
-        api_ns_project.add_resource(self.RestfulProjectByCode, '/project/code/<project_code>')
-        api_ns_project.add_resource(self.VirtualFolder, '/project/<project_geid>/collections')
+        # api_ns_projects.add_resource(self.RestfulProjects, '/projects')
+        api_ns_project.add_resource(
+            self.RestfulProject, '/project/<project_geid>')
+        api_ns_project.add_resource(
+            self.RestfulProjectByCode, '/project/code/<project_code>')
+        api_ns_project.add_resource(
+            self.VirtualFolder, '/project/<project_geid>/collections')
 
     class RestfulProjects(Resource):
         def get(self):
@@ -51,7 +56,8 @@ class APIProject(metaclass=MetaAPI):
 
             # get the payload
             post_data = request.get_json()
-            _logger.info('Calling API for creating project: {}'.format(post_data))
+            _logger.info(
+                'Calling API for creating project: {}'.format(post_data))
 
             container_type = post_data.get("type", None)
             description = post_data.get("description", None)
@@ -77,14 +83,14 @@ class APIProject(metaclass=MetaAPI):
             auth_result = None
 
             try:
-                # Duplicate check 
+                # Duplicate check
                 url = ConfigClass.NEO4J_SERVICE + "nodes/Container/query"
                 res = requests.post(url=url, json={"code": code})
                 datasets = res.json()
                 if datasets:
                     return {'result': 'Error duplicate project code'}, 409
 
-                ## let the hdfs create a dataset
+                # let the hdfs create a dataset
                 post_data.update({'path': code})
                 post_data['system_tags'] = ['copied-to-core']
 
@@ -149,13 +155,15 @@ class APIProject(metaclass=MetaAPI):
                 # Create Project User Group in ldap
                 ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
                 conn = ldap.initialize(ConfigClass.LDAP_URL)
-                conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN, ConfigClass.LDAP_ADMIN_SECRET)
+                conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN,
+                                   ConfigClass.LDAP_ADMIN_SECRET)
 
                 dn = "cn=vre-{},ou=Gruppen,ou={},dc={},dc={}".format(code, ConfigClass.LDAP_OU, ConfigClass.LDAP_DC1,
                                                                      ConfigClass.LDAP_DC2)
 
                 objectclass = []
-                objectclass.append(ConfigClass.LDAP_objectclass.encode('utf-8'))
+                objectclass.append(
+                    ConfigClass.LDAP_objectclass.encode('utf-8'))
 
                 attrs = {}
                 attrs['objectclass'] = objectclass
@@ -181,7 +189,8 @@ class APIProject(metaclass=MetaAPI):
 
                 access_token = request.headers.get("Authorization", None)
                 for user in users:
-                    add_user_to_ad_group(user["email"], code, _logger, access_token)
+                    add_user_to_ad_group(
+                        user["email"], code, _logger, access_token)
 
                 # Create roles
                 payload = {
@@ -190,23 +199,24 @@ class APIProject(metaclass=MetaAPI):
                     "project_code": code
                 }
                 keycloak_roles_url = ConfigClass.AUTH_SERVICE + 'admin/users/realm-roles'
-                keycloak_roles_res = requests.post(url=keycloak_roles_url, json=payload)
+                keycloak_roles_res = requests.post(
+                    url=keycloak_roles_url, json=payload)
                 if keycloak_roles_res.status_code != 200:
                     return {'result': 'create realm role: ' + json.loads(
                         keycloak_roles_res.text)}, keycloak_roles_res.status_code
 
                 # Add admin to new group in keycloak and assign project-admin role
                 for user in origin_users:
-                    add_admin_to_project_group("vre-{}".format(code), user["name"], _logger)
+                    add_admin_to_project_group(
+                        "vre-{}".format(code), user["name"], _logger)
                     _logger.info('user email: {}'.format(user["email"]))
-                    if 'email' in user:
-                        assign_project_role(user["email"], "{}-admin".format(code), _logger)
 
                 # create username namespace folder for all platform admin
                 _logger.info(
                     f"Creating namespace folder for list of users in platfomr_admin_users : {origin_users}")
                 print(origin_users)
-                create_folder_usernamespace(users=origin_users, project_code=code)
+                bulk_create_folder_usernamespace(
+                    users=origin_users, project_code=code)
 
             except Exception as e:
                 _logger.error('Error in creating project: {}'.format(str(e)))
@@ -272,7 +282,8 @@ class APIProject(metaclass=MetaAPI):
 def create_folder_usernamespace(users, project_code):
     for user in users:
         try:
-            _logger.info(f"creating namespace folder in greenroom and vrecore for user : {user['name']}")
+            _logger.info(
+                f"creating namespace folder in greenroom and vrecore for user : {user['name']}")
             zone_list = ["greenroom", "vrecore"]
             for zone in zone_list:
                 payload = {
@@ -288,6 +299,38 @@ def create_folder_usernamespace(users, project_code):
                     json=payload
                 )
                 if res.status_code == 200:
-                    _logger.info(f"Namespace folder created successfully for user : {user['name']}")
+                    _logger.info(
+                        f"Namespace folder created successfully for user : {user['name']}")
         except Exception as error:
-            _logger.error(f"Error while trying to create namespace folder for user : {user['name']} : {error}")
+            _logger.error(
+                f"Error while trying to create namespace folder for user : {user['name']} : {error}")
+
+
+def bulk_create_folder_usernamespace(users, project_code):
+    try:
+        folders = []
+        zone_list = ["greenroom", "vrecore"]
+        for zone in zone_list:
+            for user in users:
+                folders.append({
+                    "name": user["name"],
+                    "project_code": project_code,
+                    "uploader": user["name"],
+                })
+
+            folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_GREENROOM+'/folder/bulk'
+            payload = {
+                "folders": folders,
+                "zone": zone,
+            }
+            res = requests.post(
+                url=folder_creation_url,
+                json=payload
+            )
+            if res.status_code == 200:
+                _logger.info(
+                    f"Namespace folder created successfully for users")
+
+    except Exception as error:
+        _logger.error(
+            f"Error while trying to bulk create namespace folder, error: {error}")

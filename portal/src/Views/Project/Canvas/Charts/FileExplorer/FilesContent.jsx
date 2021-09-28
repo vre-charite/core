@@ -367,11 +367,11 @@ function FilesContent(props) {
         if (panes.length > 0) {
           const vfolderIds = panes
             .filter((el) => el.key.startsWith('vfolder-'))
-            .map((el) => el.content.folderId);
+            .map((el) => el.content.geid);
           res.data.result.forEach((el) => {
-            if (vfolderIds.includes(el.id)) {
+            if (vfolderIds.includes(el.globalEntityId)) {
               const selectPane = updatedPane.find(
-                (item) => item.content.folderId === el.id,
+                (item) => item.content.geid === el.globalEntityId,
               );
               selectPane.title = getTitle(`Collection - ${el.name}  `);
               if (selectPane.key === activePane) {
@@ -396,11 +396,11 @@ function FilesContent(props) {
     }
   };
 
-  const deleteCollection = async (id, key) => {
+  const deleteCollection = async (geid, key) => {
     try {
       setDeleteBtnLoading(true);
       setDeletedPaneKey(key);
-      await deleteVirtualFolder(id);
+      await deleteVirtualFolder(geid);
       updateVfolders();
     } catch (error) {
       setDeleteBtnLoading(false);
@@ -544,14 +544,14 @@ function FilesContent(props) {
                     }}
                   ></Input>
                 </Form.Item>
-                {deleteBtnLoading && deleteItemId === el.id ? (
+                {deleteBtnLoading && deleteItemId === el.geid ? (
                   <LoadingOutlined spin style={{ marginRight: '10px' }} />
                 ) : (
                   <DeleteOutlined
                     style={{ color: '#FF6D72', marginRight: '10px' }}
                     onClick={() => {
-                      deleteCollection(el.id, 'vfolder-' + el.name);
-                      setDeleteItemId(el.id);
+                      deleteCollection(el.geid, 'vfolder-' + el.name);
+                      setDeleteItemId(el.geid);
                     }}
                   />
                 )}
@@ -838,7 +838,7 @@ function FilesContent(props) {
                         projectId={pane.content.projectId}
                         type={pane.content.type}
                         panelKey={pane.key}
-                        folderId={pane.content.folderId}
+                        activePane={activePane}
                         removePanel={remove}
                         geid={pane.content.geid} // only for vfolder
                         title={pane.title}
@@ -921,7 +921,6 @@ function FilesContent(props) {
           content: {
             projectId: projectId,
             type: DataSourceType.CORE_VIRTUAL_FOLDER,
-            folderId: vfolder.id,
             geid: info.node.geid,
           },
           key: info.node.key.toString(),

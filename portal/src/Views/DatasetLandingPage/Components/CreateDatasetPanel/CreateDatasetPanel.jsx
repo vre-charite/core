@@ -19,7 +19,7 @@ import { modalityOptions } from './selectOptions';
 import { fetchMyDatasets } from '../../Components/MyDatasetList/fetchMyDatasets';
 import { useTranslation } from 'react-i18next';
 import { useQueryParams } from '../../../../Utility';
-
+import { FileAddOutlined } from '@ant-design/icons';
 const { Option } = Select;
 
 const layout = {
@@ -40,6 +40,7 @@ export default function CreateDatasetPanel(props) {
 
   const onSubmit = async () => {
     setSubmitting(true);
+
     try {
       const values = await form.validateFields();
       const {
@@ -59,7 +60,7 @@ export default function CreateDatasetPanel(props) {
         title,
         code,
         authors,
-        type?'BIDS':"GENERAL",
+        type ? 'BIDS' : 'GENERAL',
         modality,
         collectionMethod,
         license,
@@ -70,6 +71,9 @@ export default function CreateDatasetPanel(props) {
       message.success(t('success:createDataset'));
       fetchMyDatasets(username, parseInt(page), parseInt(pageSize));
     } catch (error) {
+      console.log(error);
+      if (error.hasOwnProperty('errorFields')) return; // for antd form validation error
+
       if (error.response?.status === 409) {
         message.error(t('errormessages:createDataset.409.0'));
       } else {
@@ -184,12 +188,17 @@ export default function CreateDatasetPanel(props) {
 
       <div className={styles['button-group']}>
         <Space>
+          <Button
+            icon={<FileAddOutlined />}
+            loading={submitting}
+            onClick={onSubmit}
+            type="primary"
+          >
+            Create
+          </Button>
           <Button disabled={submitting} onClick={onCancel} type="link">
             {' '}
             Cancel
-          </Button>
-          <Button loading={submitting} onClick={onSubmit} type="primary">
-            Create
           </Button>
         </Space>
       </div>

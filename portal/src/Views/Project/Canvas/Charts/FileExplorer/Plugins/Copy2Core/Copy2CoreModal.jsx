@@ -40,17 +40,17 @@ const Copy2CoreModal = ({
   const username = useSelector((state) => state.username);
   const [step, setStep] = React.useState(1);
   const [skipped, setSkipped] = React.useState([]);
+  const [need2Rename, setNeed2Rename] = React.useState([]);
   const [renamedFilesObj, setRenamedFilesObj] = React.useState({});
   const [renameSuccessList, setRenameSuccessList] = React.useState([]);
   const [renameValidateFailedObj, setRenameValidateFailedObj] = React.useState(
     {},
   );
   const [nameFormatFailedObj, setNameFormatFailedObj] = React.useState({});
-  const [BtnDisabled, setBtnDisabled] = React.useState(false);
   const [locked, setLocked] = React.useState([]);
   const [destination, setDestination] = React.useState(null);
   const dispatch = useDispatch();
-
+  const btnDisabled = files.length === skipped.length;
   const sessionId = tokenManager.getCookie('sessionId');
 
   async function closeModal() {
@@ -60,6 +60,7 @@ const Copy2CoreModal = ({
       setCodeRandom(randomTxt(5));
       setStep(1);
       setSkipped([]);
+      setNeed2Rename([]);
       setLocked([]);
       setRenamedFilesObj({});
       setRenameSuccessList([]);
@@ -188,6 +189,7 @@ const Copy2CoreModal = ({
               setStep(3);
             }
             setSkipped(existingFiles);
+            setNeed2Rename(existingFiles);
           }
         }
         setConfirmLoading(false);
@@ -218,20 +220,30 @@ const Copy2CoreModal = ({
     try {
       await commitFileAction(
         {
-          targets: files.map((file) => {
-            const fileNameRecord = renameSuccessList.find(
-              (v) => v.geid === file.geid,
-            );
-            if (fileNameRecord) {
-              return {
-                geid: file.geid,
-                rename: fileNameRecord['name'],
-              };
-            }
-            return {
-              geid: file.geid,
-            };
-          }),
+          targets: files
+            .map((file) => {
+              if (
+                need2Rename.find((renameFile) => renameFile.geid === file.geid)
+              ) {
+                // files need to be renamed
+                const fileNameRecord = renameSuccessList.find(
+                  (v) => v.geid === file.geid,
+                );
+                if (fileNameRecord) {
+                  return {
+                    geid: file.geid,
+                    rename: fileNameRecord['name'],
+                  };
+                }
+                return null;
+              } else {
+                // files do not need to be renamed
+                return {
+                  geid: file.geid,
+                };
+              }
+            })
+            .filter((file) => !!file),
           destination: destination.geid,
         },
         username,
@@ -296,14 +308,13 @@ const Copy2CoreModal = ({
                 setRenamedFilesObj({});
                 setRenameSuccessList([]);
                 setRenameValidateFailedObj({});
-                setBtnDisabled(false);
               }}
             >
               Go back
             </Button>
             <Button
               type="primary"
-              disabled={BtnDisabled}
+              disabled={btnDisabled}
               loading={proceedLoading}
               style={{ borderRadius: '6px' }}
               onClick={() => handleStep3Proceed()}
@@ -382,8 +393,7 @@ const Copy2CoreModal = ({
             <div style={{ flex: 1 }}>
               <p style={{ marginBottom: '8px' }}>
                 <strong>{skipped.length} file(s)/folder(s)</strong> will be
-                skipped because there are concurrent file operations taking
-                place
+                skipped
               </p>
               {skipped && skipped.length ? (
                 <ul
@@ -416,7 +426,7 @@ const Copy2CoreModal = ({
           <div style={{ flex: 1 }}>
             <p style={{ marginBottom: '8px' }}>
               <strong>{skipped.length} file(s)/folder(s)</strong> will be
-              skipped because there are concurrent file operations taking place
+              skipped
             </p>
             {skipped && skipped.length ? (
               <ul
@@ -551,7 +561,6 @@ const Copy2CoreModal = ({
       }
       const newSkippedFile = skipped.filter((el) => el.geid !== geid);
       setSkipped(newSkippedFile);
-      setBtnDisabled(false);
     } else if (type === 'succeedList') {
       try {
         await validateRepeatFiles(
@@ -589,7 +598,6 @@ const Copy2CoreModal = ({
       // reset the renamedFiles object when a file has successfully renamed.
       delete obj1[geid];
       setRenamedFilesObj(obj1);
-      setBtnDisabled(false);
     }
   };
 
@@ -707,7 +715,6 @@ const Copy2CoreModal = ({
                   setRenamedFilesObj({
                     ...obj,
                   });
-                  setBtnDisabled(true);
                 }}
               >
                 <EditOutlined style={{ marginRight: '6px' }} />

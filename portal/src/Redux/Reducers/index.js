@@ -31,6 +31,8 @@ import user from './user';
 import { datasetData } from './datasetData';
 import { myDatasetList } from './myDatasetList';
 import { datasetInfo } from './datasetInfo';
+import { datasetFileOperations } from './datasetFileOperations';
+import { schemaTemplatesInfo } from './schemaTemplatesInfo';
 
 const appReducer = combineReducers({
   datasetList,
@@ -64,6 +66,8 @@ const appReducer = combineReducers({
   datasetData,
   myDatasetList,
   datasetInfo,
+  datasetFileOperations,
+  schemaTemplatesInfo,
 });
 
 const rootReducer = (state, action) => {

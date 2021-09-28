@@ -7,133 +7,11 @@ import moment from 'moment';
 import { DatasetCard as Card } from '../Components/DatasetCard/DatasetCard';
 import DatasetActivityViewSelector from './DatasetActicityViewSelector';
 import { getDatasetActivityLogsAPI } from '../../../APIs/index';
-import {
-  datasetUpdateInfoDisplay,
-  datasetAddAndRemoveInfoDisplay,
-  datasetDownloadInfoDisplay,
-  fileInfoDisplay,
-  datasetCreateInfoDisplay,
-} from './DatasetActivityLogsDisplay';
+import logsInfo from './DatasetActivityLogsDisplay';
 import styles from './DatasetActivity.module.scss';
 
 const { RangePicker } = DatePicker;
 const format = 'YYYY-MM-DD HH:mm:ss';
-
-//display logs information
-const logsInfo = (action, detail, resource) => {
-  switch (resource) {
-    case 'Dataset.Title':
-      return datasetUpdateInfoDisplay('Dataset.Title');
-    case 'Dataset.License':
-      return datasetUpdateInfoDisplay('Dataset.License');
-    case 'Dataset.Type':
-      return datasetUpdateInfoDisplay('Dataset.Type');
-    case 'Dataset.Description':
-      return datasetUpdateInfoDisplay('Dataset.Description');
-    case 'Dataset.Authors':
-      switch (action) {
-        case 'ADD':
-          return datasetAddAndRemoveInfoDisplay(
-            'Dataset.Authors',
-            'ADD',
-            detail,
-          );
-        case 'REMOVE':
-          return datasetAddAndRemoveInfoDisplay(
-            'Dataset.Authors',
-            'REMOVE',
-            detail,
-          );
-      }
-    case 'Dataset.Modality':
-      switch (action) {
-        case 'ADD':
-          return datasetAddAndRemoveInfoDisplay(
-            'Dataset.Modality',
-            'ADD',
-            detail,
-          );
-        case 'REMOVE':
-          return datasetAddAndRemoveInfoDisplay(
-            'Dataset.Modality',
-            'REMOVE',
-            detail,
-          );
-      }
-    case 'Dataset.CollectionMethod':
-      switch (action) {
-        case 'ADD':
-          return datasetAddAndRemoveInfoDisplay(
-            'Dataset.CollectionMethod',
-            'ADD',
-            detail,
-          );
-        case 'REMOVE':
-          return datasetAddAndRemoveInfoDisplay(
-            'Dataset.CollectionMethod',
-            'REMOVE',
-            detail,
-          );
-      }
-    case 'Dataset.Tags':
-      switch (action) {
-        case 'ADD':
-          return datasetAddAndRemoveInfoDisplay('Dataset.Tags', 'ADD', detail);
-        case 'REMOVE':
-          return datasetAddAndRemoveInfoDisplay(
-            'Dataset.Tags',
-            'REMOVE',
-            detail,
-          );
-      }
-    case 'Dataset':
-      switch (action) {
-        case 'CREATE':
-          return datasetCreateInfoDisplay();
-        case 'DOWNLOAD': 
-          return datasetDownloadInfoDisplay(detail);
-      }
-    case 'File': 
-      switch (action) {
-        case 'MOVE':
-          return fileInfoDisplay('File', 'MOVE', detail);
-        case 'ADD':
-          return fileInfoDisplay('File', 'ADD', detail);
-        case 'REMOVE':
-          return fileInfoDisplay('File', 'REMOVE', detail);
-      } 
-    default:
-      return null;
-  }
-};
-
-const columns = [
-  {
-    title: 'Date',
-    key: 'date',
-    with: '20%',
-    render: (item) => {
-      return moment.unix(item.source.createTimestamp).format(format);
-    },
-  },
-  {
-    title: 'Action',
-    key: 'action',
-    width: '70%',
-    render: (item) => {
-      const { action, detail, resource } = item.source;
-      return logsInfo(action, detail, resource);
-    },
-  },
-  {
-    title: 'By',
-    key: 'by',
-    width: '10%',
-    render: (item) => {
-      return <span>{item.source.operator}</span>;
-    },
-  },
-];
 
 const DatasetActivity = (props) => {
   const [viewValue, setViewValue] = useState('All');
@@ -141,12 +19,57 @@ const DatasetActivity = (props) => {
   const [customTimeRange, setCustomTimeRange] = useState([]);
   const [cusTimeRangeChangeTimes, setCusTimeRangeChangeTimes] = useState(0);
   const [activityLogs, setActivityLogs] = useState([]);
+  const [publishRecord, setPublishRecord] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalItem, setTotalItem] = useState(0);
   const [datePickerDisabled, setDatePickerDisabled] = useState(true);
   const datasetInfo = useSelector((state) => state.datasetInfo.basicInfo);
   const datasetGeid = datasetInfo.geid;
+
+  const columns = [
+    {
+      title: 'Date',
+      key: 'date',
+      with: '20%',
+      render: (item, row, index) => {
+        if (publishRecord.includes(index)) {
+          return (
+            <p style={{ fontWeight: 'bold', color: '#003262', margin: '0px'}}>
+              {moment.unix(item.source.createTimestamp).format(format)}
+            </p>
+          );
+        } else {
+          return moment.unix(item.source.createTimestamp).format(format);
+        }
+      },
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: '70%',
+      render: (item, row, index) => {
+        const { action, detail, resource } = item.source;
+        return logsInfo(action, detail, resource);
+      },
+    },
+    {
+      title: 'By',
+      key: 'by',
+      width: '10%',
+      render: (item, row, index) => {
+        if (publishRecord.includes(index)) {
+          return (
+            <p style={{ fontWeight: 'bold', color: '#003262', margin: '0px' }}>
+              {item.source.operator}
+            </p>
+          );
+        } else {
+          return <p style={{ margin: '0px' }}>{item.source.operator}</p>;
+        }
+      },
+    },
+  ];
 
   const getDatasetActivityLogs = async () => {
     let queryParams;
@@ -207,10 +130,21 @@ const DatasetActivity = (props) => {
     }
 
     const res = await getDatasetActivityLogsAPI(datasetGeid, queryParams);
+    let newArr = [];
+    res.data.result.forEach((el, index) => {
+      if (el.source.action === 'PUBLISH') {
+        newArr.push(index);
+      }
+    });
+    setPublishRecord(newArr);
     setActivityLogs(res.data.result);
     setTotalItem(res.data.total);
     if (viewValue === 'All') {
-      setLastUpdateTime(res.data.result[0].source.createTimestamp);
+      if (res.data.result.length) {
+        setLastUpdateTime(res.data.result[0].source.createTimestamp);
+      } else {
+        setLastUpdateTime(0);
+      }
     }
   };
 
@@ -274,6 +208,7 @@ const DatasetActivity = (props) => {
     <div style={{ margin: '15px 24px 0px 15px' }}>
       <Card title={cardTitle}>
         <Table
+          className={styles.dataset_activity_table}
           columns={columns}
           dataSource={activityLogs}
           onChange={onTableChange}
@@ -285,6 +220,7 @@ const DatasetActivity = (props) => {
             showSizeChanger: true,
           }}
           size="middle"
+          style={{tableLayout: 'fixed'}}
         />
       </Card>
     </div>

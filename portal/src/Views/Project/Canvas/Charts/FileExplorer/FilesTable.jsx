@@ -1,8 +1,12 @@
-import { Table, Input, Button, Space } from 'antd';
+import { Table, Input, Button, Space, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import React from 'react';
 import styles from './index.module.scss';
 import { TABLE_STATE } from './RawTableValues';
+import {
+  checkIsVirtualFolder,
+  checkGreenAndCore,
+} from '../../../../../Utility';
 import { connect } from 'react-redux';
 class FilesTable extends React.Component {
   constructor(props) {
@@ -41,6 +45,42 @@ class FilesTable extends React.Component {
         });
         return;
       }
+    }
+  }
+
+  getCurrentSourceType = () => {
+    if (checkIsVirtualFolder(this.props.panelKey)) {
+      if (this.props.currentRouting?.length === 0) {
+        return 'Collection';
+      } else {
+        return 'Folder';
+      }
+    } else if (this.props.panelKey.toLowerCase().includes('trash')) {
+      if (this.props.currentRouting?.length === 0) {
+        return 'TrashFile';
+      } else {
+        return 'Folder';
+      }
+    }
+
+    // this check is for table columns sorting and get source type when clicing on refresh button.
+    if (checkGreenAndCore(this.props.panelKey) && this.props.currentRouting?.length > 0) {
+      return 'Folder';
+    } else {
+      return 'Project';
+    }
+  }
+
+  componentWillReceiveProps(nextProps, nextState) {
+    if (this.props.activePane !== nextProps.activePane) {
+      this.props.updateTable({
+        geid: this.props.getCurrentGeid(),
+        page: this.state.page,
+        pageSize: this.state.pageSize,
+        orderBy: this.state.sortColumn,
+        orderType: this.state.order,
+        sourceType: this.getCurrentSourceType(),
+      });
     }
   }
 
@@ -169,7 +209,7 @@ class FilesTable extends React.Component {
       orderBy: sorter.columnKey,
       orderType: order,
       query: convertFilter(searchText),
-      sourceType: this.props.getSourceType(),
+      sourceType: this.getCurrentSourceType(),
     });
   };
 
@@ -189,39 +229,53 @@ class FilesTable extends React.Component {
         return el;
       });
     return (
-      <Table
-        id={`files_table`}
-        columns={columns}
-        dataSource={this.props.dataSource}
-        onChange={this.onChange}
-        pagination={{
-          current: page + 1,
-          pageSize,
-          total: totalItem,
-          pageSizeOptions: [10, 20, 50],
-          showQuickJumper: true,
-          showSizeChanger: true,
-        }}
-        className={styles.files_raw_table}
-        tableLayout={'fixed'}
-        rowKey={(record) => record.geid}
-        rowSelection={{ ...this.props.rowSelection, columnWidth: 40 }}
-        key={this.props.tableKey}
-        rowClassName={(record) => {
-          let classArr = [];
-          if (record.name && this.props.selectedRecord?.name === record.name) {
-            classArr.push('selected');
-          }
-          if (
-            record.manifest &&
-            record.manifest.length !== 0 &&
-            this.props.tableState === TABLE_STATE.MANIFEST_APPLY
-          ) {
-            classArr.push('manifest-attached');
-          }
-          return classArr.join(' ');
-        }}
-      />
+      <div>
+        {
+          /* this.props.tableLoading ? (
+          <Spin
+            tip="Loading..."
+            style={{ width: '100%', height: '100%', margin: '20% auto' }}
+            size="large"
+          />
+        ) : */ <Table
+            id={`files_table`}
+            columns={columns}
+            dataSource={this.props.dataSource}
+            onChange={this.onChange}
+            pagination={{
+              current: page + 1,
+              pageSize,
+              total: totalItem,
+              pageSizeOptions: [10, 20, 50],
+              showQuickJumper: true,
+              showSizeChanger: true,
+            }}
+            loading={this.props.tableLoading}
+            className={styles.files_raw_table}
+            tableLayout={'fixed'}
+            rowKey={(record) => record.geid}
+            rowSelection={{ ...this.props.rowSelection, columnWidth: 40 }}
+            key={this.props.tableKey}
+            rowClassName={(record) => {
+              let classArr = [];
+              if (
+                record.name &&
+                this.props.selectedRecord?.name === record.name
+              ) {
+                classArr.push('selected');
+              }
+              if (
+                record.manifest &&
+                record.manifest.length !== 0 &&
+                this.props.tableState === TABLE_STATE.MANIFEST_APPLY
+              ) {
+                classArr.push('manifest-attached');
+              }
+              return classArr.join(' ');
+            }}
+          />
+        }
+      </div>
     );
   }
 }

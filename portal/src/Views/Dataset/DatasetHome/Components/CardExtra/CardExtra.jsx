@@ -32,12 +32,13 @@ export function CardExtra(props) {
     );
   }
 
-  return (
-    <Button
-      className={styles['edit-button']}
-      type="link"
-      onClick={onClickEditButton}
-      icon={<EditOutlined />}
-    ></Button>
-  );
+  // return (
+  //   <Button
+  //     className={styles['edit-button']}
+  //     type="link"
+  //     onClick={onClickEditButton}
+  //     icon={<EditOutlined />}
+  //   ></Button>
+  // );
+  return null;
 }

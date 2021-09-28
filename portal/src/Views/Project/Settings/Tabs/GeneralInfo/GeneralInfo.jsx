@@ -14,14 +14,13 @@ import {
 import styles from '../../index.module.scss';
 import { withRouter } from 'react-router-dom';
 import { updateDatasetIcon } from '../../../../../APIs';
+import { withCurrentProject } from '../../../../../Utility';
 import ImgCrop from 'antd-img-crop';
 const { TextArea } = Input;
 const { Paragraph } = Typography;
 function GeneralInfo(props) {
   const {
-    match: {
-      params: { datasetId },
-    },
+    currentProject,
     editMode,
     userListOnDataset,
     updateDatasetInfo,
@@ -29,7 +28,6 @@ function GeneralInfo(props) {
     datasetInfo,
     setDatasetInfo,
   } = props;
-
   function getBase64(img, callback) {
     const reader = new FileReader();
     reader.addEventListener('load', () => callback(reader.result));
@@ -38,7 +36,8 @@ function GeneralInfo(props) {
   function beforeIconChange(file) {
     getBase64(file, async (imageUrl) => {
       const compressedIcon = await resizeImage(imageUrl);
-      await updateDatasetIcon(datasetId, compressedIcon);
+
+      await updateDatasetIcon(currentProject.globalEntityId, compressedIcon);
       setDatasetInfo({
         ...datasetInfo,
         icon: compressedIcon,
@@ -271,4 +270,4 @@ function GeneralInfo(props) {
     </div>
   ) : null;
 }
-export default withRouter(GeneralInfo);
+export default withRouter(withCurrentProject(GeneralInfo));

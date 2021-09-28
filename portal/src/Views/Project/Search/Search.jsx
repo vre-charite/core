@@ -148,8 +148,7 @@ function Search(props) {
     searchFilesAPI(
       { query, ...pagination },
       props.currentProject.globalEntityId,
-    ).then((res) => {
-      setLastSearchQuery(query);
+    ).then((res) => {      
       setFiles(res.data.result);
       if (query['zone']['value'] === 'greenroom') {
         setGreenRoomTotal(res.data.total);
@@ -161,12 +160,22 @@ function Search(props) {
       if (query['zone']['value'] === 'greenroom') {
         newQuery = _.cloneDeep(query);
         newQuery['zone']['value'] = 'vrecore';
+        if (permission === 'collaborator') {
+          // collaborator can check all files/folders in core
+          delete newQuery['display_path'];
+        }
       } else if (query['zone']['value'] === 'vrecore') {
         newQuery = _.cloneDeep(query);
         newQuery['zone']['value'] = 'greenroom';
+        if (permission === 'collaborator') {
+          newQuery['display_path'] = {
+            value: username,
+            condition: 'start_with',
+          };
+        }
       }
-
       // this api call is to get greenroom/core total number
+      setLastSearchQuery(newQuery);
       searchFilesAPI(
         { query: newQuery, ...pagination },
         props.currentProject.globalEntityId,
@@ -203,16 +212,25 @@ function Search(props) {
         setCoreTotal(res.data.total);
       }
       setLoading(false);
-
       if (newLastSearchQuery['zone']['value'] === 'greenroom') {
         newQuery = _.cloneDeep(newLastSearchQuery);
         newQuery['zone']['value'] = 'vrecore';
+        if (permission === 'collaborator') {
+          delete newQuery['display_path'];
+        }
       } else if (newLastSearchQuery['zone']['value'] === 'vrecore') {
         newQuery = _.cloneDeep(newLastSearchQuery);
         newQuery['zone']['value'] = 'greenroom';
+        if (permission === 'collaborator') {
+          newQuery['display_path'] = {
+            value: username,
+            condition: 'start_with',
+          };
+        }
       }
 
       // this api call is to get greenroom/core total number
+      setLastSearchQuery(newQuery)
       searchFilesAPI(
         { query: newQuery, ...pagination },
         props.currentProject.globalEntityId,

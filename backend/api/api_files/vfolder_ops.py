@@ -15,7 +15,7 @@ _logger = SrvLoggerFactory('api_files_ops_v1').get_logger()
 class VirtualFolderFiles(Resource):
 
     @jwt_required()
-    def post(self, folder_geid):
+    def post(self, collection_geid):
         """
             Add files to vfolder
         """
@@ -26,13 +26,17 @@ class VirtualFolderFiles(Resource):
             # Get vfolder
             url = ConfigClass.NEO4J_SERVICE + f"nodes/VirtualFolder/query"
             payload = {
-                "global_entity_id": folder_geid,
+                "global_entity_id": collection_geid,
             }
             response = requests.post(url, json=payload)
             if response.status_code != 200:
-                api_response.code = response.status_code
-                api_response.error_msg = response.json()
-                return api_response.json_response()
+                _res.code = response.status_code
+                _res.error_msg = response.json()
+                return response.json(), response.status_code
+            if not response.json():
+                _res.set_code(EAPIResponseCode.not_found)
+                _res.set_error_msg("VirtualFolder not found")
+                return _res.to_dict, _res.code
             vfolder = response.json()[0]
 
             data = request.get_json()
@@ -56,7 +60,7 @@ class VirtualFolderFiles(Resource):
                     _res.set_result("no permission to add files to vfolder")
                     return _res.to_dict, _res.code
 
-            url = ConfigClass.DATA_UTILITY_SERVICE + f"collections/{folder_geid}/files"
+            url = ConfigClass.DATA_UTILITY_SERVICE + f"collections/{collection_geid}/files"
             response = requests.post(url, json=data, headers=headers)
             if response.status_code != 200:
                 _logger.error('Failed to add files to vfolder:   '+ response.text)
@@ -75,7 +79,7 @@ class VirtualFolderFiles(Resource):
 
 
     @jwt_required()
-    def delete(self, folder_geid):
+    def delete(self, collection_geid):
         _res = APIResponse()
         headers = request.headers
 
@@ -83,7 +87,7 @@ class VirtualFolderFiles(Resource):
             # Get vfolder
             url = ConfigClass.NEO4J_SERVICE + f"nodes/VirtualFolder/query"
             payload = {
-                "global_entity_id": folder_geid,
+                "global_entity_id": collection_geid,
             }
             response = requests.post(url, json=payload)
             if response.status_code != 200:
@@ -113,7 +117,7 @@ class VirtualFolderFiles(Resource):
                     _res.set_result("no permission to remove files from vfolder")
                     return _res.to_dict, _res.code
 
-            url = ConfigClass.DATA_UTILITY_SERVICE + f"collections/{folder_geid}/files"
+            url = ConfigClass.DATA_UTILITY_SERVICE + f"collections/{collection_geid}/files"
             response = requests.delete(url, json=data, headers=headers)
             if response.status_code != 200:
                 _logger.error('Failed to remove files from vfolder:   '+ response.text)
@@ -198,8 +202,6 @@ class VirtualFolderInfo(Resource):
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_result("no permission to get files from vfolder")
                     return _res.to_dict, _res.code
-
-
         except Exception as e:
             print(str(e))
             _logger.error("errors in get files from vfolder: {}".format(str(e)))
@@ -209,18 +211,21 @@ class VirtualFolderInfo(Resource):
 
     
     @jwt_required()
-    def delete(self, folderId):
+    def delete(self, collection_geid):
         _res = APIResponse()
-        url = ConfigClass.DATA_UTILITY_SERVICE + "collections/{}".format(folderId)
         headers = request.headers
 
         neo4j_client = Neo4jClient()
-        response = neo4j_client.node_get("VirtualFolder", folderId)
+        response = neo4j_client.node_query("VirtualFolder", {"global_entity_id": collection_geid})
         if not response.get("result"):
-            _res.set_code(response.get("code", 500))
-            _res.set_error_msg(response.get("error_msg"))
+            _res.set_code(EAPIResponseCode.not_found)
+            _res.set_error_msg("Virtual Folder not found")
             return _res.to_dict, _res.code
-        vfolder_node = response.get("result")
+        if response.get("code") != 200:
+            _res.set_code(response.get("code", 500))
+            _res.set_error_msg(response.get("error_msg", "Error calling neo4j"))
+            return _res.to_dict, _res.code
+        vfolder_node = response.get("result")[0]
 
         neo4j_client = Neo4jClient()
         response = neo4j_client.node_get("Container", vfolder_node["container_id"])
@@ -235,42 +240,38 @@ class VirtualFolderInfo(Resource):
             return _res.to_dict, _res.code
 
         try:
-            data = request.get_json()
-            payload = {
-                "start_id": current_identity['user_id'],
-                "end_id": folderId
-            }
-            relation_res = requests.get(ConfigClass.NEO4J_SERVICE + 'relations', params=payload)
-            relations = relation_res.json()
+            if current_identity["role"] != "admin":
+                payload = {
+                    "start_id": current_identity['user_id'],
+                    "end_id": vfolder_node["id"]
+                }
+                relation_res = requests.get(ConfigClass.NEO4J_SERVICE + 'relations', params=payload)
+                relations = relation_res.json()
 
-            if len(relations) == 0:
+                if len(relations) == 0:
                     _res.set_code(EAPIResponseCode.bad_request)
                     _res.set_result("no permission for this project")
                     return _res.to_dict, _res.code
-            else:
                 relation = relations[0]
                 project_role = relation['r']['type']
 
-                if project_role == 'owner':
-                    response = requests.delete(url, json=data, headers=headers)
-                    if response.status_code != 200:
-                        _logger.error('Failed to delete vfolder:   '+ response.text)
-                        _res.set_code(EAPIResponseCode.internal_error)
-                        _res.set_result("Failed to delete vfolder")
-                        return _res.to_dict, _res.code
-                
-                    else:
-                        _logger.info('Successfully delete vfolder: {}'.format(json.dumps(response.json())))
-                        return response.json()
-
-                else:
+                if project_role != 'owner':
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_result("no permission to delete vfolder")
                     return _res.to_dict, _res.code
 
-
+            url = ConfigClass.DATA_UTILITY_SERVICE + "collections/{}".format(collection_geid)
+            data = request.get_json()
+            response = requests.delete(url, json=data, headers=headers)
+            if response.status_code != 200:
+                _logger.error('Failed to delete vfolder:   '+ response.text)
+                _res.set_code(EAPIResponseCode.internal_error)
+                _res.set_result("Failed to delete vfolder")
+                return _res.to_dict, _res.code
+            else:
+                _logger.info('Successfully delete vfolder: {}'.format(json.dumps(response.json())))
+                return response.json()
         except Exception as e:
-            print(str(e))
             _logger.error("errors in delete vfolder: {}".format(str(e)))
             _res.set_code(EAPIResponseCode.internal_error)
             _res.set_result("Failed to delete vfolder")

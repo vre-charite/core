@@ -3,7 +3,7 @@ import { Card, Tag } from 'antd';
 import { DownCircleTwoTone, UpCircleTwoTone } from '@ant-design/icons';
 import styles from './DatasetCard.module.scss';
 import DatasetCardTitle from '../DatasetCardTitle/DatasetCardTitle';
-import { getFileSize } from '../../../../Utility';
+import { getFileSize, getTags } from '../../../../Utility';
 import moment from 'moment';
 
 export default function DatasetCard(props) {
@@ -28,8 +28,11 @@ export default function DatasetCard(props) {
       <div className={styles['left']}>
         <DatasetCardTitle title={title} code={code} />
         <div className={styles['dataset-card-note']}>
-          <b>Created on {moment.utc(timeCreated).local().format('YYYY-MM-DD')}</b> by{' '}
-          {creator || 'N/A'}
+          <b>
+            Dataset Code: {code} / Created on{' '}
+            {moment.utc(timeCreated).local().format('YYYY-MM-DD')}
+          </b>{' '}
+          by {creator || 'N/A'}
         </div>
         {isExpand && <Description>{description}</Description>}
       </div>
@@ -67,13 +70,4 @@ const Description = (props) => {
       <p>{children || 'N/A'}</p>
     </div>
   );
-};
-
-const getTags = (tags) => {
-  if (tags.length <= 3) {
-    return tags.map((tag) => <Tag>{tag}</Tag>);
-  }
-
-  const hideTags = [...tags.slice(0, 3), `+${tags.length - 3}`];
-  return hideTags.map((tag) => <Tag>{tag}</Tag>);
 };

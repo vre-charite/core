@@ -5,6 +5,7 @@ $headerHeight: 48px;
   width: 100%;
   box-shadow: 0px 1px 7px #0000001a;
   border-radius: 6px;
+  position: relative;
 
   :global {
     .ant-card-head {

@@ -15,7 +15,7 @@ api_ns_hello = module_api.namespace('Hello VRE', description='For backend servic
 ## for backend services down/on testing
 class APIHelloWorld(metaclass=MetaAPI):
     def api_registry(self):
-        api_ns_hello.add_resource(self.Restful, '/helloworld/test_gua') ## for browser
+        # api_ns_hello.add_resource(self.Restful, '/helloworld/test_gua') ## for browser
         api_ns_hello.add_resource(self.Restful, '/helloworld') ## for curl/postman
     class Restful(Resource):
         ## init logger
@@ -23,12 +23,8 @@ class APIHelloWorld(metaclass=MetaAPI):
         @api_ns_hello.response(200, hello_indoc_return_example)
         def get(self):
             '''
-            Hello Wolrd PlaceHolder
+            Check service environment and status
             '''
-            # get delay
-            delay = int(request.args.get('delay', default='0'))
-            if delay > 0:
-                time.sleep(delay)
             self._logger.info("Get Request Gotten")
             ## init response
             my_res = APIResponse()
@@ -36,13 +32,8 @@ class APIHelloWorld(metaclass=MetaAPI):
             my_srv = SrvHelloWolrd()
             hello_content = my_srv.get_content()
             my_res.set_code(EAPIResponseCode.success)
-            my_res.set_result(hello_content)
-            res = Response()
-            res.status_code = 301
-            res.headers['Location'] = 'http://10.3.7.225:8000/vre/guacamole/#/'
-            res.headers['REMOTE_USER'] = 'guacadmin'
-            res.headers['Access-Control-Allow-Origin'] = '*'
-            return res
+            my_res.set_result("Serivce on, CenterUrl: {},  Env: {}".format(ConfigClass.CONFIG_CENTER, ConfigClass.env))
+            return my_res.to_dict
         def post(self):
             '''
             Hello Wolrd PlaceHolder

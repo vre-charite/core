@@ -10,6 +10,7 @@ from .api_notification import APINotification
 from .api_container.route_registry import APIContainer
 from .api_data_manifest.data_manifest import APIDataManifest
 from .api_project import APIProject
+from .api_project_v2 import APIProjectV2
 from .api_system_tags import APISystemTags
 from .api_announcement.announcement import APIAnnouncement
 from .api_users import APIUsers
@@ -22,9 +23,15 @@ from .api_tags.api_tags_operation import APITagsV2
 from .api_tags.api_batch_tags_operation import APIBatchTagsV2
 from .api_archive import APIArchive
 from .api_preview import APIPreview
-from .api_dataset_rest_proxy import APIDatasetProxy, APIDatasetFileProxy
+from .api_dataset_rest_proxy import APIDatasetProxy, APIDatasetFileProxy, \
+    APIDatasetFileRenameProxy, APIDatasetFileTasks
 from .api_download import APIDatasetDownload
 from .api_dataset.api_activity_logs import APIDatasetActivityLogs
+from .api_dataset.api_versions import APIVersions
+from .api_dataset.api_folder import APIDatasetFolder
+from .api_dataset.api_schema import APISchema
+from .api_dataset.api_schema_template import APIDatasetSchemaTemplateProxy
+from .api_dataset.api_validate import APIValidator
 
 apis = [
     APIHelloWorld(),
@@ -38,12 +45,14 @@ apis = [
     APINotification(),
     APIDataManifest(),
     APIProject(),
+    APIProjectV2(),
     APISystemTags(),
     APIAnnouncement(),
     APIUsers(),
     APIProvenance(),
     APINeo4j2ESScript(),
     APIResourceRequest(),
+    # APIResourceRequestV2(),
     APIWorkbench(),
     APIFolderCreation(),
     APITagsV2(),
@@ -52,8 +61,15 @@ apis = [
     APIPreview(),
     APIDatasetProxy(),
     APIDatasetFileProxy(),
+    APIDatasetFileRenameProxy(),
+    APIDatasetFileTasks(),
     APIDatasetDownload(),
     APIDatasetActivityLogs(),
+    APIVersions(),
+    APIDatasetFolder(),
+    APISchema(),
+    APIDatasetSchemaTemplateProxy(),
+    APIValidator(),
 ]
 
 

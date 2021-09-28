@@ -92,9 +92,11 @@ class APIDatasetDownload(metaclass=MetaAPI):
                         return api_response.to_dict, api_response.code
             try:
                 if zone == "vrecore":
-                    response = requests.post(ConfigClass.DOWNLOAD_SERVICE_VRE_V2 + "download/pre", json=payload)
+                    response = requests.post(ConfigClass.DOWNLOAD_SERVICE_VRE_V2 + "download/pre/", json=payload, \
+                        headers=request.headers)
                 else:
-                    response = requests.post(ConfigClass.DOWNLOAD_SERVICE_GR_V2 + "download/pre", json=payload)
+                    response = requests.post(ConfigClass.DOWNLOAD_SERVICE_GR_V2 + "download/pre/", json=payload, \
+                        headers=request.headers)
                 return response.json(), response.status_code
             except Exception as e:
                 _logger.info("Error calling download service " + str(e))
@@ -129,6 +131,8 @@ class APIDatasetDownload(metaclass=MetaAPI):
                 api_response.set_error_msg("Missing required field dataset_geid")
                 return api_response.to_dict, api_response.code
 
+            _logger.error("test here for the proxy")
+
             neo4j_client = Neo4jClient()
             response = neo4j_client.node_query("Dataset", {"global_entity_id": payload.get("dataset_geid")}) 
             if not response.get("result"):
@@ -143,11 +147,14 @@ class APIDatasetDownload(metaclass=MetaAPI):
                 api_response.set_result("Permission Denied")
                 return api_response.to_dict, api_response.code
 
+            _logger.error("test here for the proxy")
             try:
-                response = requests.post(ConfigClass.DOWNLOAD_SERVICE_VRE_V2 + "dataset/download/pre", json=payload)
+                response = requests.post(ConfigClass.DOWNLOAD_SERVICE_VRE_V2 + "dataset/download/pre", json=payload, \
+                    headers=request.headers)
                 return response.json(), response.status_code
             except Exception as e:
                 _logger.info("Error calling download service " + str(e))
                 api_response.set_code(EAPIResponseCode.internal_error)
                 api_response.set_error_msg("Error calling download service")
                 return api_response.to_dict, api_response.code
+

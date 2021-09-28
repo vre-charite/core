@@ -9,6 +9,7 @@ import {
 import { objectKeysToSnakeCase, checkGreenAndCore } from '../Utility';
 import { message } from 'antd';
 import _ from 'lodash';
+import { keycloak } from '../Service/keycloak';
 
 function uploadFileApi(containerId, data, cancelToken) {
   return devOpAxios({
@@ -36,7 +37,7 @@ function preUploadApi(data, sessionId) {
     url: `/v1/files/jobs`,
     method: 'POST',
     data,
-    timeout: 100 * 1000,
+    timeout: 10 * 60 * 1000,
     headers: {
       'Session-ID': sessionId,
     },
@@ -50,6 +51,7 @@ function combineChunksApi(data, sessionId) {
     data,
     headers: {
       'Session-ID': sessionId,
+      'Refresh-token': keycloak.refreshToken,
     },
   });
 }
@@ -142,6 +144,7 @@ function createFolderApi(containerId, path, folderName) {
   return devOpAxios({
     url: `/v1/folders`,
     method: 'POST',
+    headers: { 'Refresh-token': keycloak.refreshToken },
     data: {
       path: path ? path + '/' + folderName : folderName,
       container_id: containerId,
@@ -329,6 +332,7 @@ async function downloadFilesAPI(
   return axios({
     url: `/v2/download/pre`,
     method: 'post',
+    headers: { 'Refresh-token': keycloak.refreshToken },
     data: {
       files,
       project_code: projectCode,
@@ -493,35 +497,29 @@ function copyFiles(inputFiles, projectCode, operator, sessionId, opType) {
   });
 }
 
-function addToVirtualFolder(folderGeid, geids) {
+function addToVirtualFolder(collectionGeid, geids) {
   return axios({
-    url: `/v1/collections/${folderGeid}/files`,
+    url: `/v1/collections/${collectionGeid}/files`,
     method: 'POST',
     data: {
-      geids: geids,
+      file_geids: geids,
     },
   });
 }
 
 /**
  * https://indocconsortium.atlassian.net/browse/VRE-1499
- * @param {string} folderGeid the vfolder geid
+ * @param {string} collectionGeid the vfolder geid
  * @param {string} geids the files/folders geid
  * @returns
  */
-function removeFromVirtualFolder(folderGeid, geids) {
+function removeFromVirtualFolder(collectionGeid, geids) {
   return axios({
-    url: `/v1/collections/${folderGeid}/files`,
+    url: `/v1/collections/${collectionGeid}/files`,
     method: 'DELETE',
     data: {
-      geids: geids,
+      file_geids: geids,
     },
-  });
-}
-
-function getCollectionFiles(folderGeid) {
-  return axios({
-    url: `/v1/collections/${folderGeid}/files`,
   });
 }
 
@@ -539,6 +537,7 @@ function deleteFileAPI(data) {
   return axios({
     url: '/v1/files/actions',
     method: 'DELETE',
+    headers: { 'Refresh-token': keycloak.refreshToken },
     data,
   });
 }
@@ -593,7 +592,9 @@ function commitFileAction(
     method: 'POST',
     headers: {
       'Session-ID': sessionId,
+      'Refresh-token': keycloak.refreshToken,
     },
+
     data: {
       payload,
       operator,
@@ -636,5 +637,4 @@ export {
   getFiles,
   validateRepeatFiles,
   commitFileAction,
-  getCollectionFiles,
 };

@@ -18,10 +18,12 @@ import {
 } from '../../../../APIs';
 import { useTranslation } from 'react-i18next';
 import { tokenManager } from '../../../../Service/tokenManager';
+
 export default function DatasetHeaderLeft(props) {
+  const { setDatasetDrawerVisibility } = props;
   const { t } = useTranslation(['errormessages', 'success']);
   const {
-    basicInfo: { title, timeCreated, creator, geid },
+    basicInfo: { title, timeCreated, creator, geid, code },
     projectName,
   } = useSelector((state) => state.datasetInfo);
   const username = useSelector((state) => state.username);
@@ -89,7 +91,7 @@ export default function DatasetHeaderLeft(props) {
         <PageHeader
           ghost={true}
           className={styles['pageHeader']}
-          title={getTitle(title)}
+          title={getTitle(title, setDatasetDrawerVisibility)}
         ></PageHeader>
         {/*           <Dropdown className={styles['dropdown']} overlay={menu}>
             <span>
@@ -105,8 +107,12 @@ export default function DatasetHeaderLeft(props) {
       </div> */}
       <>
         <div className={styles['createdTime']}>
-          Created on <b>{moment.utc(timeCreated).local().format('YYYY-MM-DD')}</b> by{' '}
-          {creator || 'N/A'}
+          <b>
+            {' '}
+            Dataset Code: {code} / Created on{' '}
+            {moment.utc(timeCreated).local().format('YYYY-MM-DD')}
+          </b>{' '}
+          by {creator || 'N/A'}
         </div>
         <Button
           className={styles['download-button']}
@@ -122,18 +128,44 @@ export default function DatasetHeaderLeft(props) {
   );
 }
 
-const getTitle = (title) => {
+const getTitle = (title, setDatasetDrawerVisibility) => {
   title = title ? title : 'N/A';
   const titleComponent =
-    title.length > 40 ? (
-      <Tooltip title={title}>
-        <div className={styles['toolTip-div']}>
+    title.length > 60 ? (
+      <div style={{ display: 'flex' }}>
+        <Tooltip title={title}>
+          <div className={styles['toolTip-div']}>
+            <span>{`${title.slice(0, 60)}...`}</span>
+          </div>
+        </Tooltip>
+        <p
+          style={{
+            cursor: 'pointer',
+            margin: '0px 0px 0px 20px',
+            fontSize: '14px',
+            textDecoration: 'underline',
+          }}
+          onClick={() => setDatasetDrawerVisibility(true)}
+        >
+          Versions
+        </p>
+      </div>
+    ) : (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div className={styles['no-toolTip-div']}>
           <span>{title}</span>
         </div>
-      </Tooltip>
-    ) : (
-      <div className={styles['no-toolTip-div']}>
-        <span>{title}</span>
+        <p
+          style={{
+            cursor: 'pointer',
+            margin: '0px 0px 0px 20px',
+            fontSize: '14px',
+            textDecoration: 'underline',
+          }}
+          onClick={() => setDatasetDrawerVisibility(true)}
+        >
+          Versions
+        </p>
       </div>
     );
 

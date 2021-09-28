@@ -16,7 +16,7 @@ import {
   DownCircleOutlined,
 } from '@ant-design/icons';
 import { getUsersOnDatasetAPI, getAdminsOnDatasetAPI } from '../../../../APIs';
-import { objectKeysToCamelCase } from '../../../../Utility';
+import { objectKeysToCamelCase, getTags } from '../../../../Utility';
 
 const { Content } = Layout;
 const { Paragraph } = Typography;
@@ -313,22 +313,7 @@ function ProjectItemCard({ item, currentRole, platformRole }) {
           maxWidth: '600px',
         }}
       >
-        {item.tags &&
-          item.tags.map((tag, index) => (
-            <Tag
-              key={index}
-              style={{
-                marginRight: 0,
-                marginLeft: 10,
-                backgroundColor: '#f5f5f5',
-                maxWidth: '100%',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {tag}
-            </Tag>
-          ))}
+        {item.tags && getTags(item.tags)}
       </div>
     </div>
   );

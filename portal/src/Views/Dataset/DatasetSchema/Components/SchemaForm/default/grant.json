@@ -1,0 +1,65 @@
+{
+  "schema": {
+    "type": "object",
+    "required": ["dataset_grant_name"],
+    "properties": {
+      "dataset_grant_name": {
+        "type": "string",
+        "title": "Grant Name"
+      },
+      "dataset_grant_funder": {
+        "type": "array",
+        "title": "Grant Funder",
+        "items": {
+          "type": "object",
+          "anyOf": [
+            {
+              "title": "Person",
+              "required": [
+                "dataset_contributor_person_firstname",
+                "dataset_contributor_person_lastname",
+                "dataset_contributor_person_email"
+              ],
+              "properties": {
+                "dataset_contributor_person_firstname": {
+                  "type": "string",
+                  "title": "First Name"
+                },
+                "dataset_contributor_person_lastname": {
+                  "type": "string",
+                  "title": "Last Name"
+                },
+                "dataset_contributor_person_email": {
+                  "type": "string",
+                  "title": "Email",
+                  "format": "email"
+                }
+              }
+            },
+            {
+              "title": "Organization",
+              "required": ["dataset_contributor_organization_name"],
+              "properties": {
+                "dataset_contributor_organization_name": {
+                  "type": "string",
+                  "title": "Full Name"
+                },
+                "dataset_contributor_organization_abbreviation": {
+                  "type": "string",
+                  "title": "Short Name"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "ui": {
+    "dataset_grant_funder": {
+      "ui:options": {
+        "orderable": false
+      }
+    }
+  }
+}

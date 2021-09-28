@@ -27,7 +27,6 @@ const VFolderFilesDeleteModal = ({
     setConfirmLoading(true);
     const vfolderName = panelKey.split('-').slice(1).join('-');
     const vfolder = vfolders.find((v) => v.name === vfolderName);
-    console.log(vfolder,"vfolder")
     if (vfolder) {
       try {
         await removeFromVirtualFolder(vfolder.geid, files);
@@ -39,7 +38,7 @@ const VFolderFilesDeleteModal = ({
           `${i18n.t('errormessages:removeFromVirtualFolder.default.0')}`,
           3,
         );
-      } finally{
+      } finally {
         setConfirmLoading(false);
       }
 

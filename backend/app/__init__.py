@@ -68,6 +68,7 @@ def create_app(extra_config_settings={}):
     def error_handler(e):
         print("###### Error Handler")
         # Either not Authorized or Expired
+        print(e)
         return {'result': 'jwt ' + str(e)}, 401
 
     # load jwt token from request's header
@@ -75,6 +76,7 @@ def create_app(extra_config_settings={}):
     def load_token():
         print("###### Load Token")
         token = request.headers.get('Authorization')
+        print(request.headers)
 
         if not token:
             return token

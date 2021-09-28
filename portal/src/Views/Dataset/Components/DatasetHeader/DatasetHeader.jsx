@@ -5,17 +5,33 @@ import styles from './DatasetHeader.module.scss';
 import DatasetHeaderLeft from '../DatasetHeaderLeft/DatasetHeaderLeft';
 import DatasetHeaderRight from '../DatasetHeaderRight/DatasetHeaderRight';
 import { useHistory, useParams } from 'react-router-dom';
-import { getDatasetByDatasetCode, getProjectInfoAPI } from '../../../../APIs';
+import { getDatasetByDatasetCode, getProjectInfoAPI, getDatasetVersionsAPI, getBidsResult } from '../../../../APIs';
 import { useDispatch, useSelector } from 'react-redux';
 import { datasetInfoCreators } from '../../../../Redux/actions';
 import { useTranslation } from 'react-i18next';
 
 export default function DatasetHeader(props) {
+  const { setDatasetDrawerVisibility } = props;
   const history = useHistory();
   const { datasetCode } = useParams();
   const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.datasetInfo);
+  const { loading, basicInfo } = useSelector((state) => state.datasetInfo);
   const { t } = useTranslation(['errormessages']);
+  
+  const getDatasetVersions = async () => {
+    const res = await getDatasetVersionsAPI(basicInfo.geid);
+    if (res.data.result.length > 0) {
+      // do the update dataset current version logic
+      dispatch(datasetInfoCreators.setDatasetVersion(res.data.result[0].version));
+    }
+  }
+  
+  useEffect(() => {
+    if (basicInfo.geid) {
+      getDatasetVersions();
+    }
+  }, [basicInfo.geid]);
+  
   useEffect(() => {
     init();
   }, [datasetCode]);
@@ -26,7 +42,7 @@ export default function DatasetHeader(props) {
       const projectInfo = res.data.result;
       dispatch(datasetInfoCreators.setProjectName(projectInfo.name));
     } catch (error) {
-      //message.error('Failed to get project name');
+      message.error('Failed to get project name');
     }
   }
 
@@ -38,6 +54,17 @@ export default function DatasetHeader(props) {
         data: { result: basicInfo },
       } = await getDatasetByDatasetCode(datasetCode);
 
+      if (basicInfo.geid) {
+        const bidsResult = await getBidsResult(basicInfo.geid);
+        if (bidsResult.status === 200) {
+          basicInfo['bidsResult'] = bidsResult.data.result.validateOutput;
+          basicInfo['bidsUpdatedTime'] = bidsResult.data.result.updatedTime;
+          basicInfo['bidsCreatedTime'] = bidsResult.data.result.createdTime;
+          basicInfo['bidsLoading'] = false;
+        }
+      }
+
+      dispatch(datasetInfoCreators.setDatasetVersion(''));
       dispatch(datasetInfoCreators.setBasicInfo(basicInfo));
       dispatch(datasetInfoCreators.setHasInit(true));
 
@@ -69,7 +96,9 @@ export default function DatasetHeader(props) {
         </div>
 
         <div className={styles['left']}>
-          <DatasetHeaderLeft />
+          <DatasetHeaderLeft
+            setDatasetDrawerVisibility={setDatasetDrawerVisibility}
+          />
         </div>
 
         <div className={styles['right']}>

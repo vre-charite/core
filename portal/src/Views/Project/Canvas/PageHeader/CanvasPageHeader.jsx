@@ -26,8 +26,9 @@ import {
   getAdminsOnDatasetAPI,
 } from '../../../../APIs';
 import { connect } from 'react-redux';
-import { withCurrentProject, objectKeysToCamelCase } from '../../../../Utility';
+import { withCurrentProject, objectKeysToCamelCase, getTags } from '../../../../Utility';
 import userRoles from '../../../../Utility/project-roles.json';
+import styles from '../index.module.scss';
 const { Content } = Layout;
 const { Paragraph } = Typography;
 
@@ -355,19 +356,7 @@ class CanvasPageHeader extends Component {
             textAlign: 'right',
           }}
         >
-          {currentProject.tags &&
-            currentProject.tags.map((tag, index) => (
-              <Tag
-                key={index}
-                style={{
-                  marginRight: 0,
-                  marginLeft: 10,
-                  backgroundColor: '#f5f5f5',
-                }}
-              >
-                {tag}
-              </Tag>
-            ))}
+          {currentProject.tags && getTags(currentProject.tags)}
         </div>
       </div>
     );

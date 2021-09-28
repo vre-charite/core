@@ -3,6 +3,7 @@ import reduxActionWrapper from './reduxActionWrapper';
 import { objectKeysToCamelCase, objectKeysToSnakeCase } from './caseConvert';
 import getChildrenTree from './getChildrenTree';
 import protectedRoutes from './protectedRoutes';
+import { getTags } from './tagsDisplay';
 import { validateEmail } from './tokenRefresh';
 import {
   sleep,
@@ -16,6 +17,7 @@ import {
   withCurrentProject,
   getCurrentProject,
 } from './useCurrentProject';
+import { usePrevious } from './usePrevious';
 import { resetReduxState } from './resetReduxState';
 import { useIsMount } from './useIsMount';
 import { validateTag } from './validateTag';
@@ -67,6 +69,8 @@ export {
   checkUserHomeFolder,
   checkRootFolder,
   checkGreenAndCore,
+  getTags,
+  usePrevious,
 };
 
 export { logout, refresh, login } from './keycloakActions';

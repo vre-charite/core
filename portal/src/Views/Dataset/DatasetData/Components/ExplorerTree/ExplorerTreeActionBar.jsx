@@ -4,45 +4,53 @@ import {
   FolderOutlined,
   EyeOutlined,
   DeleteOutlined,
-  ExclamationCircleOutlined,
+  EditOutlined,
   DownloadOutlined,
   CloseOutlined,
   SaveOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
-import { Input, Button, Modal, message } from 'antd';
+import { Input, Button, message } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { EDIT_MODE } from '../../../../../Redux/Reducers/datasetData';
 import {
-  deleteDatasetFiles,
   downloadDatasetFiles,
   checkDatasetDownloadStatusAPI,
+  renameFileApi,
 } from '../../../../../APIs';
 import { datasetDataActions } from '../../../../../Redux/actions';
 import { tokenManager } from '../../../../../Service/tokenManager';
 import _ from 'lodash';
 import { ExplorerTreeDeleteModal } from './ExplorerTreeDeleteModal';
 import { useTranslation } from 'react-i18next';
+import { getFileSize } from '../../../../../Utility';
 export default function ExplorerTreeActionBar({
   title,
   nodeKey,
   isLeaf,
   createBy,
   fileSize,
+  labels,
 }) {
   const username = useSelector((state) => state.username);
   const editorMode = useSelector((state) => state.datasetData.mode);
   const [downloading, setDownloading] = useState(false);
   const [downloadHash, setDownloadHash] = useState(null);
+  const selectedData = useSelector((state) => state.datasetData.selectedData);
+  const treeData = useSelector((state) => state.datasetData.treeData);
   const hightLighted = useSelector((state) => state.datasetData.hightLighted);
   const datasetInfo = useSelector((state) => state.datasetInfo.basicInfo);
   const [deleteVisible, setDeleteVisible] = useState(false);
+  const titleArr = title.split('.');
+  const titleName =
+    titleArr.length > 1 ? titleArr.slice(0, titleArr.length - 1) : titleArr[0];
+  const format = titleArr.length > 1 ? titleArr[titleArr.length - 1] : null;
+  const [nodeName, setNodeName] = useState(titleName);
   const { t } = useTranslation(['errormessages', 'success']);
   const datasetGeid = datasetInfo.geid;
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const previewNode = () => {
-    const titleArr = title.split('.');
-    const format = titleArr[titleArr.length - 1];
     dispatch(
       datasetDataActions.setPreviewFile({
         type: format.toLowerCase(),
@@ -99,31 +107,75 @@ export default function ExplorerTreeActionBar({
       checkDownload(timer);
     }
   }, [downloadHash]);
-  // const editNode = () => {
-  //   const newSelectedData = selectedData.filter((v) => v !== nodeKey);
-  //   dispatch(datasetDataActions.setSelectedData(newSelectedData));
-  //   dispatch(datasetDataActions.setMode(EDIT_MODE.EIDT_INDIVIDUAL));
-  // const newTreeData = updateTreeInfo(_.cloneDeep(treeData), nodeKey, {
-  //   disabled: true,
-  // });
-  // dispatch(datasetDataActions.setTreeData(newTreeData));
-  // };
-  function displayFileSize() {
-    if (fileSize < 1 * 1024) {
-      return fileSize + 'B';
-    } else if (fileSize < 1 * 1024 * 1024) {
-      return (fileSize / 1024.0).toFixed(2) + 'KB';
-    } else if (fileSize < 1 * 1024 * 1024 * 1024) {
-      return (fileSize / 1024.0 / 1024.0).toFixed(2) + 'MB';
-    } else if (fileSize < 1 * 1024 * 1024 * 1024 * 1024) {
-      return (fileSize / 1024.0 / 1024.0 / 1024.0).toFixed(2) + 'GB';
-    }
+  function updateTreeInfo(list, key, newInfo) {
+    return list.map((node) => {
+      if (node.key === key) {
+        return { ...node, ...newInfo };
+      }
+      if (node.children) {
+        return {
+          ...node,
+          children: updateTreeInfo(node.children, key, newInfo),
+        };
+      }
+      return node;
+    });
   }
+
+  const editNode = () => {
+    const newSelectedData = selectedData.filter((v) => v !== nodeKey);
+    dispatch(datasetDataActions.setSelectedData(newSelectedData));
+    dispatch(datasetDataActions.setMode(EDIT_MODE.EIDT_INDIVIDUAL));
+    const newTreeData = updateTreeInfo(_.cloneDeep(treeData), nodeKey, {
+      disabled: true,
+    });
+    dispatch(datasetDataActions.setTreeData(newTreeData));
+  };
+
   const deleteNode = () => {
     setDeleteVisible(true);
   };
   const cancelEdit = () => {
-    // dispatch(datasetDataActions.setMode(EDIT_MODE.DISPLAY));
+    dispatch(datasetDataActions.setMode(EDIT_MODE.DISPLAY));
+    setNodeName(titleName);
+  };
+
+  const onSave = async () => {
+    setLoading(true);
+
+    if (labels.includes('Folder')) {
+      const reg = new RegExp(/[\\/:?*<>|”]/);
+      if (reg.test(nodeName)) {
+        message.error('The file/folder name cannot contain [\\/:?*<>|”]');
+        setLoading(false);
+        return;
+      }
+
+      if (nodeName.length > 20 || nodeName.length === 0) {
+        message.error(
+          'The length file/folder name should be between 0-20 characters',
+        );
+        setLoading(false);
+        return;
+      }
+    }
+
+    try {
+      await renameFileApi(
+        datasetGeid,
+        nodeKey,
+        format ? nodeName + '.' + format : nodeName,
+        username,
+      );
+      message.success(
+        `The rename request is submitted. Please wait for a while`,
+      );
+      cancelEdit();
+    } catch (error) {
+      message.error('Failed to submit the rename request');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const explorerTreeDeleteModalProps = {
@@ -134,6 +186,9 @@ export default function ExplorerTreeActionBar({
     username,
     title,
   };
+  const nameArr = title.toLowerCase().split('.');
+  const namePostfix = nameArr[nameArr.length - 1];
+  const supportFormats = ['tsv', 'csv', 'json', 'txt', 'yml', 'yaml', 'log'];
   return (
     <>
       <div className={'tree-node-custom-title'}>
@@ -150,11 +205,20 @@ export default function ExplorerTreeActionBar({
               e.stopPropagation();
             }}
           >
-            <Input value={title} className="rename-input" />
+            <Input
+              value={nodeName}
+              onChange={(e) => {
+                setNodeName(e.target.value);
+              }}
+              className="rename-input"
+            />
+            {format ? `.${format}` : null}
             <Button
               type="primary"
               icon={<SaveOutlined />}
               className="rename-save-btn"
+              onClick={onSave}
+              loading={loading}
             >
               Save
             </Button>
@@ -167,17 +231,16 @@ export default function ExplorerTreeActionBar({
           <>
             <span className="node-name">{title}</span>
             <span className="uploader">{createBy ? 'by ' + createBy : ''}</span>
-            <span className="size">{fileSize ? displayFileSize() : ''}</span>
+            <span className="size">
+              {fileSize ? getFileSize(fileSize) : ''}
+            </span>
             <div
               className="actions-bar"
               onClick={(e) => {
                 e.stopPropagation();
               }}
             >
-              {(title.toLowerCase().endsWith('.tsv') ||
-                title.toLowerCase().endsWith('.csv') ||
-                title.toLowerCase().endsWith('.json')) && (
-                // ||title.toLowerCase().endsWith('.txt')
+              {supportFormats.indexOf(namePostfix) !== -1 && (
                 <EyeOutlined
                   onClick={(e) => {
                     previewNode();
@@ -193,12 +256,11 @@ export default function ExplorerTreeActionBar({
                   }}
                 />
               )}
-
-              {/* <EditOutlined
-              onClick={(e) => {
-                editNode();
-              }}
-            /> */}
+              <EditOutlined
+                onClick={(e) => {
+                  editNode();
+                }}
+              />
               <DeleteOutlined
                 onClick={(e) => {
                   deleteNode();

@@ -17,7 +17,9 @@ const init = {
     description: '',
     geid: '',
     tags: [],
+    bidsLoading: false,
   },
+  currentVersion: '',
   projectName: '',
   loading: false,
   hasInit: false,
@@ -37,6 +39,9 @@ export function datasetInfo(state = init, action) {
     }
     case DATASET_INFO.SET_HAS_INIT: {
       return { ...state, hasInit: payload };
+    }
+    case DATASET_INFO.SET_VERSION: {
+      return { ...state, currentVersion: payload };
     }
     default:
       return state;

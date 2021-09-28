@@ -51,6 +51,9 @@ class FileActionLogs(BaseProxyResource):
     required_roles = {"GET": "member"}
     url = ConfigClass.DATA_SERVICE + "file/actions/logs"
 
+
+# by default this proxy will ONLY call 
+# the Container related apis.
 class FileActionTasks(BaseProxyResource):
     @jwt_required()
     @permissions_check('tasks', '*', 'view')
@@ -77,7 +80,7 @@ class FileActionTasks(BaseProxyResource):
 class FileActions(Resource):
     @jwt_required()
     def post(self):
-        data_actions_utility_url = ConfigClass.DATA_UTILITY_SERVICE + "files/actions"
+        data_actions_utility_url = ConfigClass.DATA_UTILITY_SERVICE + "files/actions/"
         headers = request.headers
         request_body = request.get_json()
         operation = request_body.get("operation", None)
@@ -155,22 +158,22 @@ class FileActions(Resource):
                         source = source_folder_found[0]
                 else:
                     source = source_file_found[0]
+                neo4j_labels = source["labels"]
                 if user_project_role == 'contributor':
-                    neo4j_labels = source["labels"]
-
                     root_folder = source["display_path"].split("/")[0]
                     if root_folder != current_identity['username']:
                         return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                     if 'Greenroom' not in neo4j_labels:
                         return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                 if user_project_role == 'collaborator':
-                    root_folder = source["display_path"].split("/")[0]
-                    if root_folder != current_identity['username']:
-                        return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
+                    if 'VRECore' not in neo4j_labels:
+                        root_folder = source["display_path"].split("/")[0]
+                        if root_folder != current_identity['username']:
+                            return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
         # request action utility API
         payload = request_body
         payload['session_id'] = session_id
-        action_util_res = requests.post(data_actions_utility_url, json=payload)
+        action_util_res = requests.post(data_actions_utility_url, json=payload, headers=request.headers)
         if action_util_res.status_code == 202:
             return action_util_res.json(), action_util_res.status_code
         else:
@@ -257,18 +260,19 @@ class FileRepeatedCheck(Resource):
                         source = source_folder_found[0]
                 else:
                     source = source_file_found[0]
-                if user_project_role == 'contributor':
-                    neo4j_labels = source["labels"]
 
+                neo4j_labels = source["labels"]
+                if user_project_role == 'contributor':
                     root_folder = source["display_path"].split("/")[0]
                     if root_folder != current_identity['username']:
                         return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                     if 'Greenroom' not in neo4j_labels:
                         return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                 if user_project_role == 'collaborator':
-                    root_folder = source["display_path"].split("/")[0]
-                    if root_folder != current_identity['username']:
-                        return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
+                    if 'VRECore' not in neo4j_labels:
+                        root_folder = source["display_path"].split("/")[0]
+                        if root_folder != current_identity['username']:
+                            return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
         # request action utility API
         payload = request_body
         payload['session_id'] = session_id
@@ -368,17 +372,18 @@ class FileValidation(Resource):
                     if not full_access and operation == "delete":
                         relation = relations[0]
                         user_project_role = relation['r']['type']
+                        neo4j_labels = source["labels"]
                         if user_project_role == 'contributor':
-                            neo4j_labels = source["labels"]
                             root_folder = source["display_path"].split("/")[0]
                             if root_folder != current_identity['username']:
                                 return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                             if 'Greenroom' not in neo4j_labels:
                                 return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                         if user_project_role == 'collaborator':
-                            root_folder = source["display_path"].split("/")[0]
-                            if root_folder != current_identity['username']:
-                                return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
+                            if 'VRECore' not in neo4j_labels:
+                                root_folder = source["display_path"].split("/")[0]
+                                if root_folder != current_identity['username']:
+                                    return "Permission denied on file: " + source['global_entity_id'], EAPIResponseCode.forbidden.value
                             
                 
             # request action utility API

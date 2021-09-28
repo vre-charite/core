@@ -103,7 +103,6 @@ function Portal(props) {
   const dispatch = useDispatch();
   const { keycloak } = useKeycloak();
   const q = useContext(UploadQueueContext);
-
   //keycloak event binding
   useEffect(() => {
     // initial logic

@@ -56,5 +56,13 @@
     "default": [
       "Moving files and folders may take some time, please refresh afterwards."
     ]
+  },
+  "publishDatasetNewVersion": {
+    "default": [
+      "New version has been created successfully, please check the version later."
+    ]
+  },
+  "uploadOpenMindsSchema": {
+    "default": ["Schema uploaded successfully"]
   }
 }

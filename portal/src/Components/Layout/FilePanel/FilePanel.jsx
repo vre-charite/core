@@ -56,9 +56,7 @@ function FilePanel(props) {
     (el) => el.projectCode === projectCode,
   );
 
-  deletedFileList = deletedFileList.filter(
-    (el) => el.projectCode === projectCode,
-  );
+  deletedFileList = deletedFileList.filter((el) => el.code === projectCode);
   deletedFileList = _.orderBy(deletedFileList, ['updateTimestamp'], ['desc']);
 
   const dispatch = useDispatch();
@@ -70,17 +68,16 @@ function FilePanel(props) {
       const projectCode = project.profile.code;
 
       let res = await listAllCopy2CoreFiles(projectCode, sessionId);
-      const result = res.data.result.map((el) => {
+      const result = res.map((el) => {
         return {
           ...el,
           createdTime: Date.now(),
         };
       });
       dispatch(updateCopy2CoreList(result));
-      if (res.data.result.length) {
+      if (result.length) {
         if (
-          res.data.result.filter((v) => v.status === JOB_STATUS.RUNNING)
-            .length !== 0
+          result.filter((v) => v.status === JOB_STATUS.RUNNING).length !== 0
         ) {
           refreshJobStart = true;
           keepAlive();
@@ -291,7 +288,7 @@ function FilePanel(props) {
   if (uploadingList && uploadingList.length > 0) defaultKey = ['upload'];
   // eslint-disable-next-line
   copy2CoreList = copy2CoreList.filter((item) => {
-    if (item.projectCode === projectCode) return true;
+    if (item.code === projectCode) return true;
   });
 
   const title = (
@@ -356,7 +353,9 @@ function FilePanel(props) {
 
   const displayName = (fileName) => {
     if (fileName.length > 40) {
-      return <Tooltip title={fileName}>{`${fileName.slice(0, 32)}...`}</Tooltip>;
+      return (
+        <Tooltip title={fileName}>{`${fileName.slice(0, 32)}...`}</Tooltip>
+      );
     } else {
       return fileName;
     }
@@ -379,7 +378,10 @@ function FilePanel(props) {
         </span>
       );
     } else if (item.status === JOB_STATUS.RUNNING && tabName === 'progress') {
-      if (item.action === 'data_transfer') {
+      if (
+        item.action === 'data_transfer' ||
+        item.action === 'data_transfer_folder'
+      ) {
         return (
           <span>
             <Tooltip title="file copy">
@@ -412,7 +414,8 @@ function FilePanel(props) {
             <Tooltip title="file download">
               <DownloadOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
-            {displayName(item.filename)}{'-'}{' '}
+            {displayName(item.filename)}
+            {'-'}{' '}
             <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
               Waiting
             </span>
@@ -449,8 +452,7 @@ function FilePanel(props) {
               <CloudUploadOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
             {displayName(item.fileName)}
-            {'-'}{' '}
-            <span style={{ fontStyle: 'Italic' }}>Failed</span>
+            {'-'} <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
       }
@@ -461,20 +463,21 @@ function FilePanel(props) {
               <DownloadOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
             {displayName(item.filename)}
-            {'-'}{' '}
-            <span style={{ fontStyle: 'Italic' }}>Failed</span>
+            {'-'} <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
       }
-      if (item.action === 'data_transfer') {
+      if (
+        item.action === 'data_transfer' ||
+        item.action === 'data_transfer_folder'
+      ) {
         return (
           <span style={{ color: '#FF6D72' }}>
             <Tooltip title="file copy">
               <CopyOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
             {displayName(copyFileName)}
-            {'-'}{' '}
-            <span style={{ fontStyle: 'Italic' }}>Failed</span>
+            {'-'} <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
       }
@@ -485,7 +488,7 @@ function FilePanel(props) {
               <RestOutlined style={{ marginRight: '2%' }} />
             </Tooltip>
             {displayName(item.fileName)}
-            {'-'}{' '} <span style={{ fontStyle: 'Italic' }}>Failed</span>
+            {'-'} <span style={{ fontStyle: 'Italic' }}>Failed</span>
           </span>
         );
       }
@@ -530,9 +533,7 @@ function FilePanel(props) {
               />
             )}
           />
-          <span className={styles.fileName}>
-            {displayName(item.filename)}
-          </span>{' '}
+          <span className={styles.fileName}>{displayName(item.filename)}</span>{' '}
           {'-'} <span>{nameZone(item)}</span>
         </span>
       );
@@ -549,9 +550,7 @@ function FilePanel(props) {
               />
             )}
           />
-          <span className={styles.fileName}>
-            {displayName(copyFileName)}
-          </span>
+          <span className={styles.fileName}>{displayName(copyFileName)}</span>
           <span className={styles.slash}>/</span>
           <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
             {item.copyTag}
@@ -566,9 +565,7 @@ function FilePanel(props) {
               <RestOutlined className={styles.icons} />
             </Tooltip>
           }
-          <span className={styles.fileName}>
-            {displayName(item.fileName)}
-          </span>{' '}
+          <span className={styles.fileName}>{displayName(item.fileName)}</span>{' '}
           {'-'} <span>{item.payload.frontendZone}</span>
         </span>
       );

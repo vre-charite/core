@@ -9,7 +9,7 @@ import {
   CloseOutlined,
   HomeOutlined,
   CloudServerOutlined,
-  BarChartOutlined,
+  DeploymentUnitOutlined,
 } from '@ant-design/icons';
 
 const { Panel } = Collapse;
@@ -166,7 +166,7 @@ function SearchResultTable({
           <Button
             type="link"
             //style={{border: '0px'}}
-            icon={<BarChartOutlined />}
+            icon={<DeploymentUnitOutlined />}
             disabled={selectedRows.length ? false : true}
             onClick={() => {
               openDatasetsModal();

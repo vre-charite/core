@@ -10,9 +10,12 @@ import { useSelector, useDispatch } from 'react-redux';
 import styles from './ExplorerActions.module.scss';
 import { EDIT_MODE } from '../../../../../Redux/Reducers/datasetData';
 import { Move } from './Actions/Move/Move';
+import BidsValidator from './Actions/BidsValidator/BidsValidator';
+
 export function ExplorerActions(props) {
   const editorMode = useSelector((state) => state.datasetData.mode);
   const selectedData = useSelector((state) => state.datasetData.selectedData);
+  const basicInfo = useSelector((state) => state.datasetInfo.basicInfo);
   const moveCondition =
     selectedData.length !== 0 && editorMode !== EDIT_MODE.EIDT_INDIVIDUAL;
   return (
@@ -45,6 +48,7 @@ export function ExplorerActions(props) {
         </Button>{' '} */}
         <Move />
       </Space>
+      { basicInfo.type && basicInfo.type === 'BIDS' && <BidsValidator />}
     </div>
   );
 }

@@ -89,7 +89,7 @@ const serverAxios = axios.create({
 
 // serverAxios.defaults.withCredentials = true;
 serverAxios.defaults.headers.post['Content-Type'] = 'application/json';
-serverAxios.defaults.timeout = 10000;
+serverAxios.defaults.timeout = 100000;
 
 const CancelToken = axios.CancelToken;
 
@@ -102,7 +102,7 @@ const serverAxiosNoIntercept = axios.create({
 });
 serverAxiosNoIntercept.defaults.headers.post['Content-Type'] =
   'application/json';
-serverAxiosNoIntercept.defaults.timeout = 10000;
+serverAxiosNoIntercept.defaults.timeout = 100000;
 useHeader(serverAxiosNoIntercept);
 /**
  * executes the api calling function
@@ -150,7 +150,7 @@ useHeader(devOpServerNoIntercept);
 const authServerAxios = axios.create({ baseURL: authService });
 // authServerAxios.defaults.withCredentials = true;
 authServerAxios.defaults.headers.post['Content-Type'] = 'application/json';
-authServerAxios.defaults.timeout = 10000;
+authServerAxios.defaults.timeout = 100000;
 useHeader(authServerAxios);
 
 //Adding a interceptor to axios, so it handles expire issue before .then and .error
@@ -159,7 +159,7 @@ useHeader(authServerAxios);
 const invitationAxios = axios.create({ baseURL: 'http://bff.utility:5060' });
 // authServerAxios.defaults.withCredentials = true;
 invitationAxios.defaults.headers.post['Content-Type'] = 'application/json';
-invitationAxios.defaults.timeout = 10000;
+invitationAxios.defaults.timeout = 100000;
 useHeader(invitationAxios);
 
 const uploadAxios = axios.create({ baseURL: uploadGrUrl });

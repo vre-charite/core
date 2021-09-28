@@ -48,6 +48,7 @@ function FileBasics(props) {
             )}
           </Descriptions.Item>
         )}
+        <Descriptions.Item label="geid">{record.geid}</Descriptions.Item>
         <Descriptions.Item>
           <FileTags
             panelKey={panelKey}

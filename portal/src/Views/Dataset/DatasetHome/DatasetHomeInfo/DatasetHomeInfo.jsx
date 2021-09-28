@@ -72,7 +72,6 @@ export default function DatasetHomeInfo(props) {
       setEditMode(false);
     } catch (error) {
       if(error.message){
-        console.log(error.message)
         message.error(t('errormessages:updateDatasetInfo.default.0'));
       }
     } finally {

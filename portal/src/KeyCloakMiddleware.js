@@ -181,7 +181,7 @@ function KeyCloakMiddleware() {
         store.dispatch(setIsLoginCreator(keycloak.authenticated));
         store.dispatch(setIsKeycloakReady(true));
         if (keycloak.authenticated) {
-          console.log(keycloak.token, 'access_token'); // successfully get it. So once authenticated === true, access_token has value.
+          // console.log(keycloak.token, 'access_token'); // successfully get it. So once authenticated === true, access_token has value.
         }
         break;
       }
@@ -200,6 +200,7 @@ function KeyCloakMiddleware() {
         break;
       }
       case 'onAuthRefreshSuccess': {
+        // console.log(keycloak.token, 'access_token');
         if (
           keycloak.refreshTokenParsed.exp - keycloak.refreshTokenParsed.iat <
           refreshTokenLiftTime

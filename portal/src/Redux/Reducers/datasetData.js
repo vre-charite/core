@@ -7,10 +7,12 @@ export const EDIT_MODE = {
 const init = {
   treeData: [],
   selectedData: [],
-  uniqeSelectedData: [],
+  selectedDataPos: [],
   mode: EDIT_MODE.DISPLAY,
   hightLighted: null,
   previewFile: {},
+  treeLoading: false,
+  treeKey: 1,
 };
 
 export function datasetData(state = init, action) {
@@ -23,8 +25,8 @@ export function datasetData(state = init, action) {
     case DATASET_DATA.SET_SELECTED_DATA: {
       return { ...state, selectedData: payload };
     }
-    case DATASET_DATA.SET_UNIQE_SELECTED_DATA: {
-      return { ...state, uniqeSelectedData: payload };
+    case DATASET_DATA.SET_SELECTED_DATA_POS: {
+      return { ...state, selectedDataPos: payload };
     }
     case DATASET_DATA.SET_HIGHLIGHTED: {
       return { ...state, hightLighted: payload };
@@ -41,6 +43,12 @@ export function datasetData(state = init, action) {
       return { ...state, previewFile: payload };
     }
 
+    case DATASET_DATA.SET_TREE_LOADING: {
+      return { ...state, treeLoading: payload };
+    }
+    case DATASET_DATA.RESET_TREE_KEY: {
+      return { ...state, treeKey: state.treeKey + 1 };
+    }
     default:
       return state;
   }

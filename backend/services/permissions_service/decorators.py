@@ -27,8 +27,6 @@ def permissions_check(resource, zone, operation):
 def dataset_permission():
     def inner(function):
         def wrapper(*args, **kwargs):
-            # print(args)
-            # print(kwargs)
             dateset_geid = kwargs.get("dataset_geid")
 
             # here we have to find the parent node and delete the relationship
@@ -41,8 +39,6 @@ def dataset_permission():
                 "start_params": {"name":current_identity.get("username")},
             }
             response = requests.post(relation_query_url, json=query_payload)
-            # print(current_identity)
-            # print(response.json())
 
             # if not the owner and not the platform admin
             if len(response.json()) == 0:

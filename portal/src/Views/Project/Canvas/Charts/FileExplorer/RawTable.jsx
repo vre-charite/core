@@ -89,7 +89,7 @@ const { Title } = Typography;
 const _ = require('lodash');
 
 function RawTable(props) {
-  const { panelKey, folderId, removePanel, geid, titleText } = props; //the geid is for vfolder
+  const { panelKey, removePanel, geid, titleText, activePane } = props; //the geid is for vfolder
   const dispatch = useDispatch();
   const ref = React.useRef(null);
   const [loading, setLoading] = useState(false);
@@ -116,7 +116,8 @@ function RawTable(props) {
   const [menuItems, setMenuItems] = useState(0);
   const [tableReady, setTableReady] = useState(false);
   const [showPlugins, setShowPlugins] = useState(true);
-
+  // const [tableLoading, setTableLoading] = useState(false);
+  
   const sessionId = tokenManager.getCookie('sessionId');
   const currentDataset = getCurrentProject(props.projectId);
   const projectActivePanel = useSelector(
@@ -558,12 +559,32 @@ function RawTable(props) {
 
             const menu = (
               <Menu>
-                <Menu.Item onClick={(e) => openFileSider(record)}>
+                <Menu.Item
+                  disabled={
+                    deletedFileList &&
+                    deletedFileList.find(
+                      (el) =>
+                        el.payload?.geid === record.geid &&
+                        el.status === JOB_STATUS.RUNNING,
+                    ) &&
+                    true
+                  }
+                  onClick={(e) => openFileSider(record)}
+                >
                   Properties
                 </Menu.Item>
                 {!panelKey.includes('trash') && <Menu.Divider />}
                 {!panelKey.includes('trash') && (
                   <Menu.Item
+                    disabled={
+                      deletedFileList &&
+                      deletedFileList.find(
+                        (el) =>
+                          el.payload?.geid === record.geid &&
+                          el.status === JOB_STATUS.RUNNING,
+                      ) &&
+                      true
+                    }
                     onClick={async (e) => {
                       downloadFilesAPI(
                         props.projectId,
@@ -1058,6 +1079,7 @@ function RawTable(props) {
       setShowPlugins(true);
     } catch (error) {
       setShowPlugins(false);
+      console.error(error)
       if (error.response && error.response.status === 404) {
         message.error('No user folder found');
       } else {
@@ -1436,6 +1458,7 @@ function RawTable(props) {
         dataSource={rawFiles.data}
         totalItem={rawFiles.total}
         updateTable={refreshFiles}
+        activePane={activePane}
         projectId={props.projectId}
         rowSelection={rowSelection}
         tableKey={tableKey}
@@ -1447,9 +1470,10 @@ function RawTable(props) {
         selectedRecord={currentRecord}
         tableState={tableState}
         getCurrentGeid={getCurrentGeid}
-        getSourceType={getSourceType}
+        tableLoading={tableLoading}
+        currentRouting={currentRouting}
       />
-      {tableLoading ? (
+      {/* {tableLoading ? (
         <div
           style={{
             position: 'absolute',
@@ -1460,7 +1484,7 @@ function RawTable(props) {
             background: 'rgba(255,255,255,0.2)',
           }}
         ></div>
-      ) : null}
+      ) : null} */}
     </div>
   );
 

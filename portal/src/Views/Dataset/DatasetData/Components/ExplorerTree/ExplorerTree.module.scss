@@ -1,3 +1,4 @@
+$action-bar-width: 110px;
 .project_name {
   font-size: 14px;
   margin: 0;
@@ -78,7 +79,7 @@
         white-space: nowrap;
       }
       .actions-bar {
-        width: 100px;
+        width: $action-bar-width;
         text-align: right;
         > span {
           display: none;
@@ -92,7 +93,7 @@
       .tree-node-custom-title {
         .actions-bar {
           cursor: default;
-          width: 100px;
+          width: $action-bar-width;
           text-align: right;
           > span {
             display: inline-block;
@@ -144,6 +145,8 @@
 }
 .explorer-tree-loading {
   padding: 10px 25px;
+  position: relative;
+  height: 100%;
 }
 
 .delete-modal {

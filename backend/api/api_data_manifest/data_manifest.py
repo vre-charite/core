@@ -37,8 +37,8 @@ class APIDataManifest(metaclass=MetaAPI):
             self.RestfulAttributes, '/data/attributes')
         api_ns_data_manifest.add_resource(
             self.RestfulAttribute, '/data/attribute/<id>')
-        api_ns_data_manifest.add_resource(
-            self.FileManifests, '/file/manifest/attach')
+        # api_ns_data_manifest.add_resource(
+        #     self.FileManifests, '/file/manifest/attach') ## deprecated
         api_ns_data_manifest.add_resource(self.FileManifest, '/file/<file_geid>/manifest')
         api_ns_data_manifest.add_resource(
             self.ValidateManifest, '/file/manifest/validate')
@@ -272,98 +272,6 @@ class APIDataManifest(metaclass=MetaAPI):
                 }
                 return error_msg, 500
 
-    class FileManifests(Resource):
-        @jwt_required()
-        def post(self):
-            """
-                Attach file manifest
-            """
-            api_response = APIResponse()
-            manifests = request.get_json()
-            results = {
-                "error": [],
-                "success": []
-            }
-            error_list = []
-
-            for data in manifests:
-                # Check required fields
-                if not "global_entity_id" in data:
-                    results["error"].append(data.get("global_entity_id", ""))
-                    print("missing global_entity_id")
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_error_msg("missing global_entity_id")
-                    return api_response.to_dict, api_response.code
-
-                global_entity_id = data["global_entity_id"]
-                manifest_id = data.get("manifest_id", None)
-                if not manifest_id:
-                    if not "manifest_name" in data or not "project_code" in data:
-                        results["error"].append(data["name"])
-                        print("missing manifest id or manifest_name and project_code")
-                        api_response.set_code(EAPIResponseCode.bad_request)
-                        api_response.set_error_msg(
-                            "missing manifest id or manifest_name and project_code")
-                        return api_response.to_dict, api_response.code
-
-                    manifest = db.session.query(DataManifestModel).filter_by(
-                        name=data["manifest_name"], project_code=data["project_code"]).first()
-                    manifest_id = manifest.id
-                if not manifest_id:
-                    results["error"].append(data["name"])
-                    print("Manifest not found")
-                    api_response.set_code(EAPIResponseCode.not_found)
-                    api_response.set_error_msg("Manifest not found")
-                    return api_response.to_dict, api_response.code
-
-                file_node = get_file_node_bygeid(global_entity_id)
-                if not file_node:
-                    results["error"].append(data["name"])
-                    print("File not found")
-                    api_response.set_code(EAPIResponseCode.not_found)
-                    api_response.set_error_msg("File not found")
-                    return api_response.to_dict, api_response.code
-                # Make sure it's Greenroom/Raw
-                if not is_greenroom(file_node):
-                    results["error"].append(file_node["name"])
-                    print("not greenroom")
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_error_msg("File is not in greenroom")
-                    return api_response.to_dict, api_response.code
-
-                # Permissions check
-                if not has_permissions(manifest_id, file_node):
-                    results["error"].append(file_node["name"])
-                    print("Permission denied")
-
-                    api_response.set_code(EAPIResponseCode.bad_request)
-                    api_response.set_error_msg("Permission denied")
-                    return api_response.to_dict, api_response.code
-
-                manifest = db.session.query(DataManifestModel).get(manifest_id)
-                if is_greenroom(file_node):
-                    zone = "greenroom"
-                else:
-                    zone = "vrecore"
-                if not has_permission(manifest.project_code, 'file_attribute_template', zone, 'attach'):
-                    api_response.set_code(EAPIResponseCode.forbidden)
-                    api_response.set_error_msg("Permission denied")
-                    return api_response.to_dict, api_response.code
-            payload = {
-                "manifests": manifests
-            }
-            try:
-                response = requests.post(
-                    ConfigClass.ENTITYINFO_SERVICE + "file/manifest/attach", json=payload)
-                return response.json(), response.status_code
-            except Exception as e:
-                _logger.error(
-                    f"Error when calling entityinfo service: {str(e)}")
-                error_msg = {
-                    "result": str(e)
-                }
-                return error_msg, 500
-
     class FileManifest(Resource):
         """
         Edit a manifest attached to a file
@@ -386,16 +294,10 @@ class APIDataManifest(metaclass=MetaAPI):
             manifest = db.session.query(DataManifestModel).get(
                 file_node["manifest_id"])
             if current_identity["role"] != "admin":
-                role = get_project_permissions(
-                    manifest.project_code, current_identity["user_id"])
-                if role != "admin":
-                    if role != "collaborator" or "Greenroom" in file_node["labels"]:
-                        # contrib must own the file to attach manifests
-                        # collab can edit core files and there own greenroom files
-                        if file_node["uploader"] != current_identity["username"]:
-                            api_response.set_code(EAPIResponseCode.forbidden)
-                            api_response.set_result("Permission Denied")
-                            return api_response.to_dict, api_response.code
+                if not has_permissions(manifest.id, file_node):
+                    api_response.set_code(EAPIResponseCode.forbidden)
+                    api_response.set_result("Permission Denied")
+                    return api_response.to_dict, api_response.code
 
             if is_greenroom(file_node):
                 zone = "greenroom"
@@ -410,7 +312,7 @@ class APIDataManifest(metaclass=MetaAPI):
             # }
             try:
                 response = requests.put(
-                    ConfigClass.ENTITYINFO_SERVICE + f"file/{file_geid}/manifest", json=request.get_json())
+                    ConfigClass.ENTITYINFO_SERVICE + f"files/{file_geid}/manifest", json=request.get_json())
                 return response.json(), response.status_code
             except Exception as e:
                 _logger.error(
@@ -430,7 +332,7 @@ class APIDataManifest(metaclass=MetaAPI):
             data = request.get_json()
             try:
                 response = requests.post(
-                    ConfigClass.ENTITYINFO_SERVICE + "file/manifest/validate", json=data)
+                    ConfigClass.ENTITYINFO_SERVICE + "files/manifest/validate", json=data)
                 return response.json(), response.status_code
             except Exception as e:
                 _logger.error(
@@ -448,7 +350,7 @@ class APIDataManifest(metaclass=MetaAPI):
             data = request.get_json()
             try:
                 response = requests.post(
-                    ConfigClass.ENTITYINFO_SERVICE + "file/manifest/import", json=data)
+                    ConfigClass.ENTITYINFO_SERVICE + "manifest/file/import", json=data)
                 return response.json(), response.status_code
             except Exception as e:
                 _logger.error(
@@ -484,7 +386,7 @@ class APIDataManifest(metaclass=MetaAPI):
 
             try:
                 response = requests.get(
-                    ConfigClass.ENTITYINFO_SERVICE + "file/export/manifest", params={"manifest_id": manifest_id})
+                    ConfigClass.ENTITYINFO_SERVICE + "manifest/file/export", params={"manifest_id": manifest_id})
                 return response.json(), response.status_code
             except Exception as e:
                 _logger.error(
@@ -632,7 +534,7 @@ class APIDataManifest(metaclass=MetaAPI):
             }
 
             res = requests.post(ConfigClass.ENTITYINFO_SERVICE +
-                                'file/attributes/attach', json=post_data)
+                                'files/attributes/attach', json=post_data)
 
             print(post_data)
             if res.status_code != 200:

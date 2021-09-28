@@ -8,6 +8,14 @@ import { TxtPreviewer } from './TXT/TxtPreviewer/TxtPreviewer';
 export default function DatasetDataPreviewer(props) {
   const { previewFile } = useSelector((state) => state.datasetData);
 
+  if (
+    previewFile?.type === 'txt' ||
+    previewFile?.type === 'yml' ||
+    previewFile?.type === 'yaml' ||
+    previewFile?.type === 'log'
+  ) {
+    return <TxtPreviewer previewFile={previewFile} />;
+  }
   switch (previewFile?.type) {
     case 'json': {
       return <JsonPreviewer previewFile={previewFile} />;
@@ -17,9 +25,6 @@ export default function DatasetDataPreviewer(props) {
     }
     case 'tsv': {
       return <CsvPreviewer previewFile={previewFile} />;
-    }
-    case 'txt': {
-      return <TxtPreviewer previewFile={previewFile} />;
     }
     default: {
       return <BlankPreviewerCard />;

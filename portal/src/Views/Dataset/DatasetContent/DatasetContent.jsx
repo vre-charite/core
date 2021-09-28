@@ -1,5 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import {useDispatch} from 'react-redux';
+import {
+  datasetInfoCreators,
+  schemaTemplatesActions,
+} from '../../../Redux/actions';
 import DatasetHeader from '../Components/DatasetHeader/DatasetHeader';
+import DatasetDrawer from '../Components/DatasetDrawer/DatasetDrawer';
 import { Layout, Menu } from 'antd';
 import {
   Switch,
@@ -14,9 +20,41 @@ import styles from './DatasetContent.module.scss';
 const { Content } = Layout;
 
 export default function DatasetContent(props) {
+  const [datasetDrawerVisibility, setDatasetDrawerVisibility] = useState(false);
   const { pathname } = useLocation();
   const { datasetCode } = useParams();
   const history = useHistory();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    return () => {
+      dispatch(
+        datasetInfoCreators.setBasicInfo({
+          timeCreated: '',
+          creator: '',
+          title: '',
+          authors: [],
+          type: '',
+          modality: [],
+          collectionMethod: [],
+          license: '',
+          code: '',
+          projectGeid: '',
+          size: 0,
+          totalFiles: 0,
+          description: '',
+          geid: '',
+          tags: [],
+        }),
+      );
+      dispatch(datasetInfoCreators.setDatasetVersion(''));
+      dispatch(schemaTemplatesActions.updateDefaultSchemaList([]));
+      dispatch(schemaTemplatesActions.updateDefaultSchemaTemplateList([]));
+      dispatch(schemaTemplatesActions.setDefaultActiveKey(''));
+      dispatch(schemaTemplatesActions.clearDefaultOpenTab());
+      dispatch(schemaTemplatesActions.showTplDropdownList(false));
+    }
+  }, [])
 
   const tabName = getTabName(pathname);
 
@@ -26,7 +64,11 @@ export default function DatasetContent(props) {
 
   return (
     <Content className={styles['content']}>
-      <DatasetHeader />
+      <DatasetHeader setDatasetDrawerVisibility={setDatasetDrawerVisibility} />
+      <DatasetDrawer
+        datasetDrawerVisibility={datasetDrawerVisibility}
+        setDatasetDrawerVisibility={setDatasetDrawerVisibility}
+      />
       {/*TODO: should align the menu items to the cards below, and add margin top */}
       <Menu
         className={styles['menu']}
@@ -36,8 +78,8 @@ export default function DatasetContent(props) {
       >
         <Menu.Item key="home">Home</Menu.Item>
         <Menu.Item key="data">Data</Menu.Item>
+        <Menu.Item key="schema">Metadata</Menu.Item>
         <Menu.Item key="activity">Activity</Menu.Item>
-        {/* <Menu.Item key="schema">Schema</Menu.Item> */}
       </Menu>
 
       <Switch>

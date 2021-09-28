@@ -65,9 +65,9 @@ nfs_upload_ns.add_resource(CheckUploadStateRestful,
 
 nfs_vfolder_ns = Namespace(
     'NFS Data vFolder', description='vFolder on NFS', path='/v1')
-nfs_vfolder_ns.add_resource(VirtualFolderFiles, '/collections/<folder_geid>/files')
+nfs_vfolder_ns.add_resource(VirtualFolderFiles, '/collections/<collection_geid>/files')
 nfs_vfolder_ns.add_resource(VirtualFolder, '/collections')
-nfs_vfolder_ns.add_resource(VirtualFolderInfo, '/collections/<folderId>')
+nfs_vfolder_ns.add_resource(VirtualFolderInfo, '/collections/<collection_geid>')
 
 
 # nfs_entity_ns_v4 = Namespace(

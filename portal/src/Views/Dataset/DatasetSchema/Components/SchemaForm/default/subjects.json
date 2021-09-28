@@ -1,0 +1,59 @@
+{
+  "schema": {
+    "type": "object",
+    "properties": {
+      "dataset_subjects": {
+        "type": "array",
+        "title": "Subjects",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "subject_id",
+            "subject_species",
+            "subject_sex",
+            "subject_agecategory"
+          ],
+          "properties": {
+            "subject_id": {
+              "type": "string",
+              "title": "Subject ID"
+            },
+            "subject_species": {
+              "type": "string",
+              "title": "Subject Species",
+              "enum": [
+                "Homo sapiens",
+                "Macaca fascicularis",
+                "Macaca mulatta",
+                "Mus musculus",
+                "Mustela putorius",
+                "Rattus norvegicus",
+                "Other"
+              ]
+            },
+            "subject_sex": {
+              "type": "string",
+              "title": "Subject Sex",
+              "enum": ["Female", "Male", "Unknown", "Other"]
+            },
+            "subject_agecategory": {
+              "type": "string",
+              "title": "Subject Age Category",
+              "enum": [
+                "Neonate",
+                "Infant",
+                "Juvenile",
+                "Young adult",
+                "Adult",
+                "Unknown",
+                "Other"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "ui": {}
+}

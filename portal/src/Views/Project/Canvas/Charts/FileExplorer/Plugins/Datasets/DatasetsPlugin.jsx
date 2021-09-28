@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Button } from 'antd';
-import { BarChartOutlined, LeftOutlined } from '@ant-design/icons';
+import { DeploymentUnitOutlined, LeftOutlined } from '@ant-design/icons';
 import { TABLE_STATE } from '../../RawTableValues';
 import DatasetsModal from './DatasetsModal';
 
@@ -63,7 +63,7 @@ const DatasetsPlugin = ({
           }}
           onClick={() => setDataSetsModalVisible(true)}
           disabled={selectedRowKeys.length ? false : true}
-          icon={<BarChartOutlined />}
+          icon={<DeploymentUnitOutlined />}
         >
           Add to Datasets
         </Button>
@@ -78,7 +78,7 @@ const DatasetsPlugin = ({
         onClick={() => {
           setTableState(TABLE_STATE.ADD_TO_DATASETS);
         }}
-        icon={<BarChartOutlined />}
+        icon={<DeploymentUnitOutlined />}
         style={{ marginRight: 8 }}
         ref={addToDatasetsBtnRef}
       >

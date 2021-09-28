@@ -232,6 +232,7 @@ class Auth extends Component {
           'http://10.3.7.220/xwiki/wiki/vrepublic/view/Main/user_guide/';
         break;
     }
+
     const alertMessage = (
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <div>
@@ -262,15 +263,10 @@ class Auth extends Component {
         </div>
       </div>
     );
+    
     return (
       <>
-        {/* <Alert
-          message="This release of the VRE is exclusively for testing purposes. The upload of files containing clinical and/or research data of any type is strictly forbidden. By proceeding, you are agreeing to these terms."
-          type="warning"
-          showIcon
-          style={{ float: 'right', width: '100%', zIndex: '10' }}
-        /> */}
-	 <Alert
+        <Alert
           className={styles.login_alert}
           message={alertMessage}
           style={{ width: '100%', zIndex: '10' }}

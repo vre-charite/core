@@ -21,6 +21,9 @@ const timeConvert = (time, type) => {
 };
 
 const CalTimeDiff = (targetTime) => {
+  if (targetTime === 0) {
+    return;
+  }
   const currentTime = new Date().getTime();
   const timeStampDiff = currentTime - targetTime * 1000;
   const calculatedTimeDiff = timeStampDiff / (1000 * 3600); //based by hour

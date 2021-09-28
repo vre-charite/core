@@ -7,7 +7,6 @@ export function CsvTable(props) {
   if (!props.csvData || !props.csvData.length) {
     return null;
   }
-  console.log(props.csvData);
   function pageNoChange(page) {
     setPageNo(page - 1);
   }

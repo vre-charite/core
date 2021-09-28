@@ -67,6 +67,9 @@ class AppHeader extends Component {
     } else if (path === '/users') {
       this.updatedSelectedKeys('clear');
       this.updatedSelectedKeys('add', 'users');
+    } else if (path === "/datasets" || path.startsWith('/dataset') ){
+      this.updatedSelectedKeys('clear');
+      this.updatedSelectedKeys('add','datasets')
     }
     if (!this.props.unauthorized) {
       // check if there are new service requests

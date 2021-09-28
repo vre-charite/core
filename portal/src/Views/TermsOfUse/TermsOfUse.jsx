@@ -21,7 +21,7 @@ function TermsOfUse(props) {
   };
 
   const onOk = async () => {
-    setVisible(false);
+    setAcceptLoading(true);
     const user = keycloak?.tokenParsed;
     const res = await changeUserStatusAPI(
       user.email,
@@ -56,6 +56,8 @@ function TermsOfUse(props) {
       //     console.log(error);
       //   }
       // }
+      setAcceptLoading(false);
+      setVisible(false);
       window.location.reload();
     }
   };

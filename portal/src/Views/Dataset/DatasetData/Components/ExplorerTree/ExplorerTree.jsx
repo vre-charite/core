@@ -1,28 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import styles from './ExplorerTree.module.scss';
-import { Skeleton, Tree } from 'antd';
+import { Tree } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { EDIT_MODE } from '../../../../../Redux/Reducers/datasetData';
 import { datasetDataActions } from '../../../../../Redux/actions';
 import ExplorerTreeActionBar from './ExplorerTreeActionBar';
 import { listDatasetFiles } from '../../../../../APIs';
 import { QuestionCircleOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
 import _ from 'lodash';
+import { deleteNodeWithGeids } from '../DatasetDataExplorer/utility';
+import { initTree } from './initTree';
+
+const page = 0,
+  pageSize = 10000,
+  orderBy = 'create_time',
+  orderType = 'desc';
+
 export function ExplorerTree(props) {
   const editorMode = useSelector((state) => state.datasetData.mode);
   const hightLighted = useSelector((state) => state.datasetData.hightLighted);
   const selectedData = useSelector((state) => state.datasetData.selectedData);
   const treeData = useSelector((state) => state.datasetData.treeData);
   const datasetInfo = useSelector((state) => state.datasetInfo.basicInfo);
-  const [initLoading, setInitLoading] = useState(true);
+  const treeKey = useSelector((state) => state.datasetData.treeKey);
+  const { delete: deleteOperations, move: moveOperations } = useSelector(
+    (state) => state.datasetFileOperations,
+  );
+  const { treeLoading } = useSelector((state) => state.datasetData);
   const datasetGeid = datasetInfo.geid;
-  const page = 0,
-    pageSize = 10000,
-    orderBy = 'create_time',
-    orderType = 'desc';
+
   const dispatch = useDispatch();
 
-  function titleRender(title, nodeKey, isLeaf, fileSize, createBy) {
+  function titleRender(title, nodeKey, isLeaf, fileSize, createBy,labels) {
     return (
       <ExplorerTreeActionBar
         title={title}
@@ -30,24 +40,25 @@ export function ExplorerTree(props) {
         isLeaf={isLeaf}
         fileSize={fileSize}
         createBy={createBy}
+        labels={labels}
       />
     );
   }
 
   useEffect(() => {
-    async function initTree() {
-      const res = await listDatasetFiles(
-        datasetGeid,
-        null,
-        page,
-        pageSize,
-        orderBy,
-        orderType,
-        {},
-      );
-      dispatch(datasetDataActions.setTreeData(res?.data?.result?.data));
-      setInitLoading(false);
+    const deletingList = deleteOperations.filter(
+      (v) => v.status === 'RUNNING' || v.status === 'INIT',
+    );
+    const moveList = moveOperations.filter(
+      (v) => v.status === 'RUNNING' || v.status === 'INIT',
+    );
+    if (deletingList.length === 0 && moveList.length === 0) {
+      dispatch(datasetDataActions.setTreeLoading(false));
+    } else {
+      dispatch(datasetDataActions.setTreeLoading(true));
     }
+  }, [deleteOperations, moveOperations]);
+  useEffect(() => {
     if (datasetGeid) {
       initTree();
     }
@@ -69,24 +80,6 @@ export function ExplorerTree(props) {
       return node;
     });
   }
-  function deleteTreeNode(treeNodes, newNodeKeys) {
-    return treeNodes
-      .map((node) => {
-        if (newNodeKeys.indexOf(node.globalEntityId) !== -1) {
-          return null;
-        }
-
-        if (node.children) {
-          return {
-            ...node,
-            children: deleteTreeNode(node.children, newNodeKeys),
-          };
-        }
-
-        return node;
-      })
-      .filter((v) => !!v);
-  }
   function getTreeDataElm(list) {
     return list.map((node) => {
       node.key = node.globalEntityId;
@@ -97,6 +90,7 @@ export function ExplorerTree(props) {
         node.isLeaf,
         node.fileSize,
         node.createBy ? node.createBy : node.operator,
+        node.labels
       );
       if (node.children) {
         return {
@@ -119,32 +113,16 @@ export function ExplorerTree(props) {
       {},
     );
     const newNodeKeys = res?.data?.result?.data.map((v) => v.globalEntityId);
-    let newTreeData = deleteTreeNode(_.cloneDeep(treeData), newNodeKeys);
+    let newTreeData = deleteNodeWithGeids(_.cloneDeep(treeData), newNodeKeys);
     newTreeData = updateTreeData(newTreeData, key, res?.data?.result?.data);
     dispatch(datasetDataActions.setTreeData(newTreeData));
   }
-  function getUniqSelNodes(selNodesPos) {
-    const originalNodes = _.cloneDeep(selNodesPos);
-    const uniqeNodes = selNodesPos.filter((nodePos) => {
-      const paths = nodePos.pos.split('-');
-      while (paths.length) {
-        paths.pop();
-        const pathStr = paths.join('-');
-        for (let i = 0; i < originalNodes.length; i++) {
-          if (originalNodes[i].pos === pathStr) {
-            return false;
-          }
-        }
-      }
-      return true;
-    });
-    return uniqeNodes;
-  }
+
   const onCheck = (checkedKeysValue, event) => {
-    const uniqeNodes = getUniqSelNodes(event.checkedNodesPositions);
     dispatch(datasetDataActions.setSelectedData(checkedKeysValue));
-    const uniqeSelectedData = uniqeNodes.map((v) => v.node.globalEntityId);
-    dispatch(datasetDataActions.setUniqeSelectedData(uniqeSelectedData));
+    dispatch(
+      datasetDataActions.setSelectedDataPos(event.checkedNodesPositions),
+    );
   };
   const onSelect = (selectedKeysValue, _info) => {
     if (selectedKeysValue && selectedKeysValue[0]) {
@@ -154,9 +132,18 @@ export function ExplorerTree(props) {
     }
   };
   const treeDataElm = getTreeDataElm(_.cloneDeep(treeData));
-  return initLoading ? (
+  
+  return treeLoading ? (
     <div className={styles['explorer-tree-loading']}>
-      <Skeleton loading={initLoading}></Skeleton>
+      <LoadingOutlined
+        style={{
+          position: 'absolute',
+          top: '30%',
+          left: '50%',
+          color: '#1890ff',
+          transform: 'translate(-50%, -50%)',
+        }}
+      />
     </div>
   ) : treeData && treeData.length ? (
     <>
@@ -172,6 +159,7 @@ export function ExplorerTree(props) {
               checkedKeys={selectedData}
               onSelect={onSelect}
               selectedKeys={[hightLighted]}
+              key={treeKey}
             />
           )}
         </div>

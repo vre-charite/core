@@ -1,6 +1,7 @@
 import { serverAxios, axios, devOpServer } from './config';
 import { objectKeysToCamelCase, objectKeysToSnakeCase } from '../Utility';
 import _, { result } from 'lodash';
+import { keycloak } from '../Service/keycloak';
 /**
  * Get all the datasets
  *
@@ -228,7 +229,6 @@ async function listAllVirtualFolder(projectGeid) {
   });
   const vfolders = res.data.result.map((v) => {
     return {
-      id: v.identity,
       geid: v.globalEntityId,
       labels: v.labels,
       ...v.properties,
@@ -249,18 +249,23 @@ function createVirtualFolder(projectGeid, name) {
   });
 }
 
-function deleteVirtualFolder(folderId) {
+function deleteVirtualFolder(collectionGeid) {
   return serverAxios({
-    url: `/v1/collections/${folderId}`,
+    url: `/v1/collections/${collectionGeid}`,
     method: 'DELETE',
   });
 }
 
-function listAllCopy2CoreFiles(projectCode, sessionId) {
-  return serverAxios({
+async function listAllCopy2CoreFiles(projectCode, sessionId) {
+  const res = await serverAxios({
     url: `/v1/files/actions/tasks?action=data_transfer&project_code=${projectCode}&session_id=${sessionId}`,
     method: 'GET',
   });
+  const resFolder = await serverAxios({
+    url: `/v1/files/actions/tasks?action=data_transfer_folder&project_code=${projectCode}&session_id=${sessionId}`,
+    method: 'GET',
+  });
+  return [...res.data.result, ...resFolder.data.result];
 }
 
 function loadDeletedFiles(projectCode, sessionId) {
@@ -586,6 +591,7 @@ function addToDatasetsAPI(datasetGeid, payLoad) {
   return serverAxios({
     url: `/v1/dataset/${datasetGeid}/files`,
     method: 'PUT',
+    headers: { 'Refresh-token': keycloak.refreshToken },
     data: payLoad,
   });
 }

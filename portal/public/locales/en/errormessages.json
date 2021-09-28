@@ -124,7 +124,9 @@
     "500": [
       "Something went wrong while trying to retrieve child datasets, please try again later. Error code: 500"
     ],
-    "default": ["Something went wrong while attempting to retrive the child datasets, please try again later."]
+    "default": [
+      "Something went wrong while attempting to retrive the child datasets, please try again later."
+    ]
   },
   "traverseFoldersContainersAPI": {
     "403": ["You do not have permission to access this folder."],
@@ -403,10 +405,14 @@
     "uniqueName": ["The \"name\" property should be unique"]
   },
   "importManifestAPI": {
-    "default": ["Something went wrong while trying to upload the attribute template"]
+    "default": [
+      "Something went wrong while trying to upload the attribute template"
+    ]
   },
   "getManifestById": {
-    "default": ["Something went wrong while trying to retrieve the attribute template id: "]
+    "default": [
+      "Something went wrong while trying to retrieve the attribute template id: "
+    ]
   },
   "fileOperations": {
     "deleteErr": "Something went wrong while trying to delete a file or folder.",
@@ -549,26 +555,90 @@
     ]
   },
   "getDatasets": {
-    "500": ["Something went wrong while trying to retrieve datasets.  Error code: 500"],
-    "default": ["Something went wrong while trying to retrieve datasets, please try again later."]
+    "500": [
+      "Something went wrong while trying to retrieve datasets.  Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to retrieve datasets, please try again later."
+    ]
   },
   "downloadDataset": {
     "default": ["Failed to retrieve download url"]
   },
   "createDataset": {
-    "409": ["This dataset code has been taken"],
-    "default": ["Something went wrong while trying to create the dataset, please try again later."]
+    "409": ["This dataset code has been taken, please try another."],
+    "default": [
+      "Something went wrong while trying to create the dataset, please try again later."
+    ]
   },
-  "updateDatasetInfo":{
-    "default":["Something went wrong while trying to update the dataset info, please try again later."]
+  "updateDatasetInfo": {
+    "default": [
+      "Something went wrong while trying to update the dataset info, please try again later."
+    ]
   },
-  "getDatasetInfo":{
-    "default":["Something went wrong while trying to get dataset information, please try again later."]
+  "getDatasetInfo": {
+    "default": [
+      "Something went wrong while trying to get dataset information, please try again later."
+    ]
   },
-  "datasetDelete":{
-    "default":["Something went wrong while trying to delete the file or folder, please try again later."]
+  "datasetDelete": {
+    "default": [
+      "Something went wrong while trying to delete the file or folder, please try again later."
+    ]
   },
-  "datasetDownloadFile":{
-    "default":["Something went wrong while trying to retrieve the download url, please try again later."]
+  "datasetDownloadFile": {
+    "default": [
+      "Something went wrong while trying to retrieve the download url, please try again later."
+    ]
+  },
+  "datasetVersionLogs": {
+    "default": [
+      "Something went wrong while trying to retrieve the activity logs for this current version, please try again later."
+    ]
+  },
+  "publishDatasetNewVersion": {
+    "default": [
+      "Something went wrong while trying to publish a new version, please try again later."
+    ]
+  },
+  "updateDatasetSchema": {
+    "default": [
+      "Something went wrong while trying to update the dataset schema, please try again later."
+    ]
+  },
+  "createDatasetSchema": {
+    "default": [
+      "Something went wrong while trying to create a dataset schema, please try again later."
+    ]
+  },
+  "createDatasetSchemaDraft": {
+    "empty": ["Please input a valid value before saving as draft."]
+  },
+  "datasetSchemaList": {
+    "default": [
+      "Something went wrong while trying to get the dataset schemas, please try again later."
+    ]
+  },
+  "datasetSchemaTemplateList": {
+    "default": [
+      "Something went wrong while trying to get the dataset schema templates, please try again later."
+    ]
+  },
+  "customizeSchema":{
+    "itemRequired":["Please add at least one field."]
+  },
+  "validateEssentialSchema": {
+    "tags": {
+      "noWhiteSpace": "Tags may not contain spaces."
+    },
+    "description": {
+      "onlyWhiteSpace": "Please enter a tag."
+    }
+  },
+  "uploadOpenMindsSchema": {
+    "fileNumOverLimit": ["Please do not upload more than 20 files"],
+    "noOpenMindsTemplate": ["No OpenMINDS template found"],
+    "fileSizeOverLimit": ["File size must be smaller than 1MB"],
+    "uploadFailed":["Failed to upload the selected schema."]
   }
 }

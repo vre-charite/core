@@ -72,6 +72,14 @@
   }
 }
 
+.dataset_activity_table {
+  :global {
+    table {
+      table-layout: fixed !important;
+    }
+  }
+}
+
 @media (max-width: 1100px) {
   .all_activity {
     display: none;

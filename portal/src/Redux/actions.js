@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import {
   ADD_DATASET_LIST,
   SET_USER_LIST,
@@ -52,7 +53,9 @@ import {
   DATASET_DATA,
   MY_DATASET_LIST,
   DATASET_INFO,
+  DATASET_FILE_OPERATION,
   SET_TABLE_RESET,
+  SCHEMA_TEMPLATES,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -334,6 +337,10 @@ export const setUserStatus = (payload) => ({
 });
 
 export const datasetDataActions = {
+  resetTreeKey: (payload) => ({
+    type: DATASET_DATA.RESET_TREE_KEY,
+    payload,
+  }),
   setTreeData: (payload) => ({
     type: DATASET_DATA.SET_TREE_DATA,
     payload,
@@ -342,8 +349,8 @@ export const datasetDataActions = {
     type: DATASET_DATA.SET_SELECTED_DATA,
     payload,
   }),
-  setUniqeSelectedData: (payload) => ({
-    type: DATASET_DATA.SET_UNIQE_SELECTED_DATA,
+  setSelectedDataPos: (payload) => ({
+    type: DATASET_DATA.SET_SELECTED_DATA_POS,
     payload,
   }),
   setMode: (payload) => ({
@@ -360,6 +367,10 @@ export const datasetDataActions = {
   }),
   clearData: (payload) => ({
     type: DATASET_DATA.CLEAR_DATA,
+    payload,
+  }),
+  setTreeLoading: (payload) => ({
+    type: DATASET_DATA.SET_TREE_LOADING,
     payload,
   }),
 };
@@ -384,6 +395,10 @@ export const datasetInfoCreators = {
     type: DATASET_INFO.SET_BASIC_INFO,
     payload,
   }),
+  setDatasetVersion: (payload) => ({
+    type: DATASET_INFO.SET_VERSION,
+    payload,
+  }),
   setProjectName: (payload) => ({
     type: DATASET_INFO.SET_PROJECT_NAME,
     payload,
@@ -394,6 +409,93 @@ export const datasetInfoCreators = {
   }),
   setHasInit: (payload) => ({
     type: DATASET_INFO.SET_HAS_INIT,
+    payload,
+  }),
+};
+
+export const datasetFileOperationsCreators = {
+  setMove: (payload) => ({
+    type: DATASET_FILE_OPERATION.SET_MOVE,
+    payload,
+  }),
+  setRename: (payload) => ({
+    type: DATASET_FILE_OPERATION.SET_RENAME,
+    payload,
+  }),
+  setDelete: (payload) => ({
+    type: DATASET_FILE_OPERATION.SET_DELETE,
+    payload,
+  }),
+  setImport: (payload) => ({
+    type: DATASET_FILE_OPERATION.SET_IMPORT,
+    payload,
+  }),
+  /**
+   *
+   * @param {"move"|"rename"|"delete"|"import"} type
+   * @param {boolean} payload
+   * @returns
+   */
+  setLoadingStatus: (type, payload) => ({
+    type: DATASET_FILE_OPERATION.SET_LOADING_STATUS[_.upperCase(type)],
+    payload,
+  }),
+};
+
+export const schemaTemplatesActions = {
+  updateDefaultSchemaList: (payload) => ({
+    type: SCHEMA_TEMPLATES.UPDATE_DEFAULT_SCHEMA_LIST,
+    payload,
+  }),
+  updateDefaultSchemaTemplateList: (payload) => ({
+    type: SCHEMA_TEMPLATES.UPDATE_DEFAULT_SCHEMA_TEMPLATE_LIST,
+    payload,
+  }),
+  setDefaultActiveKey: (payload) => ({
+    type: SCHEMA_TEMPLATES.SET_DEFAULT_SCHEMA_ACTIVE_KEY,
+    payload,
+  }),
+  setCustomActiveKey: (payload) => ({
+    type: SCHEMA_TEMPLATES.SET_CUSTOM_SCHEMA_ACTIVE_KEY,
+    payload,
+  }),
+  addDefaultOpenTab: (payload) => ({
+    type: SCHEMA_TEMPLATES.ADD_DEFAULT_OPEN_TAB,
+    payload,
+  }),
+  updateDefaultOpenTab: (payload) => ({
+    type: SCHEMA_TEMPLATES.UPDATE_DEFAULT_OPEN_TAB,
+    payload,
+  }),
+  clearDefaultOpenTab: () => ({
+    type: SCHEMA_TEMPLATES.CLEAR_DEFAULT_OPEN_TAB,
+  }),
+  addCustomOpenTab: (payload) => ({
+    type: SCHEMA_TEMPLATES.ADD_CUSTOM_OPEN_TAB,
+    payload,
+  }),
+  removeDefaultOpenTab: (payload) => ({
+    type: SCHEMA_TEMPLATES.REMOVE_DEFAULT_OPEN_TAB,
+    payload,
+  }),
+  removeCustomOpenTab: (payload) => ({
+    type: SCHEMA_TEMPLATES.REMOVE_CUSTOM_OPEN_TAB,
+    payload,
+  }),
+  setPreviewSchemaGeid: (payload) => ({
+    type: SCHEMA_TEMPLATES.SET_PREVIEW_SCHEMA_GEID,
+    payload,
+  }),
+  setSchemaTypes: (payload) => ({
+    type: SCHEMA_TEMPLATES.SET_SCHEMA_TYPES,
+    payload,
+  }),
+  switchTPLManagerMode: (payload) => ({
+    type: SCHEMA_TEMPLATES.SWITCH_TEMPLATE_MANAGER_MODE,
+    payload,
+  }),
+  showTplDropdownList: (payload) => ({
+    type: SCHEMA_TEMPLATES.SHOW_TEMPLATES_DROPDOWN_LIST,
     payload,
   }),
 };

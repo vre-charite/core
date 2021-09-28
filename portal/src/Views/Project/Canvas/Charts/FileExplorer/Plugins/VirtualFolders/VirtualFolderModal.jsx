@@ -65,8 +65,8 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
 
   async function addToExistFolder(values) {
     try {
-      const folderId = values.folder;
-      const res = await addToVirtualFolder(folderId, files);
+      const folderGeid = values.folder;
+      const res = await addToVirtualFolder(folderGeid, files);
       if (res.data.result === 'duplicate') {
         message.success(
           `${i18n.t('success:virtualFolder.addFilesDuplicate')}`,
@@ -97,8 +97,8 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
         setSentBtnLoading(false);
         return;
       }
-      const folderId = res.data.result.globalEntityId;
-      if (!folderId) {
+      const folderGeid = res.data.result.globalEntityId;
+      if (!folderGeid) {
         message.error(
           `${i18n.t('errormessages:createVirtualFolder.default.0')}`,
           3,
@@ -106,7 +106,7 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
         setSentBtnLoading(false);
         return;
       }
-      await addToVirtualFolder(folderId, files);
+      await addToVirtualFolder(folderGeid, files);
       const allVirtualRes = await listAllVirtualFolder(
         project.profile?.globalEntityId,
       );
@@ -170,7 +170,7 @@ const VirtualFolderModal = ({ visible, setVisible, files }) => {
               <Select>
                 {vfolders.map((v) => {
                   return (
-                    <Option key={v.id} value={v.geid}>
+                    <Option key={v.geid} value={v.geid}>
                       {v.name}
                     </Option>
                   );

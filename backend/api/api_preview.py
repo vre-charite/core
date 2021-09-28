@@ -59,7 +59,8 @@ class APIPreview(metaclass=MetaAPI):
                 return api_response.to_dict, api_response.code
 
             try:
-                response = requests.get(ConfigClass.DATASET_SERVICE + f"{file_geid}/preview", params=data)
+                response = requests.get(ConfigClass.DATASET_SERVICE + f"{file_geid}/preview", params=data, \
+                    headers=request.headers)
             except Exception as e:
                 _logger.info(f"Error calling dataops gr: {str(e)}")
                 api_response.set_code(EAPIResponseCode.internal_error)

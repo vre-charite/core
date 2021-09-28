@@ -427,7 +427,8 @@ function NewProjectPanel({
                 {` `}Create
               </Button>
               <Button
-                style={{ border: 'none' }}
+                disabled={submitting}
+                style={{ border: 'none', background: 'white' }}
                 onClick={onToggleCreateNewProject}
               >
                 <p style={{ color: '#1890FF' }}>Cancel</p>

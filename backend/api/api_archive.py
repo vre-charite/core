@@ -62,7 +62,7 @@ class APIArchive(metaclass=MetaAPI):
                 return api_response.to_dict, api_response.code
 
             try:
-                response = requests.get(ConfigClass.DATA_SERVICE + "archive", params=data)
+                response = requests.get(ConfigClass.DATA_UTILITY_SERVICE + "archive", params=data)
             except Exception as e:
                 _logger.info(f"Error calling dataops gr: {str(e)}")
                 return response.json(), response.status_code

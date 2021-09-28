@@ -1,6 +1,7 @@
 import requests
 from config import ConfigClass
 
+
 def catch_internal(func):
     '''
     decorator to catch internal server error.
@@ -26,10 +27,11 @@ class Neo4jClient(object):
             "code": 200,
         }
 
-    ### Shared
+    # Shared
     @catch_internal
     def node_get(self, label, id):
-        response = requests.get(ConfigClass.NEO4J_SERVICE + f"nodes/{label}/node/{id}")
+        response = requests.get(
+            ConfigClass.NEO4J_SERVICE + f"nodes/{label}/node/{id}")
         result = self.result.copy()
         if not response.json():
             result["error_msg"] = "Node not found"
@@ -40,14 +42,16 @@ class Neo4jClient(object):
 
     @catch_internal
     def node_create(self, label, data):
-        response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/{label}", json=data)
+        response = requests.post(
+            ConfigClass.NEO4J_SERVICE + f"nodes/{label}", json=data)
         result = self.result.copy()
         result["result"] = response.json()
         return result
 
     @catch_internal
     def node_query(self, label, data):
-        response = requests.post(ConfigClass.NEO4J_SERVICE + f"nodes/{label}/query", json=data)
+        response = requests.post(
+            ConfigClass.NEO4J_SERVICE + f"nodes/{label}/query", json=data)
         result = self.result.copy()
         result["result"] = response.json()
         return result
@@ -55,8 +59,8 @@ class Neo4jClient(object):
     @catch_internal
     def get_relation(self, start_id, end_id):
         relation_query = {"start_id": start_id, "end_id": end_id}
-        print(relation_query)
-        response = requests.get(ConfigClass.NEO4J_SERVICE + f"relations", params=relation_query)
+        response = requests.get(
+            ConfigClass.NEO4J_SERVICE + f"relations", params=relation_query)
         result = self.result.copy()
         result["result"] = response.json()
         return result
@@ -66,20 +70,22 @@ class Neo4jClient(object):
         payload = {"start_id": start_id, "end_id": end_id}
         if properties:
             payload['properties'] = properties
-        response = requests.post(ConfigClass.NEO4J_SERVICE + f"relations/{label}", json=payload)
-        result = self.result.copy()
-        result["result"] = response.json()
-        return result 
-
-    @catch_internal
-    def update_node(self, label, node_id, data):
-        response = requests.put(ConfigClass.NEO4J_SERVICE + f"/nodes/{label}/node/{node_id}", json=data)
+        response = requests.post(
+            ConfigClass.NEO4J_SERVICE + f"relations/{label}", json=payload)
         result = self.result.copy()
         result["result"] = response.json()
         return result
 
+    @catch_internal
+    def update_node(self, label, node_id, data):
+        response = requests.put(
+            ConfigClass.NEO4J_SERVICE + f"/nodes/{label}/node/{node_id}", json=data)
+        result = self.result.copy()
+        result["result"] = response.json()
+        return result
 
-    ### Containers
+    # Containers
+
     def get_container_by_geid(self, geid):
         response = self.node_query("Container", {"global_entity_id": geid})
         if not response.get("result"):
@@ -90,7 +96,6 @@ class Neo4jClient(object):
         dataset_node = response["result"][0]
         self.result["result"] = response["result"][0]
         return self.result
-
 
     def get_container_by_code(self, code):
         response = self.node_query("Container", {"code": code})
@@ -122,10 +127,11 @@ class Neo4jClient(object):
             if not response.get("error_msg"):
                 self.result["error_msg"] = "Folder not found"
                 self.result["code"] = 404
-            return self.result 
+            return self.result
         folder_node = response["result"][0]
 
-        response = self.node_query("Container", {"code": folder_node["project_code"]})
+        response = self.node_query(
+            "Container", {"code": folder_node["project_code"]})
         if not response.get("result"):
             if not response.get("error_msg"):
                 self.result["error_msg"] = "Container not found"
@@ -140,10 +146,11 @@ class Neo4jClient(object):
             if not response.get("error_msg"):
                 self.result["error_msg"] = "VirtualFolder not found"
                 self.result["code"] = 404
-            return self.result 
+            return self.result
         folder_node = response["result"][0]
 
-        response = self.node_query("Container", {"id": folder_node["container_id"]})
+        response = self.node_query(
+            "Container", {"id": folder_node["container_id"]})
         if not response.get("result"):
             if not response.get("error_msg"):
                 self.result["error_msg"] = "Container not found"
@@ -152,14 +159,14 @@ class Neo4jClient(object):
         self.result["result"] = response["result"][0]
         return self.result
 
-    ### Users
+    # Users
     def get_user_by_email(self, email):
         response = self.node_query("User", {"email": email})
         if not response.get("result"):
             if not response.get("error_msg"):
                 response["error_msg"] = "User not found"
                 response["code"] = 404
-            return response 
+            return response
         response["result"] = response["result"][0]
         return response
 
@@ -169,7 +176,7 @@ class Neo4jClient(object):
             if not response.get("error_msg"):
                 response["error_msg"] = "User not found"
                 response["code"] = 404
-            return response 
+            return response
         response["result"] = response["result"][0]
         return response
 
@@ -199,16 +206,30 @@ class Neo4jClient(object):
         )
         return response
 
+    def get_project_linked_folders(self, project_code):
+        url = ConfigClass.NEO4J_SERVICE + "relations/query"
+        payload = {
+            "start_label": "Container",
+            "end_label": "Folder",
+            "start_params": {"code": project_code}
+        }
+        response = requests.post(
+            url=url,
+            json=payload
+        )
+        return response.json()
+
     def get_dataset_from_folder(self, geid):
         response = self.node_query("Folder", {"global_entity_id": geid})
         if not response.get("result"):
             if not response.get("error_msg"):
                 self.result["error_msg"] = "Folder not found"
                 self.result["code"] = 404
-            return self.result 
+            return self.result
         folder_node = response["result"][0]
 
-        response = self.node_query("Container", {"code": folder_node["project_code"]})
+        response = self.node_query(
+            "Container", {"code": folder_node["project_code"]})
         if not response.get("result"):
             if not response.get("error_msg"):
                 self.result["error_msg"] = "Container not found"
@@ -216,4 +237,3 @@ class Neo4jClient(object):
             return self.result
         self.result["result"] = response["result"][0]
         return self.result
-

@@ -1,0 +1,48 @@
+.new_version_modal {
+  width: 600px;
+  height: 484px;
+  :global {
+    .ant-modal-header {
+      height: 30px;
+      padding: 5px 24px;
+      border-radius: 6px;
+    }
+    .ant-modal-close-x {
+      margin-top: -10px;
+    }
+    .ant-modal-footer {
+      height: 45px;
+      padding: 5px 16px;
+    }
+    .ant-modal-content {
+      border-radius: 6px;
+    }
+    .ant-modal-body{
+        padding: 10px 24px 24px 24px;
+    }
+  }
+}
+
+.modal_content_table {
+  :global {
+    .ant-pagination {
+      margin: 16px 0px 0px 0px;
+    }
+    .ant-table-thead {
+      display: none;
+    }
+  }
+}
+
+.modal_content_table {
+  :global {
+    .ant-table {
+      max-height: 100px !important;
+      overflow-y: auto !important;
+    }
+    table {
+      table-layout: fixed !important;
+    }
+  }
+}
+

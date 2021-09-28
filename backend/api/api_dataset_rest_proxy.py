@@ -88,7 +88,8 @@ class APIDatasetFileProxy(metaclass=MetaAPI):
         def get(self, dataset_geid):
 
             url = ConfigClass.DATASET_SERVICE + "dataset/{}/files".format(dataset_geid)
-            respon = requests.get(url, params=request.args, headers=request.headers)
+            respon = requests.get(url, params=request.args, headers=request.headers, \
+                cookies=request.cookies)
             return respon.json(), respon.status_code
 
 
@@ -98,7 +99,8 @@ class APIDatasetFileProxy(metaclass=MetaAPI):
 
             url = ConfigClass.DATASET_SERVICE + "dataset/{}/files".format(dataset_geid)
             payload_json = request.get_json()
-            respon = requests.post(url, json=payload_json, headers=request.headers)
+            respon = requests.post(url, json=payload_json, headers=request.headers, \
+                cookies=request.cookies)
             return respon.json(), respon.status_code
 
 
@@ -107,7 +109,8 @@ class APIDatasetFileProxy(metaclass=MetaAPI):
         def put(self, dataset_geid):
             url = ConfigClass.DATASET_SERVICE + "dataset/{}/files".format(dataset_geid)
             payload_json = request.get_json()
-            respon = requests.put(url, json=payload_json, headers=request.headers)
+            respon = requests.put(url, json=payload_json, headers=request.headers, \
+                cookies=request.cookies)
             return respon.json(), respon.status_code
 
 
@@ -117,5 +120,59 @@ class APIDatasetFileProxy(metaclass=MetaAPI):
 
             url = ConfigClass.DATASET_SERVICE + "dataset/{}/files".format(dataset_geid)
             payload_json = request.get_json()
-            respon = requests.delete(url, json=payload_json, headers=request.headers)
+            respon = requests.delete(url, json=payload_json, headers=request.headers, \
+                cookies=request.cookies)
             return respon.json(), respon.status_code
+
+
+class APIDatasetFileRenameProxy(metaclass=MetaAPI):
+    def api_registry(self):
+        api_ns_dataset_proxy.add_resource(self.Restful, '/dataset/<dataset_geid>/files/<file_geid>')
+
+    class Restful(Resource):
+        @jwt_required()
+        @dataset_permission()
+        def post(self, dataset_geid, file_geid):
+
+            url = ConfigClass.DATASET_SERVICE + "dataset/{}/files/{}".format(dataset_geid, file_geid)
+            payload_json = request.get_json()
+            respon = requests.post(url, json=payload_json, headers=request.headers, \
+                cookies=request.cookies)
+            return respon.json(), respon.status_code
+
+
+class APIDatasetFileTasks(metaclass=MetaAPI):
+    def api_registry(self):
+        api_ns_dataset_proxy.add_resource(self.Restful, '/dataset/<dataset_geid>/file/tasks')
+
+    class Restful(Resource):
+
+        @jwt_required()
+        @dataset_permission()
+        def get(self, dataset_geid):
+            request_params = request.args
+            new_params = {
+                **request_params,
+                "label": "Dataset"
+            }
+
+            relation_query_url = ConfigClass.NEO4J_SERVICE + "nodes/geid/"+dataset_geid
+            response = requests.get(relation_query_url)
+            new_params['code'] = response.json()[0].get("code")
+
+            url = ConfigClass.DATA_UTILITY_SERVICE + "tasks"
+            response = requests.get(url, params=new_params)
+            return response.json(), response.status_code
+
+        @jwt_required()
+        @dataset_permission()
+        def delete(self, dataset_geid):
+            request_body = request.get_json()
+            request_body.update({"label": "Dataset"})
+            relation_query_url = ConfigClass.NEO4J_SERVICE + "nodes/geid/"+dataset_geid
+            response = requests.get(relation_query_url)
+            request_body['code'] = response.json()[0].get("code")
+
+            url = ConfigClass.DATA_UTILITY_SERVICE + "tasks"
+            response = requests.delete(url, json=request_body)
+            return response.json(), response.status_code
