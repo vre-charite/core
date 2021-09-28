@@ -50,6 +50,9 @@ export default function DatasetDataExplorer(props) {
     case 'staging':
       socketIoUrl = 'wss://vre-staging.indocresearch.org';
       break;
+    case 'charite':
+      socketIoUrl = 'wss://vre.charite.de';
+      break;
     default:
       socketIoUrl = 'ws://10.3.7.220';
       break;
