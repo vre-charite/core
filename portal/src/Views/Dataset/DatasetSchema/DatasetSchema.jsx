@@ -50,6 +50,7 @@ export default function DatasetData(props) {
 
   useEffect(() => {
     async function initData() {
+      dispatch(schemaTemplatesActions.setSchemaTypes('Default'));
       dispatch(schemaTemplatesActions.clearDefaultOpenTab());
       const schemasTemplates = await getSchemaTemplates();
       const schemas = await getDatasetSchemaList();
