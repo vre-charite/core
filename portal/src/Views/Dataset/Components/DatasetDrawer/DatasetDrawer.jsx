@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Drawer, Table } from 'antd';
-import { getDatasetVersionsAPI, datasetDownloadReturnURLAPI, datasetDownloadAPI } from '../../../../APIs';
+import {
+  getDatasetVersionsAPI,
+  datasetDownloadReturnURLAPI,
+  datasetDownloadAPI,
+} from '../../../../APIs';
 import { useDispatch, useSelector } from 'react-redux';
 import { DownloadOutlined } from '@ant-design/icons';
 import moment from 'moment';
@@ -16,9 +20,9 @@ const DatasetDrawer = (props) => {
     (state) => state.datasetInfo,
   );
 
-  const downloadDataset = async () => {
+  const downloadDataset = async (version) => {
     try {
-      const res = await datasetDownloadReturnURLAPI(basicInfo.geid, currentVersion);
+      const res = await datasetDownloadReturnURLAPI(basicInfo.geid, version);
       await datasetDownloadAPI(res.data.result.downloadHash);
     } catch (error) {
       console.log(error);
@@ -70,24 +74,29 @@ const DatasetDrawer = (props) => {
               <p style={{ margin: '0px' }}>{item.notes}</p>
             </div>
             <div style={{ flex: '1', alignSelf: 'center' }}>
-              <DownloadOutlined style={{ cursor: 'pointer' }} onClick={downloadDataset}/>
+              <DownloadOutlined
+                style={{ cursor: 'pointer' }}
+                onClick={(e) => {
+                  downloadDataset(item.version);
+                }}
+              />
             </div>
           </div>
         );
       },
-    }
+    },
   ];
 
   const getDatasetVersions = async () => {
-      const params = {
-        page: currentPage - 1,
-        page_size: pageSize,
-        order: 'desc',
-        sorting: 'create_at',
-      };
-      const res = await getDatasetVersionsAPI(basicInfo.geid, params);
-      setDatasetVersions(res.data.result);
-      setTotalItem(res.data.total);
+    const params = {
+      page: currentPage - 1,
+      page_size: pageSize,
+      order: 'desc',
+      sorting: 'create_at',
+    };
+    const res = await getDatasetVersionsAPI(basicInfo.geid, params);
+    setDatasetVersions(res.data.result);
+    setTotalItem(res.data.total);
   };
 
   useEffect(() => {

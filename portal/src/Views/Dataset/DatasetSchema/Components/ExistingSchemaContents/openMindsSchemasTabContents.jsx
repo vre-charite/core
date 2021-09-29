@@ -57,7 +57,7 @@ const OpenMindsSchemaTabContents = (props) => {
                           fontWeight: '700',
                         }}
                       >{`${el.name}`}</span>
-                      <span style={{ fontSize: '10px' }}>OpenMinds</span>
+                      <span style={{ fontSize: '10px' }}>OpenMINDs</span>
                     </div>
                   </div>
                   {schemaGeid === el.geid && schemaActionButtons(el)}
