@@ -248,8 +248,8 @@ class APIResourceRequest(metaclass=MetaAPI):
                     resource_request = resource_request_res
 
                 # send_email
-                # is_email_sent, email_res, code = send_email(resource_request, dataset_node, user_role)
-                # if not is_email_sent: return email_res, code
+                is_email_sent, email_res, code = send_email(resource_request, dataset_node, user_role)
+                if not is_email_sent: return email_res, code
                 api_response.set_result(resource_request.to_dict())
                 return api_response.to_dict, api_response.code
 
