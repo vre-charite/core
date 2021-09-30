@@ -55,7 +55,8 @@ class ContainerUser(Resource):
             if container_id is None:
                 return {'result': f"Cannot find project with geid : {project_geid}"}
             # check if dataset exist
-            is_dataset, res_dataset, code = validate_container(headers=headers, container_id=container_id)
+            is_dataset, res_dataset, code = validate_container(
+                headers=headers, container_id=container_id)
             if not is_dataset:
                 return res_dataset, code
             else:
@@ -65,7 +66,8 @@ class ContainerUser(Resource):
             dataset_code = datasets[0]['code']
 
             # validate user and relationship
-            is_users, res_users, code = validate_user(username=username, headers=headers)
+            is_users, res_users, code = validate_user(
+                username=username, headers=headers)
             if not is_users:
                 return res_users, code
             else:
@@ -75,8 +77,8 @@ class ContainerUser(Resource):
             user_email = users[0]["email"]
 
             # validate user relationship
-            is_related, res, code = validate_user_relationship(headers=headers,container_id=container_id,
-                                                                                 user_id=user_id, username=username)
+            is_related, res, code = validate_user_relationship(headers=headers, container_id=container_id,
+                                                               user_id=user_id, username=username)
             user_dataset_relation = res.json()
             if len(user_dataset_relation) > 0:
                 _logger.error(
@@ -84,25 +86,33 @@ class ContainerUser(Resource):
                 return {'result': 'User %s already in the project please check.' % username}, 403
 
             # add user relationship
-            is_added, user_add_res, code = add_user_relationship(headers, user_id, container_id, role)
-            if not is_added: return user_add_res, code
+            is_added, user_add_res, code = add_user_relationship(
+                headers, user_id, container_id, role)
+            if not is_added:
+                return user_add_res, code
 
             try:
-                add_user_to_project_group(container_id, username, _logger)
-                add_user_to_ad_group(user_email, dataset_code, _logger, access_token)
+                # add_user_to_project_group(container_id, username, _logger)
+                add_user_to_ad_group(
+                    user_email, dataset_code, _logger, access_token)
             except Exception as error:
-                error = f'Error adding user to group vre-{dataset_code}: ' + str(error)
+                error = f'Error adding user to group vre-{dataset_code}: ' + str(
+                    error)
                 _logger.info(error)
                 return {'result': error}, 500
 
             # keycloak user role update
-            is_updated, response, code = keycloak_user_role_update(headers, user_email, dataset_code, role)
-            if not is_updated: return response, code
+            is_updated, response, code = keycloak_user_role_update(
+                headers, user_email, dataset_code, role)
+            if not is_updated:
+                return response, code
 
             # send email to user
-            title = "Project %s Notification: New Invitation" % (str(dataset_name))
+            title = "Project %s Notification: New Invitation" % (
+                str(dataset_name))
             template = "user_actions/invite.html"
-            send_email_user(users, dataset_name, username, role, title, template)
+            send_email_user(users, dataset_name, username,
+                            role, title, template)
         except Exception as e:
             return {'result': str(e)}, 403
         return {'result': json.loads(user_add_res.text)}, 200
@@ -130,11 +140,14 @@ class ContainerUser(Resource):
             # Check if permission is provided
             old_role = request.get_json().get("old_role", None)
             new_role = request.get_json().get("new_role", None)
-            is_valid, res_valid, code = validate_payload(old_role=old_role, new_role=new_role, username=username)
-            if not is_valid: return res_valid, code
+            is_valid, res_valid, code = validate_payload(
+                old_role=old_role, new_role=new_role, username=username)
+            if not is_valid:
+                return res_valid, code
 
             # check if dataset exist
-            is_dataset, res_dataset, code = validate_container(headers=headers, container_id=container_id)
+            is_dataset, res_dataset, code = validate_container(
+                headers=headers, container_id=container_id)
             if not is_dataset:
                 return res_dataset, code
             else:
@@ -144,7 +157,8 @@ class ContainerUser(Resource):
             dataset_code = datasets[0]['code']
 
             # validate user
-            is_users, res_users, code = validate_user(username=username, headers=headers)
+            is_users, res_users, code = validate_user(
+                username=username, headers=headers)
             if not is_users:
                 return res_users, code
             else:
@@ -163,21 +177,29 @@ class ContainerUser(Resource):
                 return {'result': "User %s does not exist in project." % username}, 404
 
             # Update relation between user and container
-            is_update, updated_res, code = update_user_relationship(headers, user_id, container_id, old_role, new_role)
-            if not is_update: return updated_res, code
+            is_update, updated_res, code = update_user_relationship(
+                headers, user_id, container_id, old_role, new_role)
+            if not is_update:
+                return updated_res, code
 
             # keycloak user role delete
-            is_deleted, del_response, code = keycloak_user_role_delete(headers, user_email, dataset_code, old_role)
-            if not is_deleted: return del_response, code
+            is_deleted, del_response, code = keycloak_user_role_delete(
+                headers, user_email, dataset_code, old_role)
+            if not is_deleted:
+                return del_response, code
 
             # keycloak user role update
-            is_updated, response, code = keycloak_user_role_update(headers, user_email, dataset_code, new_role)
-            if not is_updated: return response, code
+            is_updated, response, code = keycloak_user_role_update(
+                headers, user_email, dataset_code, new_role)
+            if not is_updated:
+                return response, code
 
             # send email
-            title = "Project %s Notification: Role Modified" % (str(dataset_name))
+            title = "Project %s Notification: Role Modified" % (
+                str(dataset_name))
             template = "role/update.html"
-            send_email_user(users, dataset_name, username, new_role, title, template)
+            send_email_user(users, dataset_name, username,
+                            new_role, title, template)
 
         except Exception as error:
             _logger.error(
@@ -205,7 +227,8 @@ class ContainerUser(Resource):
             container_id = get_container_id(query_params)
 
             # validate user
-            is_users, res_users, code = validate_user(username=username, headers=headers)
+            is_users, res_users, code = validate_user(
+                username=username, headers=headers)
             if not is_users:
                 return res_users, code
             else:
@@ -225,15 +248,20 @@ class ContainerUser(Resource):
             role = result[0]["r"]["type"]
 
             # remove from ad group
-            remove_user_from_project_group(container_id, user_email, _logger, access_token)
+            remove_user_from_project_group(
+                container_id, user_email, _logger, access_token)
 
-            is_delete, res_delete, code = delete_relation_user_container(user_id=user_id, container_id=container_id)
-            if not is_delete: return res_delete, code
+            is_delete, res_delete, code = delete_relation_user_container(
+                user_id=user_id, container_id=container_id)
+            if not is_delete:
+                return res_delete, code
 
             # keycloak user role delete
             dataset_code = dataset_node["code"]
-            is_deleted, del_response, code = keycloak_user_role_delete(headers, user_email, dataset_code, role)
-            if not is_deleted: return del_response, code
+            is_deleted, del_response, code = keycloak_user_role_delete(
+                headers, user_email, dataset_code, role)
+            if not is_deleted:
+                return del_response, code
 
         except Exception as e:
             _logger.error(
@@ -244,7 +272,8 @@ class ContainerUser(Resource):
 
 def delete_relation_user_container(user_id, container_id):
     # Get relation between user and container
-    neo4j_relation_url = ConfigClass.NEO4J_SERVICE + f"relations?start_id={int(user_id)}&end_id={int(container_id)}"
+    neo4j_relation_url = ConfigClass.NEO4J_SERVICE + \
+        f"relations?start_id={int(user_id)}&end_id={int(container_id)}"
 
     res = requests.get(url=neo4j_relation_url)
     if res.status_code != 200 or len(json.loads(res.text)) == 0:

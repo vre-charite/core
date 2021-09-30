@@ -222,7 +222,7 @@ def ldap_create_user_group(code, description):
         dn = "cn=vre-{},ou=Gruppen,ou={},dc={},dc={}".format(code, ConfigClass.LDAP_OU, ConfigClass.LDAP_DC1,
                                                              ConfigClass.LDAP_DC2)
         objectclass = [ConfigClass.LDAP_objectclass.encode('utf-8')]
-        attrs = {'objectclass': objectclass}
+        attrs = {'objectclass': objectclass, 'sAMAccountName': f'vre-{code}'}
         if description:
             attrs['description'] = description.encode('utf-8')
         ldif = modlist.addModlist(attrs)
