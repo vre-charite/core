@@ -92,8 +92,8 @@ def add_user_to_ad_group(user_email, project_code, logger, access_token):
         }
     )
     if(res.status_code != 200):
-        logger.error(
-            f"Error adding user to group in ad: {res.text} {res.status_code}")
+        raise Exception(f"Error adding user to group in ad: {res.text} {res.status_code}")
+        
     return res.json().get("entry")
 
 

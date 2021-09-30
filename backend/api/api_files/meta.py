@@ -111,6 +111,8 @@ class FileMeta(Resource):
                 'query': json.dumps(query)
             }
 
+            print(payload)
+
             url = ConfigClass.ENTITYINFO_SERVICE + f'files/meta/{geid}'
             response = requests.get(url, params=payload)
             _logger.info(f'Calling Entityinfo service, payload is:  ' + str(payload))
