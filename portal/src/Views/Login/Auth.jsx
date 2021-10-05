@@ -82,17 +82,14 @@ class Auth extends Component {
             <p>
               We use cookies to make your experience better by keeping your
               session information and login status. By using the VRE, you accept
-              our use of cookies.
-              <Button
-                type="link"
-                style={{ paddingLeft: 0 }}
-                onClick={() => {
-                  closeNotification();
-                  this.showModal();
-                }}
+              our use of cookies in accordance with our{' '}
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/Privacy%20Policy/"
               >
-                Click here for details and controls.
-              </Button>
+                Privacy Policy
+              </a>
             </p>
           </>
         ),
@@ -240,13 +237,13 @@ class Auth extends Component {
             component={() => (
               <img
                 className="pic"
-                style={{width: '44px', height: '44px'}}
+                style={{ width: '44px', height: '44px' }}
                 src={require('../../Images/auth_alert.png')}
               />
             )}
           />
         </div>
-        <div style={{marginLeft: '20px', marginTop: '-3px'}}>
+        <div style={{ marginLeft: '20px', marginTop: '-3px' }}>
           <p
             style={{
               margin: '0px',
@@ -257,13 +254,19 @@ class Auth extends Component {
           >
             GDPR READY
           </p>
-          <p style={{ margin: '-7px 0px 0px 0px', color: '#FFFFFF', fontSize: '16px' }}>
+          <p
+            style={{
+              margin: '-7px 0px 0px 0px',
+              color: '#FFFFFF',
+              fontSize: '16px',
+            }}
+          >
             The VRE has undergone a successful GDPR Service Readiness Audit
           </p>
         </div>
       </div>
     );
-    
+
     return (
       <>
         <Alert
@@ -376,6 +379,17 @@ class Auth extends Component {
             >
               <small>Terms of Use</small>
             </Button>{' '}
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: 'white',
+                fontSize: '80%',
+              }}
+              href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/Privacy%20Policy/"
+            >
+              Privacy Policy
+            </a>
             <TermsOfUseModal
               visible={this.state.visible}
               handleOk={this.handleOk}

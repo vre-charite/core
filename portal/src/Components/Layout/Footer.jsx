@@ -41,6 +41,20 @@ function AppFooter(props) {
         <Button type="link" onClick={showModal} className={styles.tou}>
           <small>Terms of Use</small>
         </Button>
+        <a
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            fontSize: '80%',
+            height: '32px',
+            lineHeight: '32px',
+            display: 'block',
+            marginTop: -3,
+          }}
+          href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/Privacy%20Policy/"
+        >
+          Privacy Policy
+        </a>
         {/* <Button type="link" className={styles.tou}>
           <small>About</small>
         </Button> */}
