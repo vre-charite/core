@@ -221,14 +221,17 @@ def ldap_create_user_group(code, description):
 
         dn = "cn=vre-{},ou=Gruppen,ou={},dc={},dc={}".format(code, ConfigClass.LDAP_OU, ConfigClass.LDAP_DC1,
                                                              ConfigClass.LDAP_DC2)
+
+        # NOTE here LDAP client will require the BINARY STRING for the payload
+        # Please remember to convert all string to utf-8
         objectclass = [ConfigClass.LDAP_objectclass.encode('utf-8')]
-        attrs = {'objectclass': objectclass, 'sAMAccountName': f'vre-{code}'}
+        attrs = {'objectclass': objectclass, 'sAMAccountName': f'vre-{code}'.encode('utf-8')}
         if description:
             attrs['description'] = description.encode('utf-8')
         ldif = modlist.addModlist(attrs)
         conn.add_s(dn, ldif)
     except Exception as error:
-        _logger.info(f"Error while creating user group in ldap : {error}")
+        _logger.error(f"Error while creating user group in ldap : {error}")
 
 
 def neo4j_add_platform_admins(code):
