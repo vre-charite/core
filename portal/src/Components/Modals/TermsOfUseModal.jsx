@@ -295,8 +295,15 @@ function TermsOfUseModal(props) {
           </li>
 
           <li>
-            You will follow and adhere to the Data Processing Agreement with the
-            Charité for the research project(s) of which you are a member.{' '}
+            You will follow and adhere to the{' '}
+            <a
+              target="_blank"
+              href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/Data%20Processing%20Agreement/"
+            >
+              Data Processing Agreement
+            </a>{' '}
+            with the Charité for the research project(s) of which you are a
+            member.{' '}
           </li>
 
           <li>
