@@ -65,7 +65,7 @@ build-bff:
       - backend/*/*/*/*/*/*/*
   script:
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-    - docker build -t ${BFF_CONTAINER_IMAGE} backend/.
+    - docker build --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${BFF_CONTAINER_IMAGE} backend/.
     - docker push ${BFF_CONTAINER_IMAGE}
 
 deploy-bff:
