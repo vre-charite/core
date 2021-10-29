@@ -22,10 +22,8 @@ build-portal:
       - portal/*/*/*/*/*/*/*/*
       - portal/*/*/*/*/*/*/*/*/*
   script:
-    - export PORTAL_ENV=build-charite
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-#    - docker build -t ${PORTAL_CONTAINER_IMAGE} --build-arg PORTAL_ENV portal/.
-    - docker build --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${PORTAL_CONTAINER_IMAGE} portal/.
+    - docker build --build-arg PORTAL_ENV="build-charite" --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${PORTAL_CONTAINER_IMAGE} portal/.
     - docker push ${PORTAL_CONTAINER_IMAGE}
 
 deploy-portal:
