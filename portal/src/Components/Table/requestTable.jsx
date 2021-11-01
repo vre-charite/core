@@ -25,9 +25,21 @@ const ServiceRequestTable = (props) => {
 
 
   const getResourceRequests = async (filters) => {
+    const {page: tablePage, pageSize, orderBy, orderType, filters: tableFilters} = filters;
     try {
       const res = await getResourceRequestsAPI(filters);
-      localStorage.setItem('serviceRequestId', res.data.result[0].id);
+      if (
+        // alway set the latest request id to localStorage
+        // set the first request id to localStorage only when the filters are default to get the first page info.
+        res.data.result.length &&
+        Object.keys(tableFilters).length === 0 &&
+        tablePage === 0 &&
+        pageSize === 10 &&
+        orderBy === 'request_date' &&
+        orderType === 'desc'
+      ) {
+        localStorage.setItem('serviceRequestId', res.data.result[0].id);
+      }
       props.setServiceRequestRedDot(false);
       const { page, result, total } = res.data;
       setRequests(result);
@@ -37,7 +49,7 @@ const ServiceRequestTable = (props) => {
       const errorMessager = new ErrorMessager(
         namespace.userManagement.getServiceRequestAPI,
       );
-      errorMessager.triggerMsg(error.response.status);
+      //errorMessager.triggerMsg(error.response.status);
     }
   }
 

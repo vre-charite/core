@@ -60,8 +60,10 @@ class APIProjectV2(metaclass=MetaAPI):
             Notice that top-level container could only be created by site admin.
             """
             post_data = request.get_json()
+            _res = APIResponse()
             _logger.info(
                 'Calling API for creating project: {}'.format(post_data))
+            
             container_type = post_data.get("type", None)
             description = post_data.get("description", None)
             dataset_code = post_data.get("code", None)
@@ -69,14 +71,21 @@ class APIProjectV2(metaclass=MetaAPI):
             headers = {
                 'Authorization': access_token
             }
+            
             try:
                 is_valid, message = validate_post_data(post_data)
                 if not is_valid:
-                    return json.dumps(message), 400
+                    _logger.error("Invalid post data")
+                    _res.set_code(EAPIResponseCode.bad_request)
+                    _res.set_error_msg(message["result"])
+                    return _res.to_dict, _res.code
 
                 is_dataset, res_datasets, code = duplicate_check(dataset_code)
                 if not is_dataset:
-                    return res_datasets, code
+                    _logger.error("Duplicate project data")
+                    _res.set_code(EAPIResponseCode.conflict)
+                    _res.set_error_msg(res_datasets["result"])
+                    return _res.to_dict, _res.code
 
                 # let the hdfs create a dataset
                 post_data.update({'path': dataset_code})
@@ -85,18 +94,32 @@ class APIProjectV2(metaclass=MetaAPI):
                 # if we have the parent_id then update relationship label as PARENT
                 if post_data.get('parent_id', None):
                     post_data.update({'parent_relation': 'PARENT'})
+                if not post_data.get('discoverable', None):
+                    post_data.update({"discoverable":True})
                 is_container, container_result, code = create_container_node(
                     post_data)
                 if not is_container:
-                    return container_result, code
-                else:
-                    result = container_result.json()[0]
+                    _logger.error("Error when creating node in neo4j")
+                    _res.set_code(code)
+                    _res.set_error_msg("Error when creating Container node in neo4j")
+                    return _res.to_dict, _res.code
+                result = container_result.json()[0]
+                
+                # Add admin users relationship in neo4j
                 is_valid, res = add_admins(headers, result)
                 if not is_valid:
-                    return res
+                    _logger.error("Error when adding admin into project")
+                    _res.set_code(EAPIResponseCode.internal_error)
+                    _res.set_error_msg(res["result"])
+                    return _res.to_dict, _res.code
 
                 # Create folder (project) in Green Room
-                create_folder_gr(result, container_type)
+                is_valid, res, code = create_folder_gr(result, container_type)
+                if not is_valid:
+                    _logger.error("Error when creating name folders into project")
+                    _res.set_code(code)
+                    _res.set_error_msg(res["result"])
+                    return _res.to_dict, _res.code
 
                 # Create Project User Group in ldap
                 ldap_create_user_group(dataset_code, description)
@@ -106,7 +129,10 @@ class APIProjectV2(metaclass=MetaAPI):
                 is_created, res, status_code = keycloak_create_roles(
                     dataset_code)
                 if not is_created:
-                    return res
+                    _logger.error("Error when creating project roles in keycloak")
+                    _res.set_code(status_code)
+                    _res.set_error_msg(res["result"])
+                    return _res.to_dict, _res.code
                 keycloak_add_group_role(dataset_code, origin_users)
 
                 _logger.info(
@@ -117,9 +143,12 @@ class APIProjectV2(metaclass=MetaAPI):
 
             except Exception as e:
                 _logger.error('Error in creating project: {}'.format(str(e)))
-                return {'result': 'Error %s' % str(e)}, 403
-
-            return {'result': container_result.json(), 'auth_result': 'create user group successfully'}, 200
+                _res.set_code(EAPIResponseCode.forbidden)
+                _res.set_error_msg('Error %s' % str(e))
+                return _res.to_dict, _res.code
+            
+            _res.set_result(container_result.json())
+            return _res.to_dict, _res.code
 
 
 def validate_post_data(post_data):
@@ -132,19 +161,27 @@ def validate_post_data(post_data):
     if not name or not code:
         _logger.error('Field name and code field is required.')
         return False, {'result': "Error the name and code field is required"}
+    
     project_code_pattern = re.compile(ConfigClass.PROJECT_CODE_REGEX)
     is_match = re.search(project_code_pattern, code)
 
     if not is_match:
         _logger.error('Project code does not match the pattern.')
         return False, {'result': "Project code does not match the pattern."}
+    
+    project_name_pattern = re.compile(ConfigClass.PROJECT_NAME_REGEX)
+    is_match = re.search(project_name_pattern, name)
+
+    if not is_match:
+        _logger.error('Project name does not match the pattern.')
+        return False, {'result': "Project name does not match the pattern."}
 
     if post_data.get("icon"):
         # check if icon is bigger then limit
         if len(post_data.get("icon")) > ConfigClass.ICON_SIZE_LIMIT:
-            return {'result': 'icon too large'}, 413
+            return False, {'result': 'icon too large'}
 
-    return True, {}
+    return True, {} 
 
 
 def duplicate_check(code):
@@ -198,7 +235,10 @@ def create_folder_gr(result, container_type):
         )
         if res.status_code != 200:
             return False, {'result': json.loads(res.text)}, res.status_code
-    create_folder_vre(vre_path)
+    is_valid, res, code =create_folder_vre(vre_path)
+    if not is_valid:
+        return False, res, code
+    return True, {}, 200
 
 
 def create_folder_vre(vre_path):
@@ -210,6 +250,7 @@ def create_folder_vre(vre_path):
         })
         if res.status_code != 200:
             return False, {'result': json.loads(res.text)}, res.status_code
+    return True, {}, 200
 
 
 def ldap_create_user_group(code, description):

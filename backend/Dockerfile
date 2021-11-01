@@ -5,8 +5,7 @@ RUN groupadd --gid 1004 deploy \
 WORKDIR /home/deploy
 COPY .  ./
 RUN chown -R deploy:deploy /home/deploy
-RUN apt-get update
-RUN apt-get install libsasl2-dev python-dev libldap2-dev libssl-dev -y
+RUN apt-get update && apt-get install libsasl2-dev python-dev libldap2-dev libssl-dev -y
 USER deploy
 RUN chmod +x /home/deploy/gunicorn_starter.sh
 RUN pip install --no-cache-dir -r requirements.txt --user

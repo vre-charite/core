@@ -117,7 +117,7 @@ function RawTable(props) {
   const [tableReady, setTableReady] = useState(false);
   const [showPlugins, setShowPlugins] = useState(true);
   // const [tableLoading, setTableLoading] = useState(false);
-  
+
   const sessionId = tokenManager.getCookie('sessionId');
   const currentDataset = getCurrentProject(props.projectId);
   const projectActivePanel = useSelector(
@@ -287,6 +287,7 @@ function RawTable(props) {
       key: 'nodeLabel',
       width: 60,
       render: (text, record) => {
+        console.log(record, record.name, record.name.split('.').pop());
         if (record.nodeLabel.indexOf('Folder') !== -1) {
           if (checkGreenAndCore(panelKey) && currentRouting?.length === 0) {
             return <UserOutlined style={{ float: 'right' }} />;
@@ -360,6 +361,7 @@ function RawTable(props) {
                 refreshFiles({
                   geid: recordGeid,
                   sourceType: 'Folder',
+                  node: {nodeLabel: record.nodeLabel},
                   resetTable: true,
                 });
               }
@@ -699,6 +701,7 @@ function RawTable(props) {
               ? null
               : routeToGo.globalEntityId,
           sourceType: 'Folder',
+          node: {nodeLabel: routeToGo.labels},
           resetTable: true,
         });
         dispatch(setTableLayoutReset(panelKey));
@@ -1042,6 +1045,7 @@ function RawTable(props) {
       partial,
       sourceType,
       resetTable = false,
+      node = null
     } = params;
     if (tableLoading) return;
     setTableLoading(true);
@@ -1061,7 +1065,7 @@ function RawTable(props) {
         mapColumnKey(orderBy),
         orderType,
         mapQueryKeys(query),
-        getZone(panelKey, permission),
+        getZone(panelKey, permission, sourceType, node),
         sourceType,
         partial,
         panelKey,
@@ -1079,7 +1083,7 @@ function RawTable(props) {
       setShowPlugins(true);
     } catch (error) {
       setShowPlugins(false);
-      console.error(error)
+      console.error(error);
       if (error.response && error.response.status === 404) {
         message.error('No user folder found');
       } else {
@@ -1362,6 +1366,7 @@ function RawTable(props) {
                             geid,
                             sourceType: 'Folder',
                             resetTable: true,
+                            node: {nodeLabel: v.labels}
                           });
                           dispatch(setTableLayoutReset(panelKey));
                         }}
@@ -1712,9 +1717,17 @@ export default connect(
  * @param {string} panelKey the current open panel key
  * @returns {"Greenroom" | "VRECore" | "All"} "Greenroom" | "VRECore" | "All"
  */
-const getZone = (panelKey, role) => {
+const getZone = (panelKey, role, sourceType, node) => {
   if (panelKey.includes('trash')) {
-    return role === 'contributor' ? 'Greenroom' : 'All';
+    if (sourceType === 'Folder') {
+      if (node.nodeLabel.indexOf('VRECore') !== -1) {
+        return 'VRECore';
+      } else {
+        return 'Greenroom';
+      }
+    } else {
+      return role === 'contributor' ? 'Greenroom' : 'All';
+    }
   }
   if (panelKey.startsWith('greenroom')) {
     return 'Greenroom';
@@ -1734,11 +1747,11 @@ function resKeyConvert(res) {
   const files = result.map((item) => {
     return {
       ...item.attributes,
-      name: item.attributes.name || item.geid,
+      name: item.attributes.fileName || item.geid,
       tags: item.labels,
       guid: item.guid,
       geid: item.geid,
-      key: item.attributes.name || item.geid,
+      key: item.attributes.fileName || item.geid,
       manifest: item.manifest,
     };
   });

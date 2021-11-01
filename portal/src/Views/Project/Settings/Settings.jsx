@@ -59,7 +59,7 @@ function Settings(props) {
 
     const tags = datasetUpdate['tags'];
     let isTagContainSpace = false;
-    isTagContainSpace = tags && tags.filter((el) => el.includes(' '));
+    isTagContainSpace = tags && tags.filter((el) => (el + '').includes(' '));
     if (isTagContainSpace && isTagContainSpace.length) {
       message.error({
         content: `${t('formErrorMessages:project.card.update.tags.space')}`,

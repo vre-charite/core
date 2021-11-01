@@ -44,17 +44,17 @@ function onRenameFinish(payload, oldTreeData, dispatch) {
     //payload.payload is the new node
     //payload.payload is the old node
     targetNode['name'] = payload.payload.name;
-    targetNode["globalEntityId"] = payload.payload.globalEntityId;
+    targetNode['globalEntityId'] = payload.payload.globalEntityId;
     dispatch(datasetDataActions.setTreeData(newTreeData));
-    
   }
 }
 
-
-function onImportFinish(payload,oldTreeData,dispatch){
+function onImportFinish(payload, oldTreeData, dispatch) {
   const newTreeData = _.cloneDeep(oldTreeData);
-  const newImport =  payload?.source;
-  newTreeData.unshift(newImport);
+  const newImport = payload?.payload;
+  if (!newTreeData.find((x) => x.id === newImport.id)) {
+    newTreeData.unshift(newImport);
+  }
   dispatch(datasetDataActions.setTreeData(newTreeData));
 }
 
@@ -98,4 +98,9 @@ const deleteNodeWithGeids = (treeNodes, geids) => {
     })
     .filter((v) => !!v);
 };
-export { fetchFileOperations, deleteNodeWithGeids, onRenameFinish, onImportFinish };
+export {
+  fetchFileOperations,
+  deleteNodeWithGeids,
+  onRenameFinish,
+  onImportFinish,
+};

@@ -224,7 +224,6 @@ async function getFiles(
         displayPath: item.displayPath,
         fileName: item.name,
         fileSize: item.fileSize,
-        name: item.fullPath,
         owner: item.uploader,
         path: item.path,
         location: item.location,

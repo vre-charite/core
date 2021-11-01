@@ -73,14 +73,24 @@ class FilesTable extends React.Component {
 
   componentWillReceiveProps(nextProps, nextState) {
     if (this.props.activePane !== nextProps.activePane) {
-      this.props.updateTable({
+      const curSourceType = this.getCurrentSourceType();
+      const params = {
         geid: this.props.getCurrentGeid(),
         page: this.state.page,
         pageSize: this.state.pageSize,
         orderBy: this.state.sortColumn,
         orderType: this.state.order,
-        sourceType: this.getCurrentSourceType(),
-      });
+        sourceType: curSourceType,
+      };
+       if (curSourceType === 'Folder' && this.props.currentRouting.length) {
+         params.node = {
+           nodeLabel:
+             this.props.currentRouting[this.props.currentRouting.length - 1]
+               .labels,
+         };
+       }
+       // update table
+       this.props.updateTable(params);
     }
   }
 
@@ -201,16 +211,24 @@ class FilesTable extends React.Component {
 
     this.setState({ searchText: searchText });
 
-    // update table
-    this.props.updateTable({
+    const curSourceType = this.getCurrentSourceType();
+    const params = {
       geid: this.props.getCurrentGeid(),
       page: pagination.current - 1,
       pageSize: pagination.pageSize,
       orderBy: sorter.columnKey,
       orderType: order,
       query: convertFilter(searchText),
-      sourceType: this.getCurrentSourceType(),
-    });
+      sourceType: curSourceType,
+    };
+    if (curSourceType === 'Folder' && this.props.currentRouting.length ) {
+      params.node = {
+        nodeLabel:
+          this.props.currentRouting[this.props.currentRouting.length - 1].labels,
+      };
+    }
+    // update table
+    this.props.updateTable(params);
   };
 
   render() {

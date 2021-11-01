@@ -34,9 +34,9 @@ class ContainerUser(Resource):
     @check_role("admin")
     def post(self, username, project_geid):
         """
-        This method allow container admin to add single user to a specific dataset with permission.
+        This method allow container admin to add single user to a specific container with permission.
         """
-        _logger.info('Call API for adding user {} to dataset {}'.format(
+        _logger.info('Call API for adding user {} to project {}'.format(
             username, str(project_geid)))
         try:
             # Get token from request's header
@@ -85,14 +85,8 @@ class ContainerUser(Resource):
                     'User %s already in the project please check.' % username)
                 return {'result': 'User %s already in the project please check.' % username}, 403
 
-            # add user relationship
-            is_added, user_add_res, code = add_user_relationship(
-                headers, user_id, container_id, role)
-            if not is_added:
-                return user_add_res, code
-
+            # add user to ad group
             try:
-                # add_user_to_project_group(container_id, username, _logger)
                 add_user_to_ad_group(
                     user_email, dataset_code, _logger, access_token)
             except Exception as error:
@@ -106,6 +100,12 @@ class ContainerUser(Resource):
                 headers, user_email, dataset_code, role)
             if not is_updated:
                 return response, code
+            
+            # add user relationship in neo4j
+            is_added, user_add_res, code = add_user_relationship(
+                headers, user_id, container_id, role)
+            if not is_added:
+                return user_add_res, code
 
             # send email to user
             title = "Project %s Notification: New Invitation" % (

@@ -67,9 +67,9 @@ class AppHeader extends Component {
     } else if (path === '/users') {
       this.updatedSelectedKeys('clear');
       this.updatedSelectedKeys('add', 'users');
-    } else if (path === "/datasets" || path.startsWith('/dataset') ){
+    } else if (path === '/datasets' || path.startsWith('/dataset')) {
       this.updatedSelectedKeys('clear');
-      this.updatedSelectedKeys('add','datasets')
+      this.updatedSelectedKeys('add', 'datasets');
     }
     if (!this.props.unauthorized) {
       // check if there are new service requests
@@ -256,7 +256,7 @@ class AppHeader extends Component {
             key="logo"
             style={{ marginRight: '27px', borderBottom: 0 }}
           >
-            <Link to="/">
+            <Link to="/landing">
               <img
                 src={require('../../Images/vre-logo.png')}
                 style={{ height: '40px', marginLeft: -45 }}

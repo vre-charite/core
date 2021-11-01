@@ -37,7 +37,8 @@ class ConfigClass(object):
     TIMEZONE = "CET"
 
     USERNAME_REGEX = "^[a-z\d]{6,20}$"
-    PROJECT_CODE_REGEX = "^[a-z][a-z0-9]{1,32}$"
+    PROJECT_CODE_REGEX = "^[a-z][a-z0-9]{0,31}$"
+    PROJECT_NAME_REGEX = "^.{1,100}$"
 
     # Services
 
@@ -68,6 +69,9 @@ class ConfigClass(object):
     # DOWNLOAD_SERVICE_VRE = "http://10.3.7.235:5077/v2"
     # KONG API Gateway
     KONG_BASE = vault["KONG_BASE"]+"/vre/"
+    # Knowledge Graph
+    KG_SERVICE = "http://10.3.7.102:5081/v1/" if os.environ.get('env', "test") == "test" else "http://kg.utility:5081/v1/"
+
 
     # JWT
     JWT_AUTH_URL_RULE = None

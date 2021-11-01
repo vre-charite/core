@@ -1,38 +1,4 @@
-.radio {
-  display: flex;
-  color: #595959;
-  font-weight: 500;
-}
 
-.radio_default {
-  width: 86px;
-  border: 0px solid #d9d9d9;
-  border-left-width: 1px;
-  border-top-width: 1px;
-  border-bottom-width: 1px;
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
-  text-align: center;
-  cursor: pointer;
-}
-
-.radio_custom {
-  width: 86px;
-  text-align: center;
-  border: 0px solid #d9d9d9;
-  border-left-width: 1px;
-  border-right-width: 1px;
-  border-top-width: 1px;
-  border-bottom-width: 1px;
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
-  cursor: pointer;
-}
-
-.radio_backgroundColor {
-  background-color: #003262;
-  color: #ffffff;
-}
 
 .tabs {
   margin-top: -18px;
@@ -179,4 +145,13 @@
       height: 400px;
     }
   }
+}
+
+.loading_icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: -5%;
 }

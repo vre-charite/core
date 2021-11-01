@@ -42,7 +42,7 @@ const authedRoutes = [
 // render whenever user is unauthorized
 const unAuthedRoutes = [
   {
-    path: '/',
+    path: '/login',
     component: Login,
     protectedType: 'unLogin',
     exact: true,

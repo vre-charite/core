@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { schemaTemplatesActions } from '../../../../../Redux/actions';
-import { Tabs } from 'antd';
+import { Tabs, Spin } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import SchemaTemplatesSelector from './SchemaTemplatesSelector';
 import SchemaForm from '../SchemaForm/SchemaForm';
 import styles from './SchemaTemplates.module.scss';
@@ -81,11 +82,13 @@ const SchemaTemplates = (props) => {
 
   return (
     <div className={styles.schema_editor_wrapper}>
-      {templateManagerMode === 'hide' && schemasTypes === 'Default' ? (
+      {templateManagerMode === 'hide' &&
+      schemasTypes === 'Default' &&
+      defaultPanes.length ? (
         <SchemaTemplatesSelector />
       ) : null}
 
-      {schemasTypes === 'Default' && defaultPanes && (
+      {schemasTypes === 'Default' && defaultPanes.length ? (
         <Tabs
           className={styles.tabs}
           type="editable-card"
@@ -107,6 +110,12 @@ const SchemaTemplates = (props) => {
             </TabPane>
           ))}
         </Tabs>
+      ) : (
+        <Spin
+          indicator={<LoadingOutlined />}
+          className={styles.loading_icon}
+          size="large"
+        />
       )}
       {schemasTypes === 'OpenMinds' ? (
         schemaPreviewGeid ? (

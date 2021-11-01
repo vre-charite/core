@@ -43,6 +43,14 @@ class SetUpTest:
         self.log.info(response.json())
         return response.json()[0]
 
+    def get_user_by_name(self, username):
+        payload = {
+            "name": username,
+        }
+        response = requests.post(ConfigClass.NEO4J_SERVICE + "nodes/User/query", json=payload)
+        self.log.info(response.json())
+        return response.json()[0]
+    
     def create_folder(self, geid, project_code, zone="greenroom", path="", name="bff_proxy_unittest_folder", parent_geid=""):
         self.log.info("\n")
         self.log.info("Creating testing folder".ljust(80, '-'))
@@ -95,6 +103,20 @@ class SetUpTest:
         except Exception as e:
             self.log.info(f"ERROR CREATING PROJECT: {e}")
             raise e
+
+    def get_project(self, project_code):
+        self.log.info("\n")
+        self.log.info("Get project by project code".ljust(80, '-'))
+        get_api = ConfigClass.NEO4J_SERVICE + "nodes/Container/query"
+        payload = {
+            "code": project_code
+        }
+        try:
+            get_res = requests.post(get_api, json=payload)
+            return get_res.json()[0]
+        except Exception as e:
+            self.log.info(f"ERROR GETTING PROJECT: {e}")
+            raise e    
 
     def delete_project(self, node_id):
         self.log.info("\n")
@@ -199,6 +221,23 @@ class SetUpTest:
                 continue
         if response.status_code != 200:
             raise Exception(f"Error adding keycloak role to user: {response.json()}")
+
+    def remove_user_from_ad_group(self, user_email, project_code,headers):
+        self.log.info("\n")
+        self.log.info("Preparing removing user from ad group".ljust(80, '-'))
+        payload = {
+        "operation_type": "remove",
+        "user_email": user_email,
+        "group_code": project_code,
+        }
+        res = requests.put(
+            url=ConfigClass.AUTH_SERVICE + "user/ad-group",
+            json=payload,
+            headers=headers
+        )
+        if(res.status_code != 200):
+            raise Exception( f"Error removing user from group in ad: {res.text} {res.status_code}")
+
 
     def get_projects(self):
         all_project_url = ConfigClass.NEO4J_SERVICE + 'nodes/Container/properties'

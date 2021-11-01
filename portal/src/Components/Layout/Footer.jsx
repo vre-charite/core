@@ -16,31 +16,24 @@ function AppFooter(props) {
   const handleOk = () => {
     setModal(false);
   };
-  let documentsLink;
-  switch (process.env.REACT_APP_ENV) {
-    case 'dev':
-      documentsLink =
-        'http://10.3.7.220/xwiki/wiki/vrepublic/view/Main/user_guide/';
-      break;
-    case 'staging':
-      documentsLink =
-        'https://vre-staging.indocresearch.org/xwiki/wiki/vrepublic/view/Main/user_guide/';
-      break;
-    case 'charite':
-      documentsLink =
-        'https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/user_guide/';
-      break;
-    default:
-      documentsLink =
-        'http://10.3.7.220/xwiki/wiki/vrepublic/view/Main/user_guide/';
-      break;
-  }
   return (
     <Footer className={styles.footer}>
       <Space className={styles.menu}>
-        <Button type="link" onClick={showModal} className={styles.tou}>
-          <small>Terms of Use</small>
-        </Button>
+        <a
+          target="_blank"
+          rel="noreferrer"
+          href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/General%20Terms%20of%20Use/"
+          style={{
+            fontSize: '80%',
+            height: '32px',
+            lineHeight: '32px',
+            display: 'block',
+            marginTop: -3,
+            marginRight: 20,
+          }}
+        >
+          Terms of Use
+        </a>
         <a
           target="_blank"
           rel="noopener noreferrer"
@@ -72,7 +65,7 @@ function AppFooter(props) {
         {' / '}
         <a
           style={{ marginRight: 10 }}
-          href={documentsLink}
+          href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/user_guide/"
           target="_blank"
           rel="noopener noreferrer"
         >

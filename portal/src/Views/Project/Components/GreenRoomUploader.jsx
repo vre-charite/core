@@ -471,6 +471,8 @@ const GreenRoomUploader = ({
                   form.resetFields(['file']);
                   if (value) {
                     setIsFiles(false);
+                  }else{
+                    form.resetFields(['folder']);
                   }
                 }}
                 multiple

@@ -225,6 +225,8 @@ class APIProject(metaclass=MetaAPI):
             return {'result': container_result.json(), 'auth_result': 'create user group successfully'}, 200
 
     class RestfulProject(Resource):
+        @jwt_required()
+        @permissions_check('project', '*', 'view')
         def get(self, project_geid):
             # init resp
             my_res = APIResponse()

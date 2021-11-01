@@ -30,7 +30,6 @@ import { version } from '../../../package.json';
 import { tokenManager } from '../../Service/tokenManager';
 import { lastLoginAPI } from '../../APIs';
 import { keycloak } from '../../Service/keycloak';
-import { v4 as uuidv4 } from 'uuid';
 const { detect } = require('detect-browser');
 const browser = detect();
 const isSafari = browser?.name === 'safari';
@@ -196,38 +195,19 @@ class Auth extends Component {
   };
 
   render() {
-    if (keycloak.authenticated && !tokenManager.getCookie('sessionId')) {
-      const sourceId = uuidv4();
-      tokenManager.setCookies({
-        sessionId: `${keycloak?.tokenParsed.preferred_username}-${sourceId}`,
-      });
-      lastLoginAPI(keycloak?.tokenParsed.preferred_username);
-    }
+    // if (keycloak.authenticated && !tokenManager.getCookie('sessionId')) {
+    //   const sourceId = uuidv4();
+    //   tokenManager.setCookies({
+    //     sessionId: `${keycloak?.tokenParsed.preferred_username}-${sourceId}`,
+    //   });
+    //   lastLoginAPI(keycloak?.tokenParsed.preferred_username);
+    // }
     if (tokenManager.getCookie('sessionId')) {
       if (isSafari) {
         window.location.href = '/vre/landing';
       } else {
         return <Redirect to="/landing" />;
       }
-    }
-    let documentsLink;
-    switch (process.env.REACT_APP_ENV) {
-      case 'dev':
-        documentsLink =
-          'http://10.3.7.220/xwiki/wiki/vrepublic/view/Main/user_guide/';
-        break;
-      case 'staging':
-        documentsLink =
-          'https://vre-staging.indocresearch.org/xwiki/wiki/vrepublic/view/Main/user_guide/';
-        break;
-      case 'charite':
-        documentsLink =
-          'https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/user_guide/';
-        break;
-      default:
-        documentsLink =
-          'http://10.3.7.220/xwiki/wiki/vrepublic/view/Main/user_guide/';
-        break;
     }
 
     const alertMessage = (
@@ -372,13 +352,18 @@ class Auth extends Component {
             </Row>
           </Card>
           <div className={styles.utils}>
-            <Button
-              type="link"
-              style={{ color: 'white' }}
-              onClick={this.showModal}
+            <a
+              target="_blank"
+              rel="noreferrer"
+              href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/General%20Terms%20of%20Use/"
+              style={{
+                color: 'white',
+                fontSize: '80%',
+                marginRight: 20,
+              }}
             >
-              <small>Terms of Use</small>
-            </Button>{' '}
+              Terms of Use
+            </a>
             <a
               target="_blank"
               rel="noopener noreferrer"
@@ -414,7 +399,7 @@ class Auth extends Component {
             {' / '}
             <a
               style={{ marginRight: 10 }}
-              href={documentsLink}
+              href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/user_guide/"
               target="_blank"
               rel="noopener noreferrer"
             >

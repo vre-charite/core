@@ -108,7 +108,10 @@ function Portal(props) {
     // initial logic
     async function initUser() {
       setUsernameDispatcher(keycloak?.tokenParsed.preferred_username);
-      setEmailDispatcher(keycloak?.tokenParsed.email);
+      if (keycloak?.tokenParsed.email) {
+        setEmailDispatcher(keycloak?.tokenParsed.email);
+      }
+
       getUserstatus();
     }
     async function getUserstatus() {
@@ -453,7 +456,7 @@ function Portal(props) {
                   exact={item.exact || false}
                   render={(props) => {
                     if (!keycloak.authenticated) {
-                      return <Redirect to="/" />;
+                      return <Redirect to="/login" />;
                     }
                     if (!containersPermission) {
                       return <Loading />;
@@ -472,7 +475,7 @@ function Portal(props) {
                     } else if (res) {
                       return <item.component />;
                     } else {
-                      return <Redirect to="/" />;
+                      return <Redirect to="/login" />;
                     }
                   }}
                 ></Route>
