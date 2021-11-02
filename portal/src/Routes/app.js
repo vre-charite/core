@@ -24,7 +24,7 @@ const authedRoutes = [
   {
     path: '/users',
     component: UserManagement,
-    protectedType: 'isLogin',
+    protectedType: 'PlatformAdmin',
   },
   {
     path: '/datasets',

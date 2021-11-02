@@ -49,6 +49,13 @@ export default function protectedRoutes(
       }
       return true;
     }
+    case 'PlatformAdmin': {
+      if (platformRole === 'admin') {
+        return true;
+      } else {
+        return '403';
+      }
+    }
     default: {
       return true;
     }
