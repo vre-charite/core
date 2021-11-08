@@ -147,15 +147,17 @@ async function fileUpload(data, resolve, reject) {
    * Description: try to resent failed chunk for RETRY_MAX times. Return resolve if one request success, and return reject if all requests failed.
    * @param {Object} chunk Chunk needs to be resented
    * @param {String} index original index of the chunk
-   * @param {Number} RETRY_MAX maximum times of retry
+   * @param {Number} retries maximum times of retry
    */
-  const retry = (chunk, index, RETRY_MAX) => {
-    let arr = [];
-    for (let i = 0; i < RETRY_MAX; i++) {
-      arr.push(sendOneChunk(chunk, index));
+
+  function retry(chunk, index, retries, err = null) {
+    if (!retries) {
+      return Promise.reject(err);
     }
-    return Promise.any(arr);
-  };
+    return sendOneChunk(chunk, index).catch((err) => {
+      return retry(chunk, index, retries - 1, err);
+    });
+  }
 
   async function combineChunks() {
     try {

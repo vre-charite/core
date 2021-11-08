@@ -26,6 +26,7 @@ function uploadFileApi2(data, sessionId, cancelToken) {
     method: 'POST',
     data,
     cancelToken,
+    timeout: 30 * 1000,
     headers: {
       'Session-ID': sessionId,
     },
