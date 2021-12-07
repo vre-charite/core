@@ -11,10 +11,10 @@ export const validators = {
         if (!value) {
           return Promise.reject('The dataset code is required');
         }
-        const regex = new RegExp(/^([a-z0-9]){1,32}$/);
+        const regex = new RegExp(/^([a-z0-9]){3,32}$/);
         if (!regex.test(value)) {
           return Promise.reject(
-            'The dataset code can only contains 1-32 lower case letters or digits, with no white space',
+            '3-32 lower case numbers or letters with no white space',
           );
         }
         return Promise.resolve();
@@ -53,7 +53,7 @@ export const validators = {
 
         for (const author of value) {
           if (author.length > 50) {
-            return Promise.reject("The author's length should be between 1-50");
+            return Promise.reject('Maximum length 50 characters');
           }
         }
 
@@ -67,7 +67,7 @@ export const validators = {
         if (!value || value.length === 0)
           return Promise.reject('Description is required');
 
-        if (_.trim(value," ").length === 0)
+        if (_.trim(value, ' ').length === 0)
           return Promise.reject(
             'Description should not only contain white space',
           );
@@ -100,7 +100,7 @@ export const validators = {
 
         for (const tag of value) {
           if (tag.length > 20)
-            return Promise.reject("Every tag's length should be between 1-20");
+            return Promise.reject('Maximum length 20 characters');
           if (tag.includes(' ')) {
             return Promise.reject('Tag should not include white space');
           }
@@ -123,15 +123,7 @@ export const validators = {
 
         for (const method of value) {
           if (method.length > 20)
-            return Promise.reject(
-              "Every method's length should be between 1-20",
-            );
-
-          if (method.includes(' ')) {
-            return Promise.reject(
-              'collection method should not contain white space',
-            );
-          }
+            return Promise.reject('Maximum length 20 characters');
         }
 
         return Promise.resolve();

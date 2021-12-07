@@ -306,9 +306,7 @@
     "404": [
       "The project could not be found while trying to set container permissions, please try again later."
     ],
-    "default": [
-      "Something went wrong while trying to set container permissions, please try again later."
-    ]
+    "default": ["Something went wrong, please try again later."]
   },
   "contactUsAPI": {
     "401": [
@@ -421,6 +419,15 @@
   },
   "copyFiles": {
     "default": ["Failed to copy the files, please try again later."]
+  },
+  "requestToCore": {
+    "default": ["Failed to send the request, please try again later."]
+  },
+  "markAsComplete": {
+    "default": ["Something wrong with the request, please try again later."]
+  },
+  "completeRequest": {
+    "default": ["Failed to send the request, please try again later."]
   },
   "addToDataset": {
     "default": [
@@ -624,8 +631,8 @@
       "Something went wrong while trying to get the dataset schema templates, please try again later."
     ]
   },
-  "customizeSchema":{
-    "itemRequired":["Please add at least one field."]
+  "customizeSchema": {
+    "itemRequired": ["Please add at least one field."]
   },
   "validateEssentialSchema": {
     "tags": {
@@ -639,6 +646,6 @@
     "fileNumOverLimit": ["Please do not upload more than 20 files"],
     "noOpenMindsTemplate": ["No OpenMINDS template found"],
     "fileSizeOverLimit": ["File size must be smaller than 1MB"],
-    "uploadFailed":["Failed to upload the selected schema."]
+    "uploadFailed": ["Failed to upload the selected schema."]
   }
 }

@@ -13,36 +13,6 @@ import time
 _logger = SrvLoggerFactory('api_files_ops_v2').get_logger()
 
 
-class TotalFileCountV2(Resource):
-    @jwt_required()
-    @check_role('uploader')
-    def get(self, project_geid):
-        _res = APIResponse()
-        url = ConfigClass.DATA_SERVICE_V2 + f"containers/{project_geid}/files/count"
-        payload = {}
-        try:
-            if current_identity['role'] != 'admin':
-                if not current_identity.get('project_role'):
-                    _res.set_code(EAPIResponseCode.forbidden)
-                    _res.set_error_msg("Permission Denied")
-                    return _res.to_dict, _res.code
-                if current_identity['project_role'] != 'admin':
-                    payload = {'uploader': current_identity['username']}
-        except Exception as e:
-            _logger.error("Erroring checking project role:"  + str(e))
-            _res.set_code(EAPIResponseCode.internal_error)
-            _res.set_error_msg("Error checking project role:" + str(e))
-            return _res.to_dict, _res.code
-        try:
-            result = requests.get(url, params=payload)
-        except Exception as e:
-            _logger.error("Erroring getting counts"  + str(e))
-            _res.set_code(EAPIResponseCode.internal_error)
-            _res.set_error_msg("Erroring getting counts"  + str(e))
-            return _res.to_dict, _res.code
-        return result.json()
-
-
 class FileTags(Resource):
     @jwt_required()
     def post(self, dataset_id):

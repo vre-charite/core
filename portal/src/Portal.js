@@ -1,7 +1,7 @@
 import React, { useEffect, useState, Suspense, useContext } from 'react';
 import { Switch, Route, Redirect, withRouter } from 'react-router-dom';
 import { authedRoutes, unAuthedRoutes } from './Routes';
-import './Portal.css';
+import './Portal.scss';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   setContainersPermissionCreator,
@@ -456,7 +456,8 @@ function Portal(props) {
                   exact={item.exact || false}
                   render={(props) => {
                     if (!keycloak.authenticated) {
-                      return <Redirect to="/login" />;
+                      window.location.href = window.location.origin + '/vre';
+                      return null;
                     }
                     if (!containersPermission) {
                       return <Loading />;
@@ -475,7 +476,8 @@ function Portal(props) {
                     } else if (res) {
                       return <item.component />;
                     } else {
-                      return <Redirect to="/login" />;
+                      window.location.href = window.location.origin + '/vre';
+                      return null;
                     }
                   }}
                 ></Route>

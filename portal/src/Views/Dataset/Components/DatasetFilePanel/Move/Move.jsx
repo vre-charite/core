@@ -19,14 +19,14 @@ export function Move(props) {
     fetchFileOperations('move', geid, dispatch);
   }, [geid, dispatch]);
 
-  const [runningCount, errorCount, finishCount, initCount] =
+  const [runningCount, errorCount, finishCount, initCount, cancelCount] =
     countStatus(moveOperations);
 
   return (
     <>
       <div className={'list-header'}>
         {initCount} waiting, {runningCount} running, {errorCount} error,{' '}
-        {finishCount} finish
+        {finishCount} finish, {cancelCount} cancelled
       </div>
       <List
         dataSource={moveOperations}

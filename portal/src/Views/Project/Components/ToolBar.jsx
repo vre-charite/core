@@ -1,10 +1,11 @@
 import React, { useState, Component, useEffect } from 'react';
-import { Menu, message, Spin } from 'antd';
+import { Menu, message, Badge } from 'antd';
 import {
   TeamOutlined,
   SettingOutlined,
   LoadingOutlined,
   SearchOutlined,
+  PullRequestOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withRouter } from 'react-router-dom';
@@ -15,7 +16,11 @@ import style from './index.module.scss';
 import { useCurrentProject } from '../../../Utility';
 import AnnouncementButton from './AnnouncementButton';
 import RequestAccessModal from './requestAccessModal';
-import { getResourceRequestsAPI, getWorkbenchInfo } from '../../../APIs';
+import {
+  getResourceRequestsAPI,
+  getWorkbenchInfo,
+  listAllCopyRequests,
+} from '../../../APIs';
 import { useTranslation } from 'react-i18next';
 
 const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
@@ -30,6 +35,7 @@ const ToolBar = ({
 }) => {
   const { t } = useTranslation(['errormessages', 'success']);
   const [isShown, toggleModal] = useState(false);
+  const [showRequestToCoreRedDot, setShowRequestToCoreRedDot] = useState(false);
   const [iconSelected, toggleIcon] = useState(pathname.split('/')[3]);
   const [showRequestModal, toggleRequestModal] = useState(false);
   const [requestItem, setRequestItem] = useState('');
@@ -48,8 +54,15 @@ const ToolBar = ({
         item.permission === 'admin'
       );
     });
+  const collaboratorPermission = _.some(containersPermission, (item) => {
+    return (
+      parseInt(item.id) === parseInt(params.datasetId) &&
+      item.permission === 'collaborator'
+    );
+  });
   let currentProject = useCurrentProject();
   currentProject = currentProject[0];
+  const projectGeid = currentProject?.globalEntityId;
 
   const getWorkbenchInformation = async () => {
     try {
@@ -127,7 +140,23 @@ const ToolBar = ({
       }
     };
 
+    const requestToCorePendingCheck = async () => {
+      const res = await listAllCopyRequests(projectGeid, 'pending', 0, 10);
+      if (res.data.result.length) {
+        const requestToCoreTimeRecord = new Date(
+          localStorage.getItem('requestToCoreTimeRecord'),
+        );
+        const latestRequestToCoreTime = new Date(
+          res.data.result[0].submittedAt,
+        );
+        if (latestRequestToCoreTime > requestToCoreTimeRecord) {
+          setShowRequestToCoreRedDot(true);
+        }
+      }
+    };
+
     getResourceRequests();
+    requestToCorePendingCheck();
   }, [params.datasetId]);
 
   const superSet = (
@@ -149,7 +178,7 @@ const ToolBar = ({
               // eslint-disable-next-line
               target="_blank"
             >
-              <span role="img" class="anticon">
+              <span role="img" className="anticon">
                 <img
                   style={{ height: 10 }}
                   src={require('../../../Images/SuperSet.svg')}
@@ -168,7 +197,7 @@ const ToolBar = ({
               toggleRequestModal(true);
             }}
           >
-            <span role="img" class="anticon">
+            <span role="img" className="anticon">
               <img
                 style={{ height: 10 }}
                 src={require('../../../Images/SuperSet.svg')}
@@ -186,7 +215,7 @@ const ToolBar = ({
             message.info('This project does not have superset configured yet.');
           }}
         >
-          <span role="img" class="anticon">
+          <span role="img" className="anticon">
             <img
               style={{ height: 10 }}
               src={require('../../../Images/SuperSet.svg')}
@@ -219,7 +248,7 @@ const ToolBar = ({
               // eslint-disable-next-line
               target="_blank"
             >
-              <span role="img" class="anticon">
+              <span role="img" className="anticon">
                 <img
                   style={{ width: 14 }}
                   src={require('../../../Images/Guacamole.svg')}
@@ -238,7 +267,7 @@ const ToolBar = ({
               toggleRequestModal(true);
             }}
           >
-            <span role="img" class="anticon">
+            <span role="img" className="anticon">
               <img
                 style={{ width: 14 }}
                 src={require('../../../Images/Guacamole.svg')}
@@ -258,7 +287,7 @@ const ToolBar = ({
             );
           }}
         >
-          <span role="img" class="anticon">
+          <span role="img" className="anticon">
             <img
               style={{ width: 14 }}
               src={require('../../../Images/Guacamole.svg')}
@@ -319,6 +348,11 @@ const ToolBar = ({
     }
   };
 
+  const handleRequestToCoreOnClick = () => {
+    toggleIcon('');
+    setShowRequestToCoreRedDot(false);
+  };
+
   return (
     <>
       <Menu
@@ -367,7 +401,6 @@ const ToolBar = ({
             </Link>
           </Menu.Item>
         )}
-
         {adminPermission && (
           <Menu.Item key="settings" onClick={() => toggleIcon('')}>
             <Link to="settings">
@@ -375,6 +408,35 @@ const ToolBar = ({
               <span>Settings</span>
             </Link>
           </Menu.Item>
+        )}
+        {(adminPermission || collaboratorPermission) && (
+          <Menu.Item key="requestToCore" onClick={handleRequestToCoreOnClick}>
+            <Link to="requestToCore">
+              <PullRequestOutlined />
+              <span>Requests</span>
+            </Link>
+          </Menu.Item>
+        )}
+        {(adminPermission || collaboratorPermission) && (
+          <>
+            {showRequestToCoreRedDot && (
+              <Menu.Item
+                key="request-dot"
+                style={{
+                  marginTop: -30,
+                  width: 10,
+                  height: 10,
+                  marginLeft: 31,
+                  marginBottom: 35,
+                  pointerEvents: 'none',
+                }}
+              >
+                <Badge className={style.badge} status={'error'}>
+                  {' '}
+                </Badge>
+              </Menu.Item>
+            )}
+          </>
         )}
       </Menu>
 

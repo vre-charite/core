@@ -2,7 +2,7 @@ import React from 'react';
 import { Popover, Tooltip } from 'antd';
 import _ from 'lodash';
 
-const displayTitle = (title) => {
+export const displayTitle = (title) => {
   if (title.length > 40) {
     return <Tooltip title={title}>{`${title.slice(0, 40)}...`}</Tooltip>;
   } else {

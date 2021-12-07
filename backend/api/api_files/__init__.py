@@ -4,9 +4,9 @@ from .vfolder_ops import VirtualFolderFiles, VirtualFolder, VirtualFolderInfo
 from .file_ops import FileExistCheck, FileDownloadLog, FilePreDownload, FileInfo, \
     ProcessedFile, FileTransfer, FileActionLogs, FileActions, \
     FileActionTasks, FileValidation, FileRepeatedCheck
-from .file_ops_v2 import TotalFileCountV2, FileTags
+from .file_ops_v2 import FileTags
 from .file_ops_v4 import FileInfoV4
-from .meta import FileMeta, FileMetaHome
+from .meta import FileMeta, FileMetaHome, FileDetail, FileDetailBulk
 from .file_stats import FileStatistics
 from .folder_entity import FolderEntity, FoldersEntity
 from flask_restx import Api, Resource, fields, Namespace
@@ -32,6 +32,8 @@ nfs_entity_ns.add_resource(FoldersEntity, '/entity/folders')
 nfs_entity_ns.add_resource(FolderEntity, '/entity/folder/')
 nfs_entity_ns.add_resource(FileMetaHome, '/entity/meta/')
 nfs_entity_ns.add_resource(FileMeta, '/entity/meta/<geid>')
+nfs_entity_ns.add_resource(FileDetail, '/detail/<file_geid>')
+nfs_entity_ns.add_resource(FileDetailBulk, '/bulk/detail')
 nfs_entity_ns.add_resource(FileStatistics, '/project/<project_geid>/files/statistics')
 nfs_entity_ns.add_resource(FileValidation, '/validation')
 nfs_entity_ns.add_resource(FileRepeatedCheck, '/repeatcheck')
@@ -44,8 +46,6 @@ nfs_entity_ns_v2 = Namespace(
 #nfs_entity_ns_v2.add_resource(FileInfoV2, '/containers/<dataset_id>/files/meta')
 # downstream service dataops_gr -> /containers/<dataset_id/tags is deprecated
 nfs_entity_ns_v2.add_resource(FileTags, '/containers/<dataset_id>/files/tags')
-# nfs_entity_ns_v2.add_resource(TotalFileCountV2, '/containers/<dataset_id>/files/count')
-nfs_entity_ns_v2.add_resource(TotalFileCountV2, '/containers/<project_geid>/files/count')
 
 nfs_upload_ns = Namespace(
     'NFS Data Upload', description='Upload on NFS', path='/v1/upload')

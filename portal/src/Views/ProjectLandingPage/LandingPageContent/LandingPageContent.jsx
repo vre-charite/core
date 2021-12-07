@@ -821,7 +821,7 @@ class LandingPageContent extends Component {
     return (
       <div
         style={{
-          marginLeft: -25,
+          marginLeft: 0,
           marginRight: 25,
           marginTop: 25,
           position: 'relative',

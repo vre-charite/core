@@ -17,7 +17,7 @@ export function Import(props) {
     fetchFileOperations('import', geid, dispatch);
   }, [geid, dispatch]);
 
-  const [runningCount, errorCount, finishCount, initCount] =
+  const [runningCount, errorCount, finishCount, initCount, cancelCount] =
     countStatus(importOperations);
 
   return (
@@ -25,7 +25,7 @@ export function Import(props) {
       <div className={'list-header'}>
         {' '}
         {initCount} waiting, {runningCount} running, {errorCount} error,{' '}
-        {finishCount} finish
+        {finishCount} finish, {cancelCount} cancelled
       </div>
       <List
         dataSource={importOperations}

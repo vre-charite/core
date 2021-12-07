@@ -23,7 +23,7 @@ function logout() {
   tokenManager.clearCookies();
   debouncedBroadcastLogout();
   return keycloak
-    .logout({ redirectUri: window.location.origin + '/vre/login' })
+    .logout({ redirectUri: window.location.origin + '/vre' })
     .then((res) => {});
 }
 

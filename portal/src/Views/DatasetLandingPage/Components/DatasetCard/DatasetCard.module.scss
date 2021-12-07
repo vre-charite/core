@@ -1,15 +1,19 @@
 .dataset-card {
-  background: #ffffff;
-  box-shadow: 0px 1px 7px #0000001a;
-  border-radius: 6px;
-  margin-bottom: 20px;
-  position: relative;
   :global {
+    .ant-card {
+      background: #ffffff;
+      box-shadow: 0px 1px 7px #0000001a;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      position: relative;
+    }
     .ant-card-body {
       padding-top: 18px !important;
     }
   }
-  .left {
+}
+
+.left {
     float: left;
     max-width: calc(100% - 240px);
     .dataset-card-note {
@@ -79,4 +83,3 @@
     font-size: 12px;
     margin-top: 10px;
   }
-}

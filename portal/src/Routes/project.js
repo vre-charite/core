@@ -3,6 +3,7 @@ import Teams from '../Views/Project/Teams/Teams';
 import Settings from '../Views/Project/Settings/Settings';
 import Search from '../Views/Project/Search/Search';
 import Announcement from '../Views/Project/Announcement/Announcement';
+import RequestToCore from '../Views/Project/RequestToCore/RequestToCore';
 
 const routes = [
   {
@@ -29,6 +30,11 @@ const routes = [
     path: '/announcement',
     component: Announcement,
     protectedType: 'projectMember',
+  },
+  {
+    path: '/requestToCore',
+    component: RequestToCore,
+    protectedType: 'projectCollab',
   },
 ];
 

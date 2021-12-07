@@ -256,13 +256,13 @@ class AppHeader extends Component {
             key="logo"
             style={{ marginRight: '27px', borderBottom: 0 }}
           >
-            <Link to="/landing">
+            <a href="/vre">
               <img
                 src={require('../../Images/vre-logo.png')}
                 style={{ height: '40px', marginLeft: -45 }}
                 alt="indoc-icon"
               />
-            </Link>
+            </a>
           </Menu.Item>
           {!this.props.unauthorized && (
             <Menu.Item key="uploader">

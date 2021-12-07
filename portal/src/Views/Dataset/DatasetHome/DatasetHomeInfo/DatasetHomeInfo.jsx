@@ -46,12 +46,12 @@ export default function DatasetHomeInfo(props) {
     basicInfo: { geid },
   } = useSelector((state) => state.datasetInfo);
   const values = extractValues(basicInfo);
-  const {t} = useTranslation(["errormessages"])
+  const { t } = useTranslation(['errormessages']);
   useEffect(() => {
     if (hasInit) {
       form.setFieldsValue(values);
     }
-  }, [hasInit,geid]);
+  }, [hasInit, geid]);
 
   const onClickEditButton = () => {
     setEditMode(true);
@@ -71,7 +71,7 @@ export default function DatasetHomeInfo(props) {
       dispatch(datasetInfoCreators.setBasicInfo(res.data.result));
       setEditMode(false);
     } catch (error) {
-      if(error.message){
+      if (error.message) {
         message.error(t('errormessages:updateDatasetInfo.default.0'));
       }
     } finally {
@@ -108,7 +108,7 @@ export default function DatasetHomeInfo(props) {
 
           <Form.Item rules={validators.authors} label="Authors" name="authors">
             {editMode ? (
-              <Select placeholder="Input authors" mode="tags" />
+              <Select placeholder="Enter authors" mode="tags" />
             ) : (
               <span className={styles['property-value']}>
                 {values?.authors ? values?.authors?.join(', ') : 'N/A'}
@@ -118,7 +118,7 @@ export default function DatasetHomeInfo(props) {
 
           <Form.Item label="Type" name="type">
             {editMode ? (
-              <Select disabled >
+              <Select disabled>
                 {typeOptions.map((item) => (
                   <Option value={item}>{item}</Option>
                 ))}
@@ -149,7 +149,9 @@ export default function DatasetHomeInfo(props) {
               </Select>
             ) : (
               <span className={styles['property-value']}>
-                {values?.modality?.length ? values?.modality?.join(', ') : 'N/A'}
+                {values?.modality?.length
+                  ? values?.modality?.join(', ')
+                  : 'N/A'}
               </span>
             )}
           </Form.Item>
@@ -162,7 +164,7 @@ export default function DatasetHomeInfo(props) {
             {editMode ? (
               <Select
                 className={styles['select']}
-                placeholder="Input Collection Method"
+                placeholder="Enter Collection Method"
                 mode="tags"
                 allowClear
               ></Select>

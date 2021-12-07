@@ -76,6 +76,7 @@ import ZipContentPlugin from './Plugins/ZipContent/ZipContentPlugin';
 import DeleteFilesPlugin from './Plugins/DeleteFiles/DeleteFilesPlugin';
 import ManifestManagementPlugin from './Plugins/ManifestManagement/ManifestManagementPlugin';
 import AddTagsPlugin from './Plugins/AddTags/AddTagsPlugin';
+import RequestToCorePlugin from './Plugins/RequestToCore/RequestToCorePlugin';
 import DatasetsPlugin from './Plugins/Datasets/DatasetsPlugin';
 import CreateFolderPlugin from './Plugins/CreateFolder/CreateFolderPlugin';
 import { tokenManager } from '../../../../../Service/tokenManager';
@@ -287,7 +288,6 @@ function RawTable(props) {
       key: 'nodeLabel',
       width: 60,
       render: (text, record) => {
-        console.log(record, record.name, record.name.split('.').pop());
         if (record.nodeLabel.indexOf('Folder') !== -1) {
           if (checkGreenAndCore(panelKey) && currentRouting?.length === 0) {
             return <UserOutlined style={{ float: 'right' }} />;
@@ -361,7 +361,7 @@ function RawTable(props) {
                 refreshFiles({
                   geid: recordGeid,
                   sourceType: 'Folder',
-                  node: {nodeLabel: record.nodeLabel},
+                  node: { nodeLabel: record.nodeLabel },
                   resetTable: true,
                 });
               }
@@ -701,7 +701,7 @@ function RawTable(props) {
               ? null
               : routeToGo.globalEntityId,
           sourceType: 'Folder',
-          node: {nodeLabel: routeToGo.labels},
+          node: { nodeLabel: routeToGo.labels },
           resetTable: true,
         });
         dispatch(setTableLayoutReset(panelKey));
@@ -1045,7 +1045,7 @@ function RawTable(props) {
       partial,
       sourceType,
       resetTable = false,
-      node = null
+      node = null,
     } = params;
     if (tableLoading) return;
     setTableLoading(true);
@@ -1281,6 +1281,26 @@ function RawTable(props) {
     },
     {
       condition:
+        !isRootFolder &&
+        (props.type === DataSourceType.GREENROOM_HOME ||
+          props.type === DataSourceType.GREENROOM) &&
+        hasSelected &&
+        permission === 'collaborator',
+      elm: (
+        <RequestToCorePlugin
+          tableState={tableState}
+          setTableState={setTableState}
+          selectedRowKeys={selectedRowKeys}
+          clearSelection={clearSelection}
+          selectedRows={selectedRows}
+          panelKey={panelKey}
+          currentRouting={currentRouting}
+          orderRouting={orderRouting}
+        />
+      ),
+    },
+    {
+      condition:
         props.type === DataSourceType.CORE_VIRTUAL_FOLDER &&
         !currentRouting?.length &&
         !hasSelected,
@@ -1366,7 +1386,7 @@ function RawTable(props) {
                             geid,
                             sourceType: 'Folder',
                             resetTable: true,
-                            node: {nodeLabel: v.labels}
+                            node: { nodeLabel: v.labels },
                           });
                           dispatch(setTableLayoutReset(panelKey));
                         }}

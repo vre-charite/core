@@ -33,6 +33,8 @@ import { myDatasetList } from './myDatasetList';
 import { datasetInfo } from './datasetInfo';
 import { datasetFileOperations } from './datasetFileOperations';
 import { schemaTemplatesInfo } from './schemaTemplatesInfo';
+import { fileExplorerTable } from './fileExplorerTable';
+import request2Core from './request2Core';
 
 const appReducer = combineReducers({
   datasetList,
@@ -68,6 +70,8 @@ const appReducer = combineReducers({
   datasetInfo,
   datasetFileOperations,
   schemaTemplatesInfo,
+  fileExplorerTable,
+  request2Core,
 });
 
 const rootReducer = (state, action) => {

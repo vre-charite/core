@@ -170,7 +170,7 @@ export function ExistingSchemaContents(props) {
     dispatch(schemaTemplatesActions.setSchemaTypes(activeKey));
   };
   return (
-    <div style={{ height: '100%' }}>
+    <div style={{ height: '100%', position:'relative' }}>
       <Tabs
         className={styles['tabs']}
         tabPosition={'left'}

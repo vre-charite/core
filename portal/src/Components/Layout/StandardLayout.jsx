@@ -3,8 +3,9 @@ import { Layout } from 'antd';
 import AppHeader from './Header';
 import Footer from './Footer';
 import LeftSider from './LeftSider';
-import { withRouter } from 'react-router-dom';
+import { withRouter, Switch } from 'react-router-dom';
 import { connect } from 'react-redux';
+import styles from './index.module.scss';
 
 const { Content } = Layout;
 function StandardLayout(props) {
@@ -13,7 +14,7 @@ function StandardLayout(props) {
     initFunc = () => {},
     leftContent,
     children,
-    leftMargin=true,
+    leftMargin = true,
   } = props;
 
   useEffect(() => {
@@ -26,7 +27,10 @@ function StandardLayout(props) {
       <AppHeader />
       <Content>
         <Layout>
-          <Layout style={{ marginLeft: leftMargin?'50px':0 }}>
+          <Layout
+            style={{ marginLeft: leftMargin ? '50px' : 0 }}
+            className={styles.layout_wrapper}
+          >
             {children}
             <Footer />
           </Layout>

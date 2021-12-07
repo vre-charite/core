@@ -437,13 +437,8 @@ class UserManagement extends Component {
   };
 
   render() {
-    const {
-      sidePanel,
-      tableWidth,
-      panelWidth,
-      currentRecord,
-      tabPaneKey,
-    } = this.state;
+    const { sidePanel, tableWidth, panelWidth, currentRecord, tabPaneKey } =
+      this.state;
     const { username, showRedDot } = this.props;
 
     let columns = [
@@ -664,7 +659,7 @@ class UserManagement extends Component {
                     ></CreateEmailModal>
                     <div
                       style={{
-                        marginLeft: -25,
+                        marginLeft: 0,
                         marginRight: 25,
                         position: 'relative',
                         boxShadow: '0px 3px 6px #0000001A',

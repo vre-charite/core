@@ -261,11 +261,7 @@ async function listAllCopy2CoreFiles(projectCode, sessionId) {
     url: `/v1/files/actions/tasks?action=data_transfer&project_code=${projectCode}&session_id=${sessionId}`,
     method: 'GET',
   });
-  const resFolder = await serverAxios({
-    url: `/v1/files/actions/tasks?action=data_transfer_folder&project_code=${projectCode}&session_id=${sessionId}`,
-    method: 'GET',
-  });
-  return [...res.data.result, ...resFolder.data.result];
+  return [...res.data.result];
 }
 
 function loadDeletedFiles(projectCode, sessionId) {
@@ -587,6 +583,31 @@ function createSubFolderApi(
   });
 }
 
+function requestToCoreAPI(
+  projectGeid,
+  entityGeids,
+  destinationFolderGeid,
+  sourceFolderGeid,
+  sourcePath,
+  destinationPath,
+  requestNote,
+  userName,
+) {
+  return serverAxios({
+    url: `/v1/request/copy/${projectGeid}`,
+    method: 'POST',
+    data: {
+      entity_geids: entityGeids,
+      destination_geid: destinationFolderGeid,
+      source_geid: sourceFolderGeid,
+      source_path: sourcePath,
+      destination_path: destinationPath,
+      note: requestNote,
+      submitted_by: userName,
+    },
+  });
+}
+
 function addToDatasetsAPI(datasetGeid, payLoad) {
   return serverAxios({
     url: `/v1/dataset/${datasetGeid}/files`,
@@ -604,6 +625,51 @@ function getDatasetsListingAPI(username, payload) {
   });
 }
 
+function listFilesInRequestApi(requestGeid, projectGeid, query, partial) {
+  return serverAxios({
+    url: `/v1/request/copy/${projectGeid}/files`,
+    method: 'GET',
+    params: {
+      request_geid: requestGeid,
+      query,
+      partial,
+    },
+  });
+}
+
+function listAllCopyRequests(projectGeid, status, pageNo, pageSize) {
+  return serverAxios({
+    url: `/v1/request/copy/${projectGeid}`,
+    method: 'get',
+    params: {
+      status: status,
+      page: pageNo,
+      page_size: pageSize,
+    },
+  });
+}
+
+function requestPendingFilesAPI(projectGeid, requestId) {
+  return serverAxios({
+    url: `/v1/request/copy/${projectGeid}/pending-files`,
+    method: 'GET',
+    params: {
+      request_id: requestId
+    },
+  });
+}
+
+function requestCompleteAPI(data) {
+  return serverAxios({
+    url: `/v1/request/copy/${data.projectGeid}`,
+    method: 'PUT',
+    data: {
+      request_id: data.requestId,
+      status: data.status,
+      review_notes: data.reviewNotes,
+    },
+  });
+}
 export {
   getDatasetsAPI,
   createProjectAPI,
@@ -653,4 +719,9 @@ export {
   createSubFolderApi,
   addToDatasetsAPI,
   getDatasetsListingAPI,
+  requestToCoreAPI,
+  listFilesInRequestApi,
+  listAllCopyRequests,
+  requestPendingFilesAPI,
+  requestCompleteAPI,
 };

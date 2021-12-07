@@ -32,7 +32,7 @@ export function ExplorerTree(props) {
 
   const dispatch = useDispatch();
 
-  function titleRender(title, nodeKey, isLeaf, fileSize, createBy,labels) {
+  function titleRender(title, nodeKey, isLeaf, fileSize, createBy, labels) {
     return (
       <ExplorerTreeActionBar
         title={title}
@@ -90,7 +90,7 @@ export function ExplorerTree(props) {
         node.isLeaf,
         node.fileSize,
         node.createBy ? node.createBy : node.operator,
-        node.labels
+        node.labels,
       );
       if (node.children) {
         return {
@@ -132,7 +132,7 @@ export function ExplorerTree(props) {
     }
   };
   const treeDataElm = getTreeDataElm(_.cloneDeep(treeData));
-  
+
   return treeLoading ? (
     <div className={styles['explorer-tree-loading']}>
       <LoadingOutlined

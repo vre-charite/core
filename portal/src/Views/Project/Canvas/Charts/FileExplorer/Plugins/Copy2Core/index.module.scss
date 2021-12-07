@@ -10,6 +10,8 @@
 
 .copy_to_core_modal {
   :global {
+    .ant-modal-body {
+    }
     .ant-modal-content {
       border-radius: 6px;
     }
@@ -26,12 +28,60 @@
 }
 
 .copy_to_core_tree {
+  max-height: 70vh;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  margin: -24px -24px -24px 0;
+  padding-top: 24px;
+  padding-bottom: 24px;
   :global {
     .ant-tree-node-content-wrapper {
       margin-top: 2px;
     }
     .ant-tree-iconEle {
       margin-right: 10px;
+    }
+  }
+}
+
+.copy2core_popover {
+  :global {
+    .ant-popover-content {
+      margin-left: 12px;
+      margin-top: -8px;
+      .ant-popover-arrow {
+        display: none;
+      }
+      .ant-popover-inner {
+        width: 475px;
+        height: auto;
+        border-radius: 8px;
+        .ant-popover-inner-content {
+          padding: 10px 16px;
+          p {
+            font-size: 12px;
+            font-style: italic;
+            letter-spacing: 0px;
+            color: #595959;
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+  }
+}
+
+.popover {
+  margin-left: 15px;
+  max-width: 300px !important;
+  span:nth-child(2) {
+    font-size: 12px;
+    font-style: italic;
+    text-decoration: underline;
+  }
+  :global {
+    .anticon {
+      font-size: 12px !important;
     }
   }
 }

@@ -38,7 +38,7 @@ export default function DatasetListActions(props) {
 
   return (
     <div>
-{/*       <span style={{ marginRight: '10px' }}>Sort by</span>
+      {/*       <span style={{ marginRight: '10px' }}>Sort by</span>
       <Dropdown overlay={sortPanel} placement="bottomRight">
         <Button style={{ borderRadius: '6px' }}>
           <SortAscendingOutlined />
@@ -57,7 +57,7 @@ export default function DatasetListActions(props) {
         }}
         icon={<PlusOutlined />}
       >
-        New Create
+        Create New
       </Button>
     </div>
   );

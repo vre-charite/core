@@ -64,5 +64,15 @@
   },
   "uploadOpenMindsSchema": {
     "default": ["Schema uploaded successfully"]
+  },
+  "requestToCore": {
+    "default": ["Request has been successfully sent"]
+  },
+  "completeRequest": {
+    "default": ["Request has been successfully completed"]
+  },
+  "reviewRequestFiles": {
+    "approve": ["Selected file(s) have been approved successfully"],
+    "deny": ["Selected file(s) have been denied successfully"]
   }
 }

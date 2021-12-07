@@ -33,6 +33,7 @@ from .api_dataset.api_schema import APISchema
 from .api_dataset.api_schema_template import APIDatasetSchemaTemplateProxy
 from .api_dataset.api_validate import APIValidator
 from .api_kg.api_kg_resource import APIKGResourceProxy
+from .api_copy_request.copy_request import APICopyRequest
 
 apis = [
     APIHelloWorld(),
@@ -71,7 +72,8 @@ apis = [
     APISchema(),
     APIDatasetSchemaTemplateProxy(),
     APIValidator(),
-    APIKGResourceProxy()
+    APIKGResourceProxy(),
+    APICopyRequest()
 ]
 
 

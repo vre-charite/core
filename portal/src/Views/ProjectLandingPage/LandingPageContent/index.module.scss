@@ -83,60 +83,45 @@
 }
 
 .searchCard {
-  margin: 0 !important;
   border-radius: 0px 0px 6px 6px;
   box-shadow: 0px 1px 7px #0000001a;
   opacity: 1;
   position: absolute !important;
-  top: 60px;
   top: 44px;
   right: 24px;
   left: 24px;
-}
-
-.firstInputLine {
-  width: 100%;
-}
-
-.firstInputLine > div {
-  display: inline-block;
-  margin-right: 1%;
-}
-
-.firstInputLine {
-  :global {
-    .ant-input {
-      border-radius: 6px;
+  .firstInputLine {
+    width: 100%;
+    > div {
+      display: inline-block;
+      margin-right: 1%;
     }
-    .ant-picker {
-      border-radius: 6px;
-    }
-    .ant-select {
-      border-radius: 6px;
-    }
-    .ant-select-selector {
-      border-radius: 6px !important;
+    :global {
+      .ant-input {
+        border-radius: 6px;
+      }
+      .ant-picker {
+        border-radius: 6px;
+      }
+      .ant-select {
+        border-radius: 6px;
+      }
+      .ant-select-selector {
+        border-radius: 6px !important;
+      }
     }
   }
-}
-
-.secondInputLine {
-  display: flex;
-  align-items: flex-end;
-}
-
-.secondInputLine > div {
-  display: inline-block;
-}
-
-.secondInputLine {
-  :global {
-    .ant-input {
-      border-radius: 6px;
-    }
-    .ant-btn {
-      border-radius: 6px !important;
-      margin-right: 2%;
+  .secondInputLine {
+    display: flex;
+    align-items: flex-end;
+    :global {
+      .ant-input {
+        border-radius: 6px;
+      }
+      .ant-btn {
+        border-radius: 6px !important;
+        margin-right: 2%;
+      }
     }
   }
 }

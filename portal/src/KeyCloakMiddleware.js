@@ -388,8 +388,13 @@ function KeyCloakMiddleware() {
                 <Route
                   path="/"
                   render={(props) => {
-                    // General 404 when all rules not match the url
-                    return <Redirect to="/404" />;
+                    if (props.location.pathname === '/') {
+                      // direct to login page
+                      return <Redirect to="/login" />;
+                    } else {
+                      // General 404 when all rules not match the url
+                      return <Redirect to="/404" />;
+                    }
                   }}
                 ></Route>
               </Switch>

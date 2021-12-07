@@ -56,6 +56,8 @@ import {
   DATASET_FILE_OPERATION,
   SET_TABLE_RESET,
   SCHEMA_TEMPLATES,
+  FILE_EXPLORER_TABLE as FILE_EXPLORER_TABLE,
+  COPY_REQUEST,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -496,6 +498,112 @@ export const schemaTemplatesActions = {
   }),
   showTplDropdownList: (payload) => ({
     type: SCHEMA_TEMPLATES.SHOW_TEMPLATES_DROPDOWN_LIST,
+    payload,
+  }),
+};
+
+export const fileExplorerTableActions = {
+  setLoading: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_LOADING,
+    payload,
+  }),
+  setCurrentPlugin: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_CURRENT_PLUGIN,
+    payload,
+  }),
+  setData: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_DATA,
+    payload,
+  }),
+  setRoute: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_ROUTE,
+    payload,
+  }),
+  setPage: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_PAGE,
+    payload,
+  }),
+  setPageSize: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_PAGE_SIZE,
+    payload,
+  }),
+  setTotal: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_TOTAL,
+    payload,
+  }),
+  setSortBy: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_SORT_BY,
+    payload,
+  }),
+  setSortType: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_SORT_ORDER,
+    payload,
+  }),
+  setFilter: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_FILTER,
+    payload,
+  }),
+  setSelections: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_SELECTION,
+    payload,
+  }),
+  setDataOriginal: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_DATA_ORIGINAL,
+    payload,
+  }),
+  setColumnsCompMap: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_COLUMNS_COMP_MAP,
+    payload,
+  }),
+  setAdd: (payload) => ({
+    type: FILE_EXPLORER_TABLE.ADD,
+    payload,
+  }),
+  clear: (payload) => ({
+    type: FILE_EXPLORER_TABLE.REMOVE,
+    payload,
+  }),
+  setPropertyRecord: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_PROPERTY_RECORD,
+    payload,
+  }),
+  setSidePanelOpen: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_SIDE_PANEL_OPEN,
+    payload,
+  }),
+  setSourceType: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_SOURCE_TYPE,
+    payload,
+  }),
+  refreshTable: (payload) => ({
+    type: FILE_EXPLORER_TABLE.REFRESH_TABLE,
+    payload,
+  }),
+  setCurrentGeid: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_CURRENT_GEID,
+    payload,
+  }),
+  setHardFreshKey: (payload) => ({
+    type: FILE_EXPLORER_TABLE.SET_HARD_REFRESH_KEY,
+    payload,
+  }),
+};
+
+export const request2CoreActions = {
+  setStatus: (payload) => ({
+    type: COPY_REQUEST.SET_STATUS,
+    payload,
+  }),
+  setReqList: (payload) => ({
+    type: COPY_REQUEST.SET_REQ_LIST,
+    payload,
+  }),
+  setActiveReq: (payload) => ({
+    type: COPY_REQUEST.SET_ACTIVE_REQ,
+    payload,
+  }),
+  setPagination: (payload) => ({
+    type: COPY_REQUEST.SET_PAGINATION,
     payload,
   }),
 };

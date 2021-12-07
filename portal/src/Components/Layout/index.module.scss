@@ -4,6 +4,9 @@
   max-width: 560px;
   margin: 30px auto;
 }
+.layout_wrapper {
+  overflow-y: hidden;
+}
 
 .forgot {
   @include media('>576px') {
@@ -208,10 +211,19 @@
   color: #1c5388 !important;
   margin-right: 2%;
 }
+.icons-fail {
+  width: 18px;
+  height: 12px;
+  color: #ff4d4f !important;
+  margin-right: 2%;
+}
 .siteHeader {
   :global {
-    .ant-popover-inner-content {
-      padding: 0;
+    .ant-popover-inner {
+      height: 0px !important;
+      .ant-popover-inner-content {
+        padding: 0;
+      }
     }
   }
 }

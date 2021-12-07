@@ -14,6 +14,7 @@ const OpenMindsSchemaTabContents = (props) => {
     tabContentStyle,
   } = props;
 
+  
   return (
     <>
       <div className={styles.upload_btn}>

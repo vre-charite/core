@@ -122,8 +122,8 @@ function CoreDirTree(props) {
         : targetGeid,
       page,
       PAGE_SIZE,
-      'time_created',
-      'desc',
+      'name',
+      'asc',
       { archived: false },
       'VRECore',
       isHome ? 'Project' : 'Folder',
@@ -138,7 +138,8 @@ function CoreDirTree(props) {
       return {
         title: getTitle(v.name),
         key: v.globalEntityId,
-        icon: // when click on "Core" or "...", all subfolders should show user icon.
+        // when click on "Core" or "...", all subfolders should show user icon.
+        icon:
           foundTreeNodePath.length === 0 ||
           foundTreeNodePath[0].title === LOAD_MORE_TEXT ? (
             <UserOutlined />

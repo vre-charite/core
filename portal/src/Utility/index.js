@@ -24,7 +24,8 @@ import { validateTag } from './validateTag';
 import { formatRole, convertRole } from './roleConvert';
 import { convertUTCDateToLocalDate, timeConvert, timezone } from './timeCovert';
 import { partialString } from './column';
-import { nestedLoop } from './fileTree';
+import { displayTitle, nestedLoop } from './fileTree';
+import { fileNameOrPathDisplay } from './fileNameOrPathDisplay';
 import { pathsMap } from './pathsMap';
 import { getHighlightedText, hightLightCaseInsensitive } from './highlight';
 
@@ -60,6 +61,8 @@ export {
   trimString,
   partialString,
   pathsMap,
+  fileNameOrPathDisplay,
+  displayTitle,
   nestedLoop,
   getHighlightedText,
   hightLightCaseInsensitive,
@@ -72,7 +75,7 @@ export {
   getTags,
   usePrevious,
 };
-
+export { randomTxt } from './randomTxt';
 export { logout, refresh, login } from './keycloakActions';
 export {
   actionType,

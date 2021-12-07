@@ -230,6 +230,7 @@ class FileTags extends Component {
     const { inputVisible, inputValue, errorMessage, edit, manifest } =
       this.state;
     const projectSystemTags = manifest?.tags;
+
     const systemTags = this.state.tagsEdited.filter(
       (v) => projectSystemTags && projectSystemTags.indexOf(v) !== -1,
     );
@@ -240,7 +241,8 @@ class FileTags extends Component {
       <>
         {systemTags &&
         systemTags.length &&
-        this.props.panelKey === PanelKey.GREENROOM_HOME ? (
+        (this.props.panelKey === PanelKey.GREENROOM_HOME ||
+          this.props.panelKey === PanelKey.GREENROOM) ? (
           <div style={{ marginBottom: 10 }}>
             <p
               style={{

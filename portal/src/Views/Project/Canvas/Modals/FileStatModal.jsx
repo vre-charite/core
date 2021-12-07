@@ -10,6 +10,7 @@ import {
   Empty,
   Spin,
   Space,
+  Tooltip,
 } from 'antd';
 import moment from 'moment';
 import _ from 'lodash';
@@ -168,6 +169,7 @@ const FileStatModal = (props) => {
     if (values.action === 'delete') operation = 'data_delete';
     if (values.action === 'download') operation = 'data_download';
     if (values.action === 'upload') operation = 'data_upload';
+    if (values.action === 'all') operation = 'all';
 
     const paginationParams = {
       page: 0,
@@ -204,6 +206,7 @@ const FileStatModal = (props) => {
     if (action === 'delete') operation = 'data_delete';
     if (action === 'download') operation = 'data_download';
     if (action === 'upload') operation = 'data_upload';
+    if (action === 'all') operation = 'all';
 
     const paginationParams = {
       page: page - 1,
@@ -240,18 +243,24 @@ const FileStatModal = (props) => {
         <Timeline style={{ marginTop: 40 }}>
           {filterData &&
             filterData.map((i) => {
-              let { createdTime, displayName, operator, target, outcome } =
-                i['source'];
+              let {
+                action,
+                createdTime,
+                displayName,
+                operator,
+                target,
+                outcome,
+              } = i['source'];
               let localTime = moment(createdTime * 1000).format(
                 'YYYY-MM-DD HH:mm:ss',
               );
 
               let operate = 'copied';
-              if (action === 'delete') operate = 'deleted';
-              if (action === 'download') operate = 'downloaded';
-              if (action === 'upload') operate = 'uploaded';
+              if (action === 'data_delete') operate = 'deleted';
+              if (action === 'data_download') operate = 'downloaded';
+              if (action === 'data_upload') operate = 'uploaded';
 
-              if (['deleted', 'copied'].includes(operate)) {
+              if (['copied'].includes(operate)) {
                 const originPathArray = target && target.split('/');
                 const pathArray = outcome && outcome.split('/');
 
@@ -268,6 +277,26 @@ const FileStatModal = (props) => {
                       {originPathName.join('/')} to {pathName.join('/')} at{' '}
                       {localTime}
                     </span>
+                  </Timeline.Item>
+                );
+              } else if (operate === 'deleted') {
+                const originPathArray = target && target.split('/');
+                const originPathName =
+                  originPathArray &&
+                  originPathArray.slice(0, originPathArray.length - 1);
+
+                return (
+                  <Timeline.Item color="green">
+                    <span>
+                      {operator} {operate} {displayName} from{' '}
+                      {originPathName.join('/')} at {localTime}
+                    </span>
+                  </Timeline.Item>
+                );
+              } else if (operate === 'uploaded') {
+                return (
+                  <Timeline.Item color="green">
+                    {operator} {operate} {target} at {localTime}
                   </Timeline.Item>
                 );
               }
@@ -369,6 +398,7 @@ const FileStatModal = (props) => {
                       <Option value="copy">Copy</Option>
                     ) : null}
                     <Option value="delete">Delete</Option>
+                    <Option value="all">All</Option>
                   </Select>
                 </Form.Item>
               </div>

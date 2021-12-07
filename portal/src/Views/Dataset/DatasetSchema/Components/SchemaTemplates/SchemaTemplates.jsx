@@ -88,35 +88,36 @@ const SchemaTemplates = (props) => {
         <SchemaTemplatesSelector />
       ) : null}
 
-      {schemasTypes === 'Default' && defaultPanes.length ? (
-        <Tabs
-          className={styles.tabs}
-          type="editable-card"
-          hideAdd={true}
-          onChange={handleDefaultSchemaTabChange}
-          activeKey={defaultSchemaActiveTabKey}
-          onEdit={(targetTplKey, action) =>
-            handleTabsPanelEdit(targetTplKey, action, 'Default')
-          }
-        >
-          {defaultPanes.map((pane) => (
-            <TabPane
-              tab={pane.title}
-              key={pane.tplKey}
-              closable={pane.title !== ESSENTIAL_TPL_NAME}
-              // disabled={addMode && defaultSchemaActiveTabKey !== pane.key}
-            >
-              <SchemaForm pane={pane}></SchemaForm>
-            </TabPane>
-          ))}
-        </Tabs>
-      ) : (
-        <Spin
-          indicator={<LoadingOutlined />}
-          className={styles.loading_icon}
-          size="large"
-        />
-      )}
+      {schemasTypes === 'Default' &&
+        (defaultPanes.length ? (
+          <Tabs
+            className={styles.tabs}
+            type="editable-card"
+            hideAdd={true}
+            onChange={handleDefaultSchemaTabChange}
+            activeKey={defaultSchemaActiveTabKey}
+            onEdit={(targetTplKey, action) =>
+              handleTabsPanelEdit(targetTplKey, action, 'Default')
+            }
+          >
+            {defaultPanes.map((pane) => (
+              <TabPane
+                tab={pane.title}
+                key={pane.tplKey}
+                closable={pane.title !== ESSENTIAL_TPL_NAME}
+                // disabled={addMode && defaultSchemaActiveTabKey !== pane.key}
+              >
+                <SchemaForm pane={pane}></SchemaForm>
+              </TabPane>
+            ))}
+          </Tabs>
+        ) : (
+          <Spin
+            indicator={<LoadingOutlined />}
+            className={styles.loading_icon}
+            size="large"
+          />
+        ))}
       {schemasTypes === 'OpenMinds' ? (
         schemaPreviewGeid ? (
           <div className="json_previwer">

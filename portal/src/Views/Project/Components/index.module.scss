@@ -5,54 +5,20 @@
 }
 
 .upperMenu {
+  background-color: #003262 !important;
+  position: fixed !important;
+  top: 100px;
+  width: 51px;
+  max-width: 51px;
+  min-width: 51px;
   :global {
-    background-color: #003262 !important;
-    position: fixed !important;
-    top: 120px;
-    width: 51px;
-    max-width: 51px;
-    min-width: 51px;
-  }
-}
-
-.lowerMenu {
-  :global {
-    background-color: #003262 !important;
-    position: fixed !important;
-    bottom: 20px;
-    width: 51px;
-    max-width: 51px;
-    min-width: 51px;
-  }
-}
-
-.upperMenu {
-  :global {
+    .ant-menu-item {
+      left: -14px !important;
+      margin-bottom: 10px !important;
+    }
     .anticon {
       color: #f0f0f0;
     }
-  }
-}
-
-.upperMenu {
-  :global {
-    .ant-menu-item {
-      margin-bottom: 25px !important;
-      left: -14px !important;
-    }
-  }
-}
-
-.lowerMenu {
-  :global {
-    .ant-menu-item {
-      left: -14px !important;
-    }
-  }
-}
-
-.upperMenu {
-  :global {
     .ant-menu-item-selected {
       .anticon {
         color: #1890ff;
@@ -60,6 +26,22 @@
     }
   }
 }
+
+.lowerMenu {
+  background-color: #003262 !important;
+  position: fixed !important;
+  bottom: 20px;
+  width: 51px;
+  max-width: 51px;
+  min-width: 51px;
+  :global {
+    .ant-menu-item {
+      left: -14px !important;
+      margin-bottom: 15px !important;
+    }
+  }
+}
+
 .upperMenu,
 .lowerMenu {
   :global {
@@ -74,7 +56,6 @@
         }
       }
       margin-top: 0px !important;
-      margin-bottom: 20px !important;
     }
   }
 }
@@ -266,4 +247,15 @@
 
 .modal_content_button {
   margin-top: 40px;
+}
+
+.badge {
+  position: relative;
+  :global {
+    .ant-badge-status-dot {
+      position: absolute;
+      top: 22px;
+      left: -6px;
+    }
+  }
 }

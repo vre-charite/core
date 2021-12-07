@@ -136,18 +136,28 @@ export default function AnnouncementButton({ currentProject }) {
           const userRes = await getUserAnnouncementApi(username);
           announcementsRaw = res?.data?.result?.result;
           setAnnouncements(announcementsRaw);
-          const latestAnnouncementId = userRes.data.result[ _.camelCase(`announcement_${currentProject?.code}`) ];
-          if(!latestAnnouncementId && announcementsRaw[0]?.id){
+          const latestAnnouncementId =
+            userRes.data.result[
+              _.camelCase(`announcement_${currentProject?.code}`)
+            ];
+          if (!latestAnnouncementId && announcementsRaw[0]?.id) {
             setUnread(true);
           }
-          if(latestAnnouncementId && (announcementsRaw[0]?.id !== latestAnnouncementId)){
+          if (
+            latestAnnouncementId &&
+            announcementsRaw[0]?.id !== latestAnnouncementId
+          ) {
             setUnread(true);
           }
         } catch (err) {
           console.log(err);
-          const errorMessage = new ErrorMessager(namespace.announcement.getUserAnnouncementApi);
-          errorMessage.triggerMsg(null,null,{projectCode:currentProject?.code})
-/*           message.error(
+          const errorMessage = new ErrorMessager(
+            namespace.announcement.getUserAnnouncementApi,
+          );
+          errorMessage.triggerMsg(null, null, {
+            projectCode: currentProject?.code,
+          });
+          /*           message.error(
             `Failed to get announcements for project ${currentProject?.code}`,
           ); */
         }
@@ -158,7 +168,11 @@ export default function AnnouncementButton({ currentProject }) {
 
   const onClick = () => {
     setUnread(false);
-    putUserAnnouncementApi(keycloak.tokenParsed.preferred_username,currentProject?.code,announcements[0]?.id);
+    putUserAnnouncementApi(
+      keycloak.tokenParsed.preferred_username,
+      currentProject?.code,
+      announcements[0]?.id,
+    );
   };
   const onMouseEnter = () => {
     if (!visible) {
@@ -179,7 +193,11 @@ export default function AnnouncementButton({ currentProject }) {
     setVisible(visible);
     if (timeReach && !visible) {
       setUnread(false);
-      putUserAnnouncementApi(keycloak.tokenParsed.preferred_username,currentProject?.code,announcements[0]?.id);
+      putUserAnnouncementApi(
+        keycloak.tokenParsed.preferred_username,
+        currentProject?.code,
+        announcements[0]?.id,
+      );
     }
     if (!visible) {
       clearTimeout(timeoutId);
@@ -194,7 +212,7 @@ export default function AnnouncementButton({ currentProject }) {
           content={content}
           mouseEnterDelay={0.5}
           placement="rightTop"
-          title={'Announcement'}
+          title={'Announcements'}
           onVisibleChange={onVisibleChange}
           getPopupContainer={() => {
             return document.getElementById('global_site_header');
@@ -211,7 +229,7 @@ export default function AnnouncementButton({ currentProject }) {
           </div>
         </Popover>
       ) : (
-        <Tooltip title="Announcement" placement="left">
+        <Tooltip title="Announcements" placement="left">
           <Link to="announcement">
             <NotificationOutlined />
           </Link>
@@ -220,4 +238,3 @@ export default function AnnouncementButton({ currentProject }) {
     </>
   );
 }
-

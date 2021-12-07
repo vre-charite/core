@@ -378,10 +378,7 @@ function FilePanel(props) {
         </span>
       );
     } else if (item.status === JOB_STATUS.RUNNING && tabName === 'progress') {
-      if (
-        item.action === 'data_transfer' ||
-        item.action === 'data_transfer_folder'
-      ) {
+      if (item.action === 'data_transfer') {
         return (
           <span>
             <Tooltip title="file copy">
@@ -467,10 +464,7 @@ function FilePanel(props) {
           </span>
         );
       }
-      if (
-        item.action === 'data_transfer' ||
-        item.action === 'data_transfer_folder'
-      ) {
+      if (item.action === 'data_transfer') {
         return (
           <span style={{ color: '#FF6D72' }}>
             <Tooltip title="file copy">
@@ -557,12 +551,50 @@ function FilePanel(props) {
           </span>
         </span>
       );
+    } else if (
+      item.status === JOB_STATUS.TERMINATED &&
+      tabName === 'approved'
+    ) {
+      return (
+        <span>
+          <Icon
+            style={{ marginRight: '2%' }}
+            component={() => (
+              <img
+                alt="Approved"
+                style={{ marginTop: '-25%' }}
+                src={require('../../../Images/Fail-X.png')}
+              />
+            )}
+          />
+          <span className={styles.fileName}>{displayName(copyFileName)}</span>
+          <span className={styles.slash}>/</span>
+          <span style={{ fontStyle: 'Italic', color: '#A5B0B6' }}>
+            {item.copyTag}
+          </span>
+        </span>
+      );
     } else if (item.status === JOB_STATUS.SUCCEED && tabName === 'trashBin') {
       return (
         <span>
           {
             <Tooltip title="file delete">
               <RestOutlined className={styles.icons} />
+            </Tooltip>
+          }
+          <span className={styles.fileName}>{displayName(item.fileName)}</span>{' '}
+          {'-'} <span>{item.payload.frontendZone}</span>
+        </span>
+      );
+    } else if (
+      item.status === JOB_STATUS.TERMINATED &&
+      tabName === 'trashBin'
+    ) {
+      return (
+        <span>
+          {
+            <Tooltip title="failed to delete file">
+              <CloseOutlined className={styles['icons-fail']} />
             </Tooltip>
           }
           <span className={styles.fileName}>{displayName(item.fileName)}</span>{' '}
@@ -590,7 +622,8 @@ function FilePanel(props) {
       el.status !== 'success' &&
       el.status !== 'succeed' &&
       el.status !== JOB_STATUS.SUCCEED &&
-      el.status !== JOB_STATUS.TERMINATED
+      el.status !== JOB_STATUS.TERMINATED &&
+      el.status !== JOB_STATUS.CANCELLED
     ) {
       return true;
     }
@@ -598,14 +631,16 @@ function FilePanel(props) {
   inProgressList = _.orderBy(inProgressList, ['createdTime'], ['desc']);
 
   const uploadSuccessList = uploadList.filter((el) => el.status === 'success');
-  const approvedSuccessList = approvedList.filter(
-    (el) => el.status === JOB_STATUS.SUCCEED,
+  const approvedEndList = approvedList.filter(
+    (el) =>
+      el.status === JOB_STATUS.SUCCEED || el.status === JOB_STATUS.TERMINATED,
   );
   const downloadSuccessList = downloadList.filter(
-    (el) => el.status === 'success',
+    (el) => el.status === 'success' || el.status === JOB_STATUS.SUCCEED,
   );
-  const deletedSuccessList = deletedFileList.filter(
-    (el) => el.status === JOB_STATUS.SUCCEED,
+  const deletedEndList = deletedFileList.filter(
+    (el) =>
+      el.status === JOB_STATUS.SUCCEED || el.status === JOB_STATUS.TERMINATED,
   );
 
   // const failedList = allFileList.filter((el) => el.status === 'error');
@@ -631,6 +666,7 @@ function FilePanel(props) {
   let approvedSuccessNum = approvedList.filter(
     (el) => el.status === JOB_STATUS.SUCCEED,
   ).length;
+
   let approvedToCoreNum = approvedList.filter(
     (el) => el.status === JOB_STATUS.SUCCEED && el.copyTag === 'Copied to Core',
   ).length;
@@ -754,7 +790,7 @@ function FilePanel(props) {
                 <span className={styles.listHeader}>{approvedTitle}</span>
               }
               split={false}
-              dataSource={approvedSuccessList}
+              dataSource={approvedEndList}
               renderItem={(item) => {
                 return (
                   <List.Item>
@@ -771,7 +807,7 @@ function FilePanel(props) {
             size="small"
             header={<span className={styles.listHeader}>{deletedTitle}</span>}
             split={false}
-            dataSource={deletedSuccessList}
+            dataSource={deletedEndList}
             renderItem={(item) => (
               <List.Item>
                 <List.Item.Meta title={listItemTitle(item, 'trashBin')} />

@@ -43,7 +43,6 @@ function AddUserModal(props) {
       .then(async (res) => {
         // successfully invited
         await props.getUsers();
-        await createFolderIfNotExist(username);
         message.success(
           `${t('success:addUser.addUserToDataset.0')} ${username} ${t(
             'success:addUser.addUserToDataset.1',
@@ -63,8 +62,20 @@ function AddUserModal(props) {
             email: email,
           });
         }
-
         return Promise.reject();
+      })
+      .then(async () => {
+        await createFolderIfNotExist(username);
+      })
+      .catch((err) => {
+        if (err.response?.status !== 409) {
+          const errorMessager = new ErrorMessager(
+            namespace.teams.addUsertoDataSet,
+          );
+          errorMessager.triggerMsg(null, null, {
+            email: email,
+          });
+        }
       });
   }
   async function createFolderIfNotExist(username) {
@@ -207,6 +218,7 @@ function AddUserModal(props) {
         .finally(() => {
           cancelAddUser();
           setIsSubmitting(false);
+          form.resetFields();
         });
     } else {
       message.error(t('formErrorMessages:common.email.valid'));

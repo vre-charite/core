@@ -1,9 +1,10 @@
-import React from 'react';
-import { Badge, Popover, Tooltip } from 'antd';
+import React, { useEffect, useRef, useCallback } from 'react';
+import { Badge, Popover, Tooltip, message } from 'antd';
 import DatasetFilePanelContent from './DatasetFilePanelContent';
+import { countStatus, fetchFileOperations } from './utility';
 import Icon from '@ant-design/icons';
 import styles from './DatasetFilePanel.module.scss';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 const DatasetFilePanel = () => {
   const {
@@ -12,9 +13,35 @@ const DatasetFilePanel = () => {
     delete: deleteDataset,
     move,
   } = useSelector((state) => state.datasetFileOperations);
-  console.log(move);
+  /* const geid = useSelector((state) => state.datasetInfo.basicInfo.geid);
+  const isCancelCountInit = useRef(false);
 
-  const allOperationList = [...importDataset, ...rename, ...deleteDataset, ...move];
+  const dispatch = useCallback(useDispatch(), []);
+
+  useEffect(() => {
+    fetchFileOperations('rename', geid, dispatch);
+  }, [geid, dispatch]); */
+
+  const allOperationList = [
+    ...importDataset,
+    ...rename,
+    ...deleteDataset,
+    ...move,
+  ];
+  /* const [runningCount, errorCount, finishCount, initCount, cancelCount] =
+    countStatus(rename);
+
+  useEffect(() => {
+    if (cancelCount > 0 && isCancelCountInit.current) {
+      message.warning('The operation has been cancelled!');
+    }
+  }, [cancelCount]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      isCancelCountInit.current = true;
+    }, 5000);
+  }, []); */
 
   const filePanelStatus = (allOperationList) => {
     if (allOperationList.length === 0) {

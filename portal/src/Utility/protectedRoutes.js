@@ -49,6 +49,18 @@ export default function protectedRoutes(
       }
       return true;
     }
+    case 'projectCollab': {
+      if (containerId && permissions) {
+        let p = permissions.filter((i) => {
+          return i.id === parseInt(containerId);
+        });
+        return (p[0] && p[0]['permission'] === 'admin') ||
+          (p[0] && p[0]['permission'] === 'collaborator')
+          ? true
+          : '403';
+      }
+      return true;
+    }
     case 'PlatformAdmin': {
       if (platformRole === 'admin') {
         return true;

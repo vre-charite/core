@@ -38,15 +38,16 @@ function MyDatasetsList() {
   };
 
   return (
-    <List
-      className={styles['my-dataset-list']}
-      loading={loading}
-      dataSource={datasets}
-      renderItem={(item, index) => {
-        return <DatasetCard dataset={item} />;
-      }}
-      pagination={paginationProps}
-    ></List>
+    <div className={styles['my-dataset-list']}>
+      <List
+        loading={loading}
+        dataSource={datasets}
+        renderItem={(item, index) => {
+          return <DatasetCard dataset={item} />;
+        }}
+        pagination={paginationProps}
+      ></List>
+    </div>
   );
 }
 

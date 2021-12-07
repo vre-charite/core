@@ -93,115 +93,129 @@ export default function CreateDatasetPanel(props) {
   );
 
   return (
-    <Card className={styles['card']}>
-      <Form form={form} colon={false} {...layout} className={styles['form']}>
-        <h2>Define Dataset</h2>
-        <Form.Item rules={validators.title} name="title" label="Title" required>
-          <Input className={styles['input']} placeholder="Enter title"></Input>
-        </Form.Item>
-        <Row>
-          {' '}
-          <Col span={12}>
-            <Form.Item
-              required
-              labelCol={{ xs: 20, sm: 8, lg: 8, xl: 6 }}
-              name="code"
-              label="Dataset Code"
-              rules={validators.datasetCode}
-            >
-              <Input className={styles['input']}></Input>
-            </Form.Item>
-          </Col>{' '}
-          <Col span={12}>
-            <Form.Item
-              labelCol={{ xs: 20, sm: 8, lg: 8, xl: 4 }}
-              name="authors"
-              label="Authors"
-              required
-              rules={validators.authors}
+    <div className={styles['card']}>
+      <Card>
+        <Form form={form} colon={false} {...layout} className={styles['form']}>
+          <h2>Define Dataset</h2>
+          <Form.Item
+            rules={validators.title}
+            name="title"
+            label="Title"
+            required
+          >
+            <Input
+              className={styles['input']}
+              placeholder="Enter title"
+            ></Input>
+          </Form.Item>
+          <Row>
+            {' '}
+            <Col span={12}>
+              <Form.Item
+                required
+                labelCol={{ xs: 20, sm: 8, lg: 8, xl: 6 }}
+                name="code"
+                label="Dataset Code"
+                rules={validators.datasetCode}
+              >
+                <Input className={styles['input']}></Input>
+              </Form.Item>
+            </Col>{' '}
+            <Col span={12}>
+              <Form.Item
+                labelCol={{ xs: 20, sm: 8, lg: 8, xl: 4 }}
+                name="authors"
+                label="Authors"
+                required
+                rules={validators.authors}
+                allowClear
+              >
+                <Select placeholder="Enter authors" mode="tags" />
+              </Form.Item>
+            </Col>{' '}
+          </Row>
+
+          <Form.Item valuePropName="checked" name="type" label="Dataset Type">
+            <Checkbox value="BIDS">BIDS</Checkbox>
+          </Form.Item>
+
+          <div className={styles['spacing']}></div>
+
+          <h2>Description</h2>
+          <Form.Item
+            rules={validators.description}
+            name="description"
+            label="Description of Dataset"
+            required
+          >
+            <Input.TextArea
+              className={styles['input']}
+              placeholder="Enter description"
+            ></Input.TextArea>
+          </Form.Item>
+          <Form.Item
+            rules={validators.modality}
+            name="modality"
+            label="Modality"
+          >
+            <Select
+              mode="multiple"
+              className={styles['select']}
+              placeholder="Select Modality"
               allowClear
             >
-              <Select placeholder="Input authors" mode="tags" />
-            </Form.Item>
-          </Col>{' '}
-        </Row>
-
-        <Form.Item valuePropName="checked" name="type" label="Type">
-          <Checkbox value="BIDS">BIDS</Checkbox>
-        </Form.Item>
-
-        <div className={styles['spacing']}></div>
-
-        <h2>Description</h2>
-        <Form.Item
-          rules={validators.description}
-          name="description"
-          label="Description"
-          required
-        >
-          <Input.TextArea
-            className={styles['input']}
-            placeholder="Enter description"
-          ></Input.TextArea>
-        </Form.Item>
-        <Form.Item rules={validators.modality} name="modality" label="Modality">
-          <Select
-            mode="multiple"
-            className={styles['select']}
-            placeholder="Enter Modality"
-            allowClear
+              {modalityOptions.map((value) => (
+                <Option key={value} value={value}>
+                  {value}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            className={styles['collection-method']}
+            name="collectionMethod"
+            label={<CollectionMethodLabel />}
+            rules={validators.collectionMethod}
           >
-            {modalityOptions.map((value) => (
-              <Option key={value} value={value}>
-                {value}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item
-          className={styles['collection-method']}
-          name="collectionMethod"
-          label={<CollectionMethodLabel />}
-          rules={validators.collectionMethod}
-        >
-          <Select
-            className={styles['select']}
-            placeholder="Input Collection Method"
-            mode="tags"
-            allowClear
-          ></Select>
-        </Form.Item>
-        <Form.Item rules={validators.license} name="license" label="License">
-          <Input
-            className={styles['input']}
-            placeholder="Enter License"
-          ></Input>
-        </Form.Item>
+            <Select
+              className={styles['select']}
+              placeholder="Enter Collection Method"
+              mode="tags"
+              allowClear
+            ></Select>
+          </Form.Item>
+          <Form.Item rules={validators.license} name="license" label="License">
+            <Input
+              className={styles['input']}
+              placeholder="Enter License"
+            ></Input>
+          </Form.Item>
 
-        <div className={styles['spacing']}></div>
+          <div className={styles['spacing']}></div>
 
-        <h2>Tags</h2>
-        <Form.Item rules={validators.tags} name="tags" label="Tags">
-          <Select placeholder="Enter tag" mode="tags"></Select>
-        </Form.Item>
-      </Form>
+          <h2>Tags</h2>
+          <Form.Item rules={validators.tags} name="tags" label="Tags">
+            <Select placeholder="Enter tag" mode="tags"></Select>
+          </Form.Item>
+        </Form>
 
-      <div className={styles['button-group']}>
-        <Space>
-          <Button
-            icon={<FileAddOutlined />}
-            loading={submitting}
-            onClick={onSubmit}
-            type="primary"
-          >
-            Create
-          </Button>
-          <Button disabled={submitting} onClick={onCancel} type="link">
-            {' '}
-            Cancel
-          </Button>
-        </Space>
-      </div>
-    </Card>
+        <div className={styles['button-group']}>
+          <Space>
+            <Button
+              icon={<FileAddOutlined />}
+              loading={submitting}
+              onClick={onSubmit}
+              type="primary"
+            >
+              Create
+            </Button>
+            <Button disabled={submitting} onClick={onCancel} type="link">
+              {' '}
+              Cancel
+            </Button>
+          </Space>
+        </div>
+      </Card>
+    </div>
   );
 }

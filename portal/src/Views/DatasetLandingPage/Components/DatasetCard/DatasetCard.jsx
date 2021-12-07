@@ -24,31 +24,33 @@ export default function DatasetCard(props) {
   };
 
   return (
-    <Card className={styles['dataset-card']}>
-      <div className={styles['left']}>
-        <DatasetCardTitle title={title} code={code} />
-        <div className={styles['dataset-card-note']}>
-          <b>
-            Dataset Code: {code} / Created on{' '}
-            {moment.utc(timeCreated).local().format('YYYY-MM-DD')}
-          </b>{' '}
-          by {creator || 'N/A'}
+    <div className={styles['dataset-card']}>
+      <Card>
+        <div className={styles['left']}>
+          <DatasetCardTitle title={title} code={code} />
+          <div className={styles['dataset-card-note']}>
+            <b>
+              Dataset Code: {code} / Created on{' '}
+              {moment.utc(timeCreated).local().format('YYYY-MM-DD')}
+            </b>{' '}
+            by {creator || 'N/A'}
+          </div>
+          {isExpand && <Description>{description}</Description>}
         </div>
-        {isExpand && <Description>{description}</Description>}
-      </div>
 
-      <div className={styles['right']}>
-        <div className={styles['statistics-container']}>
-          <Statistics label="Files">{totalFiles}</Statistics>
-          <Statistics label="Size">{getFileSize(size)}</Statistics>
+        <div className={styles['right']}>
+          <div className={styles['statistics-container']}>
+            <Statistics label="Files">{totalFiles}</Statistics>
+            <Statistics label="Size">{getFileSize(size)}</Statistics>
+          </div>
+          <div className={styles['tags-container']}>{getTags(tags)}</div>
         </div>
-        <div className={styles['tags-container']}>{getTags(tags)}</div>
-      </div>
 
-      <div onClick={toggleExpand} className={styles['expand']}>
-        {isExpand ? <UpCircleTwoTone /> : <DownCircleTwoTone />}
-      </div>
-    </Card>
+        <div onClick={toggleExpand} className={styles['expand']}>
+          {isExpand ? <UpCircleTwoTone /> : <DownCircleTwoTone />}
+        </div>
+      </Card>
+    </div>
   );
 }
 

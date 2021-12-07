@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {useDispatch} from 'react-redux';
+import { useDispatch } from 'react-redux';
 import {
   datasetInfoCreators,
   schemaTemplatesActions,
@@ -53,8 +53,8 @@ export default function DatasetContent(props) {
       dispatch(schemaTemplatesActions.setDefaultActiveKey(''));
       dispatch(schemaTemplatesActions.clearDefaultOpenTab());
       dispatch(schemaTemplatesActions.showTplDropdownList(false));
-    }
-  }, [])
+    };
+  }, []);
 
   const tabName = getTabName(pathname);
 
@@ -77,7 +77,7 @@ export default function DatasetContent(props) {
         mode="horizontal"
       >
         <Menu.Item key="home">Home</Menu.Item>
-        <Menu.Item key="data">Data</Menu.Item>
+        <Menu.Item key="data">Explorer</Menu.Item>
         <Menu.Item key="schema">Metadata</Menu.Item>
         <Menu.Item key="activity">Activity</Menu.Item>
       </Menu>

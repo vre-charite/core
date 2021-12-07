@@ -164,6 +164,88 @@ function getFileManifestAttrs(geidsList, lineageView = false) {
   });
 }
 
+async function getRequestFiles(
+  requestGeid,
+  page,
+  pageSize,
+  orderBy,
+  orderType,
+  filters,
+  partial,
+  projectGeid,
+  parentGeid,
+) {
+  const params = {
+    page,
+    page_size: pageSize,
+    order_by: orderBy,
+    order_type: orderType,
+    partial,
+    query: _.omit(filters, ['tags']),
+    request_id: requestGeid,
+  };
+  if (parentGeid) {
+    params.parent_geid = parentGeid;
+  }
+  let res;
+  res = await axios({
+    url: `/v1/request/copy/${projectGeid}/files`,
+    params: objectKeysToSnakeCase(params),
+  });
+  res.data.result.entities = res.data.result.data.map((item) => {
+    res.data.result.approximateCount = res.data.total;
+    let formatRes = {
+      geid: item.entityGeid,
+      key: item.entityGeid,
+      archived: item.archived,
+      createTime: item.uploadedAt,
+      nodeLabel:
+        item.entityType === 'folder'
+          ? ['Greenroom', 'Folder']
+          : ['Greenroom', 'File'],
+      displayPath: item.displayPath,
+      name: item.name,
+      fileSize: item.fileSize,
+      owner: item.uploadedBy,
+      path: item.path,
+      location: item.location,
+      folderRelativePath: item.folderRelativePath,
+      generateId:
+        item.generateId && typeof item.generateId !== 'undefined'
+          ? item.generateId
+          : undefined,
+      tags: [],
+      reviewedAt: item.reviewedAt,
+      reviewedBy: item.reviewedBy,
+      reviewStatus: item.reviewStatus,
+    };
+    return formatRes;
+  });
+  res.data.result.routing = res.data.result.routing.map((item, ind) => {
+    let formatRes = {
+      name: item.name,
+      labels:
+        item.entityType === 'folder'
+          ? ['Greenroom', 'Folder']
+          : ['Greenroom', 'File'],
+      globalEntityId: item.entityGeid,
+      folderLevel: res.data.result.routing.length - ind,
+    };
+    return formatRes;
+  });
+  return res;
+}
+
+async function getRequestFilesDetailByGeid(geids) {
+  return axios({
+    url: `/v1/files/bulk/detail`,
+    method: 'POST',
+    data: {
+      geids,
+    },
+  });
+}
+
 /**
  * https://indocconsortium.atlassian.net/browse/VRE-1314
  * @param {string} geid the geid of a virtual folder or folder, like bcae46e0-916c-11eb-be94-eaff9e667817-1617118177
@@ -219,6 +301,7 @@ async function getFiles(
     let formatRes = {
       guid: item.guid,
       geid: item.globalEntityId,
+      archived: item.archived,
       attributes: {
         createTime: item.timeCreated,
         nodeLabel: item.labels,
@@ -276,6 +359,8 @@ function checkDownloadStatusAPI(
         setTimeout(() => {
           setSuccessNumDispatcher(successNum + 1);
         }, 3000);
+      } else if (status === 'CANCELLED') {
+        updateDownloadItemDispatch({ key: taskId, status: 'error' });
       } else if (status === 'error') {
         // Stop check status
       }
@@ -604,6 +689,46 @@ function commitFileAction(
     },
   });
 }
+function reviewAllRequestFiles(
+  projectGeid,
+  requestId,
+  reviewStatus,
+  sessionId,
+) {
+  return axios({
+    url: `/v1/request/copy/${projectGeid}/files`,
+    method: 'PUT',
+    headers: {
+      'Session-ID': sessionId,
+    },
+    data: {
+      request_id: requestId,
+      review_status: reviewStatus,
+      session_id: sessionId,
+    },
+  });
+}
+function reviewSelectedRequestFiles(
+  projectGeid,
+  requestId,
+  geids,
+  reviewStatus,
+  sessionId,
+) {
+  return axios({
+    url: `/v1/request/copy/${projectGeid}/files`,
+    method: 'PATCH',
+    headers: {
+      'Session-ID': sessionId,
+    },
+    data: {
+      request_id: requestId,
+      entity_geids: geids,
+      review_status: reviewStatus,
+      session_id: sessionId,
+    },
+  });
+}
 
 export {
   uploadFileApi,
@@ -635,6 +760,10 @@ export {
   getFileManifestAttrs,
   searchFilesAPI,
   getFiles,
+  getRequestFiles,
   validateRepeatFiles,
   commitFileAction,
+  reviewSelectedRequestFiles,
+  reviewAllRequestFiles,
+  getRequestFilesDetailByGeid,
 };

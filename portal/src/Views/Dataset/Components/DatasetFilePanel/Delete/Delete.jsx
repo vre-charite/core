@@ -17,7 +17,7 @@ export function Delete(props) {
     fetchFileOperations('delete', geid, dispatch);
   }, [geid, dispatch]);
 
-  const [runningCount, errorCount, finishCount, initCount] =
+  const [runningCount, errorCount, finishCount, initCount, cancelCount] =
     countStatus(deleteOperations);
 
   return (
@@ -25,7 +25,7 @@ export function Delete(props) {
       <div className={'list-header'}>
         {' '}
         {initCount} waiting, {runningCount} running, {errorCount} error,{' '}
-        {finishCount} finish
+        {finishCount} finish, {cancelCount} cancelled
       </div>
       <List
         dataSource={deleteOperations}

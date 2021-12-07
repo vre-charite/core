@@ -100,7 +100,7 @@ class APIFolderCreation(metaclass=MetaAPI):
                     elif zone == 'greenroom':
                         folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_GREENROOM + '/folder'
                     response = requests.post(folder_creation_url, data=json.dumps(payload))
-                    return response.json()
+                    return response.json(), response.status_code
                 except Exception as error:
                     _logger.error("Error while creating folder")
                     _res.set_code(EAPIResponseCode.internal_error)

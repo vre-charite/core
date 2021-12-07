@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Input, message, Button, Tooltip } from 'antd';
+import { Modal, Input, message, Button, Tooltip, Popover } from 'antd';
 import {
   ArrowLeftOutlined,
   CloudServerOutlined,
@@ -773,10 +773,36 @@ const Copy2CoreModal = ({
     }
   };
 
+  const popoverContent = (
+    <p>
+      Handling duplicate files or folders If a file with same name already
+      exists in the destination, the file will be copied and a time-stamp will
+      be appended to its filename. If a folder with the same name already exists
+      in the destination, the files will be copied into the existing folder and
+      a 10-digit time-based integer hash will be appended to the duplicate
+      filenames.
+    </p>
+  );
+
+  const modalTitle = (
+    <p>
+      <span>Copy to Core</span>
+      <Popover
+        className={styles.popover}
+        overlayClassName={styles.copy2core_popover}
+        content={popoverContent}
+        placement={'bottomLeft'}
+      >
+        <ExclamationCircleOutlined />{' '}
+        <span>Handling duplicate files or folders</span>
+      </Popover>
+    </p>
+  );
+
   return (
     <Modal
       className={styles.copy_to_core_modal}
-      title="Copy to Core"
+      title={modalTitle}
       visible={visible}
       maskClosable={false}
       centered={true}

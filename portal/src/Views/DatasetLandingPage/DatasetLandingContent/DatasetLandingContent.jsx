@@ -13,30 +13,31 @@ function DatasetLandingContent(props) {
   const [action, setAction] = useState(ACTIONS.default);
 
   return (
-    <Tabs
-      tabBarExtraContent={
-        <DatasetListActions
-          ACTIONS={ACTIONS}
-          action={action}
-          setAction={setAction}
-        />
-      }
-      className={styles.tab}
-    >
-      <TabPane tab="My Datasets" key="My Datasets">
-        {action === ACTIONS.create && (
-          <CreateDatasetPanel
+    <div className={styles.tab}>
+      <Tabs
+        tabBarExtraContent={
+          <DatasetListActions
             ACTIONS={ACTIONS}
             action={action}
             setAction={setAction}
           />
-        )}
-        <MyDatasetsList />
-      </TabPane>
-      {/* <TabPane tab="All Datasets" key="All Datasets">
+        }
+      >
+        <TabPane tab="My Datasets" key="My Datasets">
+          {action === ACTIONS.create && (
+            <CreateDatasetPanel
+              ACTIONS={ACTIONS}
+              action={action}
+              setAction={setAction}
+            />
+          )}
+          <MyDatasetsList />
+        </TabPane>
+        {/* <TabPane tab="All Datasets" key="All Datasets">
         All Datasets
       </TabPane> */}
-    </Tabs>
+      </Tabs>
+    </div>
   );
 }
 

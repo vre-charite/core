@@ -13,6 +13,58 @@ from .utils import parse_json, check_folder_permissions
 _logger = SrvLoggerFactory('api_meta').get_logger()
 
 
+class FileDetailBulk(Resource):
+    @jwt_required()
+    def post(self):
+        api_response = APIResponse()
+        response = requests.post(ConfigClass.ENTITYINFO_SERVICE + f"files/bulk/detail", json=request.get_json())
+        if response.status_code != 200:
+            return response.json(), response.status_code
+        file_node = response.json()["result"]
+
+        for file_node in response.json()["result"]:
+            if "Greenroom" in file_node["labels"]:
+                zone = "greenroom"
+            else:
+                zone = "vrecore"
+            if not has_permission(file_node["project_code"], "file", zone, "view"):
+                api_response.set_code(EAPIResponseCode.forbidden)
+                api_response.set_error_msg("Permission Denied")
+                return _res.to_dict, _res.code
+        return response.json(), response.status_code
+
+
+class FileDetail(Resource):
+    @jwt_required()
+    def get(self, file_geid):
+        api_response = APIResponse()
+        response = requests.get(ConfigClass.ENTITYINFO_SERVICE + f"files/detail/{file_geid}")
+        if response.status_code != 200:
+            return response.json(), response.status_code
+        file_node = response.json()["result"]
+        if "Greenroom" in file_node["labels"]:
+            zone = "greenroom"
+        else:
+            zone = "vrecore"
+        neo4j_client = Neo4jClient()
+        response = neo4j_client.get_container_by_code(file_node["project_code"])
+        if not response.get("result"):
+            error_msg = response.get("error_msg", "Neo4j error")
+            _logger.error(f'Error fetching project from neo4j: {error_msg}')
+            _res.set_code(response.get("code"))
+            _res.set_error_msg(error_msg)
+            return _res.to_dict, _res.code
+        project_node = response.get("result")
+
+        if not has_permission(project_node["code"], "file", zone, "view"):
+            _res.set_code(EAPIResponseCode.forbidden)
+            _res.set_error_msg("Permission Denied")
+            return _res.to_dict, _res.code
+
+        api_response.set_result(file_node)
+        return api_response.to_dict, api_response.code
+
+
 class FileMeta(Resource):
     @jwt_required()
     def get(self, geid):
