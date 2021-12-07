@@ -98,7 +98,10 @@ export function Widget() {
       );
     }
 
-    if (res.data.result && res.data.result.approved && res.data.result.denied) {
+    if (
+      res.data.result &&
+      (res.data.result.approved || res.data.result.denied)
+    ) {
       setValidationParams({
         showSelection: !all,
         selectedItems: _.cloneDeep(selection),
