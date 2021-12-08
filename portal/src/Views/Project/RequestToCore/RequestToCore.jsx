@@ -159,7 +159,7 @@ const RequestToCore = (props) => {
     setBtnLoading(false);
     form.resetFields(['notes']);
     setReviewNotes('');
-  }
+  };
 
   return (
     <Content className={'content'}>
@@ -189,7 +189,10 @@ const RequestToCore = (props) => {
                       </p>
                       {status === 'complete' ? (
                         <p>
-                          <b>Review Note:</b> {activeReq.reviewNotes}
+                          <b>Review Note:</b>{' '}
+                          <span style={{ wordBreak: 'break-all' }}>
+                            {activeReq.reviewNotes}
+                          </span>
                         </p>
                       ) : null}
                     </div>
