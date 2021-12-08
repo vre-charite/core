@@ -170,12 +170,11 @@ export function ExistingSchemaContents(props) {
     dispatch(schemaTemplatesActions.setSchemaTypes(activeKey));
   };
   return (
-    <div style={{ height: '100%', position:'relative' }}>
-      <Tabs
-        className={styles['tabs']}
-        tabPosition={'left'}
-        onChange={onTabSelChange}
-      >
+    <div
+      style={{ height: '100%', position: 'relative' }}
+      className={styles['tabs']}
+    >
+      <Tabs tabPosition={'left'} onChange={onTabSelChange}>
         <TabPane tab={vreSchemasTabTitle} key="Default">
           <VreSchemasTabContents
             setSchemaGeid={setSchemaGeid}

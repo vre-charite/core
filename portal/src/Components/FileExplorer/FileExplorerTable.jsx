@@ -227,13 +227,14 @@ export default function FileExplorerTable(props) {
           </div>
           {selection && selection.length ? (
             <div
-              style={{
+              className={styles.selected_files}
+              /* style={{
                 position: 'absolute',
                 right: 40,
                 top: 10,
                 fontSize: 14,
                 fontWeight: 500,
-              }}
+              }} */
             >
               Selected {selection.filter((v) => !!v).length}{' '}
               {selection.filter((v) => !!v).length > 1 ? 'items' : 'item'}

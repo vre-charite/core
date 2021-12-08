@@ -4,3 +4,20 @@
 .table-side-panel-closed {
   width: 100%;
 }
+
+.selected_files {
+  position: absolute;
+  right: 40px;
+  top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@media (max-width: 1100px) {
+  .selected_files {
+    position: absolute;
+    top: 45px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+}

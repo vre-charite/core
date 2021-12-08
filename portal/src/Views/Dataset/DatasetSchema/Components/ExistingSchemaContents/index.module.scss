@@ -7,33 +7,35 @@
 }
 
 .tabs {
-  height: 100%;
-  padding-top: 5px;
-  padding-left: 5px;
-  max-height: 550px;
   :global {
-    .ant-tabs-tabpane {
+    .ant-tabs {
       height: 100%;
-      overflow: auto;
-    }
-    .ant-tabs-bar {
-      width: 220px;
-      padding-right: 5px;
-    }
-    .ant-tabs-tab {
-      text-align: left !important;
-      margin: 0px !important;
-    }
-    .ant-tabs-tab-active {
-      background-color: #ace4fd;
-      border-radius: 3px;
-    }
-    .ant-tabs-content {
-      padding-left: 0px;
-      height: 100%;
-    }
-    .ant-tabs-ink-bar {
-      width: 0px !important;
+      padding-top: 5px;
+      padding-left: 5px;
+      max-height: 550px;
+
+      .ant-tabs-tabpane {
+        overflow: auto;
+      }
+      .ant-tabs-bar {
+        width: 220px;
+        padding-right: 5px;
+      }
+      .ant-tabs-tab {
+        text-align: left !important;
+        margin: 0px !important;
+      }
+      .ant-tabs-tab-active {
+        background-color: #ace4fd;
+        border-radius: 3px;
+      }
+      .ant-tabs-content {
+        padding-left: 0px;
+        height: 100%;
+      }
+      .ant-tabs-ink-bar {
+        width: 0px !important;
+      }
     }
   }
 }
