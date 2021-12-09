@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
         - name: bff
-          image: 10.32.42.225:5000/bff:<VERSION>
+          image: s-hdp-vre-v007.charite.de/bff:<VERSION>
           ports:
             - containerPort: 5060
           env:
