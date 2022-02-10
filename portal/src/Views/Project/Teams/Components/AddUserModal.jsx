@@ -195,12 +195,12 @@ function AddUserModal(props) {
               ),
               onOk() {
                 if (err.response.data.result?.ad_account_created === true) {
-                  addUser(true, err.response.data.result?.ad_user_dn);
+                  addUser(true, err.response.data.result?.ad_user_dn, email, role);
                 } else {
-                  addUser(false, err.response.data.result?.ad_user_dn);
+                  addUser(false, err.response.data.result?.ad_user_dn, email, role);
                 }
               },
-              className: styles['warning-modal'],
+              className: styles['warning-modal'], 
             });
           } else {
             const errorMessager = new ErrorMessager(
@@ -230,15 +230,12 @@ function AddUserModal(props) {
     setRole(e.target.value);
   };
 
-  const addUser = async (inAd = false, adUserDn) => {
-    const values = form.getFieldsValue();
-    const email = values.email;
-    const role = values.role;
+  const addUser = async (inAd = false, adUserDn, userEmail, userRole) => {
     try {
       await inviteUserApi(
-        email,
+        userEmail,
         'member',
-        role,
+        userRole,
         currentDataset?.globalEntityId,
         keycloak.tokenParsed?.preferred_username,
         inAd,
@@ -252,7 +249,7 @@ function AddUserModal(props) {
       if (err.response) {
         const errorMessager = new ErrorMessager(namespace.teams.inviteUser);
         errorMessager.triggerMsg(err.response.status, null, {
-          email: email,
+          email: userEmail,
         });
       }
     }
