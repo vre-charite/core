@@ -77,3 +77,4 @@ $ python app.py
 - Go to the folder `/portal/server/test`, all backend unit test will be placed here
 - You can simply run each unit test with `python <unit-test-file>`
 
+
