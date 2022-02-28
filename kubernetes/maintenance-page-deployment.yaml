@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maintenance-page
+  namespace: utility
+  labels:
+    app: maintenance-page
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maintenance-page
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: maintenance-page
+    spec:
+      containers:
+        - name: maintenance-page
+          image: registry-gitlab.indocresearch.org/pilot/core/maintenance-page:<VERSION>
+          ports:
+            - containerPort: 80
+          env:
+            - name: env
+              value: "charite"
+      nodeSelector:
+        namespace: utility
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maintenance-page
+  namespace: utility
+  labels:
+    app: maintenance-page
+spec:
+  ports:
+    - name: maintenance-page
+      port: 80
+      targetPort: 80
+      nodePort:
+  selector:
+    app: maintenance-page
+  type: ClusterIP
+
