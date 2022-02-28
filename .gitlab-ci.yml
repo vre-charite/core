@@ -48,42 +48,42 @@ deploy-portal:
     - kubectl apply -f kubernetes/portal-deployment.yaml
 
 
-build-bff:
-  stage: build
-  tags:
-    - VRE-Deployment
-  only:
-    changes:
-      - kubernetes/bff-deployment.yaml
-      - backend/*
-      - backend/*/*
-      - backend/*/*/*
-      - backend/*/*/*/*
-      - backend/*/*/*/*/*
-      - backend/*/*/*/*/*/*
-      - backend/*/*/*/*/*/*/*
-  script:
-    - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-    - docker build --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${BFF_CONTAINER_IMAGE} backend/.
-    - docker push ${BFF_CONTAINER_IMAGE}
-
-deploy-bff:
-  stage: deploy
-  tags:
-    - VRE-Deployment
-  only:
-    changes:
-      - kubernetes/bff-deployment.yaml
-      - backend/*
-      - backend/*/*
-      - backend/*/*/*
-      - backend/*/*/*/*
-      - backend/*/*/*/*/*
-      - backend/*/*/*/*/*/*
-      - backend/*/*/*/*/*/*/*
-  script:
-    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/bff-deployment.yaml
-    - kubectl apply -f kubernetes/bff-deployment.yaml
+#build-bff:
+#  stage: build
+#  tags:
+#    - VRE-Deployment
+#  only:
+#    changes:
+#      - kubernetes/bff-deployment.yaml
+#      - backend/*
+#      - backend/*/*
+#      - backend/*/*/*
+#      - backend/*/*/*/*
+#      - backend/*/*/*/*/*
+#      - backend/*/*/*/*/*/*
+#      - backend/*/*/*/*/*/*/*
+#  script:
+#    - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+#    - docker build --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${BFF_CONTAINER_IMAGE} backend/.
+#    - docker push ${BFF_CONTAINER_IMAGE}
+#
+#deploy-bff:
+#  stage: deploy
+#  tags:
+#    - VRE-Deployment
+#  only:
+#    changes:
+#      - kubernetes/bff-deployment.yaml
+#      - backend/*
+#      - backend/*/*
+#      - backend/*/*/*
+#      - backend/*/*/*/*
+#      - backend/*/*/*/*/*
+#      - backend/*/*/*/*/*/*
+#      - backend/*/*/*/*/*/*/*
+#  script:
+#    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/bff-deployment.yaml
+#    - kubectl apply -f kubernetes/bff-deployment.yaml
 
 build-maintenance_page:
   stage: build
