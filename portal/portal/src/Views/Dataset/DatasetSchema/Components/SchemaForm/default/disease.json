@@ -1,0 +1,30 @@
+{
+  "schema": {
+    "type": "object",
+    "required": ["dataset_disease_name"],
+    "properties": {
+      "dataset_disease_name": {
+        "type": "string",
+        "title": "Disease Name"
+      },
+      "daatset_disease_dates": {
+        "title": "Disease Diagnosis Date",
+        "type": "string",
+        "format": "date"
+      },
+      "dataset_disease_status": {
+        "title": "Disease Status",
+        "type": "string"
+      },
+      "dataset_disease_identifier": {
+        "title": "Identifier",
+        "type": "string"
+      },
+      "dataset_disease_identifier_source": {
+        "title": "Identifier Source",
+        "type": "string"
+      }
+    }
+  },
+  "ui": {}
+}

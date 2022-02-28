@@ -1,0 +1,163 @@
+.no_select {
+  user-select: none;
+  color: rgba(0, 0, 0, 0.65) !important;
+}
+.no_select::selection {
+  background: none;
+}
+.no_select::-moz-selection {
+  background: none;
+}
+
+.accept-icon {
+  :global {
+    span {
+      color: #5b8c00;
+    }
+  }
+}
+
+.deny-icon {
+  :global {
+    span {
+      color: #ff6d72;
+    }
+  }
+}
+
+.deny_modal {
+  :global {
+    .ant-modal-body p b {
+      color: #ff6d72;
+    }
+    .ant-modal-body p em {
+      font-weight: bold;
+      font-style: normal;
+    }
+    .deny-btn {
+      background-color: #ff6d72 !important;
+      border-color: #ff6d72 !important;
+      &:hover,
+      &:visited {
+        background-color: #ff6d72 !important;
+        border-color: #ff6d72 !important;
+        opacity: 0.8;
+      }
+    }
+    .deny-btn[disabled] {
+      background-color: #f5f5f5 !important;
+      border-color: #d9d9d9 !important;
+      &:hover {
+        background-color: #f5f5f5 !important;
+      }
+    }
+    .cancel-btn {
+      border: 0;
+      &:hover {
+        color: rgba(0, 0, 0, 0.85);
+      }
+    }
+    .deny-reason {
+      width: 485px;
+      margin: 10px auto;
+      h4 {
+        font-size: 14px;
+        color: #595959;
+        font-weight: normal;
+        b {
+          color: #ff6d72;
+        }
+      }
+    }
+    .file-item {
+      justify-content: center;
+    }
+  }
+}
+.approve_modal {
+  :global {
+    .ant-modal-body p b {
+      color: #5b8c00;
+    }
+    .ant-modal-body p em {
+      font-weight: bold;
+      font-style: normal;
+    }
+    .approve-btn {
+      background-color: #5b8c00 !important;
+      border-color: #5b8c00 !important;
+      &:hover,
+      &:visited {
+        background-color: #5b8c00 !important;
+        border-color: #5b8c00 !important;
+        opacity: 0.8;
+      }
+    }
+    .approve-btn[disabled] {
+      background-color: #f5f5f5 !important;
+      border-color: #d9d9d9 !important;
+      &:hover {
+        background-color: #f5f5f5 !important;
+      }
+    }
+    .cancel-btn {
+      border: 0;
+      &:hover {
+        color: rgba(0, 0, 0, 0.85);
+      }
+    }
+    .file-item {
+      justify-content: center;
+    }
+  }
+}
+.file_path_display {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  margin-bottom: 6px;
+  .icon {
+    margin-right: 10px;
+  }
+  .file_name {
+    font-size: 14px;
+    color: #595959;
+    font-weight: 600;
+    margin-right: 5px;
+  }
+}
+.validation_modal {
+  :global {
+    .validation-content {
+      h4 {
+        padding-left: 80px;
+        font-weight: normal;
+      }
+      ul {
+        list-style: none;
+        li {
+          list-style: none;
+          padding-left: 100px;
+          font-weight: bold;
+          margin: 5px 0;
+          &.approve-item {
+            color: #5b8c00;
+          }
+          &.deny-item {
+            color: #ff6d72;
+          }
+          &.delete-item {
+            color: rgba(0, 0, 0, 0.65);
+          }
+        }
+      }
+      .list-sel {
+        margin-bottom: 30px;
+      }
+      .file-item {
+        justify-content: start;
+        padding-left: 136px;
+      }
+    }
+  }
+}

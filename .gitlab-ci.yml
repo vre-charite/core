@@ -4,6 +4,7 @@ variables:
   REGISTRY: s-hdp-vre-v007.charite.de
   PORTAL_CONTAINER_IMAGE: ${REGISTRY}/portal:${CI_COMMIT_SHORT_SHA}
   BFF_CONTAINER_IMAGE: ${REGISTRY}/bff:${CI_COMMIT_SHORT_SHA}
+  MAINTENANCE_PAGE_CONTAINER_IMAGE: ${REGISTRY}/maintenance-page:${CI_COMMIT_SHORT_SHA}
 
 build-portal:
   stage: build
@@ -23,7 +24,7 @@ build-portal:
       - portal/*/*/*/*/*/*/*/*/*
   script:
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-    - docker build --build-arg PORTAL_ENV="build-charite" --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${PORTAL_CONTAINER_IMAGE} portal/.
+    - docker build --build-arg PORTAL_ENV="build-production" --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${PORTAL_CONTAINER_IMAGE} portal/.
     - docker push ${PORTAL_CONTAINER_IMAGE}
 
 deploy-portal:
@@ -83,3 +84,40 @@ deploy-bff:
   script:
     - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/bff-deployment.yaml
     - kubectl apply -f kubernetes/bff-deployment.yaml
+
+build-maintenance_page:
+  stage: build
+  tags:
+    - VRE-Deployment
+  only:
+    changes:
+      - kubernetes/maintenance-page-deployment.yaml
+      - maintenance-page/*
+      - maintenance-page/*/*
+      - maintenance-page/*/*/*
+      - maintenance-page/*/*/*/*
+      - maintenance-page/*/*/*/*/*
+      - maintenance-page/*/*/*/*/*/*
+      - maintenance-page/*/*/*/*/*/*/*
+  script:
+    - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${BFF_CONTAINER_IMAGE} backend/.
+    - docker push ${MAINTENANCE_PAGE_CONTAINER_IMAGE}
+
+deploy-maintenance_page:
+  stage: deploy
+  tags:
+    - VRE-Deployment
+  only:
+    changes:
+      - kubernetes/maintenance-page-deployment.yaml
+      - maintenance-page/*
+      - maintenance-page/*/*
+      - maintenance-page/*/*/*
+      - maintenance-page/*/*/*/*
+      - maintenance-page/*/*/*/*/*
+      - maintenance-page/*/*/*/*/*/*
+      - maintenance-page/*/*/*/*/*/*/*
+  script:
+    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/maintenance-page-deployment.yaml
+    - kubectl apply -f kubernetes/maintenance-page-deployment.yaml

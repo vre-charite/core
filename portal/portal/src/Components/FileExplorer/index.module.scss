@@ -1,0 +1,25 @@
+.file_folder_path {
+  :global {
+    span:last-child {
+      .ant-breadcrumb-link {
+        font-weight: bold;
+      }
+    }
+    .ant-breadcrumb-separator {
+      color: #003262 !important;
+    }
+    .ant-breadcrumb-link {
+      color: #003262 !important;
+    }
+  }
+}
+.route_wrapper {
+  padding: 10px 25px;
+  display: inline-block;
+}
+
+@media (max-width: 1100px) {
+  .route_wrapper {
+    display: flex;
+  }
+}

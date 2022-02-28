@@ -1,0 +1,26 @@
+{
+  "schema": {
+    "type": "object",
+    "required": ["dataset_distribution_landing_page"],
+    "properties": {
+      "dataset_distribution_format": {
+        "type": "array",
+        "title": "Dataset Distribution Technical Format",
+        "items": { "type": "string" }
+      },
+      "dataset_distribution_landing_page": {
+        "title": "Dataset Distribution Access Landing Page",
+        "type": "string",
+        "format": "uri"
+      },
+      "dataset_distribution_authorization": {
+        "title": "Dataset Distribution Access Authorization",
+        "type": "string",
+        "enum": ["Public", "Registered", "Private"]
+      }
+    }
+  },
+  "ui": {
+    "ui:order": ["dataset_distribution_landing_page", "*"]
+  }
+}

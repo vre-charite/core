@@ -1,0 +1,21 @@
+export const initStates = {
+  loading: false,
+  currentPlugin: '',
+  route: [], // current geid can be found in the last item of the array,
+  page: 0,
+  total: 0,
+  pageSize: 10,
+  sortBy: 'createTime',
+  sortOrder: 'desc',
+  filter: {},
+  columnsComponentMap: null,
+  dataOriginal: [],
+  data: [],
+  selection: [],
+  propertyRecord: null,
+  isSidePanelOpen: false,
+  refreshNum: 0,
+  sourceType: 'Project', //"Project"|"Folder"|"TrashFile"
+  currentGeid: '',
+  hardFreshKey: 0,
+};

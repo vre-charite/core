@@ -1,0 +1,28 @@
+.content {
+  padding: 0px;
+  height: auto;
+  min-height: unset;
+  :global {
+    .ant-table-tbody > tr > td {
+      background: none !important;
+    }
+    tr.record-deleted {
+      opacity: 0.6;
+      > td {
+        background-color: white !important;
+      }
+    }
+    tr.record-approved {
+      opacity: 1;
+      > td {
+        background-color: #ebffee !important;
+      }
+    }
+    tr.record-denied {
+      opacity: 1;
+      > td {
+        background-color: #ffebeb !important;
+      }
+    }
+  }
+}

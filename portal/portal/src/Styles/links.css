@@ -1,0 +1,48 @@
+.linkDisable {
+  cursor: not-allowed;
+}
+html,
+body {
+  min-width: 950px;
+}
+.ant-table-column-sorter {
+  margin-left: 3px;
+}
+.ant-table-filter-column .ant-table-column-sorters {
+  display: inline-block;
+  width: calc(100% - 40px);
+  padding-right: 0px;
+  white-space: nowrap;
+}
+.ant-table-thead
+  tr
+  th.ant-table-column-has-sorters
+  .ant-table-filter-column
+  .ant-table-filter-column-title {
+  max-width: 100%;
+  padding: 0;
+}
+.ant-table-thead > tr > th {
+  overflow: hidden;
+}
+.ant-table-filter-trigger-container {
+  top: -6px;
+}
+.ant-table-filter-column .ant-table-column-sorters > span:first-child {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  margin-top: 3px;
+}
+.file-dir .ant-tree-title {
+  word-break: break-word;
+}
+.file-dir .ant-tree .ant-tree-node-content-wrapper {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.file-dir .ant-tree-list {
+  overflow: hidden;
+}

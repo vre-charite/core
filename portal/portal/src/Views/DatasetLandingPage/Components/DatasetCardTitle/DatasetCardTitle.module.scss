@@ -1,0 +1,30 @@
+.toolTip-div {
+  margin-top: -4px;
+  :global {
+    span {
+      max-width: 100%;
+      display: inline-block;
+      vertical-align: bottom;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #003262;
+      font-size: 20px;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+.no-toolTip-div {
+  margin-top: -4px;
+  :global {
+    span {
+      max-width: 100%;
+      display: inline-block;
+      vertical-align: bottom;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #003262;
+      font-size: 20px;
+    }
+  }
+}

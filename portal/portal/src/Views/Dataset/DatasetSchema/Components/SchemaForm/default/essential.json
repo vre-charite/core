@@ -1,0 +1,170 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "dataset_title",
+      "dataset_code",
+      "dataset_description",
+      "dataset_authors"
+    ],
+    "properties": {
+      "dataset_title": {
+        "type": "string",
+        "title": "Title",
+        "maxLength": 100
+      },
+      "dataset_code": {
+        "type": "string",
+        "title": "Dataset Code",
+        "maxLength": 32
+      },
+      "dataset_description": {
+        "type": "string",
+        "title": "Description",
+        "maxLength": 5000
+      },
+      "dataset_authors": {
+        "type": "array",
+        "title": "Authors",
+        "uniqueItems": true,
+        "maxItems": 10,
+        "minItems": 1,
+        "items": {
+          "type": "string",
+          "maxLength": 50
+        }
+      },
+      "dataset_type": {
+        "type": "string",
+        "title": "Type",
+        "enum": ["GENERAL", "BIDS"]
+      },
+      "dataset_modality": {
+        "title": "Modality",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "anatomical approach",
+            "behavioral approach",
+            "cell counting",
+            "cell morphology",
+            "cell population characterization",
+            "cell population imaging",
+            "computational modeling",
+            "electrophysiology",
+            "histological approach",
+            "microscopy",
+            "molecular expression approach",
+            "molecular expression characterization",
+            "morphological approach",
+            "multimodal approach",
+            "neural connectivity",
+            "neuroimaging",
+            "physiological approach"
+          ]
+        },
+        "uniqueItems": true
+      },
+      "dataset_license": {
+        "type": "string",
+        "title": "License",
+        "maxLength": 20
+      },
+      "dataset_collection_method": {
+        "type": "array",
+        "title": "Collection Method",
+        "uniqueItems": true,
+        "maxItems": 10,
+        "items": {
+          "type": "string",
+          "maxLength": 20
+        }
+      },
+      "dataset_tags": {
+        "type": "array",
+        "title": "Tags",
+        "maxItems": 10,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "maxLength": 20
+        }
+      },
+      "dataset_subject_number": {
+        "type": "integer",
+        "title": "Number of Subjects",
+        "minimum": 0
+      },
+      "dataset_identifier": {
+        "type": "string",
+        "title": "Dataset Identifier"
+      },
+      "dataset_identifier_source": {
+        "type": "string",
+        "title": "Dataset Identifier Source"
+      },
+      "dataset_derived_from": {
+        "type": "string",
+        "title": "Derived From"
+      },
+      "parent_dataset_identifier": {
+        "type": "string",
+        "title": "Parent Dataset Identifier"
+      },
+      "parent_dataset_identifier_source": {
+        "type": "string",
+        "title": "Parent Dataset Identifier Source"
+      },
+      "dataset_publication_title": {
+        "type": "string",
+        "title": "Related Publication Title"
+      },
+      "dataset_publication_identifier": {
+        "type": "string",
+        "title": "Related Publication Identifier"
+      },
+      "dataset_publication_identifier_source": {
+        "type": "string",
+        "title": "Related Publication Identifier Source"
+      }
+    }
+  },
+  "ui": {
+    "ui:order": [
+      "dataset_title",
+      "dataset_code",
+      "dataset_type",
+      "dataset_authors",
+      "dataset_description",
+      "dataset_modality",
+      "dataset_collection_method",
+      "dataset_license",
+      "dataset_tags",
+      "dataset_subject_number",
+      "dataset_identifier",
+      "dataset_identifier_source",
+      "dataset_derived_from",
+      "parent_dataset_identifier",
+      "parent_dataset_identifier_source",
+      "dataset_publication_title",
+      "dataset_publication_identifier",
+      "dataset_publication_identifier_source",
+      "*"
+    ],
+    "dataset_description": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 6
+      }
+    },
+    "dataset_code": {
+      "ui:readonly": true
+    },
+    "dataset_type": {
+      "ui:options": {
+        "allowClear": false
+      }
+    }
+  }
+}

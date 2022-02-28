@@ -1,0 +1,78 @@
+{
+  "createProject": "Project created successfully.",
+  "resetPassword": "Password has been reset successfully.",
+  "fileUpload": ["file", "uploaded successfully!"],
+  "teams": {
+    "roleUpdated": "Role successfully updated.",
+    "userRemoved": ["User", "has been successfully removed from this project!"],
+    "userRestored": [
+      "User",
+      "has been successfully restored from this project!"
+    ]
+  },
+  "addUser": {
+    "invitation": "Invitation email sent",
+    "addUserToDataset": ["User", "has been added to"]
+  },
+
+  "selfRegistration": "Signup completed successfully.",
+  "userManagement": {
+    "inviteUser": ["Invitation has been sent to"]
+  },
+  "importManifestAPI": {
+    "default": ["Attribute template has been imported"]
+  },
+  "fileOperations": {
+    "delete": "Files/folders deleted successfully"
+  },
+  "virtualFolder": {
+    "delete": "Collection has been deleted successfully",
+    "removeFiles": "Files/Folders have been removed successfully",
+    "addFilesDuplicate": "Files/Folders added successfully with existing files skipped",
+    "addFiles": "Files/Folders have been added successfully",
+    "updateFiles": "Files/Folders have been updated successfully"
+  },
+  "collections": {
+    "updateCollections": "Collections have been updated successfully",
+    "addCollection": "Collection has been added successfully",
+    "deleteCollection": "Collection has been deleted successfully"
+  },
+  "contactUs": {
+    "text": [
+      "Thank you for submitting a request!",
+      " {{ PLATFORM }} Support Team has received your request and will respond through the email address associated with your {{ PLATFORM }} user account shortly​."
+    ],
+    "button": "Submit another request"
+  },
+  "createFolder": "Folder has been created successfully",
+  "createDataset": "Dataset has been created successfully",
+  "addToDataset": "The file(s)/folder(s) have been added to the dataset successfully.",
+  "datasetFileDelete": {
+    "default": [
+      "Deleting files and folders may take some time, please refresh afterwards."
+    ]
+  },
+  "datasetFileMove": {
+    "default": [
+      "Moving files and folders may take some time, please refresh afterwards."
+    ]
+  },
+  "publishDatasetNewVersion": {
+    "default": [
+      "New version has been created successfully, please check the version later."
+    ]
+  },
+  "uploadOpenMindsSchema": {
+    "default": ["Schema uploaded successfully"]
+  },
+  "requestToCore": {
+    "default": ["Request has been successfully sent"]
+  },
+  "completeRequest": {
+    "default": ["Request has been successfully completed"]
+  },
+  "reviewRequestFiles": {
+    "approve": ["Selected file(s) have been approved successfully"],
+    "deny": ["Selected file(s) have been denied successfully"]
+  }
+}

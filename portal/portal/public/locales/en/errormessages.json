@@ -1,0 +1,672 @@
+{
+  "createProject": {
+    "403": ["This project code has been taken"],
+    "409": ["This project code has been taken"],
+    "default": [
+      "Something went wrong while trying to create a new project, please try again later."
+    ]
+  },
+  "login": {
+    "400": [
+      "Your account has been disabled, please contact an administrator for assistance."
+    ],
+    "401": ["Your username and/or password do not match."],
+    "500": [
+      "Something went wrong while trying to login, please try again later. Error Code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to login, please try again later."
+    ]
+  },
+  "resetPassword": {
+    "400": ["Your old password is incorrect."],
+    "403": ["This reset password is not permitted."],
+    "406": [
+      "The password format is not valid. The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character (-_!%&/()=?*+#,.;)."
+    ],
+    "500": [
+      "Something went wrong while trying to reset your password, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to reset your password, please try again later."
+    ]
+  },
+  "forgotPassword": {
+    "403": [
+      "This reset password link is invalid or expired. Please contact an administrator to receive a new link."
+    ],
+    "406": [
+      "The password format is not valid. The password must be 11-30 characters, at least 1 uppercase, 1 lowercase, 1 number and 1 special character(-_!%&/()=?*+#,.;)."
+    ],
+    "404": ["This username does not exist."],
+    "500": [
+      "Something went wrong while trying to reset your password, please try again later.  Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to send a password reset email, please try again later."
+    ]
+  },
+  "forgotUserName": {
+    "404": ["This email address could not be found."],
+    "500": [
+      "Something went wrong while trying to send your username, please try again later. Error Code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to send your username, please try again later."
+    ]
+  },
+  "checkToken": {
+    "400": [
+      "This reset password link is not valid. Please request a new link or contact an administrator for assistance."
+    ],
+    "500": [
+      "Something went wrong while trying to reset your password, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while attempting to verify your identity with the link."
+    ]
+  },
+  "resetForgottenPassword": {
+    "403": ["This reset password link is invalid or expired."],
+    "400": [
+      "The password format is not valid, please check the password requirements."
+    ],
+    "500": [
+      "Something went wrong while trying to reset your password, please try again later.  Error code: 500"
+    ],
+    "default": ["something wrong while resetting your password."]
+  },
+  "refresh": {
+    "403": [
+      "Something went wrong while trying to refresh, please try again later."
+    ],
+    "500": [
+      "Something went wrong while trying to refresh, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to refresh, please try again later."
+    ]
+  },
+  "parseInviteHashAPI": {
+    "401": ["Sorry, your invitation link has expired."],
+    "404": ["Sorry, your invitation could not be found."],
+    "500": [
+      "Something went wrong while trying to fetch invitation details, please try again later.  Error Code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to fetch invitation details, please try again later."
+    ]
+  },
+  "uploadFileApi": {
+    "403": ["A file with this name already exists within the project."],
+    "500": [
+      "Something went wrong while attempting to upload your file",
+      "Please try again later.  Error Code: 500"
+    ],
+    "502": [
+      "Something went wrong while attempting to upload your file",
+      "Please try again later.  Error Code: 502"
+    ],
+    "default": [
+      "Something went wrong while attempting to upload your file, please try again later."
+    ]
+  },
+  "uploadRequestFail": {
+    "default": ["Failed to upload", "please try again."]
+  },
+  "combineChunks": {
+    "default": ["Failed to combined file chunks for "]
+  },
+  "getChildrenDataset": {
+    "403": [
+      "You do not have permission to access child datasets in this project."
+    ],
+    "500": [
+      "Something went wrong while trying to retrieve child datasets, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while attempting to retrive the child datasets, please try again later."
+    ]
+  },
+  "traverseFoldersContainersAPI": {
+    "403": ["You do not have permission to access this folder."],
+    "500": [
+      "Something went wrong while trying to access this folder, please try again later."
+    ],
+    "404": [
+      "The folder you requested could not be found, please try again later."
+    ],
+    "default": [
+      "Something went wrong while trying to access this folder, please try again later."
+    ]
+  },
+  "getFilesByTypeAPI": {
+    "403": [
+      "You do not have permission to access processed files at this time."
+    ],
+    "500": [
+      "Something went wrong while trying to process files, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to process files, please try again later."
+    ]
+  },
+  "rawTable": {
+    "getFilesApi": {
+      "default": [
+        "An error occurred while trying to retrieve the file information"
+      ]
+    }
+  },
+  "downloadFilesAPI": {
+    "400": ["Folder is empty"],
+    "404": ["File does not exist"],
+    "403": ["You do not have permission to download files from this project."],
+    "500": [
+      "Something went wrong while trying to download files, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to download files, please try again later."
+    ]
+  },
+  "downloadDatasetFilesAPI": {
+    "400": ["Folder is empty"],
+    "404": ["File does not exist"],
+    "403": ["You do not have permission to download files from this dataset."],
+    "500": [
+      "Something went wrong while trying to download files, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to download files, please try again later."
+    ]
+  },
+  "processingFile": {
+    "default": [
+      "Something went wrong while trying to upload your file",
+      "please try again later."
+    ]
+  },
+  "preUpload": {
+    "403": ["Sorry, you do not have permission to upload the file(s)."],
+    "409": [
+      "A file/folder by the name of",
+      "already exists in the project, please rename your file before uploading."
+    ],
+    "500": [
+      "Something went wrong while trying to upload the file. please try again later. Error Code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to upload your file, please try again later."
+    ]
+  },
+  "selfRegistration": {
+    "400": [
+      "Invalid request, please try again or contact an administrator for assistance."
+    ],
+    "401": ["Invitation link has expired."],
+    "500": [
+      "Something went wrong while trying to create your account, please try again later.  Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to create your account, please try again later."
+    ]
+  },
+  "inviteUser": {
+    "403": [
+      "You do not have permission to invite this user",
+      "please try again later."
+    ],
+    "404": [
+      "Something went wrong while trying to invite user",
+      "to the project, please try again later."
+    ],
+    "500": [
+      "Something went wrong while trying to invite user",
+      "to the project, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to invite user",
+      "to the project, please try again later."
+    ]
+  },
+  "inviteUserPlatform": {
+    "default": ["Failed to add user [", "] to the platform"]
+  },
+  "checkEmailExistAPI": {
+    "403": ["A user with the email address", "already exists in the project."],
+    "500": [
+      "Something went wrong while attempting to validate the user list, please try again later.  Error Code: 500"
+    ],
+    "default": [
+      "Something went wrong while attempting to validate the user list, please try again later."
+    ]
+  },
+  "checkUserPlatformRole": {
+    "403": [
+      "You do not have permission to view this user's role on the platform."
+    ],
+    "500": [
+      "Something went wrong while checking the user's role, please try again later.  Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while checking user's role, please try again later."
+    ]
+  },
+  "addUsertoDataSet": {
+    "403": {
+      "title": ["User is already a Project Member"],
+      "content": [
+        "is already a member of this project. ",
+        "If you would like to update their permissions, you can change their Project role in the Action menu. "
+      ]
+    },
+    "500": [
+      "Something went wrong while trying to invite user",
+      "to the project, please try again later."
+    ],
+    "default": ["Something went wrong while trying to add new project member."]
+  },
+  "changeRoleInDataset": {
+    "403": [
+      "You do not have permission to change the role for",
+      "please check your account settings or contact an administrator."
+    ],
+    "404": [
+      "Something went wrong while trying to change the role for",
+      "please try again later."
+    ],
+    "500": [
+      "Something went wrong while trying to change the role for",
+      "please try again later."
+    ]
+  },
+  "getUsersOnDataset": {
+    "403": ["You do not have permission to view users in this project."],
+    "404": [
+      "The user list for this project could not be found, please try again later."
+    ],
+    "500": [
+      "Something went wrong while trying to fetch the user list for this project, please try again later."
+    ]
+  },
+  "removeUserFromDataset": {
+    "403": ["You do not have permission to remove user", "from this project."],
+    "404": [
+      "Something went wrong while trying to remove a user from this project, please try again later."
+    ],
+    "500": [
+      "Something went wrong while trying to remove a user from this project, please try again later."
+    ]
+  },
+  "restoreUserFromDataset": {
+    "403": ["You do not have permission to restore user", "from this project."],
+    "404": [
+      "The user or project could not be found, please try again later or contact an administrator for assistance."
+    ],
+    "500": [
+      "Something went wrong while trying to restore a user from this project, please try again later.  Error code: 500"
+    ]
+  },
+  "getDataset": {
+    "default": [
+      "Something went wrong while trying to load projects list, please try again later."
+    ]
+  },
+  "listAllContainersPermission": {
+    "401": ["You are not authorized to edit user roles on this project."],
+    "404": [
+      "The project could not be found while trying to set container permissions, please try again later."
+    ],
+    "default": ["Something went wrong, please try again later."]
+  },
+  "contactUsAPI": {
+    "401": [
+      "You do not have the correct permissions to submit a request, please contact an administrator or email the team directly at {{ SUPPORT_EMAIL }}"
+    ],
+    "404": [
+      "Something went wrong while trying to submit your support request, please try again later or email the team directly at {{ SUPPORT_EMAIL }}"
+    ],
+    "413": [
+      "Total file size is over the limit, please reduce the file size or email the team directly at {{ SUPPORT_EMAIL }}"
+    ],
+    "default": [
+      "Something went wrong while trying to submit your support request, please try again later or email the team directly at {{ SUPPORT_EMAIL }}"
+    ]
+  },
+  "inviteUserApi": {
+    "400": ["A user with email address", "already exists in the platform."],
+    "default": [
+      "Something went wrong while trying to invite user to platform. Please try again later."
+    ]
+  },
+  "getPortalUsers": {
+    "400": ["The users list could not be retrieved due to an invalid request"],
+    "default": [
+      "Something went wrong while trying to get users list, please try again later."
+    ]
+  },
+  "updateUserStatusAPI": {
+    "400": ["Invalid request - the user status could not be updated."],
+    "default": [
+      "Something went wrong while trying to update the users status, please try again later."
+    ]
+  },
+  "getInvitationsAPI": {
+    "400": ["Invalid request - the invitations could not be retrieved."],
+    "default": [
+      "Something went wrong while trying to fetch invitations, please try again later."
+    ]
+  },
+  "editManifestOnFile": {
+    "emptyNonOptional": ["Input cannot be empty for non-optional attributes"],
+    "lengthExceed": ["Text cannot be longer than 100 characters"]
+  },
+  "updateFileManifestAPI": {
+    "default": [
+      "Update failed - something went wrong while trying to update the attribute template, please try again later."
+    ]
+  },
+  "importExportManifest": {
+    "manifestNumberOver": [
+      "The maximum number of attribute templates has been reached."
+    ],
+    "parseJsonFailed": ["Failed to parse the json file"],
+    "fileTypeError": ["Incorrect file format"],
+    "attributesMissing": ["The json should have a \"attributes\" property"],
+    "attributesNotArray": ["The \"attributes\" property should be an array"],
+    "propertyMissing": ["property is missing on the", "th attribute"],
+    "nameNotString": [
+      "the \"name\" property should be a string on the",
+      "th attribute"
+    ],
+    "nameLength": [
+      "the \"name\" property length should be between 1-32 characters on the",
+      "th attribute"
+    ],
+    "nameFormat": [
+      "the \"name\" property should only contains letters and numbers on the",
+      "th attribute"
+    ],
+    "optionalNotBoolean": [
+      "the \"optional\" property should be a boolean on the",
+      "th attribute"
+    ],
+    "typeFormat": [
+      "the \"type\" property should be 'multiple_choice'|'text' on the",
+      "th attribute"
+    ],
+    "valueNullText": [
+      "the \"value\" should be null when the \"type\" is 'text' on the",
+      "th attribute"
+    ],
+    "valueString": [
+      "the \"value\" should be a string when the \"multiple_choice\" is 'text' on the",
+      "th attribute"
+    ],
+    "choiceLength": [
+      "the choice's length should be between 1-32 characters on the",
+      "th attribute"
+    ],
+    "choiceFormat": [
+      "the choice should only contain letters, numbers, and characters in -_!%&/()=?*+#.; on the",
+      "th attribute"
+    ],
+    "uniqueName": ["The \"name\" property should be unique"]
+  },
+  "importManifestAPI": {
+    "default": [
+      "Something went wrong while trying to upload the attribute template"
+    ]
+  },
+  "getManifestById": {
+    "default": [
+      "Something went wrong while trying to retrieve the attribute template id: "
+    ]
+  },
+  "fileOperations": {
+    "deleteErr": "Something went wrong while trying to delete a file or folder.",
+    "unauthorizedDelete": "You are not authorized to delete the selected file(s)/folder(s)",
+    "noFileToDelete": "Please select the files or folders you wish to delete."
+  },
+  "copyFiles": {
+    "default": ["Failed to copy the files, please try again later."]
+  },
+  "requestToCore": {
+    "default": ["Failed to send the request, please try again later."]
+  },
+  "markAsComplete": {
+    "default": ["Something wrong with the request, please try again later."]
+  },
+  "completeRequest": {
+    "default": ["Failed to send the request, please try again later."]
+  },
+  "addToDataset": {
+    "default": [
+      "Failed to import the file(s)/folder(s) to the dataset, please try again later!"
+    ],
+    "403": ["This dataset has already been taken by another project."]
+  },
+  "listDatasets": {
+    "default": ["Failed to list all of the datasets, please try again later."]
+  },
+  "updateFileTags": {
+    "default": ["Failed to update the tags, please try again later."]
+  },
+  "addFileTags": {
+    "default": ["Failed to add the tags, please try again later."]
+  },
+  "deleteFileTags": {
+    "default": ["Failed to delete the tags, please try again later."]
+  },
+  "attachManifest": {
+    "default": ["Failed to attach attribute template, please try again later."]
+  },
+  "deleteManifest": {
+    "500": [
+      "Attribute template has already been attached to files. Please do not delete it"
+    ]
+  },
+  "deleteVirtualFolder": {
+    "default": [
+      "Something went wrong while trying to delete the collection. Please try again later"
+    ]
+  },
+  "removeFromVirtualFolder": {
+    "default": [
+      "Something went wrong while trying to remove files from collection. Please try again later"
+    ]
+  },
+  "addFilesToVirtualFolder": {
+    "default": [
+      "Something went wrong while trying to add files to collection. Please try again later"
+    ]
+  },
+  "createVirtualFolder": {
+    "default": [
+      "Something went wrong while trying to create collection. Please try again later"
+    ],
+    "duplicate": [
+      "A collection by this name already exists, please enter a new name."
+    ],
+    "limit": ["The maximum number of collections has been reached."]
+  },
+  "updateVirtualFolder": {
+    "default": ["Failed to update collection. Please try again later"],
+    "noFoldersToUpdate": [
+      "Please change the collections' name you want to update!"
+    ]
+  },
+  "addFilesToNewFolder": {
+    "default": [
+      "Something went wrong while trying to add files to the new collection. Please try again later"
+    ]
+  },
+  "addUser2Project": {
+    "email": "Wrong email format",
+    "emailRequired": "Email is required.",
+    "disabledUser": {
+      "title": "User cannot be added to the Project",
+      "content": "cannot be added to the Project at this time, please contact a Platform Administrator for assistance."
+    },
+    "platformAdmin": {
+      "title": "User cannot be added to the Project",
+      "content": "cannot be added to the Project at this time, please contact a Platform Administrator for assistance."
+    },
+    "pending": {
+      "title": "User already invited",
+      "content": "User cannot be added to the Project at this time. Please try again later."
+    }
+  },
+  "addUser2Platform": {
+    "disabledUser": {
+      "title": "User account is disabled",
+      "content": [
+        "The account for",
+        "has been disabled.  You can reactivate the user’s account in the Action menu."
+      ]
+    },
+    "platformAdmin": {
+      "title": "User cannot be added to the Project",
+      "content": "cannot be added to the Project at this time, please contact a Platform Administrator for assistance."
+    },
+    "pending": {
+      "title": "User already invited",
+      "content": [
+        "A user with the email address",
+        "has already been invited to the {{ PLATFORM }}, you can see their invitation status in the Invitations tab."
+      ]
+    }
+  },
+  "userManagement": {
+    "getServiceRequestAPI": "Something went wrong while trying to retrieve service request table resources, please try again later."
+  },
+  "announcement": {
+    "getAnnouncementApi": {
+      "default": [
+        "Something went wrong while trying to retrieve announcements, please try again later."
+      ]
+    },
+    "getUserAnnouncementApi": {
+      "default": [
+        "Something went wrong while trying to retrieve announcements for this project, please try again later."
+      ]
+    }
+  },
+  "projectWorkench": {
+    "getWorkbench": {
+      "default": [
+        "Something went wrong while trying to retrieve the workbenches."
+      ]
+    },
+    "deployWorkbench": {
+      "default": [
+        "Something went wrong while deploying the workbench, please try again later."
+      ]
+    }
+  },
+  "createFolder": {
+    "409": [
+      "A folder with same name already exists at the specified destination."
+    ],
+    "default": [
+      "Something went wrong while trying to create folder, please try again later."
+    ]
+  },
+  "getDatasets": {
+    "500": [
+      "Something went wrong while trying to retrieve datasets.  Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to retrieve datasets, please try again later."
+    ]
+  },
+  "downloadDataset": {
+    "default": ["Failed to retrieve download url"]
+  },
+  "createDataset": {
+    "409": ["This dataset code has been taken, please try another."],
+    "default": [
+      "Something went wrong while trying to create the dataset, please try again later."
+    ]
+  },
+  "getDatasetInfo": {
+    "default": [
+      "Something went wrong while trying to get dataset information, please try again later."
+    ]
+  },
+  "datasetDelete": {
+    "default": [
+      "Something went wrong while trying to delete the file or folder, please try again later."
+    ]
+  },
+  "datasetDownloadFile": {
+    "default": [
+      "Something went wrong while trying to retrieve the download url, please try again later."
+    ]
+  },
+  "datasetVersionLogs": {
+    "default": [
+      "Something went wrong while trying to retrieve the activity logs for this current version, please try again later."
+    ]
+  },
+  "publishDatasetNewVersion": {
+    "default": [
+      "Something went wrong while trying to publish a new version, please try again later."
+    ]
+  },
+  "updateDatasetSchema": {
+    "default": [
+      "Something went wrong while trying to update the dataset schema, please try again later."
+    ]
+  },
+  "createDatasetSchema": {
+    "default": [
+      "Something went wrong while trying to create a dataset schema, please try again later."
+    ]
+  },
+  "createDatasetSchemaDraft": {
+    "empty": ["Please input a valid value before saving as draft."]
+  },
+  "datasetSchemaList": {
+    "default": [
+      "Something went wrong while trying to get the dataset schemas, please try again later."
+    ]
+  },
+  "datasetSchemaTemplateList": {
+    "default": [
+      "Something went wrong while trying to get the dataset schema templates, please try again later."
+    ]
+  },
+  "customizeSchema": {
+    "itemRequired": ["Please add at least one field."]
+  },
+  "validateEssentialSchema": {
+    "tags": {
+      "noWhiteSpace": "Tags may not contain spaces."
+    },
+    "description": {
+      "onlyWhiteSpace": "Please enter a tag."
+    }
+  },
+  "uploadOpenMindsSchema": {
+    "fileNumOverLimit": ["Please do not upload more than 20 files"],
+    "noOpenMindsTemplate": ["No OpenMINDS template found"],
+    "fileSizeOverLimit": ["File size must be smaller than 1MB"],
+    "uploadFailed": ["Failed to upload the selected schema."]
+  },
+  "createNotification": {
+    "default": [
+      "Something went wrong while trying to create the notification, please try again later."
+    ]
+  },
+  "disableNotification": {
+    "default": [
+      "Something went wrong while trying to disable the notification, please try again later."
+    ]
+  },
+  "updateNotification": {
+    "default": [
+      "Something went wrong while trying to update the notification, please try again later."
+    ]
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "userguide": "User Guide",
+  "userguide_content": "Click the link below to access the VRE User Guide on the wiki.",
+  "download_guide_button_text": "User Guide",
+  "faq_title": "Frequently Asked Questions",
+
+  "drawers": [
+    {
+      "title": "Account Information",
+      "panel": [
+        {
+          "question": "I forgot my username or password. What should I do?",
+          "answer": "You may log in with your Charité username or email address. To reset your password, please visit https://zugang.charite.de/"
+        },
+        {
+          "question": "How can I change my password?",
+          "answer": "After logging in, click on your username in the top right corner of any page and select \"Reset Password\" from the dropdown menu. You will be redirected to visit https://zugang.charite.de/ where you can reset your password. For additional assistance with your account, you can contact the Charité help desk by phone at +49 30 450 575444 or by sending an email to helpdesk@charite.de (auskunftssystem@charite.de)."
+        },
+        {
+          "question": "What do I need to do to register for the VRE?",
+          "answer": "All new users must first be invited to the VRE by a Project or Platform Administrator. If an invitation is sent to an email address that is associated with an active Charité account, the recipient will need to click the link in the invitation email and accept the Platform Terms of Use to register for the VRE. If an invitation is sent to an email address that is not associated with an active Charité account, an automated email will be sent with instructions for submitting an Access Request and completing the required form(s). If you have questions about this process or if you do not receive the expected email, please contact the VRE Support Team at VRE-support@charite.de."
+        }
+      ]
+    },
+    {
+      "title": "Projects",
+      "panel": [
+        {
+          "question": "What is my Project role and what is the difference between the various Project roles?",
+          "answer": "Your Project role is displayed in the Project Information card of the Project canvas and may be different across different Projects. The available user roles are as follows:",
+          "Administrator": "The Project Administrator is a Principal Investigator or delegate who has overall responsibility under GDPR as Data Controller for the Project data and has the authority to invite other research members to the Project. Administrators can view all Project data in the VRE Green Room and Core, modify Project information, and add additional users to the Project.",
+          "Collaborator": "The Project Collaborator is a member of the Project whose primary role is data analyst. Members with this role can contribute, or upload, data to the Project, view the list of files they uploaded to the Project, and download the files that they originally uploaded. Project Collaborators cannot browse or download data contributed by any other member of the Project in the VRE Green Room but can view and download all data in their Project that has been approved and copied to the VRE Core.",
+          "Contributor": "The Project Contributor is a member of the Project whose role is only to contribute data. Members with this role can contribute, or upload, data to the Project Green Room, view the list of files they uploaded to the Project, and download the files they originally uploaded. Project Contributors cannot browse or download data contributed by any other member of the Project and cannot view or access any data in the VRE Core. "
+        },
+        {
+          "question": "What is a Project?",
+          "answer": "A Project is a data storage and processing container that holds all the data files for a VRE-approved research project. VRE-approved means that the research project has been assessed by the Charité VRE Governance Manager and Data Protection Officer as having all the necessary approvals and safeguards in place for data processing to occur in the VRE."
+        },
+        {
+          "question": "What is the difference between Project Code and Project Name?",
+          "answer": " The Project Code is a persistent character-based code created by the VRE Onboarding Team that uniquely identifies the Project in the VRE. Once created, it cannot be changed. The Project Name is a user-friendly, descriptive title that makes it easier for users to find the Project in the VRE. The Project Name can only be changed by the Project Administrator."
+        },
+        {
+          "question": "What is Project Visibility and how can I change it?",
+          "answer": "Visibility is a Project attribute that controls whether a Project's basic information (Project Title, Project Code, and description) is visible to all VRE users in the Landing Page. Visibility does not affect which users can be added to a Project.",
+          "visibility": "The Visibility of a Project is controlled by the Administrator and can be edited in the Project Settings page by switching the visibility toggle on or off. If the Project is set to 'Discoverable by all platform users' any user logged into the VRE can see the Project Title, Project Code, and description on the VRE landing page, however, only invited Team Members can enter the Project. If visibility is turned off, only invited Project Team Members will be able to see the Project on the Landing Page."
+        },
+        {
+          "question": "Who can initiate a Project?",
+          "answer": "Once REB approval has been received for a research project and a service agreement is in place, the Project can be created and configured in the VRE by a Platform Administrator, who will grant access to the first Project Administrator."
+        }
+      ]
+    },
+    {
+      "title": "Site Security",
+      "panel": [
+        {
+          "question": "Why do I receive warnings that my session will expire?",
+          "answer": "The platform detects user sessions that have been inactive for more than thirty minutes. This is done for security reasons and helps enhance the overall speed and security of the platform. Before expiring inactive sessions, the VRE will warn you. To confirm that your session should remain active, click 'Refresh'. If your session has expired, you will be required to log back in with your username and password."
+        }
+      ]
+    },
+    {
+      "title": "File Upload",
+      "panel": [
+        {
+          "question": "Who can upload a data file to the VRE?",
+          "answer": "A file can only be uploaded into an approved Project by an invited Project Member. As a Project Member of the Project invited by an Administrator, you have been authorized to contribute data to the project. All VRE members are responsible for abiding by the Platform Terms of Use and all Project Members must ensure that they only upload authorized data that is appropriate to the Project. Please contact your Project Administrator if you believe you should have a different user role."
+        },
+        {
+          "question": "How do I upload a file?",
+          "answer": "After logging into the VRE, navigate to your Project and click on Upload in the File Explorer card. You can select one or multiple files or folders from your local drive to upload to the VRE."
+        },
+        {
+          "question": "How do I know my file uploaded successfully?",
+          "answer": "The Files Status icon in the main navigation menu will display the status of your file uploads for the current session. If you click on the File Status card, your most recent upload will appear in the \"In Progress\" section until it has uploaded successfully. The \"Uploaded\", \"Downloaded\", \"Approved\", and \"Trash Bin\" pages will show you the other files that have been successfully processed during your current session. If any uploads or downloads failed, the File Status icon will turn red and a list of the failed files will appear in the \"In Progress\" tab."
+        },
+        {
+          "question": "Who can access the files I upload?",
+          "answer": "Files uploaded into the VRE Green Room can only be accessed by a Project Administrator or the Project Member that uploaded the file. Files moved to the VRE Core are accessible to all Project Members with Core access."
+        }
+      ]
+    },
+    {
+      "title": "File Organization",
+      "panel": [
+        {
+          "question": "What is the difference between the VRE Green Room and the VRE Core?",
+          "answer": "The Green Room is a segregated data zone for the storage of data with personally identifiable information. Within the Green Room environment, hospital data can be de-identified, transformed, and prepared prior to being transferred to VRE Core systems. The VRE Core is an environment designed to support the full lifecycle of data after being deidentified in the Green Room. In the VRE Core, de-identified hospital data can be securely stored, federated, and analyzed."
+        },
+        {
+          "question": "How do I move a file from the Green Room to the VRE Core?",
+          "answer": "Project Administrators can copy files from the Green Room into the VRE Core by selecting files in the File Explorer, clicking the 'Copy to Core' button, and inputting the confirmation code."
+        },
+        {
+          "question": "What is a Collection?",
+          "answer": "A Collection is a personalized group of files that has been created by a user to organize data in the VRE Core without moving or duplicating data. A single file can be added to multiple Collections and adding or removing files from Collections does not affect the file's storage location or data lineage. Collections are made by selecting files in the VRE Core and selecting \"Add to Collection\". Currently, all collections are private and cannot be viewed by other users."
+        },
+        {
+          "question": "What is a File Attribute Template?",
+          "answer": "A File Attribute Template is a list of pre-defined attributes and values specific to a file or collection of files. File Attribute Templates are configured by Project Administrators on the Project Settings page. File Attributes can be attached to any file(s) during upload or edited while viewing the Properties of a file in the File Explorer."
+        },
+        {
+          "question": "What happens to files that get moved to the Trash Bin?",
+          "answer": "Files that are moved to the Trash Bin can either be restored, if necessary, or permanently deleted by the VRE Platform Administrator."
+        }
+      ]
+    },
+    {
+      "title": "External Project Tools",
+      "panel": [
+        {
+          "question": "What are the Project tools are available outside of the Portal?",
+          "answer": "XWiki, Guacamole, Jupyterhub, Superset, and the Command Line Tool are available for Project Members to use. Talk to your Project Administrator about setting up these tools if they are not yet configured for your Project."
+        },
+        {
+          "question": "What is XWiki?",
+          "answer": "XWiki is a structured wiki that can be used by Project Members for documentation, knowledge sharing, and collaboration."
+        },
+        {
+          "question": "What is Guacamole?",
+          "answer": "Apache Guacamole is a clientless remote desktop gateway that supports standard protocols like VNC, RDP, and SSH. Contact a Platform Administrator for more information about deploying Guacamole for your Project."
+        },
+        {
+          "question": "What is JupyterHub?",
+          "answer": "JupyterHub is an open-source, multi-user version of Jupyter Notebook integrated for performing analysis of data in the VRE Core. Contact a Platform Administrator for more information about deploying JupyterHub for your Project."
+        },
+        {
+          "question": "What is Superset?",
+          "answer": "Apache Superset is an open-source software cloud-native application designed for the exploration and visualization of big data. Contact a Platform Administrator for more information about deploying Superset for your Project."
+        },
+        {
+          "question": "What is the Command Line Tool?",
+          "answer": "The Command Line Tool supports file upload, folder upload, Project query, and File Manifest functions from a Linux or Mac Command Line."
+        }
+      ]
+    }
+  ]
+}

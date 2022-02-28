@@ -1,0 +1,22 @@
+.arrow {
+  position: absolute;
+  top: 38px;
+  left: 15px;
+  cursor: pointer;
+  transform: rotate(0deg);
+  transition: all 0.2s ease;
+  &.active {
+    transform: rotate(90deg);
+  }
+}
+
+
+.subHeader{
+    max-height: 0px;
+    transition: all 0.2s ease;
+    opacity: 0;
+    &.active{
+        max-height: 150px;
+        opacity: 1;
+    }
+}

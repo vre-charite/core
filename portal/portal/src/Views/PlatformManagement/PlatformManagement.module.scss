@@ -1,0 +1,14 @@
+.platform_management {
+    background-color: #F0F2F5;
+    .tabs {
+        margin: 24px;
+        :global {
+            .ant-tabs {
+                border-radius: 8px;
+            }
+            .ant-tabs-nav {
+                margin-left: 22px;
+            }
+        }
+    }
+}

@@ -1,0 +1,146 @@
+.formItem {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+.range {
+  padding-right: 20px !important;
+}
+.card {
+  margin-bottom: 10px;
+  background: white;
+  padding: 20px !important;
+  overflow: auto;
+}
+
+.buttonMargin {
+  margin-right: 10px;
+}
+
+.wrapper {
+  width: 100%;
+  padding: 30px 45px 20px 30px !important;
+}
+
+.paragraph {
+  max-width: calc(100% - 54px);
+  font-size: 20px;
+  margin-bottom: 4px;
+  overflow-wrap: break-word;
+}
+
+.tab {
+  background-color: #ffffff;
+  border-radius: 6px;
+}
+
+.tab {
+  :global {
+    .ant-tabs-nav-container {
+      padding: 0px 24px;
+    }
+  }
+}
+
+.tab {
+  :global {
+    .ant-tabs-nav-container {
+      .ant-tabs-tab {
+        margin: 0px 80px 0px 0px !important;
+      }
+    }
+  }
+}
+
+/* .ant-layout {
+  margin-left: 0px !important;
+  padding: 25px 25px;
+} */
+
+:global {
+  .ant-tabs-extra-content {
+    .ant-btn {
+      border-radius: 6px;
+      margin-right: 20px;
+    }
+  }
+}
+
+.createNewProjectCard {
+  margin: -16px 24px 0px 24px !important;
+  border-radius: 0px 0px 6px 6px;
+  box-shadow: 0px 1px 7px #0000001a;
+  opacity: 1;
+  padding-top: 10px;
+}
+
+.createNewProjectCard {
+  :global {
+    .ant-card-body {
+      width: 100%;
+    }
+  }
+}
+
+.searchCard {
+  border-radius: 0px 0px 6px 6px;
+  box-shadow: 0px 1px 7px #0000001a;
+  opacity: 1;
+  position: absolute !important;
+  top: 44px;
+  right: 24px;
+  left: 24px;
+  .firstInputLine {
+    width: 100%;
+    > div {
+      display: inline-block;
+      margin-right: 1%;
+    }
+    :global {
+      .ant-input {
+        border-radius: 6px;
+      }
+      .ant-picker {
+        border-radius: 6px;
+      }
+      .ant-select {
+        border-radius: 6px;
+      }
+      .ant-select-selector {
+        border-radius: 6px !important;
+      }
+    }
+  }
+  .secondInputLine {
+    display: flex;
+    align-items: flex-end;
+    :global {
+      .ant-input {
+        border-radius: 6px;
+      }
+      .ant-btn {
+        border-radius: 6px !important;
+        margin-right: 2%;
+      }
+    }
+  }
+}
+
+.newProjectForm {
+  :global {
+    .ant-input {
+      border-radius: 6px;
+    }
+    .ant-select-selector {
+      border-radius: 6px !important;
+    }
+  }
+}
+
+.buttonItem {
+  :global {
+    .ant-btn-loading {
+      width: 130px !important;
+    }
+  }
+}

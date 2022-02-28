@@ -1,0 +1,28 @@
+.tab {
+  :global {
+    .ant-tabs {
+      .ant-tabs-bar {
+        margin-bottom: 0px;
+      }
+    }
+  }
+  .tab_content {
+    display: flex;
+    min-height: 600px;
+    .tab_content_left_part {
+      min-width: 350px;
+      border-right: 1px solid #f0f0f0;
+    }
+    .tab_content_right_part {
+      flex: 1;
+      position: relative;
+    }
+    @media (max-width: 1600px) {
+      .tab_content_left_part {
+        min-width: 220px;
+        width: 220px;
+        border-right: 1px solid #f0f0f0;
+      }
+    }
+  }
+}

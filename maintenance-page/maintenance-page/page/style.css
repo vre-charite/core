@@ -1,0 +1,113 @@
+html {
+  font-family: "Open Sans", sans-serif;
+  background: #f0f2f5;
+  min-height: 100vh;
+  position: relative;
+  color: rgba(0, 0, 0, 0.8);
+}
+a {
+  text-decoration: none;
+}
+* {
+  box-sizing: border-box;
+}
+.maintenance-content {
+  max-width: 848px;
+  margin: 30vh auto;
+  background-color: #fff9f0;
+  box-shadow: 0px 3px 6px #0000001a;
+  border-radius: 8px;
+  padding: 55px 85px 35px;
+}
+.maintenance-content .logo {
+  width: 220px;
+}
+.maintenance-content .notice {
+  display: flex;
+  align-items: center;
+}
+.maintenance-content .notice > img {
+  width: 22px;
+  margin-right: 8px;
+}
+.maintenance-content .notice > p {
+  color: #ff8b18;
+  font-weight: 600;
+  font-size: 16px;
+  max-width: 440px;
+  margin: 5px 0;
+}
+.maintenance-content .contact {
+  padding-left: 50px;
+}
+.maintenance-content .contact > p {
+  color: #595959;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 3px;
+}
+.maintenance-content .contact > a {
+  color: #1890ff;
+  font-weight: 600;
+  font-size: 16px;
+}
+footer {
+  position: fixed;
+  width: 100%;
+  bottom: 10px;
+  padding: 20px 50px 10px !important;
+  color: rgba(0, 0, 0, 0.5) !important;
+  font-weight: normal;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.layout_menu {
+  display: flex;
+}
+.layout_menu .ant-space-item {
+  height: 20px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+}
+.layout_menu .ant-space-item > a {
+  display: block;
+  margin-right: 20px;
+  height: 20px;
+  line-height: 20px;
+  color: #1890ff;
+}
+.layout_copyright {
+  font-size: 12px;
+}
+.layout_copyright a {
+  color: #1890ff;
+  text-decoration: none;
+  background-color: transparent;
+  outline: none;
+  cursor: pointer;
+  margin-right: 10px;
+}
+@media only screen and (max-width: 768px) {
+  .maintenance-content {
+    margin: 20% 20px;
+    padding: 35px 40px 25px;
+  }
+  .maintenance-content .notice > p {
+    font-size: 14px;
+  }
+  .maintenance-content .contact > p {
+    font-size: 14px;
+  }
+  .maintenance-content .contact > a {
+    font-size: 14px;
+  }
+  .maintenance-content .contact {
+    padding-left: 30px;
+  }
+  footer {
+    flex-direction: column;
+  }
+}

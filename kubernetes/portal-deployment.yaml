@@ -32,7 +32,7 @@ spec:
             - name: env
               value: "charite"
             - name: REACT_APP_ENV
-              value: "charite"
+              value: "production"
             - name: CONFIG_CENTER_ENABLED
               value: "true"
             - name: CONFIG_CENTER_BASE_URL

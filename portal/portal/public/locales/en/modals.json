@@ -1,0 +1,61 @@
+{
+  "refreshModal": {
+    "title": "Warning",
+    "text": [
+      "Your session will expire in",
+      "Please click “Refresh” if you wish to remain logged in."
+    ]
+  },
+  "inviteToProject": {
+    "title": "Already Registered to {{ PLATFORM }}",
+    "content": [
+      " is already registered to {{ PLATFORM }} with AD.",
+      "Are you sure you want to invite user into ",
+      " as "
+    ]
+  },
+  "inviteNoExist": {
+    "title": "Confirm user invitation",
+    "content": [
+      "You are about to invite",
+      "to the Project:",
+      "with the role of",
+      "Are you sure you wish to proceed? "
+    ]
+  },
+  "inviteNoExistPlatform": {
+    "title": "Confirm user invitation",
+    "content": [
+      "You are about to invite",
+      "to the {{ PLATFORM }} Platform with the role of",
+      "This user is NOT a member of the Active Directory - clicking send will automatically send an invitation email with instructions for submitting a Account Request form.",
+      "Are you sure you wish to proceed? ",
+      "This user is a member of the Active Directory, clicking send will notify the user by email, once they log in for the first time and accept the Terms of Use they will appear in the User List automatically."
+    ]
+  },
+  "inviteExist": {
+    "title": "User already exists",
+    "content": [
+      "A user with the email address",
+      "already exists in the user list."
+    ]
+  },
+  "updateStatusTime": {
+    "title": "Update processing",
+    "content": [
+      "The account",
+      "is in the process of being",
+      ", this process may take up to 10 minutes to complete.",
+      "Please do not make any additional changes to the account status while the action is being processed.  Once processing is complete the user account status will be updated in the user list.",
+      "Please do not make any additional changes to this user’s Project membership status or Project role while the user’s Project membership is being restored.  Once processing is complete the user account status will be updated in the Project member list.",
+      "The Project membership for"
+    ]
+  },
+  "inviteInAd": {
+    "title": "Confirm user invitation",
+    "content": [
+      "[",
+      "] holds an account in {{ ORGANIZATION }} AD, will be federate into {{ PLATFORM }}"
+    ]
+  }
+}

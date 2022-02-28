@@ -1,0 +1,71 @@
+.maintenance-modal {
+  &__title {
+    display: flex;
+    align-items: center;
+    color: #ff8b18;
+    font-size: 17px;
+    font-weight: 500;
+    p {
+      margin-bottom: 0;
+    }
+    span[role='img'] {
+      margin-right: 8px;
+    }
+  }
+
+  &__message {
+    font-size: 16px;
+    max-width: 500px;
+    margin: 0 auto 10px auto;
+    line-height: 22px;
+  }
+
+  &__date {
+    font-size: 19px;
+    margin-bottom: 0;
+  }
+
+  &__primary-button {
+    width: 110px;
+    border-radius: 6px !important;
+  }
+
+  :global {
+    .ant-modal-header,
+    .ant-modal-content,
+    .ant-modal-footer {
+      background-color: #fff9f0;
+    }
+    .ant-modal-header {
+      padding: 10px 24px;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    .ant-modal-content {
+      width: 685px;
+      min-height: 240px;
+      box-shadow: 0px 3px 6px #0000001a;
+      border-radius: 8px;
+      color: #595959;
+      font-weight: 500;
+      text-align: center;
+      top: -25px;
+
+      .ant-modal-close-x {
+        display: flex;
+        align-items: center;
+        width: 43px;
+        height: 43px;
+      }
+    }
+    .ant-modal-footer {
+      display: flex;
+      justify-content: center;
+      border-top: none;
+      padding-top: 0;
+      padding-bottom: 16px;
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+  }
+}

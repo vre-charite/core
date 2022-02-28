@@ -1,0 +1,277 @@
+.file_explore_actions {
+  :global {
+    .ant-btn-link {
+      color: rgba(0, 0, 0, 0.65);
+    }
+    .ant-btn-link:focus {
+      color: rgba(0, 0, 0, 0.65);
+    }
+    .ant-btn-link:hover {
+      color: #40a9ff;
+    }
+  }
+}
+.files_raw_table {
+  :global {
+    .ant-table-tbody > tr > td {
+      background: none !important;
+    }
+    tr.manifest-attached {
+      opacity: 0.6;
+      > td {
+        background-color: white !important;
+      }
+    }
+  }
+}
+.file_folder_path {
+  :global {
+    span:last-child {
+      .ant-breadcrumb-link {
+        font-weight: bold;
+      }
+    }
+    .ant-breadcrumb-separator {
+      color: #003262 !important;
+    }
+    .ant-breadcrumb-link {
+      color: #003262 !important;
+    }
+  }
+}
+
+.file_dir {
+  :global {
+    .Collapse_collapseBg__3m8BO {
+      margin-bottom: 10px !important;
+    }
+    .ant-tree-iconEle {
+      margin-right: 4px;
+      font-size: 12px;
+    }
+    .ant-tree-title {
+      font-size: 14px;
+      color: #222222;
+    }
+  }
+}
+
+.trash_bin {
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.create_new_collection {
+  margin: 0px 0px 4px 0px;
+  :global {
+    .ant-form-item-control-input-content {
+      display: flex;
+      align-items: center;
+    }
+    .ant-form-item-explain {
+      margin-left: 10px;
+    }
+  }
+}
+
+.update_collection_name {
+  margin: 0px 0px 4px 0px;
+  :global {
+    .ant-form-item-control-input-content {
+      display: flex;
+      align-items: center;
+    }
+    .ant-form-item-explain {
+      margin-left: 15px;
+    }
+  }
+}
+
+.drop-down {
+  :global {
+    li {
+      display: none;
+    }
+  }
+}
+
+.greenroom_title {
+  cursor: pointer;
+}
+
+.core_title {
+  cursor: pointer;
+}
+
+.lineage_spin {
+  top: -40px !important;
+}
+
+.show-menu-1 {
+  :global {
+    li:nth-last-child(1) {
+      display: block;
+    }
+  }
+}
+
+.show-menu-2 {
+  :global {
+    li:nth-last-child(1) {
+      display: block;
+    }
+    li:nth-last-child(2) {
+      display: block;
+    }
+  }
+}
+
+.show-menu-3 {
+  :global {
+    li:nth-last-child(1) {
+      display: block;
+    }
+    li:nth-last-child(2) {
+      display: block;
+    }
+    li:nth-last-child(3) {
+      display: block;
+    }
+  }
+}
+
+.show-menu-4 {
+  :global {
+    li:nth-last-child(1) {
+      display: block;
+    }
+    li:nth-last-child(2) {
+      display: block;
+    }
+    li:nth-last-child(3) {
+      display: block;
+    }
+    li:nth-last-child(4) {
+      display: block;
+    }
+  }
+}
+
+.show-menu-5 {
+  :global {
+    li:nth-last-child(1) {
+      display: block;
+    }
+    li:nth-last-child(2) {
+      display: block;
+    }
+    li:nth-last-child(3) {
+      display: block;
+    }
+    li:nth-last-child(4) {
+      display: block;
+    }
+    li:nth-last-child(5) {
+      display: block;
+    }
+  }
+}
+
+.show-menu-6 {
+  :global {
+    li:nth-last-child(1) {
+      display: block;
+    }
+    li:nth-last-child(2) {
+      display: block;
+    }
+    li:nth-last-child(3) {
+      display: block;
+    }
+    li:nth-last-child(4) {
+      display: block;
+    }
+    li:nth-last-child(5) {
+      display: block;
+    }
+    li:nth-last-child(6) {
+      display: block;
+    }
+  }
+}
+
+.show-menu-7 {
+  :global {
+    li:nth-last-child(1) {
+      display: block;
+    }
+    li:nth-last-child(2) {
+      display: block;
+    }
+    li:nth-last-child(3) {
+      display: block;
+    }
+    li:nth-last-child(4) {
+      display: block;
+    }
+    li:nth-last-child(5) {
+      display: block;
+    }
+    li:nth-last-child(6) {
+      display: block;
+    }
+    li:nth-last-child(7) {
+      display: block;
+    }
+  }
+}
+
+@media (max-width: 1500px) {
+  .customized_tags {
+    display: flex;
+    flex-direction: column;
+    :global {
+      .ant-btn {
+        margin-left: 0px !important;
+        margin-bottom: 5px !important;
+      }
+    }
+  }
+}
+
+/*
+@media (min-width: 1366px) {
+  .hide-more {
+    display: none;
+  }
+}
+
+@media (max-width: 1366px) {
+  .file_explore_actions {
+    button:nth-last-child(3) {
+      display: none;
+    }
+  }
+  .drop-down{
+    :global{
+      li:nth-last-child(1){
+         display: block; 
+      }
+    }
+  }
+}
+
+@media (max-width: 1280px) {
+  .file_explore_actions {
+    button:nth-last-child(4) {
+      display: none;
+    }
+  }
+  .drop-down{
+    :global{
+      li:nth-last-child(2){
+         display: block; 
+      }
+    }
+  }
+} */
