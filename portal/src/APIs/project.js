@@ -64,7 +64,7 @@ function getChildrenAPI(datasetId) {
 
 /**
  * query datasets with name, metadata, tags, etc
- * https://indocconsortium.atlassian.net/browse/VRE-92
+ * ticket-92
  *
  * @param {object} data
  */
@@ -143,7 +143,7 @@ function getChildrenDataset(datasetId) {
 
 /**
  *  get the the current user's personal dataset id
- * https://indocconsortium.atlassian.net/browse/VRE-157
+ * ticket-157
  * @param {number} username
  */
 function getPersonalDatasetAPI(username) {
@@ -154,7 +154,7 @@ function getPersonalDatasetAPI(username) {
 
 /**
  * create a personal dataset
- * https://indocconsortium.atlassian.net/browse/VRE-157
+ * ticket-157
  * @param {number} username
  */
 function createPersonalDatasetAPI(username) {
@@ -166,7 +166,7 @@ function createPersonalDatasetAPI(username) {
 
 /**
  * This API allows the member to all files, containers and folders under specific container.
- * https://indocconsortium.atlassian.net/browse/VRE-165
+ * ticket-165
  * @param {number} containerId
  */
 function traverseFoldersContainersAPI(containerId) {
@@ -279,7 +279,7 @@ function getProjectManifestList(projectCode) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-921
+ * ticket-921
  * @param {number} manifestId
  */
 function getManifestById(manifestId) {
@@ -290,7 +290,7 @@ function getManifestById(manifestId) {
 
 /**
  * update the manifest attribute for a specified file
- * https://indocconsortium.atlassian.net/browse/VRE-947
+ * ticket-947
  * @param {string} geid file's geid
  * @param {object} attributes all the attributes {name:value}
  */
@@ -433,7 +433,7 @@ function getDatasetByCode(projectCode) {
 
 /**
  * import a manifest from json file
- * @param {*} manifest the manifest object, https://indocconsortium.atlassian.net/browse/VRE-922
+ * @param {*} manifest the manifest object, ticket-922
  */
 function importManifestAPI(manifest) {
   return serverAxios({
@@ -444,7 +444,7 @@ function importManifestAPI(manifest) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1006
+ * ticket-1006
  * startDate: 2021-02-22
  * endDate:2021-02-22
  * version: 1614027879010
@@ -477,7 +477,7 @@ function getAnnouncementApi({
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1006
+ * ticket-1006
  * @param {{projectCode:string,content:string}} param0
  */
 function addAnnouncementApi({ projectCode, content }) {
@@ -492,7 +492,7 @@ function addAnnouncementApi({ projectCode, content }) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1006
+ * ticket-1006
  * get user's announcement information. So that we can know which announcement the user has read.
  * @param {string} username
  */
@@ -503,7 +503,7 @@ function getUserAnnouncementApi(username) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1006
+ * ticket-1006
  * update the user's announcement information. Add the read announcement id to it.
  */
 function putUserAnnouncementApi(username, projectCode, announcementId) {
@@ -529,7 +529,7 @@ function getAuditLogsApi(projectGeid, paginationParams, query) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1431
+ * ticket-1431
  * get the the project's workbench info.
  */
 function getWorkbenchInfo(projectGeid) {
@@ -540,7 +540,7 @@ function getWorkbenchInfo(projectGeid) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1431
+ * ticket-1431
  * deploy a workbench for a project.
  */
 function deployWorkbenchAPI(projectGeid, workbench) {
@@ -555,12 +555,12 @@ function deployWorkbenchAPI(projectGeid, workbench) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1435
+ * ticket-1435
  * @param {string} folderName
  * @param {string} destinationGeid
  * @param {string} projectGeid
  * @param {string} uploader
- * @param {"greenroom | vrecore"} zone
+ * @param {"greenroom | Core"} zone No longer used
  */
 function createSubFolderApi(
   folderName,
@@ -577,8 +577,8 @@ function createSubFolderApi(
       destination_geid: destinationGeid,
       project_code: projectCode,
       uploader,
-      zone: zone.toLowerCase(),
       tags: [],
+      zone: _.lowerCase(zone),
     },
   });
 }
@@ -654,7 +654,7 @@ function requestPendingFilesAPI(projectGeid, requestId) {
     url: `/v1/request/copy/${projectGeid}/pending-files`,
     method: 'GET',
     params: {
-      request_id: requestId
+      request_id: requestId,
     },
   });
 }

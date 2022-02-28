@@ -35,14 +35,14 @@ body {
   vertical-align: middle;
   margin-top: 3px;
 }
-.vre-file-dir .ant-tree-title {
+.file-dir .ant-tree-title {
   word-break: break-word;
 }
-.vre-file-dir .ant-tree .ant-tree-node-content-wrapper {
+.file-dir .ant-tree .ant-tree-node-content-wrapper {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.vre-file-dir .ant-tree-list {
+.file-dir .ant-tree-list {
   overflow: hidden;
 }

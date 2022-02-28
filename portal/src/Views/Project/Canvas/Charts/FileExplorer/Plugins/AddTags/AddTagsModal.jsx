@@ -169,7 +169,7 @@ const AddTagsModal = ({ visible, setVisible, selectedRows, setSuccessNum }) => {
       case 3:
         return (
           <Button type="primary" onClick={handleCancel}>
-            Ok
+            OK
           </Button>
         );
     }

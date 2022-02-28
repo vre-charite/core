@@ -6,7 +6,6 @@ import _ from 'lodash';
 import { fileExplorerTableActions } from '../../Redux/actions';
 import { FileExplorerProvider } from './FileExplorerContext';
 import Routing from './Routing/Routing';
-import { fetchTableData } from './DataFetcher';
 import { SidePanel } from './SidePanel/SidePanel';
 import { CloseOutlined } from '@ant-design/icons';
 import styles from './FileExplorerTable.module.scss';
@@ -33,6 +32,7 @@ export default function FileExplorerTable(props) {
       },
     },
     sidePanelCfg,
+    dataFetcher,
   } = props;
   const dispatch = useDispatch();
   const fileExplorerTableState = useSelector(
@@ -75,19 +75,8 @@ export default function FileExplorerTable(props) {
           param: DEFAULT_COLUMN_COMP_MAP,
         }),
       );
-      await fetchTableData(
-        initDataSource.type,
-        true,
-        initDataSource.value.id,
-        page,
-        pageSize,
-        'uploaded_at',
-        'desc',
-        {},
-        projectGeid,
-        dispatch,
-        reduxKey,
-      );
+
+      await dataFetcher.init(initDataSource.value.id);
       dispatch(
         fileExplorerTableActions.setHardFreshKey({
           geid: reduxKey,
@@ -116,28 +105,18 @@ export default function FileExplorerTable(props) {
     return () => {
       dispatch(fileExplorerTableActions.clear({ geid: reduxKey }));
     };
+    //dataFetcher.init();
   }, [reduxKey]);
 
   useEffect(() => {
     async function refreshTable() {
       const isRoot = currentGeid === initDataSource.value.id;
-      await fetchTableData(
-        initDataSource.type,
-        isRoot,
-        currentGeid,
-        page,
-        pageSize,
-        orderType,
-        orderBy,
-        {},
-        projectGeid,
-        dispatch,
-        reduxKey,
-      );
+      await dataFetcher.refresh(currentGeid, isRoot);
     }
     if (refreshNum) {
       refreshTable();
     }
+    //dataFetcher.refresh();
   }, [refreshNum]);
 
   if (isSidePanelOpen) {
@@ -168,18 +147,14 @@ export default function FileExplorerTable(props) {
         param: pagination.current - 1,
       }),
     );
-    fetchTableData(
-      initDataSource.type,
-      isRoot,
+
+    dataFetcher.changeSorterAndPagination(
       currentGeid,
+      isRoot,
       pagination.current - 1,
-      pagination.pageSize,
       sort,
       order,
       filters,
-      projectGeid,
-      dispatch,
-      reduxKey,
     );
     dispatch(
       fileExplorerTableActions.setSortType({
@@ -204,6 +179,7 @@ export default function FileExplorerTable(props) {
         routing: routing,
         columnsDisplayCfg: columnsDisplayCfg,
         sidePanelCfg: sidePanelCfg,
+        dataFetcher,
       }}
     >
       <div style={{ position: 'relative', height: '100%' }}>
@@ -284,19 +260,10 @@ export default function FileExplorerTable(props) {
                     param: 0,
                   }),
                 );
-
-                fetchTableData(
-                  initDataSource.type,
-                  true,
+                dataFetcher.changePageSize(
                   initDataSource.value.id,
-                  page,
+                  true,
                   pageSize,
-                  orderType,
-                  orderBy,
-                  {},
-                  projectGeid,
-                  dispatch,
-                  reduxKey,
                 );
               },
               onChange: (page, pageSize) => {
@@ -306,19 +273,7 @@ export default function FileExplorerTable(props) {
                     param: page - 1,
                   }),
                 );
-                fetchTableData(
-                  initDataSource.type,
-                  true,
-                  initDataSource.value.id,
-                  page,
-                  pageSize,
-                  orderType,
-                  orderBy,
-                  {},
-                  projectGeid,
-                  dispatch,
-                  reduxKey,
-                );
+                dataFetcher.pageTo(initDataSource.value.id, true, page);
               },
             }}
             loading={loading}

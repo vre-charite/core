@@ -3,6 +3,7 @@ import { Modal, Button, message, Form, Input, Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { CloseOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import styles from './resetpasswd.module.scss';
+import { ORGANIZATION_PORTAL_DOMAIN } from '../../config';
 const ResetPasswordModal = (props) => {
   const [userInfo, setUserInfo] = useState({});
   const [loading, setLoading] = useState(false);
@@ -58,10 +59,10 @@ const ResetPasswordModal = (props) => {
         </p>
         <a
           style={{ fontSize: 16, fontWeight: 'bold' }}
-          href="https://zugang.charite.de/"
+          href={`https://${ORGANIZATION_PORTAL_DOMAIN}/`}
           target="_blank"
         >
-          https://zugang.charite.de/
+          https://{ORGANIZATION_PORTAL_DOMAIN}/
         </a>
       </div>
       <div style={{ textAlign: 'center', paddingBottom: 15 }}>
@@ -78,7 +79,7 @@ const ResetPasswordModal = (props) => {
         >
           Cancel
         </Button>
-        <a target="_blank" href="https://zugang.charite.de/">
+        <a target="_blank" href={`https://${ORGANIZATION_PORTAL_DOMAIN}/`}>
           <Button
             style={{ borderRadius: 10, width: 120 }}
             type="primary"

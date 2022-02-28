@@ -40,7 +40,7 @@
   "contactUs": {
     "text": [
       "Thank you for submitting a request!",
-      " VRE Support Team has received your request and will respond through the email address associated with your VRE user account shortly​."
+      " {{ PLATFORM }} Support Team has received your request and will respond through the email address associated with your {{ PLATFORM }} user account shortly​."
     ],
     "button": "Submit another request"
   },

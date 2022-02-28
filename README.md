@@ -1,12 +1,12 @@
 # Core
 
-This is the git repository for Indoc VRE project and the services used during its prototyping.
+This is the git repository for Pilot project and the services used during its prototyping.
 
 ## Getting started
 
-### VRE portal
+### Front End
 
-The folder `/portal` contains the Indoc VRE project. Go inside this folder for details on how to install and run the VRE portal.
+The folder `/portal` contains the front end project. Go inside this folder for details on how to install and run the VRE portal.
 
 ### HDFS
 

@@ -10,7 +10,7 @@ import RefForm from 'rc-field-form';
 
 const SchemaTemplatesSelector = (props) => {
   const [selectDefaultValue, setSelectDefaultValue] = useState(
-    'Select schema to fill',
+    'Select schema to complete',
   );
 
   const schemas = useSelector((state) => state.schemaTemplatesInfo.schemas);
@@ -20,7 +20,7 @@ const SchemaTemplatesSelector = (props) => {
   let schemasTemplets = useSelector(
     (state) => state.schemaTemplatesInfo.schemaTPLs,
   );
-  schemasTemplets = schemasTemplets.filter((v) => v.standard === 'vre');
+  schemasTemplets = schemasTemplets.filter((v) => v.standard === 'default');
   const templatesDropdownList = useSelector(
     (state) => state.schemaTemplatesInfo.templatesDropdownList,
   );
@@ -48,6 +48,19 @@ const SchemaTemplatesSelector = (props) => {
     };
   }, [templatesDropdownList]);
 
+  const sortNewTab = (newTabOptions) => {
+    const sortedNewTabOptions = newTabOptions.sort((a, b) => {
+      if (a.name > b.name) {
+        return 1;
+      } else if (a.name < b.name) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+    return sortedNewTabOptions;
+  };
+
   const newTabTitleOptions = (templatesType) => {
     const existingSchemasTplKeys = schemas
       .filter((el) => !el.isDraft)
@@ -57,10 +70,10 @@ const SchemaTemplatesSelector = (props) => {
 
     if (templatesType === 'Default') {
       const newTabOptions = tabOptions.filter((el) => el.systemDefined);
-      return newTabOptions;
+      return sortNewTab(newTabOptions);
     } else if (templatesType === 'Custom') {
       const newTabOptions = tabOptions.filter((el) => !el.systemDefined);
-      return newTabOptions;
+      return sortNewTab(newTabOptions);
     }
   };
 
@@ -72,7 +85,7 @@ const SchemaTemplatesSelector = (props) => {
           key: draft.geid,
           tplKey: element.geid,
           systemDefined: element.systemDefined,
-          standard: 'vre',
+          standard: 'default',
         }),
       );
     } else {
@@ -82,7 +95,7 @@ const SchemaTemplatesSelector = (props) => {
           key: NEW_TAB_GEID,
           tplKey: element.geid,
           systemDefined: element.systemDefined,
-          standard: 'vre',
+          standard: 'default',
         }),
       );
     }

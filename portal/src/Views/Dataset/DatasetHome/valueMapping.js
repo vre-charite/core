@@ -43,8 +43,8 @@ export const generateSubmitData = (oldValues, newValues, keys = infoKeys) => {
 };
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1645
- * https://indocconsortium.atlassian.net/browse/VRE-1678
+ * ticket-1645
+ * ticket-1678
  * only used in dataset home page
  * @param {"ADD|REMOVE|UPDATE"} action
  * @param {"name"|"authors"|"type"|"modality"|"collectionMethod"|"license"|} resource

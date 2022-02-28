@@ -16,6 +16,7 @@ import { withRouter } from 'react-router-dom';
 import { updateDatasetIcon } from '../../../../../APIs';
 import { withCurrentProject } from '../../../../../Utility';
 import ImgCrop from 'antd-img-crop';
+import { PLATFORM } from '../../../../../config';
 const { TextArea } = Input;
 const { Paragraph } = Typography;
 function GeneralInfo(props) {
@@ -204,7 +205,7 @@ function GeneralInfo(props) {
                       href={
                         'mailto:' +
                         i.email +
-                        `?subject=[VRE Platform: ${datasetInfo.name}]`
+                        `?subject=[${PLATFORM} Platform: ${datasetInfo.name}]`
                       }
                       target="_blank"
                       rel="noreferrer noopener"

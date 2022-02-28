@@ -52,7 +52,7 @@ export function Widget() {
   const sessionId = tokenManager.getCookie('sessionId');
   const [codeRandom, setCodeRandom] = React.useState('');
   const [codeInput, setCodeInput] = React.useState('');
-  const [codeNotValid, setCodeNotValid] = React.useState(true);
+  const [codeNotValid, setCodeNotValid] = React.useState(false);
   useEffect(() => {
     setCodeRandom(randomTxt(5));
   }, [approveSelModal, denySelModal]);
@@ -217,11 +217,16 @@ export function Widget() {
         title="Confirmation"
         width={450}
         visible={approveSelModal}
-        wrapClassName={styles.approve_modal + ' vre-modal-wrapper'}
+        wrapClassName={styles.approve_modal + ' global-modal-wrapper'}
         destroyOnClose={true}
         onOk={() => {
-          setApproveSelModal(false);
-          approveOrDeny('approve', false);
+          if (codeRandom !== codeInput) {
+            setCodeNotValid(true);
+          } else {
+            setCodeNotValid(false);
+            setApproveSelModal(false);
+            approveOrDeny('approve', false);
+          }
         }}
         cancelButtonProps={{
           className: 'cancel-btn',
@@ -230,13 +235,12 @@ export function Widget() {
           setApproveSelModal(false);
         }}
         afterClose={() => {
-          setCodeNotValid(true);
+          setCodeNotValid(false);
           setCodeInput('');
         }}
         okButtonProps={{
           icon: <CheckOutlined />,
           className: 'approve-btn',
-          disabled: codeNotValid,
         }}
         okText="Approve"
       >
@@ -252,7 +256,7 @@ export function Widget() {
         title="Confirmation"
         width={540}
         visible={approveAllModal}
-        wrapClassName={styles.approve_modal + ' vre-modal-wrapper'}
+        wrapClassName={styles.approve_modal + ' global-modal-wrapper'}
         destroyOnClose={true}
         onOk={() => {
           setApproveAllModal(false);
@@ -276,10 +280,15 @@ export function Widget() {
         width={450}
         visible={denySelModal}
         destroyOnClose={true}
-        wrapClassName={styles.deny_modal + ' vre-modal-wrapper'}
+        wrapClassName={styles.deny_modal + ' global-modal-wrapper'}
         onOk={() => {
-          setDenySelModal(false);
-          approveOrDeny('deny', false);
+          if (codeRandom !== codeInput) {
+            setCodeNotValid(true);
+          } else {
+            setCodeNotValid(false);
+            setDenySelModal(false);
+            approveOrDeny('deny', false);
+          }
         }}
         cancelButtonProps={{
           className: 'cancel-btn',
@@ -288,13 +297,12 @@ export function Widget() {
           setDenySelModal(false);
         }}
         afterClose={() => {
-          setCodeNotValid(true);
+          setCodeNotValid(false);
           setCodeInput('');
         }}
         okButtonProps={{
           className: 'deny-btn',
           icon: <CloseOutlined />,
-          disabled: codeNotValid,
         }}
         okText="Deny"
       >
@@ -310,7 +318,7 @@ export function Widget() {
         width={540}
         visible={denyAllModal}
         destroyOnClose={true}
-        wrapClassName={styles.deny_modal + ' vre-modal-wrapper'}
+        wrapClassName={styles.deny_modal + ' global-modal-wrapper'}
         onOk={() => {
           setDenyAllModal(false);
           approveOrDeny('deny', true);
@@ -333,7 +341,7 @@ export function Widget() {
         width={540}
         visible={validationModal}
         destroyOnClose={true}
-        wrapClassName={styles.validation_modal + ' vre-modal-wrapper'}
+        wrapClassName={styles.validation_modal + ' global-modal-wrapper'}
         onOk={() => {
           setValidationModal(false);
         }}

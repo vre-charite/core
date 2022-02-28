@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import { Card, Button, Layout, Result } from 'antd';
-
 import styles from './index.module.scss';
+import { BRANDING_PREFIX } from '../../config';
 
 const { Content } = Layout;
 
@@ -24,7 +24,7 @@ function ActivateUser(props) {
             }
             extra={[
               <Button type="primary" key="home">
-                <a href="/vre">Back to Home Page</a>
+                <a href={BRANDING_PREFIX}>Back to Home Page</a>
               </Button>,
             ]}
           />

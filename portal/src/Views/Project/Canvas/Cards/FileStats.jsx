@@ -81,7 +81,7 @@ function FileStats(props) {
         <div size={'small'} className={styles.card}>
           <Row>
             <Col className={styles.iconColumn}>
-              <FolderOutlined className={styles.icon} />
+              <FolderOpenOutlined className={styles.icon} />
             </Col>
             <Col>
               <Row>

@@ -2,9 +2,9 @@
   "admin": {
     "label": "Project Administrator",
     "value": "admin",
-    "description": "Project Administrators can add users to their Project as well as upload, view, and download any data in their Project's Green Room or VRE Core storage.",
+    "description": "Project Administrators can add users to their Project as well as upload, view, and download any data in their Project's Green Room or Core storage.",
     "inviteUser": true,
-    "VRE-CORE": {
+    "CORE": {
       "upload": true,
       "download": {
         "isEnable": true,
@@ -32,7 +32,7 @@
     "value": "contributor",
     "description": "Project Contributors can upload data to their Project's Green Room storage but can only view or download the files uploaded by themselves.",
     "inviteUser": false,
-    "VRE-CORE": {
+    "CORE": {
       "upload": false,
       "download": {
         "isEnable": false,
@@ -58,9 +58,9 @@
   "collaborator": {
     "label": "Project Collaborator",
     "value": "collaborator",
-    "description": "Project Collaborators can upload and access self-contributed data into Green Room and have full data access in the Project's VRE Core storage.",
+    "description": "Project Collaborators can upload and access self-contributed data into Green Room and have full data access in the Project's Core storage.",
     "inviteUser": false,
-    "VRE-CORE": {
+    "CORE": {
       "upload": false,
       "download": {
         "isEnable": true,

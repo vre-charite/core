@@ -90,7 +90,7 @@ class ContainerUser(Resource):
                 add_user_to_ad_group(
                     user_email, dataset_code, _logger, access_token)
             except Exception as error:
-                error = f'Error adding user to group vre-{dataset_code}: ' + str(
+                error = f'Error adding user to group {ConfigClass.AD_PROJECT_GROUP_PREFIX}{dataset_code}: ' + str(
                     error)
                 _logger.info(error)
                 return {'result': error}, 500
@@ -301,7 +301,7 @@ def validate_payload(old_role, new_role, username):
 
 def keycloak_user_role_delete(headers, user_email, dataset_code, role):
     payload = {
-        "realm": "vre",
+        "realm": ConfigClass.KEYCLOAK_REALM,
         "email": user_email,
         "project_role": dataset_code + "-" + role,
     }
@@ -314,7 +314,7 @@ def keycloak_user_role_delete(headers, user_email, dataset_code, role):
 
 def keycloak_user_role_update(headers, user_email, dataset_code, role):
     payload = {
-        "realm": "vre",
+        "realm": ConfigClass.KEYCLOAK_REALM,
         "email": user_email,
         "project_role": dataset_code + "-" + role,
     }

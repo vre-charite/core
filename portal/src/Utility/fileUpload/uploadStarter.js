@@ -8,6 +8,7 @@ import { message } from 'antd';
 import { FILE_OPERATIONS } from '../../Views/Project/Canvas/Charts/FileExplorer/FileOperationValues';
 import { ErrorMessager, namespace } from '../../ErrorMessages';
 import { getPath } from './getPath';
+import { dcmID } from '../../config';
 const [appendUploadListDispatcher, updateUploadItemDispatcher] =
   reduxActionWrapper([appendUploadListCreator, updateUploadItemCreator]);
 
@@ -33,7 +34,7 @@ const uploadStarter = async (data, q) => {
         ? data.folderPath + '/' + relativePath + '/' + file.name
         : data.folderPath + '/' + file.name,
       projectName: data.projectName,
-      generateID: data.gid ? data.gid : null,
+      dcmID: data.gid ? data.gid : null,
       projectCode: data.projectCode,
       createdTime: Date.now(),
     };
@@ -67,7 +68,7 @@ const uploadStarter = async (data, q) => {
           newFileList.map((item) => ({
             file: item.originFileObj,
             uploadKey: getUploadKey(item, timeStamp),
-            generateID: data.gid,
+            dcmID: data.gid,
             datasetId: data.dataset,
             uploader: data.uploader,
             projectCode: data.projectCode,
@@ -90,7 +91,7 @@ const uploadStarter = async (data, q) => {
         for (const file of err.response?.data?.result?.failed) {
           const { name, relative_path } = file;
           const errorMessager = new ErrorMessager(
-            namespace?.dataset?.files?.preUpload,
+            namespace?.project?.files?.preUpload,
           );
           errorMessager.triggerMsg(err?.response?.status, null, {
             fileName: (relative_path ? relative_path + '/' : '') + name,
@@ -98,7 +99,7 @@ const uploadStarter = async (data, q) => {
         }
       } else {
         const errorMessager = new ErrorMessager(
-          namespace?.dataset?.files?.preUpload,
+          namespace?.project?.files?.preUpload,
         );
         errorMessager.triggerMsg(err?.response?.status, null);
       }

@@ -7,6 +7,8 @@ import _ from 'lodash';
 import { useDispatch } from 'react-redux';
 import { setIsReleaseNoteShownCreator } from '../../Redux/actions';
 import parse from 'html-react-parser';
+import { PORTAL_PREFIX } from '../../config';
+
 
 const { Option } = Select;
 function ReleaseNoteModal({ currentVersion, visible }) {
@@ -45,7 +47,11 @@ function ReleaseNoteModal({ currentVersion, visible }) {
       ]}
       title={
         <>
-          <img alt="release note" width={25} src="/vre/Rocket.svg"></img>{' '}
+          <img
+            alt="release note"
+            width={25}
+            src={PORTAL_PREFIX + '/Rocket.svg'}
+          ></img>{' '}
           <b>
             {`Release Note ${version === 'all' ? ' (all)' : version}` +
               getSuffix(version, currentVersion)}

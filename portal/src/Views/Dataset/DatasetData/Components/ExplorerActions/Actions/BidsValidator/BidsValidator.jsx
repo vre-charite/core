@@ -23,6 +23,11 @@ import ValidateButton from './ValidateButton';
 import { datasetInfoCreators } from '../../../../../../../Redux/actions';
 import { preValidateBids } from '../../../../../../../APIs';
 import { getFileSize } from '../../../../../../../Utility';
+import {
+  DOMAIN_DEV,
+  DOMAIN_PROD,
+  DOMAIN_STAGING,
+} from '../../../../../../../config';
 
 const { Panel } = Collapse;
 
@@ -36,16 +41,16 @@ export default function BidsValidator(props) {
   let socketIoUrl = '';
   switch (process.env['REACT_APP_ENV']) {
     case 'dev':
-      socketIoUrl = 'ws://10.3.7.220';
+      socketIoUrl = 'ws://' + DOMAIN_DEV;
       break;
     case 'staging':
-      socketIoUrl = 'wss://vre-staging.indocresearch.org';
+      socketIoUrl = 'wss://' + DOMAIN_STAGING;
       break;
-    case 'charite':
-      socketIoUrl = 'wss://vre.charite.de';
+    case 'production':
+      socketIoUrl = 'wss://' + DOMAIN_PROD;
       break;
     default:
-      socketIoUrl = 'ws://10.3.7.220';
+      socketIoUrl = 'ws://' + DOMAIN_DEV;
       break;
   }
 
@@ -57,6 +62,9 @@ export default function BidsValidator(props) {
         if (data.payload.status === 'success') {
           basicInfo['bidsResult'] = data.payload.payload;
           basicInfo['bidsLoading'] = false;
+          basicInfo['bidsUpdatedTime'] = new Date(
+            data.payload.update_timestamp * 1000,
+          ).toUTCString();
           dispatch(datasetInfoCreators.setBasicInfo(basicInfo));
         } else {
           basicInfo['bidsLoading'] = false;
@@ -66,7 +74,6 @@ export default function BidsValidator(props) {
       }
     });
   }, []);
-
   const issues = basicInfo.bidsResult && basicInfo.bidsResult.issues;
   const warnings = issues && issues.warnings;
   const errors = issues && issues.errors;

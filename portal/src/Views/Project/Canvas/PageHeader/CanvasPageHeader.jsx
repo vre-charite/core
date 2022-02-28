@@ -29,6 +29,7 @@ import { connect } from 'react-redux';
 import { withCurrentProject, objectKeysToCamelCase, getTags } from '../../../../Utility';
 import userRoles from '../../../../Utility/project-roles.json';
 import styles from '../index.module.scss';
+import { PLATFORM } from '../../../../config';
 const { Content } = Layout;
 const { Paragraph } = Typography;
 
@@ -137,7 +138,7 @@ class CanvasPageHeader extends Component {
                 href={
                   'mailto:' +
                   el.email +
-                  `?subject=[VRE Platform: ${currentProject.name}]`
+                  `?subject=[${PLATFORM} Platform: ${currentProject.name}]`
                 }
                 target="_blank"
                 style={{ paddingRight: '5px' }}

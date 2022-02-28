@@ -187,7 +187,7 @@ function AttrEditBar(props) {
             props.setEditMode('default');
           }}
         >
-          Ok
+          OK
         </Button>
         <Button
           style={{ border: 0, outline: 0, padding: 0, marginTop: 4 }}

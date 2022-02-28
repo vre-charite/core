@@ -235,7 +235,7 @@ const RequestToCore = (props) => {
         width={412}
         visible={reviewModalVisible}
         centered={true}
-        wrapClassName="vre-modal-wrapper"
+        wrapClassName="global-modal-wrapper"
         onOk={() => {
           setReviewModalVisible(false);
         }}
@@ -251,12 +251,12 @@ const RequestToCore = (props) => {
         </p>
       </Modal>
       <Modal
-        title="Completion"
+        title={`Close Request & Notify User`}
         width={524}
         centered={true}
         visible={completeModalVisible}
         confirmLoading={btnLoading}
-        wrapClassName="vre-modal-wrapper"
+        wrapClassName="global-modal-wrapper"
         onOk={() => {
           handleCompleteRequest();
         }}
@@ -267,7 +267,7 @@ const RequestToCore = (props) => {
         {activeReq ? (
           <div className={styles.complete_modal_content}>
             <p style={{ marginBottom: '20px' }}>
-              Are you sure you want to complete the request
+              You are about to close the request
               <br />{' '}
               <b style={{ marginLeft: '10px' }}>
                 {activeReq.submittedBy.length > 20 ? (
@@ -279,6 +279,17 @@ const RequestToCore = (props) => {
                 )}
               </b>{' '}
               / {moment(activeReq.submittedAt).format('YYYY-MM-DD HH:mm:ss')}
+            </p>
+            <p className={styles.complete_note}>
+              1. Please ensure you have assigned an approval/denial status for
+              all the files in this request.
+            </p>
+            <p className={styles.complete_note}>
+              2. Add Review notes to the requester (optional).
+            </p>
+            <p className={styles.complete_note}>
+              3. Click Confirm to close the request and notify the requester by
+              email.
             </p>
             <div className={styles.review_note_section}>
               <p>Review notes</p>

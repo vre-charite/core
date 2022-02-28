@@ -37,6 +37,7 @@ import { validateForm } from '../../../Components/Form/Manifest/FormValidate';
 import styles from './index.module.scss';
 import { UploadFolder } from '../../../Components/Input';
 import { PanelKey } from '../Canvas/Charts/FileExplorer/RawTableValues';
+import { dcmProjectCode, DcmSpaceID } from '../../../config';
 const { Option } = Select;
 
 const GreenRoomUploader = ({
@@ -68,10 +69,8 @@ const GreenRoomUploader = ({
   const [mode, setMode] = useState(null);
   const currentRouting =
     folderRouting[panelKey] &&
-    folderRouting[panelKey].filter(
-      (r) => typeof r.folderLevel !== 'undefined',
-    );
-  const isGenerate = currentDataset?.code === 'generate';
+    folderRouting[panelKey].filter((r) => typeof r.folderLevel !== 'undefined');
+  const isDcm = currentDataset?.code === dcmProjectCode;
   useEffect(() => {
     async function loadManifest() {
       const manifests = await getProjectManifestList(currentDataset.code);
@@ -208,7 +207,7 @@ const GreenRoomUploader = ({
             setAttrForm({});
           }}
           id="form_in_modal_select_file"
-          disabled={isGenerate}
+          disabled={isDcm}
         >
           <FolderOutlined />
           Select Folder
@@ -296,20 +295,24 @@ const GreenRoomUploader = ({
                 ))}
             </Select>
           </Form.Item>
-          {currentDataset && currentDataset.code === 'generate' ? (
+          {currentDataset && currentDataset.code === dcmProjectCode ? (
             <>
-              <Form.Item label="Generate ID" required>
+              <Form.Item label={DcmSpaceID} required>
                 <Form.Item
                   name="gid"
                   style={{ marginBottom: '0px' }}
                   rules={[
                     {
                       required: true,
-                      message: t('formErrorMessages:project.generate.id.empty'),
+                      message: t('formErrorMessages:project.dcm.id.empty', {
+                        DcmSpaceID: DcmSpaceID,
+                      }),
                     },
                     {
                       pattern: new RegExp(/^([A-Z]{3})-([0-9]{4})$/g), // Format BXT-1234
-                      message: t('formErrorMessages:project.generate.id.valid'),
+                      message: t('formErrorMessages:project.dcm.id.valid', {
+                        DcmSpaceID: DcmSpaceID,
+                      }),
                     },
                   ]}
                   hasFeedback
@@ -327,19 +330,20 @@ const GreenRoomUploader = ({
                     }}
                   />
                 </Form.Item>
-                <small>{t('upload.generate_id')}</small>
+                <small>{t('upload.dcm_id', { DcmSpaceID })}</small>
               </Form.Item>
 
               <Form.Item
                 name="gid_repeat"
-                label="Confirm Generate ID"
+                label={`Confirm ${DcmSpaceID}`}
                 dependencies={['gid']}
                 hasFeedback
                 rules={[
                   {
                     required: true,
                     message: t(
-                      'formErrorMessages:project.generate.confirmId.empty',
+                      'formErrorMessages:project.dcm.confirmId.empty',
+                      { DcmSpaceID },
                     ),
                   },
                   ({ getFieldValue }) => ({
@@ -348,7 +352,9 @@ const GreenRoomUploader = ({
                         return Promise.resolve();
                       }
                       return Promise.reject(
-                        t('formErrorMessages:project.generate.confirmId.valid'),
+                        t('formErrorMessages:project.dcm.confirmId.valid', {
+                          DcmSpaceID,
+                        }),
                       );
                     },
                   }),
@@ -471,7 +477,7 @@ const GreenRoomUploader = ({
                   form.resetFields(['file']);
                   if (value) {
                     setIsFiles(false);
-                  }else{
+                  } else {
                     form.resetFields(['folder']);
                   }
                 }}

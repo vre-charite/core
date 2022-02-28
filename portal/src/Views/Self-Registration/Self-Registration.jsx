@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-//import { StandardLayout } from "../../Components/Layout";
 import { withRouter, Link } from 'react-router-dom';
 import {
   Row,
@@ -23,6 +22,7 @@ import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import { useTranslation } from 'react-i18next';
+import { PLATFORM, PORTAL_PREFIX } from '../../config';
 
 const { Title } = Typography;
 const formItemLayout = {
@@ -51,11 +51,7 @@ function SelfRegistration(props) {
   });
   const [visible, setVisible] = useState(false);
   const [btnDisable, setBtnDisable] = useState(true);
-  const { t} = useTranslation([
-    'tooltips',
-    'success',
-    'formErrorMessages',
-  ]);
+  const { t } = useTranslation(['tooltips', 'success', 'formErrorMessages']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -69,7 +65,12 @@ function SelfRegistration(props) {
     if (info.projectId) {
       params = { ...params, ...info, status: 'active' };
     } else {
-      params = { ...params, portalRole: info.role, email: info.email, status: 'active' };
+      params = {
+        ...params,
+        portalRole: info.role,
+        email: info.email,
+        status: 'active',
+      };
     }
     UserSelfRegistrationAPI(params)
       .then((res) => {
@@ -103,7 +104,7 @@ function SelfRegistration(props) {
           errorMessager.triggerMsg(err.response.status);
         }
       });
-      // eslint-disable-next-line
+    // eslint-disable-next-line
   }, []);
 
   const onCancel = () => {
@@ -156,28 +157,22 @@ function SelfRegistration(props) {
               bodyStyle={{ textAlign: 'center', padding: '30px' }}
             >
               <img
-                src={require('../../Images/vre-logo.png')}
+                src={PORTAL_PREFIX + '/platform-logo.png'}
                 className={styles.icon}
                 alt="icon"
               />
-              <Title level={2}>VRE Registration</Title>
+              <Title level={2}>{PLATFORM} Registration</Title>
               <Form form={form} onFinish={submitForm} {...formItemLayout}>
                 <Form.Item
                   label="Username"
                   name="username"
                   validateStatus={validatingStatus}
                   hasFeedback
-                  // validateTrigger="onBlur"
                   rules={[
                     {
                       required: true,
                       message: t('formErrorMessages:common.username.empty'),
                     },
-                    // {
-                    //   pattern: '^[a-z0-9]{6,20}$',
-                    //   // pattern: "^[^A-Z/\\<>]{1,32}$",
-                    //   message: t('formErrorMessages:common.username.valid'),
-                    // },
                     ({ getFieldValue }) => ({
                       validator: async (rule, value) => {
                         if (!value.length) {
@@ -195,11 +190,15 @@ function SelfRegistration(props) {
                               props.match.params.invitationHash,
                             );
                             setValidatingStatus('error');
-                            return Promise.reject('The username has been taken');
+                            return Promise.reject(
+                              'The username has been taken',
+                            );
                           }
 
                           setValidatingStatus('error');
-                          return Promise.reject(t('formErrorMessages:common.username.valid'));
+                          return Promise.reject(
+                            t('formErrorMessages:common.username.valid'),
+                          );
                         } catch {
                           setValidatingStatus('success');
                           return Promise.resolve();
@@ -331,19 +330,11 @@ function SelfRegistration(props) {
                     onClick={onPrint}
                     style={{ float: 'left' }}
                   >
-                    {/* <PDFDownloadLink
-                        document={
-                          <AggrementPDF
-                          />
-                        }
-                        fileName="Platform Terms of Use Agreement.pdf"
-                      >
-                      {({ blob, url, loading, error }) =>
-                        loading ? "Loading document..." : "Export PDF"
-                      }
-                    </PDFDownloadLink> */}
                     <a
-                      href="/vre/files/VRE Website Privacy Policy draft.pdf"
+                      href={
+                        PORTAL_PREFIX +
+                        '/files/Website Privacy Policy draft.pdf'
+                      }
                       download
                       target="_self"
                     >

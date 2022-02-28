@@ -72,7 +72,7 @@ class Users(Resource):
             payload = {
                 "admin_username": "admin",
                 "admin_password": "amenamen",
-                "realm": "vre",
+                "realm": ConfigClass.KEYCLOAK_REALM,
                 "username": username,
                 "password": password,
                 "email": email,
@@ -576,18 +576,16 @@ class ContainerUsersQuery(Resource):
 
             # Fetch all users under the dataset
             url = ConfigClass.NEO4J_SERVICE + 'relations/query'
-            start_data = {
-                **request.get_json().get('start_params', {}),
-                "status": "active",
-            }
             payload = {
                 'start_label': 'User',
                 'end_label': 'Container',
                 'end_params': {'id': datasets[0]['id']},
-                'start_params': start_data,
                 'sort_node': 'start',
                 **request.get_json()
             }
+            if not "start_params" in payload:
+                payload["start_params"] = {}
+            payload["start_params"]["status"] = "active"
             response = neo4j_query_with_pagination(url, payload, partial=True)
             if (response.code != 200):
                 _logger.error('Failed to fetch info in neo4j: {}'.format(

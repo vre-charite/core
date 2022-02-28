@@ -89,12 +89,12 @@ class SrvInvitationManager(metaclass=MetaService):
                 "admin_email": ConfigClass.EMAIL_ADMIN,
                 "url": ConfigClass.INVITATION_URL_LOGIN,
                 "user_email": invitation.email,
-                "domain": ConfigClass.VRE_DOMAIN,
+                "domain": ConfigClass.SITE_DOMAIN,
                 "helpdesk_email": ConfigClass.EMAIL_HELPDESK,
                 "user_first": ad_first,
             }
         else:
-            subject = "Welcome to VRE!"
+            subject = f"Welcome to {ConfigClass.PROJECT_NAME}!"
             if not ad_account_created:
                 template = "invitation/ad_invite_without_project.html"
             else:
@@ -112,7 +112,7 @@ class SrvInvitationManager(metaclass=MetaService):
                 "platform_role": platform_role,
                 "url": ConfigClass.INVITATION_URL_LOGIN,
                 "user_email": invitation.email,
-                "domain": ConfigClass.VRE_DOMAIN,
+                "domain": ConfigClass.SITE_DOMAIN,
                 "helpdesk_email": ConfigClass.EMAIL_HELPDESK,
                 "user_first": ad_first,
             }
@@ -120,7 +120,7 @@ class SrvInvitationManager(metaclass=MetaService):
             if not ad_account_created:
                 data = base64.b64encode(f.read()).decode()
                 attachment = [
-                    {"name": "Charite AD Request Form.pdf", "data": data}]
+                    {"name": "AD Request Form.pdf", "data": data}]
             else:
                 attachment = []
             email_sender.send(

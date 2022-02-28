@@ -8,7 +8,11 @@
   color: #595959;
   font-weight: 500;
 }
-
+.view_selector {
+  display: flex;
+  width: 450px;
+  margin-right: 20px;
+}
 .view_all {
   width: 65px;
   border: 0px solid #d9d9d9;
@@ -45,12 +49,12 @@
 
 .view_backgroundColor {
   background-color: #ace4fd;
-  color: #1890FF;
+  color: #1890ff;
 }
 
 .custom_time {
   .range_picker {
-    width: 246px;
+    width: 284px;
     height: 26px;
     border-radius: 6px;
   }
@@ -66,9 +70,12 @@
 .last_update {
   flex: 1;
   text-align: right;
+  overflow: hidden;
   p {
     color: #595959;
     font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -84,10 +91,14 @@
   .all_activity {
     display: none;
   }
+  .view_selector {
+    margin-right: 6px;
+  }
   .custom_time {
-    width: 300px;
+    width: 260px;
+    margin-right: 6px;
     .range_picker {
-        width: 200px;
+      width: 245px;
     }
   }
 }

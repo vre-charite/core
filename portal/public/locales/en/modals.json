@@ -7,9 +7,9 @@
     ]
   },
   "inviteToProject": {
-    "title": "Already Registered to VRE",
+    "title": "Already Registered to {{ PLATFORM }}",
     "content": [
-      " is already registered to VRE with AD.",
+      " is already registered to {{ PLATFORM }} with AD.",
       "Are you sure you want to invite user into ",
       " as "
     ]
@@ -27,10 +27,10 @@
     "title": "Confirm user invitation",
     "content": [
       "You are about to invite",
-      "to the VRE Platform with the role of",
-      "This user is NOT a member of the Charité Active Directory - clicking send will automatically send an invitation email with instructions for submitting a Account Request form.",
+      "to the {{ PLATFORM }} Platform with the role of",
+      "This user is NOT a member of the Active Directory - clicking send will automatically send an invitation email with instructions for submitting a Account Request form.",
       "Are you sure you wish to proceed? ",
-      "This user is a member of the Charité Active Directory, clicking send will notify the user by email, once they log in for the first time and accept the Terms of Use they will appear in the User List automatically."
+      "This user is a member of the Active Directory, clicking send will notify the user by email, once they log in for the first time and accept the Terms of Use they will appear in the User List automatically."
     ]
   },
   "inviteExist": {
@@ -55,7 +55,7 @@
     "title": "Confirm user invitation",
     "content": [
       "[",
-      "] holds an account in Charite AD, will be federate into VRE"
+      "] holds an account in {{ ORGANIZATION }} AD, will be federate into {{ PLATFORM }}"
     ]
   }
 }

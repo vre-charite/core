@@ -33,6 +33,19 @@
         border: 1px solid #d4d4d4;
         border-radius: 6px;
       }
+      .ant-form-item {
+        .ant-form-item-control {
+          .ant-form-item-control-input {
+            .ant-form-item-control-input-content {
+              display: flex;
+              align-items: center;
+              .anticon {
+                margin-right: 5px;
+              }
+            }
+          }
+        }
+      }
     }
     .input {
       border: 1px solid #d4d4d4;
@@ -52,6 +65,59 @@
           span {
             position: relative;
             bottom: 8px;
+          }
+        }
+      }
+    }
+  }
+
+  .tooltip{
+    margin-left: 10px;
+    margin-right: -3px;
+  }
+}
+
+.description_form_item {
+  :global {
+    .ant-form-item-label {
+      .ant-form-item-required {
+        p {
+          margin-bottom: 0px;
+          margin-top: 15px;
+        }
+        &::before {
+          margin-top: 15px;
+        }
+      }
+    }
+  }
+}
+
+@media(min-width: 1432px){
+  .description_form_item {
+    :global {
+      .ant-form-item-label {
+        .ant-form-item-required {
+          p {
+            br {
+              display: none;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media(max-width: 575px) {
+  .description_form_item {
+    :global {
+      .ant-form-item-label {
+        .ant-form-item-required {
+          p {
+            br {
+              display: none;
+            }
           }
         }
       }

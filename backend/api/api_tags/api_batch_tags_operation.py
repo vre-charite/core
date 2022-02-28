@@ -47,7 +47,7 @@ class APIBatchTagsV2(metaclass=MetaAPI):
                 if "Greenroom" in entity_node["labels"]:
                     zone = 'greenroom'
                 else:
-                    zone = 'vrecore'
+                    zone = 'core'
 
                 if not has_permission(project_code, 'tags', zone, 'create'):
                     _res.set_code(EAPIResponseCode.forbidden)
@@ -58,7 +58,7 @@ class APIBatchTagsV2(metaclass=MetaAPI):
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_result("Permission Denied")
                     return _res.to_dict, _res.code
-                if role == "collaborator" and zone != "vrecore" and current_identity["username"] != root_folder:
+                if role == "collaborator" and zone != "core" and current_identity["username"] != root_folder:
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_result("Permission Denied")
                     return _res.to_dict, _res.code

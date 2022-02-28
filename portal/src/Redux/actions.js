@@ -58,6 +58,7 @@ import {
   SCHEMA_TEMPLATES,
   FILE_EXPLORER_TABLE as FILE_EXPLORER_TABLE,
   COPY_REQUEST,
+  NOTIFICATIONS,
 } from './actionTypes';
 
 export const AddDatasetCreator = (datasetList, title) => ({
@@ -604,6 +605,33 @@ export const request2CoreActions = {
   }),
   setPagination: (payload) => ({
     type: COPY_REQUEST.SET_PAGINATION,
+    payload,
+  }),
+};
+
+export const notificationActions = {
+  setActiveNotification: (payload) => ({
+    type: NOTIFICATIONS.SET_ACTIVE_NOTIFICATION,
+    payload,
+  }),
+  setCreateNewNotificationStatus: (payload) => ({
+    type: NOTIFICATIONS.SET_CREATE_NEW_NOTIFICATION_LIST_ITEM__STATUS,
+    payload,
+  }),
+  setUserNotifications: (payload) => ({
+    type: NOTIFICATIONS.SET_USER_NOTIFICATIONS,
+    payload,
+  }),
+  setNotificationList: (payload) => ({
+    type: NOTIFICATIONS.SET_NOTIFICATION_LIST,
+    payload,
+  }),
+  setUpdateNotificationTimes: (payload) => ({
+    type: NOTIFICATIONS.SET_UPDATE_NOTIFICATION_TIMES,
+    payload,
+  }),
+  setEditNotification: (payload) => ({
+    type: NOTIFICATIONS.SET_EDIT_NOTIFICATION,
     payload,
   }),
 };

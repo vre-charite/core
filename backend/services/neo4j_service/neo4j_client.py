@@ -79,7 +79,7 @@ class Neo4jClient(object):
     @catch_internal
     def update_node(self, label, node_id, data):
         response = requests.put(
-            ConfigClass.NEO4J_SERVICE + f"/nodes/{label}/node/{node_id}", json=data)
+            ConfigClass.NEO4J_SERVICE + f"nodes/{label}/node/{node_id}", json=data)
         result = self.result.copy()
         result["result"] = response.json()
         return result

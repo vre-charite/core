@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Tabs, message, Button } from 'antd';
 import styles from './index.module.scss';
-import VreSchemasTabContents from './VreSchemasTabContents';
+import SchemasTabContents from './SchemasTabContents';
 import OpenMindsSchemaTabContents from './openMindsSchemasTabContents';
 import UploadSchemaModal from './UploadSchemaModal/UploadSchemaModal';
 import {
@@ -13,6 +13,7 @@ import { DeleteOutlined, FileOutlined, EyeOutlined } from '@ant-design/icons';
 import { ESSENTIAL_SCHEMA_NAME } from '../../GlobalDefinition';
 import { schemaTemplatesActions } from '../../../../../Redux/actions';
 import { useTranslation } from 'react-i18next';
+import { PLATFORM } from '../../../../../config';
 
 const { TabPane } = Tabs;
 
@@ -150,10 +151,10 @@ export function ExistingSchemaContents(props) {
     addMode = defaultSchemaActiveKey === NEW_TAB_GEID || editingDraft;
   } */
 
-  const vreSchemasTabTitle = (
+  const schemasTabTitle = (
     <div>
       <p style={{ fontWeight: '600', color: '#222222', margin: '0px' }}>
-        VRE Schemas
+        {PLATFORM} Schemas
       </p>
     </div>
   );
@@ -175,8 +176,8 @@ export function ExistingSchemaContents(props) {
       className={styles['tabs']}
     >
       <Tabs tabPosition={'left'} onChange={onTabSelChange}>
-        <TabPane tab={vreSchemasTabTitle} key="Default">
-          <VreSchemasTabContents
+        <TabPane tab={schemasTabTitle} key="Default">
+          <SchemasTabContents
             setSchemaGeid={setSchemaGeid}
             schemaGeid={schemaGeid}
             schemas={schemas}

@@ -30,6 +30,8 @@ import { version } from '../../../package.json';
 import { tokenManager } from '../../Service/tokenManager';
 import { lastLoginAPI } from '../../APIs';
 import { keycloak } from '../../Service/keycloak';
+import { BRANDING_PREFIX, PLATFORM, PORTAL_PREFIX } from '../../config';
+import { xwikis } from '../../externalLinks';
 const { detect } = require('detect-browser');
 const browser = detect();
 const isSafari = browser?.name === 'safari';
@@ -80,15 +82,16 @@ class Auth extends Component {
           <>
             <p>
               We use cookies to make your experience better by keeping your
-              session information and login status. By using the VRE, you accept
-              our use of cookies in accordance with our{' '}
+              session information and login status. By using the {PLATFORM} you
+              accept our use of cookies in accordance with our{' '}
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/Privacy%20Policy/"
+                href={xwikis.privacyPolicy}
               >
                 Privacy Policy
               </a>
+              .
             </p>
           </>
         ),
@@ -204,7 +207,7 @@ class Auth extends Component {
     // }
     if (tokenManager.getCookie('sessionId')) {
       if (isSafari) {
-        window.location.href = '/vre/landing';
+        window.location.href = `${BRANDING_PREFIX}/landing`;
       } else {
         return <Redirect to="/landing" />;
       }
@@ -241,7 +244,8 @@ class Auth extends Component {
               fontSize: '16px',
             }}
           >
-            The VRE has undergone a successful GDPR Service Readiness Audit
+            The {PLATFORM} has undergone a successful GDPR Service Readiness
+            Audit
           </p>
         </div>
       </div>
@@ -263,7 +267,7 @@ class Auth extends Component {
             <Row style={{ height: '100%' }}>
               <Col span={12} className={styles.intro}>
                 <div className={styles.text}>
-                  <p className={styles.title}>Welcome to VRE!</p>
+                  <p className={styles.title}>Welcome to {PLATFORM}!</p>
                   <p className={styles.content}>
                     The{' '}
                     <a
@@ -272,7 +276,7 @@ class Auth extends Component {
                       rel="noreferrer noopener"
                       style={{ color: 'white', textDecoration: 'underline' }}
                     >
-                      Virtual Research Environment (VRE)
+                      Virtual Research Environment ({PLATFORM})
                     </a>{' '}
                     supports researchers to follow the FAIR Data Principles by
                     offering functionalities to make research data findable,
@@ -303,7 +307,7 @@ class Auth extends Component {
                       rel="noreferrer noopener"
                     >
                       <img
-                        src={require('../../Images/logo-charite-alt.png')}
+                        src={require('../../Images/logo-organization-alt.png')}
                         className={styles.icon}
                         alt="icon"
                       />
@@ -329,7 +333,7 @@ class Auth extends Component {
                   bodyStyle={{ textAlign: 'center', padding: '30px' }}
                 >
                   <img
-                    src={require('../../Images/vre-logo.png')}
+                    src={PORTAL_PREFIX + '/platform-logo.png'}
                     className={styles.icon}
                     alt="icon"
                     draggable={false}
@@ -355,7 +359,7 @@ class Auth extends Component {
             <a
               target="_blank"
               rel="noreferrer"
-              href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/General%20Terms%20of%20Use/"
+              href={xwikis.termsOfUse}
               style={{
                 color: 'white',
                 fontSize: '80%',
@@ -371,7 +375,7 @@ class Auth extends Component {
                 color: 'white',
                 fontSize: '80%',
               }}
-              href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/Privacy%20Policy/"
+              href={xwikis.privacyPolicy}
             >
               Privacy Policy
             </a>
@@ -399,7 +403,7 @@ class Auth extends Component {
             {' / '}
             <a
               style={{ marginRight: 10 }}
-              href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/user_guide/"
+              href={xwikis.documentation}
               target="_blank"
               rel="noopener noreferrer"
             >

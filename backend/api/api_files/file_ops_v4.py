@@ -57,12 +57,12 @@ class FileInfoV4(Resource):
                     _res.set_error_msg(
                         'Permission Deined, zone and file_type is required if user role is contributor')
                     return _res.to_dict, _res.code
-                elif query['zone']['value'] == 'vrecore':
+                elif query['zone']['value'] == 'core':
                     _logger.error(
-                        'contributor cannot fetch vre core files or processed files')
+                        'contributor cannot fetch core files or processed files')
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_error_msg(
-                        'Permission Deined, contributor cannot fetch vre core files or processed files')
+                        'Permission Deined, contributor cannot fetch core files or processed files')
                     return _res.to_dict, _res.code
 
             elif current_identity['project_role'] == 'collaborator':

@@ -16,6 +16,7 @@ import { tokenManager } from '../../Service/tokenManager';
 import _ from 'lodash';
 import { objectKeysToSnakeCase } from '../';
 import { getPath } from './getPath';
+import { dcmId } from '../../config';
 
 const USER_LOGOUT = 'user logged out';
 const MAX_LENGTH = 1024 * 1024 * 2;
@@ -67,7 +68,7 @@ function slice(file, piece = 1024 * 1024 * 5) {
 async function fileUpload(data, resolve, reject) {
   const {
     uploadKey,
-    generateID,
+    dcmID,
     datasetId,
     uploader,
     file,
@@ -122,7 +123,7 @@ async function fileUpload(data, resolve, reject) {
       resumableRelativePath: relativePath,
       resumableTotalChunks: totalChunks,
       //subPath:subPath||'',
-      generateId: generateID, // Add generate ID
+      dcmId: dcmID,
       operator: uploader, // Add uploader
       tags,
       projectCode,
@@ -170,7 +171,7 @@ async function fileUpload(data, resolve, reject) {
         resumableTotalChunks: chunks.length,
         resumableTotalSize: file.size,
         tags,
-        generateId: generateID,
+        dcmId: dcmID,
       };
 
       const result = await combineChunksApi(
@@ -198,7 +199,7 @@ async function fileUpload(data, resolve, reject) {
       );
     } catch (err) {
       const errorMessage = new ErrorMessager(
-        namespace.dataset.files.combineChunk,
+        namespace.project.files.combineChunk,
       );
       errorMessage.triggerMsg(null, null, { fileName: file.name });
     }
@@ -238,14 +239,14 @@ async function fileUpload(data, resolve, reject) {
 
     if (err.response) {
       const errorMessager = new ErrorMessager(
-        namespace.dataset.files.uploadFileApi,
+        namespace.project.files.uploadFileApi,
       );
       errorMessager.triggerMsg(err.response.status, null, {
         fileName: file.name,
       });
     } else {
       const errorMessager = new ErrorMessager(
-        namespace.dataset.files.uploadRequestFail,
+        namespace.project.files.uploadRequestFail,
       );
       errorMessager.triggerMsg(null, null, { fileName: file.name });
     }

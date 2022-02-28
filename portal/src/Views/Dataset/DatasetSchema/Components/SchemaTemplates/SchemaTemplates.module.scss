@@ -1,43 +1,43 @@
-
-
 .tabs {
-  margin-top: -18px;
   :global {
-    .ant-tabs-tab {
-      height: 45px;
-      line-height: 32px !important;
-      div {
-        display: flex;
-        align-items: center;
-        justify-content: space-around;
+    .ant-tabs {
+      margin-top: -18px;
+      .ant-tabs-tab {
+        height: 45px;
+        line-height: 32px !important;
+        div {
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+        }
+        .anticon {
+          margin-top: 3px;
+        }
       }
-      .anticon {
-        margin-top: 3px;
+      .ant-select-selector {
+        border-radius: 6px !important;
+        padding: 0 11px !important;
       }
-    }
-    .ant-select-selector {
-      border-radius: 6px !important;
-      padding: 0 11px !important;
-    }
-    .anticon-plus {
-      width: 40px;
-      height: 30px;
-      background-color: #f0f0f0;
-      margin-top: 8px;
-    }
-    .ant-tabs-top-bar {
-      margin: 0 0 10px 0;
-      .ant-tabs-nav-container {
-        max-width: 700px;
+      .anticon-plus {
+        width: 40px;
+        height: 30px;
+        background-color: #f0f0f0;
+        margin-top: 8px;
       }
-    }
-    .ant-tabs-tab {
-      padding: 0px 16px !important;
-      height: 35px;
-      min-width: 100px;
-    }
-    .ant-tabs-tab-unclosable {
-      text-align: center;
+      .ant-tabs-top-bar {
+        margin: 0 0 10px 0;
+        .ant-tabs-nav-container {
+          max-width: 700px;
+        }
+      }
+      .ant-tabs-tab {
+        padding: 0px 16px !important;
+        height: 35px;
+        min-width: 100px;
+      }
+      .ant-tabs-tab-unclosable {
+        text-align: center;
+      }
     }
   }
 }

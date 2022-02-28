@@ -217,8 +217,8 @@
   color: #ff4d4f !important;
   margin-right: 2%;
 }
-.siteHeader {
-  :global {
+:global {
+  .ant-layout-header {
     .ant-popover-inner {
       height: 0px !important;
       .ant-popover-inner-content {
@@ -227,6 +227,7 @@
     }
   }
 }
+
 .slash {
   margin-left: 2%;
   margin-right: 2%;
@@ -274,7 +275,7 @@
     .ant-badge {
       .ant-badge-status-error {
         top: 37px;
-        right: 130px;
+        right: 156px;
         height: 8px;
         width: 8px;
       }

@@ -59,5 +59,9 @@ flask-sqlalchemy==2.4.4
 python-ldap==3.3.1
 python-dotenv==0.19.1
 pydantic==1.8.2
-
-
+asyncpg==0.25.0
+opentelemetry-exporter-jaeger==1.6.2
+opentelemetry-instrumentation==0.26b1
+opentelemetry-instrumentation-flask==0.26b1
+opentelemetry-instrumentation-requests==0.26b1
+minio==7.1.2

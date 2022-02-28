@@ -20,7 +20,7 @@ import { useIdleTimer } from 'react-idle-timer';
 import { tokenTimer } from './Service/keycloak';
 import { actionType, debouncedBroadcastAction } from './Utility';
 import { Suspense } from 'react';
-import { lastLoginAPI } from './APIs';
+import { lastLoginAPI, getUserstatusAPI } from './APIs';
 import ReleaseNoteModal from './Components/Modals/RelaseNoteModal';
 import { version } from '../package.json';
 import { v4 as uuidv4 } from 'uuid';
@@ -161,7 +161,7 @@ switch (process.env.REACT_APP_ENV) {
   case 'staging':
     refreshTokenLiftTime = 30 * 60;
     break;
-  case 'charite':
+  case 'production':
     refreshTokenLiftTime = 30 * 60;
     break;
   default:
@@ -186,7 +186,14 @@ function KeyCloakMiddleware() {
             tokenManager.setCookies({
               sessionId: `${keycloak?.tokenParsed.preferred_username}-${sourceId}`,
             });
-            lastLoginAPI(keycloak?.tokenParsed.preferred_username);
+            getUserstatusAPI()
+              .then((res) => {
+                console.log('keycloak onReady', res.data);
+                if (res.data.result.status !== 'pending') {
+                  lastLoginAPI(keycloak?.tokenParsed.preferred_username);
+                }
+              })
+              .catch((error) => console.log(error.response));
           }
         }
         store.dispatch(setIsLoginCreator(keycloak.authenticated));

@@ -91,6 +91,7 @@ const RequestToCoreModal = (props) => {
             </Button>
             <Button
               className={styles.btn_confirm}
+              id="btn_confirm"
               type="primary"
               disabled={
                 requestNote.trim().length &&
@@ -114,6 +115,7 @@ const RequestToCoreModal = (props) => {
             </Button>
             <Button
               type="primary"
+              data-id="select_path_btn"
               style={{ borderRadius: '6px' }}
               disabled={step2SelectDisabled}
               onClick={handleStep2Select}
@@ -179,7 +181,9 @@ const RequestToCoreModal = (props) => {
         placement={'bottomLeft'}
       >
         <ExclamationCircleOutlined />{' '}
-        <span>Handling duplicate files or folders</span>
+        <span data-id="handling-duplicate-note">
+          Handling duplicate files or folders
+        </span>
       </Popover>
     </p>
   );
@@ -241,7 +245,7 @@ const RequestToCoreModal = (props) => {
         return null;
       }
       return (
-        <div style={{ marginLeft: 16 }}>
+        <div data-id="folder-path" style={{ marginLeft: 16 }}>
           <p style={{ fontSize: 14, lineHeight: '18px', margin: 0 }}>
             Selected file(s) will be copied to
           </p>
@@ -264,7 +268,7 @@ const RequestToCoreModal = (props) => {
 
   return (
     <Modal
-      className={styles.request_to_core_modal}
+      className={styles.request_to_core_modal + ' request2core_modal'}
       title={modalTitle}
       visible={showModal}
       maskClosable={false}
@@ -282,7 +286,11 @@ const RequestToCoreModal = (props) => {
           <div className={styles.section_two}>
             <p>Where would you like to copy selected file(s)/folder(s) to?</p>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Button icon={<CloudServerOutlined />} onClick={() => setStep(2)}>
+              <Button
+                data-id="select_detination_btn"
+                icon={<CloudServerOutlined />}
+                onClick={() => setStep(2)}
+              >
                 Select Destination
               </Button>
               {folderPathRender()}
@@ -294,7 +302,11 @@ const RequestToCoreModal = (props) => {
             </p>
             <Form form={form}>
               <Form.Item name="notes">
-                <TextArea maxLength={250} onChange={handleOnChange} />
+                <TextArea
+                  data-id="request-notes"
+                  maxLength={250}
+                  onChange={handleOnChange}
+                />
               </Form.Item>
             </Form>
             <span className={styles.request_note}>{`${

@@ -20,7 +20,7 @@ class SrvContactUsManager(metaclass=MetaService):
         email_sender = SrvEmail()
         container_mgr = SrvContainerManager()
 
-        subject = "ACTION REQUIRED - VRE Support Request Submitted"
+        subject = f"ACTION REQUIRED - {ConfigClass.PROJECT_NAME} Support Request Submitted"
         email_sender.send(
             subject,
             [ConfigClass.EMAIL_SUPPORT],

@@ -17,6 +17,7 @@ import { objectKeysToCamelCase } from '../../../../../Utility';
 import { store } from '../../../../../Redux/store';
 import { datasetDataActions } from '../../../../../Redux/actions';
 import { initTree } from '../ExplorerTree/initTree';
+import { DOMAIN_DEV, DOMAIN_PROD, DOMAIN_STAGING } from '../../../../../config';
 
 export default function DatasetDataExplorer(props) {
   const dispatch = useDispatch();
@@ -45,16 +46,16 @@ export default function DatasetDataExplorer(props) {
   let socketIoUrl = '';
   switch (process.env['REACT_APP_ENV']) {
     case 'dev':
-      socketIoUrl = 'ws://10.3.7.220';
+      socketIoUrl = 'ws://' + DOMAIN_DEV;
       break;
     case 'staging':
-      socketIoUrl = 'wss://vre-staging.indocresearch.org';
+      socketIoUrl = 'wss://' + DOMAIN_STAGING;
       break;
-    case 'charite':
-      socketIoUrl = 'wss://vre.charite.de';
+    case 'production':
+      socketIoUrl = 'wss://' + DOMAIN_PROD;
       break;
     default:
-      socketIoUrl = 'ws://10.3.7.220';
+      socketIoUrl = 'ws://' + DOMAIN_DEV;
       break;
   }
 

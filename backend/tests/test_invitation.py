@@ -7,7 +7,7 @@ from models.invitation import InvitationModel, db
 from services.notifier_services.email_service import SrvEmail
 import requests
 from config import ConfigClass
-@unittest.skip("need update")
+
 class TestInvitation(unittest.TestCase):
     log = Logger(name='test_invitation.log')
     test = SetUpTest(log)
@@ -36,6 +36,7 @@ class TestInvitation(unittest.TestCase):
                     db.session.delete(invite)
             db.session.commit()
 
+    @unittest.skip
     @mock.patch.object(SrvEmail, 'send', side_effect=None)
     def test_01_create_invitation(self, mock_email):
         payload = {
@@ -174,7 +175,7 @@ class TestInvitation(unittest.TestCase):
             "page": 0,
             "page_size": 1,
             "filters": {
-                "project_geid": self.project["global_entity_id"],
+                "project_id": self.project["global_entity_id"],
             }
         }
         headers = {}
@@ -329,7 +330,7 @@ class TestInvitation(unittest.TestCase):
             "page": 0,
             "page_size": 1,
             "filters": {
-                "project_geid": self.project["global_entity_id"],
+                "project_id": self.project["global_entity_id"],
             }
         }
         headers = {}

@@ -3,7 +3,7 @@
     "type": "object",
     "properties": {
       "dataset_contributors": {
-        "title": "Contributors",
+        "title": "Contributors Type",
         "type": "array",
         "minItems": 1,
         "items": {
@@ -51,5 +51,15 @@
       }
     }
   },
-  "ui": {}
+  "ui": {
+    "dataset_contributors": {
+      "items": {
+        "ui:order": [
+          "dataset_contributor_person_firstname",
+          "dataset_contributor_person_lastname",
+          "dataset_contributor_person_email"
+        ]
+      }
+    }
+  }
 }

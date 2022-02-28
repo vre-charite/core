@@ -1,6 +1,7 @@
 import React from 'react';
+import { DOMAIN_DEV } from '../../../../config';
 const src =
-  (process.env.NODE_ENV === 'development' ? 'http://10.3.7.220' : '') +
+  (process.env.NODE_ENV === 'development' ? `http://${DOMAIN_DEV}` : '') +
   '/bi/superset/welcome';
 
 function Superset() {

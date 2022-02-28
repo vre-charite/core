@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from 'antd';
 import styles from './BlankPreviewerCard.module.scss';
-import { FileImageOutlined } from '@ant-design/icons';
+import { FileImageOutlined, EyeOutlined } from '@ant-design/icons';
 export function BlankPreviewerCard(params) {
   return (
     <Card className={styles['card']}>
@@ -10,7 +10,9 @@ export function BlankPreviewerCard(params) {
         <div>
           <FileImageOutlined />
         </div>
-        <span>Select file to preview</span>
+        <span>
+          click <EyeOutlined /> to preview
+        </span>
       </div>
     </Card>
   );

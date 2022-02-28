@@ -213,7 +213,7 @@ const PublishNewVersion = (props) => {
             type="primary"
             style={{
               borderRadius: '6px',
-              width: '144px',
+              width: '120px',
               height: '25px',
               padding: '0px',
             }}
@@ -221,7 +221,7 @@ const PublishNewVersion = (props) => {
             loading={btnLoading}
             onClick={publishVersion}
           >
-            Publish Version
+            Submit
           </Button>
         </div>,
       ]}

@@ -34,14 +34,14 @@
     "description": {
       "valid": "Description must be between 1 and 250 characters."
     },
-    "generate": {
+    "dcm": {
       "id": {
-        "empty": "Please enter a valid GENERATE ID",
-        "valid": "Please enter a valid GENERATE ID"
+        "empty": "Please enter a valid {{ DcmSpaceID }}",
+        "valid": "Please enter a valid {{ DcmSpaceID }}"
       },
       "confirmId": {
-        "empty": "Please confirm the GENERATE ID",
-        "valid": "The two GENERATE IDs that you entered do not match!"
+        "empty": "Please confirm the {{ DcmSpaceID }}",
+        "valid": "The two {{ DcmSpaceID }}s that you entered do not match!"
       }
     },
     "card": {

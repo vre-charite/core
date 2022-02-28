@@ -43,11 +43,11 @@ class APIFolderCreation(metaclass=MetaAPI):
                         return _res.to_dict, _res.code
                     if project_role == 'contributor':
                         # contributor is restricted to creating folder only in greenroom
-                        if zone == 'vrecore':
-                            _logger.error('Permission Deined, Contributor cannot create folder in vrecore')
+                        if zone == 'core':
+                            _logger.error('Permission Deined, Contributor cannot create folder in core')
                             _res.set_code(EAPIResponseCode.forbidden)
                             _res.set_error_msg(
-                                'Permission Deined, Contributor cannot create folder in vrecore')
+                                'Permission Deined, Contributor cannot create folder in core')
                             return _res.to_dict, _res.code
                         elif uploader != current_identity['username']:
                             _res.set_code(EAPIResponseCode.forbidden)
@@ -59,7 +59,7 @@ class APIFolderCreation(metaclass=MetaAPI):
                             return _res.to_dict, _res.code
                     elif project_role == 'collaborator':
                         # collaborator can only create sub folder under his own folder if zone is greenroom
-                        # if zone is vrecore, collaborator can create folder anywhere
+                        # if zone is core, collaborator can create folder anywhere
                         if zone == 'greenroom':
                             if destination_geid is not None:
                                 # check if parent folder uploader is same as current uploader
@@ -72,11 +72,6 @@ class APIFolderCreation(metaclass=MetaAPI):
                                     _logger.error('Permission Deined,Non-admin user can only have access to create under their own " \
                                                                                      "folder in greenroom')
                                     return _res.to_dict, _res.code
-                            # elif uploader != current_identity['username']: _res.set_code(
-                            # EAPIResponseCode.forbidden) _res.set_error_msg( "Permission Deined,Non-admin user can
-                            # only have access to create under their own " "folder ") _logger.error('Permission
-                            # Deined,Non-admin user can only have access to create under their own " \ "folder')
-                            # return _res.to_dict, _res.code
                 # neo4j to check if project exists
 
                 # create folder - call service upload
@@ -95,11 +90,12 @@ class APIFolderCreation(metaclass=MetaAPI):
                         "zone": zone
                     }
                     folder_creation_url = None
-                    if zone == 'vrecore':
-                        folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_VRE + '/folder'
+                    if zone == 'core':
+                        folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_CORE + '/folder'
                     elif zone == 'greenroom':
                         folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_GREENROOM + '/folder'
                     response = requests.post(folder_creation_url, data=json.dumps(payload))
+                    print(folder_creation_url)
                     return response.json(), response.status_code
                 except Exception as error:
                     _logger.error("Error while creating folder")
@@ -144,7 +140,7 @@ def get_project_geid(project_code):
         payload = {
             "code": project_code
         }
-        node_query_url = ConfigClass.NEO4J_SERVICE + "/nodes/Container/query"
+        node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Container/query"
         response = requests.post(node_query_url, json=payload)
         if response.status_code != 200:
             _logger.error('Failed to query project from neo4j service:   ' + response.text)
@@ -165,7 +161,7 @@ def get_destination_folder_uploader(destination_geid):
     payload = {
         "global_entity_id": destination_geid
     }
-    node_query_url = ConfigClass.NEO4J_SERVICE + "/nodes/Folder/query"
+    node_query_url = ConfigClass.NEO4J_SERVICE + "nodes/Folder/query"
     response = requests.post(node_query_url, json=payload)
 
     if response.status_code != 200:
@@ -176,3 +172,4 @@ def get_destination_folder_uploader(destination_geid):
     else:
         destination_folder_uploader = response.json()[0]["uploader"]
         return destination_folder_uploader
+

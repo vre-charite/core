@@ -23,10 +23,10 @@ class FileDetailBulk(Resource):
         file_node = response.json()["result"]
 
         for file_node in response.json()["result"]:
-            if "Greenroom" in file_node["labels"]:
+            if ConfigClass.GREENROOM_ZONE_LABEL in file_node["labels"]:
                 zone = "greenroom"
             else:
-                zone = "vrecore"
+                zone = "core"
             if not has_permission(file_node["project_code"], "file", zone, "view"):
                 api_response.set_code(EAPIResponseCode.forbidden)
                 api_response.set_error_msg("Permission Denied")
@@ -42,10 +42,10 @@ class FileDetail(Resource):
         if response.status_code != 200:
             return response.json(), response.status_code
         file_node = response.json()["result"]
-        if "Greenroom" in file_node["labels"]:
+        if ConfigClass.GREENROOM_ZONE_LABEL in file_node["labels"]:
             zone = "greenroom"
         else:
-            zone = "vrecore"
+            zone = "core"
         neo4j_client = Neo4jClient()
         response = neo4j_client.get_container_by_code(file_node["project_code"])
         if not response.get("result"):
@@ -90,7 +90,10 @@ class FileMeta(Resource):
                 _res.set_error_msg(f'Missing required paramter {field}')
                 return _res.to_dict, _res.code
 
-        if not zone in ['Greenroom', 'VRECore', 'All']:
+        if zone == "Core":
+            zone = ConfigClass.CORE_ZONE_LABEL
+
+        if not zone in [ConfigClass.GREENROOM_ZONE_LABEL, ConfigClass.CORE_ZONE_LABEL, 'All']:
             _logger.error('Invalid zone')
             _res.set_code(EAPIResponseCode.bad_request)
             _res.set_error_msg('Invalid zone')
@@ -120,7 +123,7 @@ class FileMeta(Resource):
         project_role = get_project_role(dataset_node["code"])
         
         if project_role in ["contributor", "collaborator"]:
-            if not (project_role == "collaborator" and zone == "VRECore"):
+            if not (project_role == "collaborator" and zone == ConfigClass.CORE_ZONE_LABEL):
                 if source_type == "Folder":
                     # Listing files in folder
                     response = neo4j_client.node_query("Folder", {"global_entity_id": geid})
@@ -214,7 +217,10 @@ class FileMetaHome(Resource):
             _res.set_error_msg('Invalid json')
             return _res.to_dict, _res.code
 
-        if not zone in ['Greenroom', 'VRECore']:
+        if zone == "Core":
+            zone = ConfigClass.CORE_ZONE_LABEL
+
+        if not zone in [ConfigClass.GREENROOM_ZONE_LABEL, ConfigClass.CORE_ZONE_LABEL]:
             _logger.error('Invalid zone')
             _res.set_code(EAPIResponseCode.bad_request)
             _res.set_error_msg('Invalid zone')
@@ -298,7 +304,7 @@ def get_zone(labels: list):
     '''
     Get resource type by neo4j labels
     '''
-    zones = ['Greenroom', 'VRECore']
+    zones = [ConfigClass.GREENROOM_ZONE_LABEL, ConfigClass.CORE_ZONE_LABEL]
     for label in labels:
         if label in zones:
             return label

@@ -10,9 +10,8 @@ import {
 } from '../../../APIs';
 
 const RequestAccessModal = (props) => {
-  const [showConfirmationConetnt, toggleShowConfirmationContent] = useState(
-    false,
-  );
+  const [showConfirmationConetnt, toggleShowConfirmationContent] =
+    useState(false);
   const [userGeid, setUserGeid] = useState(null);
   const [connectGuacamole, setConnectGuacamole] = useState(false);
   const [connectSuperSet, setConnectSuperSet] = useState(false);
@@ -120,7 +119,7 @@ const RequestAccessModal = (props) => {
             }, 500);
           }}
         >
-          Ok
+          OK
         </Button>
       </div>
     </div>

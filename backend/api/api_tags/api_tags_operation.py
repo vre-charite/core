@@ -116,7 +116,7 @@ class APITagsV2(metaclass=MetaAPI):
                                 return _res.to_dict, _res.code
 
                         elif project_role == 'collaborator':
-                            if (root_folder == current_identity['username']) or ('VRECore' in file_labels):
+                            if (root_folder == current_identity['username']) or (ConfigClass.CORE_ZONE_LABEL in file_labels):
                                 response = requests.post(tags_url, json=data)
                                 if response.status_code != 200:
                                     _logger.error('Failed to attach tags to entity:   ' + str(response.text))
@@ -147,7 +147,7 @@ def http_query_project_code(geid, entity):
         payload = {
             "global_entity_id": geid
         }
-        node_query_url = ConfigClass.NEO4J_SERVICE + f"/nodes/{entity}/query"
+        node_query_url = ConfigClass.NEO4J_SERVICE + f"nodes/{entity}/query"
         response = requests.post(node_query_url, json=payload)
         if response.status_code != 200:
             _logger.error('Failed to query project from neo4j service:   ' + response.text)

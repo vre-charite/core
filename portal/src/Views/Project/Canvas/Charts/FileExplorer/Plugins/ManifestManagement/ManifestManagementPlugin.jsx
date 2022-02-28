@@ -38,8 +38,6 @@ function ManifestManagementPlugin({
       manifest: v.manifest,
       nodeLabel: v.nodeLabel,
       fileName: v.fileName,
-      // generate_id:
-      //   v.generateId && v.generateId !== 'undefined' ? v.generateId : null,
     };
   });
   const selFiles = selFilesAll.filter(

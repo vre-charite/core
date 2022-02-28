@@ -90,27 +90,28 @@ const SchemaTemplates = (props) => {
 
       {schemasTypes === 'Default' &&
         (defaultPanes.length ? (
-          <Tabs
-            className={styles.tabs}
-            type="editable-card"
-            hideAdd={true}
-            onChange={handleDefaultSchemaTabChange}
-            activeKey={defaultSchemaActiveTabKey}
-            onEdit={(targetTplKey, action) =>
-              handleTabsPanelEdit(targetTplKey, action, 'Default')
-            }
-          >
-            {defaultPanes.map((pane) => (
-              <TabPane
-                tab={pane.title}
-                key={pane.tplKey}
-                closable={pane.title !== ESSENTIAL_TPL_NAME}
-                // disabled={addMode && defaultSchemaActiveTabKey !== pane.key}
-              >
-                <SchemaForm pane={pane}></SchemaForm>
-              </TabPane>
-            ))}
-          </Tabs>
+          <div className={styles.tabs}>
+            <Tabs
+              type="editable-card"
+              hideAdd={true}
+              onChange={handleDefaultSchemaTabChange}
+              activeKey={defaultSchemaActiveTabKey}
+              onEdit={(targetTplKey, action) =>
+                handleTabsPanelEdit(targetTplKey, action, 'Default')
+              }
+            >
+              {defaultPanes.map((pane) => (
+                <TabPane
+                  tab={pane.title}
+                  key={pane.tplKey}
+                  closable={pane.title !== ESSENTIAL_TPL_NAME}
+                  // disabled={addMode && defaultSchemaActiveTabKey !== pane.key}
+                >
+                  <SchemaForm pane={pane}></SchemaForm>
+                </TabPane>
+              ))}
+            </Tabs>
+          </div>
         ) : (
           <Spin
             indicator={<LoadingOutlined />}

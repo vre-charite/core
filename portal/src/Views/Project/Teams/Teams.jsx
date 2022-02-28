@@ -38,6 +38,7 @@ import InvitationTable from '../../../Components/Table/InvitationTable';
 import CanvasPageHeader from '../Canvas/PageHeader/CanvasPageHeader';
 import styles from './index.module.scss';
 import i18n from '../../../i18n';
+import { KEYCLOAK_REALM } from '../../../config';
 const { Content } = Layout;
 const { TabPane } = Tabs;
 
@@ -104,7 +105,7 @@ class Teams extends Component {
     }
 
     this.props
-      .getUsersOnDatasetAPI(this.props.currentProject.globalEntityId, data)
+      .getUserOnProjectAPI(this.props.currentProject.globalEntityId, data)
       .then((res) => {
         const users = res.data.result.filter(
           (user) => user.projectStatus !== 'disable',
@@ -201,7 +202,7 @@ class Teams extends Component {
     });
     updateUserStatusAPI({
       operationType: action,
-      userRealm: 'vre',
+      userRealm: KEYCLOAK_REALM,
       userGeid: null,
       userEmail: email,
       payload: {

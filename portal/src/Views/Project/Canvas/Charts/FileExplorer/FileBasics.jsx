@@ -6,6 +6,7 @@ import {
   timeConvert,
   checkIsVirtualFolder,
 } from '../../../../../Utility';
+import { DcmSpaceID } from '../../../../../config';
 function FileBasics(props) {
   const { record, panelKey } = props;
   let pathsArr;
@@ -27,9 +28,9 @@ function FileBasics(props) {
         <Descriptions.Item label="Created">
           {timeConvert(record.createTime, 'datetime')}
         </Descriptions.Item>
-        {record.generateId !== 'undefined' && (
-          <Descriptions.Item label="Generate ID">
-            {record.generateId}
+        {record['dcmId'] !== 'undefined' && (
+          <Descriptions.Item label={DcmSpaceID}>
+            {record['dcmId']}
           </Descriptions.Item>
         )}
         {record.nodeLabel.indexOf('Folder') === -1 ? (

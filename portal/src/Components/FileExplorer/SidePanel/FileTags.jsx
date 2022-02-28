@@ -7,7 +7,6 @@ import { EditOutlined, UpOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import styles from './index.module.scss';
 import FileExplorerContext from '../FileExplorerContext';
-import { useSelector, useDispatch } from 'react-redux';
 const { Paragraph } = Typography;
 const _ = require('lodash');
 
@@ -17,11 +16,8 @@ function FileTags(props) {
   const fileExplorerCtx = useContext(FileExplorerContext);
   const sidePanelCfg = fileExplorerCtx.sidePanelCfg;
   const inputRef = useRef(null);
-  const tagsOrigin =
-    props.record.systemTags && props.record.systemTags.length
-      ? [...props.record.systemTags, ...props.record.tags]
-      : props.record.tags;
-  const [tagsEdited, setTagsEdited] = useState(tagsOrigin);
+  const [customizedTags, setCustomizedTags] = useState(props.record.tags);
+  const [systemTags, setSystemTags] = useState(props.record.systemTags ? props.record.systemTags : []);
   const [inputVisible, setInputVisible] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [errorMessage, setErrorMessage] = useState(false);
@@ -30,17 +26,9 @@ function FileTags(props) {
   const [expand, setExpand] = useState(false);
   const [counter, setCounter] = useState(0);
   const manifest = currentDataset;
-  const projectSystemTags = manifest?.systemTags;
-
-  const systemTags = tagsEdited.filter(
-    (v) => projectSystemTags && projectSystemTags.indexOf(v) !== -1,
-  );
-  const tags = tagsEdited.filter(
-    (v) => projectSystemTags && projectSystemTags.indexOf(v) === -1,
-  );
   const handleClose = (removedTag) => {
-    const tags = tagsEdited.filter((tag) => tag !== removedTag);
-    setTagsEdited(tags);
+    const tags = customizedTags.filter((tag) => tag !== removedTag);
+    setCustomizedTags(tags);
   };
 
   const handleInputChange = (e) => {
@@ -62,13 +50,13 @@ function FileTags(props) {
       setErrorMessage(t('formErrorMessages:project.filePanel.tags.systemtags'));
       return;
     }
-    let tags = tagsEdited;
+    let tags = customizedTags;
     if (inputValueLowercase && _.includes(tags, inputValueLowercase)) {
       setErrorMessage(t('formErrorMessages:project.filePanel.tags.exists'));
       return;
     }
 
-    const tagsNew = [...tags, inputValueLowercase];
+    const tagsNew = [...customizedTags, inputValueLowercase];
     const tagsNewNotSystem = tagsNew.filter(
       (v) => projectSystemTags && projectSystemTags.indexOf(v) === -1,
     );
@@ -76,7 +64,7 @@ function FileTags(props) {
       setErrorMessage(t('formErrorMessages:project.filePanel.tags.limit'));
       return;
     }
-    setTagsEdited(tagsNew);
+    setCustomizedTags(tagsNew);
     setInputVisible(false);
     setErrorMessage(false);
     setInputValue('');
@@ -86,11 +74,7 @@ function FileTags(props) {
   const saveTags = async () => {
     try {
       const record = props.record;
-      const customizedTags = tagsEdited.filter(
-        (el) => !manifest.systemTags.includes(el),
-      );
       const fileType = record.nodeLabel.includes('Folder') ? 'Folder' : 'File';
-
       await updateProjectTagsAPI(fileType, record.geid, {
         tags: customizedTags,
         inherit: false,
@@ -118,7 +102,7 @@ function FileTags(props) {
     setExpand(false);
     setCounter(!expand ? counter + 0 : counter + 1);
   };
-  const showEditTagsBtn = (edit, tags) => {
+  const showEditTagsBtn = (edit, customizedTags) => {
     if (edit) {
       return (
         <div>
@@ -145,14 +129,18 @@ function FileTags(props) {
               onClick={() => {
                 setEdit(false);
                 setInputValue('');
-                setTagsEdited(tagsOrigin);
+                setCustomizedTags(props.record.tags);
               }}
             />
           ) : null}
         </div>
       );
     } else {
-      if (tags.length !== 0 && sidePanelCfg && sidePanelCfg.allowTagEdit) {
+      if (
+        customizedTags.length !== 0 &&
+        sidePanelCfg &&
+        sidePanelCfg.allowTagEdit
+      ) {
         return (
           <Button
             type="link"
@@ -206,12 +194,12 @@ function FileTags(props) {
         >
           Customized Tags
         </p>
-        {showEditTagsBtn(edit, tags)}
+        {showEditTagsBtn(edit, customizedTags)}
       </div>
 
-      {edit || tags.length === 0 ? (
+      {edit || customizedTags.length === 0 ? (
         <>
-          {tags.map((tag) => (
+          {customizedTags.map((tag) => (
             <Tag
               color="blue"
               closable
@@ -275,7 +263,7 @@ function FileTags(props) {
           }}
           style={{ display: 'inline' }}
         >
-          {tags.map((tag) => (
+          {customizedTags.map((tag) => (
             <Tag
               color="blue"
               style={{ marginTop: '10px' }}

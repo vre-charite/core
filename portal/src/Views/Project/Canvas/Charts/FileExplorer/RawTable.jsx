@@ -43,7 +43,6 @@ import {
   getZipContentAPI,
   getFileManifestAttrs,
   getFiles,
-  createSubFolderApi,
 } from '../../../../../APIs';
 import GreenRoomUploader from '../../../Components/GreenRoomUploader';
 import FilesTable from './FilesTable';
@@ -85,6 +84,7 @@ import i18n from '../../../../../i18n';
 import { FILE_OPERATIONS } from './FileOperationValues';
 import { JOB_STATUS } from '../../../../../Components/Layout/FilePanel/jobStatus';
 import { hideButton } from './hideButtons';
+import { dcmProjectCode, DcmSpaceID } from '../../../../../config';
 const { Panel } = Collapse;
 const { Title } = Typography;
 const _ = require('lodash');
@@ -215,7 +215,7 @@ function RawTable(props) {
 
   const getColumnWidth = (
     panelKey,
-    isGENERATE,
+    isDCM,
     isRootFolder,
     sidepanelOpen,
     columnKey,
@@ -254,7 +254,7 @@ function RawTable(props) {
     const GREENROOM_CORE_NOMAL_GEN = {
       name: '25%',
       owner: '17%',
-      generateID: 140,
+      dcmID: 140,
       createTime: 120,
       size: 100,
       action: 80,
@@ -273,7 +273,7 @@ function RawTable(props) {
       if (isRootFolder) {
         return GREENROOM_CORE_ROOT[columnKey];
       } else {
-        if (isGENERATE) {
+        if (isDCM) {
           return GREENROOM_CORE_NOMAL_GEN[columnKey];
         } else {
           return GREENROOM_CORE_NOMAL[columnKey];
@@ -306,7 +306,7 @@ function RawTable(props) {
       sorter: true,
       width: getColumnWidth(
         panelKey,
-        currentDataset.code === 'generate',
+        currentDataset.code === dcmProjectCode,
         isRootFolder,
         sidepanel,
         'name',
@@ -404,7 +404,7 @@ function RawTable(props) {
           : true,
       width: getColumnWidth(
         panelKey,
-        currentDataset.code === 'generate',
+        currentDataset.code === dcmProjectCode,
         isRootFolder,
         sidepanel,
         'owner',
@@ -419,22 +419,22 @@ function RawTable(props) {
       ellipsis: true,
     },
     currentDataset &&
-    currentDataset.code === 'generate' &&
+    currentDataset.code === dcmProjectCode &&
     !panelKey.includes('trash') &&
     !panelKey.startsWith('vfolder-')
       ? {
-          title: 'Generate ID',
-          dataIndex: 'generateId',
-          key: 'generateID',
+          title: DcmSpaceID,
+          dataIndex: "dcmId",
+          key: "dcmID",
           sorter: true,
           width: getColumnWidth(
             panelKey,
-            currentDataset.code === 'generate',
+            currentDataset.code === dcmProjectCode,
             isRootFolder,
             sidepanel,
-            'generateID',
+            "dcmID",
           ),
-          searchKey: 'generateID',
+          searchKey: "dcmID",
           ellipsis: true,
           render: (text, record) => {
             if (text === 'undefined') {
@@ -453,7 +453,7 @@ function RawTable(props) {
           sorter: true,
           width: getColumnWidth(
             panelKey,
-            currentDataset.code === 'generate',
+            currentDataset.code === dcmProjectCode,
             isRootFolder,
             sidepanel,
             'createTime',
@@ -472,7 +472,7 @@ function RawTable(props) {
           sorter: true,
           width: getColumnWidth(
             panelKey,
-            currentDataset.code === 'generate',
+            currentDataset.code === dcmProjectCode,
             isRootFolder,
             sidepanel,
             'deleteTime',
@@ -494,7 +494,7 @@ function RawTable(props) {
               record.nodeLabel.indexOf('greenroom') !== -1
             ) {
               return 'Green Room';
-            } else if (record.nodeLabel.indexOf('VRECore') !== -1) {
+            } else if (record.nodeLabel.indexOf('Core') !== -1) {
               return 'Core';
             } else {
               return '';
@@ -503,7 +503,7 @@ function RawTable(props) {
           ellipsis: true,
           width: getColumnWidth(
             panelKey,
-            currentDataset.code === 'generate',
+            currentDataset.code === dcmProjectCode,
             isRootFolder,
             sidepanel,
             'originalLocation',
@@ -526,7 +526,7 @@ function RawTable(props) {
           ellipsis: true,
           width: getColumnWidth(
             panelKey,
-            currentDataset.code === 'generate',
+            currentDataset.code === dcmProjectCode,
             isRootFolder,
             sidepanel,
             'size',
@@ -540,7 +540,7 @@ function RawTable(props) {
           key: 'action',
           width: getColumnWidth(
             panelKey,
-            currentDataset.code === 'generate',
+            currentDataset.code === dcmProjectCode,
             isRootFolder,
             sidepanel,
             'action',
@@ -596,9 +596,7 @@ function RawTable(props) {
                         sessionId,
                         currentDataset.code,
                         props.username,
-                        panelKey.startsWith('greenroom')
-                          ? 'greenroom'
-                          : 'vre-core',
+                        panelKey.startsWith('greenroom') ? 'greenroom' : 'Core',
                       )
                         .then((res) => {
                           if (res) {
@@ -612,7 +610,7 @@ function RawTable(props) {
                         .catch((err) => {
                           if (err.response) {
                             const errorMessager = new ErrorMessager(
-                              namespace.dataset.files.downloadFilesAPI,
+                              namespace.project.files.downloadFilesAPI,
                             );
                             errorMessager.triggerMsg(err.response.status);
                           }
@@ -876,7 +874,7 @@ function RawTable(props) {
       sessionId,
       currentDataset.code,
       props.username,
-      panelKey.startsWith('greenroom') ? 'greenroom' : 'vre-core',
+      panelKey.startsWith('greenroom') ? 'greenroom' : 'Core',
     )
       .then((res) => {
         // if (files && files.length === 1)
@@ -893,7 +891,7 @@ function RawTable(props) {
         setLoading(false);
         if (err.response) {
           const errorMessager = new ErrorMessager(
-            namespace.dataset.files.downloadFilesAPI,
+            namespace.project.files.downloadFilesAPI,
           );
           errorMessager.triggerMsg(err.response.status);
         }
@@ -1735,13 +1733,13 @@ export default connect(
 /**
  * Do NOT call this function on virtual folder panel
  * @param {string} panelKey the current open panel key
- * @returns {"Greenroom" | "VRECore" | "All"} "Greenroom" | "VRECore" | "All"
+ * @returns {"Greenroom" | "Core" | "All"} "Greenroom" | "Core" | "All"
  */
 const getZone = (panelKey, role, sourceType, node) => {
   if (panelKey.includes('trash')) {
     if (sourceType === 'Folder') {
-      if (node.nodeLabel.indexOf('VRECore') !== -1) {
-        return 'VRECore';
+      if (node.nodeLabel.indexOf('Core') !== -1) {
+        return 'Core';
       } else {
         return 'Greenroom';
       }
@@ -1753,10 +1751,10 @@ const getZone = (panelKey, role, sourceType, node) => {
     return 'Greenroom';
   }
   if (panelKey.startsWith('core')) {
-    return 'VRECore';
+    return 'Core';
   }
   if (checkIsVirtualFolder(panelKey)) {
-    return 'VRECore';
+    return 'Core';
   }
   throw new TypeError('only greenroom, core and trash can use getZone');
 };
@@ -1784,7 +1782,7 @@ const mapColumnKey = (column) => {
     fileName: 'name',
     owner: 'uploader',
     fileSize: 'file_size',
-    generateID: 'generate_id',
+    dcmID: "dcm_id",
   };
   return columnMap[column] || column;
 };

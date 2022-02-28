@@ -18,6 +18,7 @@ import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { useTranslation } from 'react-i18next';
 import { trimString } from '../../Utility';
 import i18n from '../../i18n';
+import { PLATFORM } from '../../config';
 const { Option } = Select;
 const { TextArea } = Input;
 const { Title, Paragraph } = Typography;
@@ -86,7 +87,7 @@ function ContactUsForm(props) {
               <p>
                 {i18n.t('success:contactUs.text.0')}
                 <br />
-                {i18n.t('success:contactUs.text.1')}
+                {i18n.t('success:contactUs.text.1', { PLATFORM: PLATFORM })}
               </p>
             </>
           }
@@ -102,8 +103,9 @@ function ContactUsForm(props) {
             Still need help?
           </Title>
           <Paragraph>
-            Contact the VRE Support Team for additional help with platform tools
-            and services, to report a bug, or other general questions.​
+            Contact the {PLATFORM} Support Team for additional help with
+            platform tools and services, to report a bug, or other general
+            questions.​
           </Paragraph>
           <Form
             layout="vertical"

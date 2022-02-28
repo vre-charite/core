@@ -1,12 +1,13 @@
 from .module_api import module_api
 from .api_hello_world import APIHelloWorld
 from .api_invitation import APIInvitation
-from .api_report import APIReport
 from .api_auth import APIAuthService
 from .api_contact_us import APIContactUs
 # from .api_cataloguing import APICataloguing
 from .api_time import APITimestamp
-from .api_notification import APINotification
+from .api_email import APIEmail
+from .api_notification.notification import APINotification, APINotifications
+from .api_notification.unsubscribe import APIUnsubscribe
 from .api_container.route_registry import APIContainer
 from .api_data_manifest.data_manifest import APIDataManifest
 from .api_project import APIProject
@@ -34,22 +35,25 @@ from .api_dataset.api_schema_template import APIDatasetSchemaTemplateProxy
 from .api_dataset.api_validate import APIValidator
 from .api_kg.api_kg_resource import APIKGResourceProxy
 from .api_copy_request.copy_request import APICopyRequest
+from .api_upload_ops import APIFileUploadStatus
 
 apis = [
     APIHelloWorld(),
     APIInvitation(),
     APIContainer(),
-    APIReport(),
     APIAuthService(),
     APIContactUs(),
     # APICataloguing(),
     APITimestamp(),
-    APINotification(),
+    APIEmail(),
     APIDataManifest(),
     APIProject(),
     APIProjectV2(),
     APISystemTags(),
     APIAnnouncement(),
+    APINotification(),
+    APINotifications(),
+    APIUnsubscribe(),
     APIUsers(),
     APIProvenance(),
     APINeo4j2ESScript(),
@@ -73,7 +77,8 @@ apis = [
     APIDatasetSchemaTemplateProxy(),
     APIValidator(),
     APIKGResourceProxy(),
-    APICopyRequest()
+    APICopyRequest(),
+    APIFileUploadStatus()
 ]
 
 

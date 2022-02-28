@@ -10,7 +10,7 @@ from resources.swagger_modules import hello_indoc_return_example
 import time
 import multiprocessing
 
-api_ns_hello = module_api.namespace('Hello VRE', description='For backend services down/on testing', path ='/v1')
+api_ns_hello = module_api.namespace('Hello World', description='For backend services down/on testing', path ='/v1')
 
 ## for backend services down/on testing
 class APIHelloWorld(metaclass=MetaAPI):

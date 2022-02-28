@@ -32,7 +32,7 @@ const NewRequestList = (props) => {
     }
   }
   return (
-    <List
+    <List 
       size="large"
       bordered={false}
       dataSource={data}

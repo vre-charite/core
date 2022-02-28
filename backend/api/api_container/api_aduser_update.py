@@ -130,10 +130,11 @@ class ADUserUpdate(Resource):
         user_data_query_results = self.neo4j_client.get_user_by_email(email)
         return user_data_query_results
 
+    # the fucntion is not used
     def add_admin_projects(self, username):
         # Give platform admin admin role for each project
         payload = {
-            "realm": "vre",
+            "realm": ConfigClass.KEYCLOAK_REALM,
             "username": username,
         }
         response = requests.post(
@@ -167,7 +168,7 @@ class ADUserUpdate(Resource):
         url = ConfigClass.AUTH_SERVICE + "user/project-role"
         request_payload = {
             "email": email,
-            "realm": "vre",
+            "realm": ConfigClass.KEYCLOAK_REALM,
             "project_role": role
         }
         response_assign = requests.post(
@@ -181,8 +182,8 @@ class ADUserUpdate(Resource):
     def bulk_create_folder(folder_name, project_code_list):
         try:
             _logger.info(
-                f"bulk creating namespace folder in greenroom and vrecore for user : {folder_name} under {project_code_list}")
-            zone_list = ["greenroom", "vrecore"]
+                f"bulk creating namespace folder in greenroom and core for user : {folder_name} under {project_code_list}")
+            zone_list = ["greenroom", "core"]
             for zone in zone_list:
                 payload = {
                     "folder_name": folder_name,

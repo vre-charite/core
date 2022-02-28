@@ -6,7 +6,7 @@ from models.api_response import APIResponse, EAPIResponseCode
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 from models.api_meta_class import MetaAPI
 from config import ConfigClass
-from resources.utils import http_query_node, get_relation
+from resources.utils import http_query_node
 import json
 import requests
 from api import module_api
@@ -46,9 +46,13 @@ class APIDatasetActivityLogs(metaclass=MetaAPI):
                     _res.set_result('Dataset is not exist')
                     return _res.to_dict, _res.code
 
-                relations = get_relation('User', 'Dataset', {
-                                         "name": current_identity['username']}, {"id": node[0]['id']})
-                if len(relations) == 0:
+                payload = {
+                    'creator': current_identity["username"],
+                    'id': node[0]['id'],
+                }
+                owner_res = http_query_node('Dataset', payload)
+                nodes_owned = owner_res.json()
+                if len(nodes_owned) == 0:
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_result("no permission for this dataset")
                     return _res.to_dict, _res.code

@@ -22,11 +22,10 @@ import { resetReduxState } from './resetReduxState';
 import { useIsMount } from './useIsMount';
 import { validateTag } from './validateTag';
 import { formatRole, convertRole } from './roleConvert';
-import { convertUTCDateToLocalDate, timeConvert, timezone } from './timeCovert';
+import { convertUTCDateToLocalDate, formatDate, timeConvert, timezone } from './timeCovert';
 import { partialString } from './column';
 import { displayTitle, nestedLoop } from './fileTree';
 import { fileNameOrPathDisplay } from './fileNameOrPathDisplay';
-import { pathsMap } from './pathsMap';
 import { getHighlightedText, hightLightCaseInsensitive } from './highlight';
 
 import {
@@ -57,10 +56,10 @@ export {
   convertRole,
   convertUTCDateToLocalDate,
   timeConvert,
+  formatDate,
   timezone,
   trimString,
   partialString,
-  pathsMap,
   fileNameOrPathDisplay,
   displayTitle,
   nestedLoop,

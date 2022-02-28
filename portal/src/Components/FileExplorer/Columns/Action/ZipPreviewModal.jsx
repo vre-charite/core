@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Tree, Modal, Button } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { nestedLoop, pathsMap } from '../../../../Utility';
+import { nestedLoop } from '../../../../Utility';
 const { DirectoryTree } = Tree;
 
 export default function ZipPreviewModal(props) {
   const [data, setData] = useState([]);
   const [defaultKeys, setDefaultKeys] = useState([]);
   const fileName = props.record.fileName;
-  const key = props.record.key;
-  const location = key && pathsMap(key);
   const upperZipContent = props.zipContent || {};
 
   const [loading, setLoading] = useState(false);

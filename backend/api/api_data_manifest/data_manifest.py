@@ -302,7 +302,7 @@ class APIDataManifest(metaclass=MetaAPI):
             if is_greenroom(file_node):
                 zone = "greenroom"
             else:
-                zone = "vrecore"
+                zone = "core"
             if not has_permission(manifest.project_code, 'file_attribute', zone, 'update'):
                 api_response.set_code(EAPIResponseCode.forbidden)
                 api_response.set_result("Permission Denied")
@@ -428,7 +428,7 @@ class APIDataManifest(metaclass=MetaAPI):
                     if is_greenroom(file_node):
                         zone = "greenroom"
                     else:
-                        zone = "vrecore"
+                        zone = "core"
                     if not has_permission(manifest.project_code, 'file_attribute_template', zone, 'view'):
                         api_response.set_code(EAPIResponseCode.forbidden)
                         api_response.set_result("Permission Denied")
@@ -487,7 +487,7 @@ class APIDataManifest(metaclass=MetaAPI):
                         root_folder = folder_node["display_path"].split("/")[0]
 
                         if project_role == 'collaborator':
-                            if "VRECore" not in folder_node['labels'] and root_folder != current_identity['username']:
+                            if ConfigClass.CORE_ZONE_LABEL not in folder_node['labels'] and root_folder != current_identity['username']:
                                 api_response.set_code(
                                     EAPIResponseCode.forbidden)
                                 api_response.set_result(f"Permission denied")
@@ -501,7 +501,7 @@ class APIDataManifest(metaclass=MetaAPI):
                     else:
                         root_folder = file_node["display_path"].split("/")[0]
                         if project_role == 'collaborator':
-                            if "VRECore" not in file_node['labels'] and root_folder != current_identity['username']:
+                            if ConfigClass.CORE_ZONE_LABEL not in file_node['labels'] and root_folder != current_identity['username']:
                                 api_response.set_code(
                                     EAPIResponseCode.forbidden)
                                 api_response.set_result(f"Permission denied")

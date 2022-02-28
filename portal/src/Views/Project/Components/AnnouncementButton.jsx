@@ -215,7 +215,7 @@ export default function AnnouncementButton({ currentProject }) {
           title={'Announcements'}
           onVisibleChange={onVisibleChange}
           getPopupContainer={() => {
-            return document.getElementById('global_site_header');
+            return document.getElementById('layout-wrapper');
           }}
         >
           <div

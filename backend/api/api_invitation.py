@@ -162,8 +162,8 @@ class APIInvitation(metaclass=MetaAPI):
                     # Failed to get first_name fall back to username
                     ad_first = entry["sAMAccountName"][0].decode()
 
-                # add user to vre-vre-users group in ldap
-                add_user_to_ad_group(email, "vre-users", _logger, access_token)
+                # add user to ad users group in ldap
+                add_user_to_ad_group(email, ConfigClass.AD_USER_GROUP, _logger, access_token)
 
                 if user_node["role"] == "admin":
                     # Add platform admin to all groups

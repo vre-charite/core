@@ -684,7 +684,7 @@ function FilesContent(props) {
           md={24}
           lg={24}
           xl={4}
-          className={styles.vre_file_dir}
+          className={styles.file_dir}
         >
           <div className={styles.greenroom_section}>
             <div
@@ -750,6 +750,7 @@ function FilesContent(props) {
                     <CloudServerOutlined style={{ marginRight: '10px' }} />
                     <span
                       className={styles.core_title}
+                      id='core_title'
                       onClick={(e) =>
                         onSelect([PanelKey.CORE], {
                           node: {

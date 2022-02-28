@@ -1,10 +1,10 @@
 import { serverAxios, serverAxiosNoIntercept } from './config';
 import { keycloak } from '../Service/keycloak';
-
 import _ from 'lodash';
+import { API_PATH, DOWNLOAD_PREFIX, DOWNLOAD_PREFIX_V1 } from '../config';
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1645
+ * ticket-1645
  * create a new dataset
  * @param {string} username
  * @param {string} title
@@ -49,7 +49,7 @@ export function createDatasetApi(
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1645
+ * ticket-1645
  * @param {string} username
  * @param {string} orderBy
  * @param {"desc"|"asc"} orderType
@@ -212,7 +212,7 @@ export function downloadDataset(datasetGeid, operator, sessionId) {
 
 export function checkDatasetDownloadStatusAPI(hashCode) {
   return serverAxios({
-    url: `/download/vre/v1/download/status/${hashCode}`,
+    url: `${DOWNLOAD_PREFIX_V1}/status/${hashCode}`,
     method: 'GET',
   });
 }
@@ -232,22 +232,6 @@ export function downloadDatasetFiles(
       session_id: sessionId,
       operator: operator,
     },
-  });
-}
-/**
- * https://indocconsortium.atlassian.net/browse/VRE-1645
- * @param {string} datasetGeid
- * @param {*} data
- * @returns
- */
-export function updateDatasetInfo(datasetGeid, data) {
-  return serverAxios({
-    url: `/v1/dataset/${datasetGeid}`,
-    data,
-    method: 'put',
-  }).then((res) => {
-    _.set(res, 'data.result', mapBasicInfo(res.data.result));
-    return res;
   });
 }
 
@@ -274,7 +258,7 @@ export function previewDatasetFileStream(datasetGeid, fileGeid) {
 
 /**
  * get the file operations for file panel in dataset page
- * https://indocconsortium.atlassian.net/browse/VRE-1801
+ * ticket-1801
  * @param {"move"|"delete"|"rename"|"import"} action
  * @param {string} datasetCode
  * @param {string} sessionId
@@ -324,11 +308,11 @@ export function datasetDownloadReturnURLAPI(datasetGeid, version) {
 
 export function datasetDownloadAPI(hash) {
   return serverAxios({
-    url: `/download/vre/v2/dataset/download/${hash}`,
+    url: `${DOWNLOAD_PREFIX}/${hash}`,
     method: 'GET',
     headers: { 'Refresh-token': keycloak.refreshToken },
   }).then((res) => {
-    const url = `/vre/api/vre/portal/download/vre/v2/dataset/download/${hash}`;
+    const url = API_PATH + DOWNLOAD_PREFIX + '/' + hash;
     window.open(url, '_blank');
   });
 }
@@ -352,7 +336,7 @@ export function checkPublishStatusAPI(datasetGeid, statusId) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1702
+ * ticket-1702
  * rename a file or folder's name
  * @param {string} datasetGeid
  * @param {string} fileGeid
@@ -474,7 +458,7 @@ export function createDatasetSchemaTPL(
     data: {
       name: tplName,
       dataset_geid: datasetGeid,
-      standard: 'vre',
+      standard: 'default',
       system_defined: false,
       is_draft: false,
       content: tplContent,
@@ -492,7 +476,7 @@ export function createDatasetSchemaTPL(
   });
 }
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1852
+ * ticket-1852
  * update the dataset schema form data
  * @param {string} datasetGeid
  * @param {string} schemaGeid
@@ -528,13 +512,13 @@ export function preValidateBids(datasetGeid) {
     method: 'POST',
     headers: { 'Refresh-token': keycloak.refreshToken },
     data: {
-      "dataset_geid": datasetGeid
-    }
-  })
+      dataset_geid: datasetGeid,
+    },
+  });
 }
 
 export function getBidsResult(datasetGeid) {
   return serverAxios({
     url: `/v1/dataset/bids-validate/${datasetGeid}`,
-  })
+  });
 }

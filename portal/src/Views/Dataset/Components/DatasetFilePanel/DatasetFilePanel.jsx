@@ -56,7 +56,7 @@ const DatasetFilePanel = () => {
   };
 
   return (
-    <Tooltip title={'Files Panel'} placement="top">
+    <Tooltip title={'Dataset Status'} placement="top">
       <Popover
         className={styles.file_panel}
         placement="bottomRight"

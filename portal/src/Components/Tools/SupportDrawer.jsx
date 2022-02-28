@@ -6,6 +6,7 @@ import ContactUsForm from './ContactUsForm';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './index.module.scss';
+import { xwikis } from '../../externalLinks';
 
 const { Title } = Typography;
 const { Link } = Anchor;
@@ -178,7 +179,7 @@ function SupportDrawer(props) {
 
       <Button type="primary" ghost>
         <a
-          href="/xwiki/wiki/vrepublic/view/Main/user_guide/"
+          href={xwikis.documentation}
           target="_blank"
         >
           {t('download_guide_button_text')}

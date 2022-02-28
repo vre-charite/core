@@ -91,7 +91,7 @@ function AddUserModal(props) {
       currentDataset.globalEntityId,
       currentDataset.code,
       username,
-      'VRECore',
+      'Core',
     );
   }
   const onSubmit = () => {
@@ -197,10 +197,15 @@ function AddUserModal(props) {
                 if (err.response.data.result?.ad_account_created === true) {
                   addUser(true, err.response.data.result?.ad_user_dn, email, role);
                 } else {
-                  addUser(false, err.response.data.result?.ad_user_dn, email, role);
+                  addUser(
+                    false,
+                    err.response.data.result?.ad_user_dn,
+                    email,
+                    role,
+                  );
                 }
               },
-              className: styles['warning-modal'], 
+              className: styles['warning-modal'],
             });
           } else {
             const errorMessager = new ErrorMessager(

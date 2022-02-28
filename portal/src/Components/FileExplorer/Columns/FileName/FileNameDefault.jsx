@@ -1,14 +1,12 @@
 import React, { useContext } from 'react';
 import { Popover } from 'antd';
-import { fetchTableData } from '../../DataFetcher';
 import { useSelector, useDispatch } from 'react-redux';
 import { fileExplorerTableActions } from '../../../../Redux/actions';
 import FileExplorerContext from '../../FileExplorerContext';
 export default function FileNameTimeDefault({ text, record }) {
   const dispatch = useDispatch();
   const fileExplorerCtx = useContext(FileExplorerContext);
-  const reduxKey = fileExplorerCtx.reduxKey;
-  const columnsDisplayCfg = fileExplorerCtx.columnsDisplayCfg;
+  const { reduxKey, dataFetcher, columnsDisplayCfg } = fileExplorerCtx;
   const isDeleted = record.archived;
   let filename = text;
   if (!filename) {
@@ -24,7 +22,6 @@ export default function FileNameTimeDefault({ text, record }) {
     popoverContent = filename;
   }
 
-  
   async function goToFolder(recordGeid) {
     dispatch(
       fileExplorerTableActions.setPageSize({
@@ -38,19 +35,7 @@ export default function FileNameTimeDefault({ text, record }) {
         param: 0,
       }),
     );
-    await fetchTableData(
-      fileExplorerCtx.initDataSource.type,
-      false,
-      recordGeid,
-      0,
-      10,
-      'uploaded_at',
-      'desc',
-      {},
-      fileExplorerCtx.projectGeid,
-      dispatch,
-      reduxKey,
-    );
+    await dataFetcher.goToFolder(recordGeid);
     dispatch(
       fileExplorerTableActions.setCurrentGeid({
         geid: reduxKey,
@@ -80,7 +65,7 @@ export default function FileNameTimeDefault({ text, record }) {
       fileExplorerTableActions.setHardFreshKey({
         geid: reduxKey,
       }),
-    )
+    );
   }
   return (
     <div

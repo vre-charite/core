@@ -58,7 +58,7 @@ const DatasetsPlugin = ({
           style={{
             borderRadius: '6px',
             height: '27px',
-            width: '155px',
+            width: '165px',
             padding: '0px',
           }}
           onClick={() => setDataSetsModalVisible(true)}
@@ -87,7 +87,7 @@ const DatasetsPlugin = ({
       {tableState === TABLE_STATE.ADD_TO_DATASETS
         ? addToDatasetsToolTips
         : null}
-      <DatasetsModal 
+      <DatasetsModal
         visible={dataSetsModalVisible}
         setVisible={setDataSetsModalVisible}
         selectedRows={selectedRows}

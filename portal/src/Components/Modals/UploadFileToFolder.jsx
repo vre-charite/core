@@ -1,25 +1,18 @@
 import React, { useState, useContext } from 'react';
-import {
-  Modal,
-  Button,
-  Form,
-  Input,
-  Select,
-  Upload,
-  Tooltip,
-} from 'antd';
+import { Modal, Button, Form, Input, Select, Upload, Tooltip } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { withRouter } from 'react-router-dom';
-import { connect,useSelector } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import {
   appendUploadListCreator,
   updateUploadItemCreator,
   setNewUploadIndicator,
 } from '../../Redux/actions';
 import _ from 'lodash';
-import { uploadStarter,useCurrentProject } from '../../Utility';
+import { uploadStarter, useCurrentProject } from '../../Utility';
 import { UploadQueueContext } from '../../Context';
 import { QuestionCircleOutlined } from '@ant-design/icons';
+import { dcmProjectCode, DcmSpaceID } from '../../config';
 
 const { Option } = Select;
 
@@ -33,7 +26,7 @@ const UploadFileToFolder = ({
   const [form] = Form.useForm();
   const [isLoading, setIsloading] = useState(false);
   const [cancelTokens, setCancelTokens] = useState([]);
-  const {username } = useSelector(state=>state);
+  const { username } = useSelector((state) => state);
   const q = useContext(UploadQueueContext);
   const stopLoading = () => {
     setIsloading(false);
@@ -131,13 +124,15 @@ const UploadFileToFolder = ({
                 ))}
             </Select>
           </Form.Item>
-          {currentDataset && currentDataset.code === 'generate' ? (
+          {currentDataset && currentDataset.code === dcmProjectCode ? (
             <>
               <Form.Item
                 label={
                   <span>
-                    Generate ID&nbsp;
-                    <Tooltip title="The format of Generate ID should follow: ABC-1234">
+                    {DcmSpaceID}&nbsp;
+                    <Tooltip
+                      title={`The format of ${DcmSpaceID} should follow: ABC-1234`}
+                    >
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </span>
@@ -150,11 +145,11 @@ const UploadFileToFolder = ({
                   rules={[
                     {
                       required: true,
-                      message: 'Please input your Generate ID',
+                      message: `Please input your ${DcmSpaceID}`,
                     },
                     {
                       pattern: new RegExp(/^([A-Z]{3})-([0-9]{4})$/g), // Format BXT-1234
-                      message: 'Please input correct Generate ID',
+                      message: `Please input correct ${DcmSpaceID}`,
                     },
                   ]}
                   hasFeedback
@@ -174,13 +169,13 @@ const UploadFileToFolder = ({
               </Form.Item>
               <Form.Item
                 name="gid_repeat"
-                label="Confirm Generate ID"
+                label={`Confirm ${DcmSpaceID}`}
                 dependencies={['gid']}
                 hasFeedback
                 rules={[
                   {
                     required: true,
-                    message: 'Please confirm your Generate ID!',
+                    message: `Please confirm your ${DcmSpaceID}!`,
                   },
                   ({ getFieldValue }) => ({
                     validator(rule, value) {
@@ -188,7 +183,7 @@ const UploadFileToFolder = ({
                         return Promise.resolve();
                       }
                       return Promise.reject(
-                        'The two Generate ID that you entered do not match!',
+                        `The two ${DcmSpaceID} that you entered do not match!`,
                       );
                     },
                   }),

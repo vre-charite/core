@@ -1,6 +1,7 @@
 import { serverAxios as axios } from './config';
 import { objectKeysToSnakeCase } from '../Utility';
 import userEmail from '../Redux/Reducers/userEmail';
+import { KEYCLOAK_REALM } from '../config';
 
 function getAllUsersAPI() {
   return axios({
@@ -47,7 +48,7 @@ function checkIsUserExistAPI(username, code) {
   return axios({
     url: `/users/name`,
     method: 'GET',
-    params: { realm: 'vre', username: username, invite_code: code },
+    params: { realm: KEYCLOAK_REALM, username: username, invite_code: code },
   });
 }
 
@@ -61,7 +62,7 @@ function checkIsUserExistAPI(username, code) {
 
 /**
  * invite a new user to platform, and to a specified project if available.
- * https://indocconsortium.atlassian.net/browse/VRE-1343
+ * ticket-1343
  * @param {string} email
  * @param {"admin"|"member"} platformRole
  * @param {string|null} projectRole
@@ -111,7 +112,6 @@ function parseInviteHashAPI(hash) {
 
 /**
  * User self registration
- * vre-205
  * @param {string} username
  * @param {string} password
  * @param {string} email
@@ -223,7 +223,7 @@ function getInvitationsAPI(params) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1200
+ * ticket-1200
  * List or query on all resource requests.
  */
 function getResourceRequestsAPI(params) {
@@ -235,7 +235,7 @@ function getResourceRequestsAPI(params) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1200
+ * ticket-1200
  * Create new resource request
  */
 function createResourceRequestAPI(params) {
@@ -247,7 +247,7 @@ function createResourceRequestAPI(params) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1200
+ * ticket-1200
  * Mark a request as completed
  */
 function approveResourceRequestAPI(requestId) {

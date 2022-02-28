@@ -15,7 +15,7 @@ const format = 'YYYY-MM-DD HH:mm:ss';
 
 const DatasetActivity = (props) => {
   const [viewValue, setViewValue] = useState('All');
-  const [lastUpdateTime, setLastUpdateTime] = useState('');
+  const [lastUpdateTime, setLastUpdateTime] = useState(0);
   const [customTimeRange, setCustomTimeRange] = useState([]);
   const [cusTimeRangeChangeTimes, setCusTimeRangeChangeTimes] = useState(0);
   const [activityLogs, setActivityLogs] = useState([]);
@@ -35,7 +35,7 @@ const DatasetActivity = (props) => {
       render: (item, row, index) => {
         if (publishRecord.includes(index)) {
           return (
-            <p style={{ fontWeight: 'bold', color: '#003262', margin: '0px'}}>
+            <p style={{ fontWeight: 'bold', color: '#003262', margin: '0px' }}>
               {moment.unix(item.source.createTimestamp).format(format)}
             </p>
           );
@@ -129,22 +129,26 @@ const DatasetActivity = (props) => {
       }
     }
 
-    const res = await getDatasetActivityLogsAPI(datasetGeid, queryParams);
-    let newArr = [];
-    res.data.result.forEach((el, index) => {
-      if (el.source.action === 'PUBLISH') {
-        newArr.push(index);
+    try {
+      const res = await getDatasetActivityLogsAPI(datasetGeid, queryParams);
+      let newArr = [];
+      res.data.result.forEach((el, index) => {
+        if (el.source.action === 'PUBLISH') {
+          newArr.push(index);
+        }
+      });
+      setPublishRecord(newArr);
+      setActivityLogs(res.data.result);
+      setTotalItem(res.data.total);
+      if (viewValue === 'All') {
+        if (res.data.result.length) {
+          setLastUpdateTime(res.data.result[0].source.createTimestamp);
+        } else {
+          setLastUpdateTime(null);
+        }
       }
-    });
-    setPublishRecord(newArr);
-    setActivityLogs(res.data.result);
-    setTotalItem(res.data.total);
-    if (viewValue === 'All') {
-      if (res.data.result.length) {
-        setLastUpdateTime(res.data.result[0].source.createTimestamp);
-      } else {
-        setLastUpdateTime(0);
-      }
+    } catch {
+      setLastUpdateTime(null);
     }
   };
 
@@ -220,7 +224,7 @@ const DatasetActivity = (props) => {
             showSizeChanger: true,
           }}
           size="middle"
-          style={{tableLayout: 'fixed'}}
+          style={{ tableLayout: 'fixed' }}
         />
       </Card>
     </div>

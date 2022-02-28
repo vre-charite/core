@@ -18,6 +18,7 @@ import {
 } from '../../../../APIs';
 import { useTranslation } from 'react-i18next';
 import { tokenManager } from '../../../../Service/tokenManager';
+import { API_PATH, DOWNLOAD_PREFIX_V1 } from '../../../../config';
 
 export default function DatasetHeaderLeft(props) {
   const { setDatasetDrawerVisibility } = props;
@@ -70,7 +71,7 @@ export default function DatasetHeaderLeft(props) {
       clearInterval(timer);
       const hashCode = res.data.result?.payload?.hashCode;
       if (hashCode) {
-        const url = `/vre/api/vre/portal/download/vre/v1/download/${hashCode}`;
+        const url = API_PATH + DOWNLOAD_PREFIX_V1 + `/` + hashCode;
         window.open(url, '_blank');
       } else {
         message.error(t('errormessages:downloadDataset.default.0'));

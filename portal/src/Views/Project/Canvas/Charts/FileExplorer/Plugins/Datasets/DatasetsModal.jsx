@@ -102,7 +102,7 @@ const DatasetsModal = (props) => {
           <Button
             type="primary"
             loading={BtnLoading}
-            style={{ width: '161px', height: '30px', borderRadius: '6px' }}
+            style={{ width: '180px', height: '30px', borderRadius: '6px' }}
             onClick={addToDatasets}
           >
             <ArrowRightOutlined /> Add to Dataset
@@ -116,7 +116,7 @@ const DatasetsModal = (props) => {
               style={{ borderRadius: '6px' }}
               onClick={closeModal}
             >
-              Ok
+              OK
             </Button>
           </div>
         );
@@ -157,18 +157,21 @@ const DatasetsModal = (props) => {
                 onChange={handleSelectChange}
               >
                 {dataSetsList.length &&
-                  dataSetsList.map((el) => (
-                    <Option value={el.globalEntityId}>
-                      {el.name.length > 40 ? (
-                        <Tooltip title={el.name}>{`${el.name.slice(
-                          0,
-                          40,
-                        )}...`}</Tooltip>
-                      ) : (
-                        el.name
-                      )}
-                    </Option>
-                  ))}
+                  dataSetsList.map((el) => {
+                    const optText = `${el.name} - ${el.title}`;
+                    return (
+                      <Option value={el.globalEntityId}>
+                        {optText.length > 60 ? (
+                          <Tooltip title={optText}>{`${optText.slice(
+                            0,
+                            60,
+                          )}...`}</Tooltip>
+                        ) : (
+                          optText
+                        )}
+                      </Option>
+                    );
+                  })}
               </Select>
             </Form.Item>
           </Form>
@@ -208,7 +211,14 @@ const DatasetsModal = (props) => {
                     ) : el.labels.includes('Folder') ? (
                       <FolderOutlined style={{ marginRight: '5px' }} />
                     ) : null}
-                    {el.name.length > 40 ? <Tooltip title={el.name}>{`${el.name.slice(0, 40)}...`}</Tooltip> : el.name}
+                    {el.name.length > 40 ? (
+                      <Tooltip title={el.name}>{`${el.name.slice(
+                        0,
+                        40,
+                      )}...`}</Tooltip>
+                    ) : (
+                      el.name
+                    )}
                   </li>
                 ))}
             </ul>

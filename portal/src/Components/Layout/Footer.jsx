@@ -5,6 +5,7 @@ import TermsOfUseModal from '../Modals/TermsOfUseModal';
 import { setIsReleaseNoteShownCreator } from '../../Redux/actions';
 import { useDispatch } from 'react-redux';
 import { version } from '../../../package.json';
+import { xwikis } from '../../externalLinks';
 const { Footer } = Layout;
 
 function AppFooter(props) {
@@ -22,7 +23,7 @@ function AppFooter(props) {
         <a
           target="_blank"
           rel="noreferrer"
-          href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/General%20Terms%20of%20Use/"
+          href={xwikis.termsOfUse}
           style={{
             fontSize: '80%',
             height: '32px',
@@ -44,7 +45,7 @@ function AppFooter(props) {
             display: 'block',
             marginTop: -3,
           }}
-          href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/Privacy%20and%20Data%20Governance/Privacy%20Policy/"
+          href={xwikis.privacyPolicy}
         >
           Privacy Policy
         </a>
@@ -65,7 +66,7 @@ function AppFooter(props) {
         {' / '}
         <a
           style={{ marginRight: 10 }}
-          href="https://vre.charite.de/xwiki/wiki/vrepublic/view/Main/user_guide/"
+          href={xwikis.documentation}
           target="_blank"
           rel="noopener noreferrer"
         >

@@ -3,6 +3,7 @@ import { message } from 'antd';
 import _ from 'lodash';
 import { store } from '../Redux/store';
 import i18n from '../i18n';
+import { SUPPORT_EMAIL } from '../config';
 /**
  * Create a error message object to trigger the error message
  * @param {string} name the namespace of the API
@@ -130,7 +131,7 @@ export default function ErrorMessager(name) {
         message.error(i18n.t('errormessages:parseInviteHashAPI.default.0'));
       },
     },
-    [namespace.dataset.files.uploadFileApi]: {
+    [namespace.project.files.uploadFileApi]: {
       403: (err, params) => {
         message.error(
           `${params.fileName} ${i18n.t('errormessages:uploadFileApi.403.0')}`,
@@ -158,7 +159,7 @@ export default function ErrorMessager(name) {
         );
       },
     },
-    [namespace.dataset.files.uploadRequestFail]: {
+    [namespace.project.files.uploadRequestFail]: {
       default: (err, params) => {
         message.error(
           `${i18n.t('errormessages:uploadRequestFail.default.0')} ${
@@ -167,14 +168,14 @@ export default function ErrorMessager(name) {
         );
       },
     },
-    [namespace.dataset.files.combineChunk]: {
+    [namespace.project.files.combineChunk]: {
       default: (err, params) => {
         message.error(
           i18n.t('errormessages:combineChunks.default.0') + params.fileName,
         );
       },
     },
-    [namespace.dataset.files.getChildrenDataset]: {
+    [namespace.project.files.getChildrenDataset]: {
       403: (err, params) => {
         message.error(`${i18n.t('errormessages:getChildrenDataset.403.0')}`);
       },
@@ -187,7 +188,7 @@ export default function ErrorMessager(name) {
         );
       },
     },
-    [namespace.dataset.files.traverseFoldersContainersAPI]: {
+    [namespace.project.files.traverseFoldersContainersAPI]: {
       403: (err, params) => {
         message.error(
           `${i18n.t('errormessages:traverseFoldersContainersAPI.403.0')}`,
@@ -209,7 +210,7 @@ export default function ErrorMessager(name) {
         );
       },
     },
-    [namespace.dataset.files.getFilesByTypeAPI]: {
+    [namespace.project.files.getFilesByTypeAPI]: {
       403: (err, params) => {
         message.error(`${i18n.t('errormessages:getFilesByTypeAPI.403.0')}`);
       },
@@ -220,11 +221,11 @@ export default function ErrorMessager(name) {
         message.error(`${i18n.t('errormessages:getFilesByTypeAPI.default.0')}`);
       },
     },
-    [namespace.dataset.files.downloadFilesAPI]: {
+    [namespace.project.files.downloadFilesAPI]: {
       400: (err, params) => {
         message.error(`${i18n.t('errormessages:downloadFilesAPI.400.0')}`);
       },
-      404:(err,params)=>{
+      404: (err, params) => {
         message.error(`${i18n.t('errormessages:downloadFilesAPI.404.0')}`);
       },
       403: (err, params) => {
@@ -237,12 +238,12 @@ export default function ErrorMessager(name) {
         message.error(`${i18n.t('errormessages:downloadFilesAPI.default.0')}`);
       },
     },
-    [namespace.dataset.files.processingFile]: {
+    [namespace.project.files.processingFile]: {
       default: (err, params) => {
         message.error(`${i18n.t('errormessages:processingFile.default.0')}`);
       },
     },
-    [namespace.dataset.files.preUpload]: {
+    [namespace.project.files.preUpload]: {
       403: (err, params) => {
         message.error(i18n.t('errormessages:preUpload.403.0'));
       },
@@ -258,6 +259,33 @@ export default function ErrorMessager(name) {
       },
       default: (err, params) => {
         message.error(i18n.t('errormessages:preUpload.default.0'));
+      },
+    },
+    [namespace.dataset.files.downloadFilesAPI]: {
+      400: (err, params) => {
+        message.error(
+          `${i18n.t('errormessages:downloadDatasetFilesAPI.400.0')}`,
+        );
+      },
+      404: (err, params) => {
+        message.error(
+          `${i18n.t('errormessages:downloadDatasetFilesAPI.404.0')}`,
+        );
+      },
+      403: (err, params) => {
+        message.error(
+          `${i18n.t('errormessages:downloadDatasetFilesAPI.403.0')}`,
+        );
+      },
+      500: (err, params) => {
+        message.error(
+          `${i18n.t('errormessages:downloadDatasetFilesAPI.500.0')}`,
+        );
+      },
+      default: (err, params) => {
+        message.error(
+          `${i18n.t('errormessages:downloadDatasetFilesAPI.default.0')}`,
+        );
       },
     },
     [namespace.selfRegister.selfRegistration]: {
@@ -441,16 +469,32 @@ export default function ErrorMessager(name) {
     },
     [namespace.contactUs.contactUsAPI]: {
       401: (err, params) => {
-        message.error(`${i18n.t('errormessages:contactUsAPI.401.0')}`);
+        message.error(
+          `${i18n.t('errormessages:contactUsAPI.401.0', {
+            SUPPORT_EMAIL: SUPPORT_EMAIL,
+          })}`,
+        );
       },
       404: (err, params) => {
-        message.error(`${i18n.t('errormessages:contactUsAPI.404.0')}`);
+        message.error(
+          `${i18n.t('errormessages:contactUsAPI.404.0', {
+            SUPPORT_EMAIL: SUPPORT_EMAIL,
+          })}`,
+        );
       },
       413: (err, params) => {
-        message.error(`${i18n.t('errormessages:contactUsAPI.413.0')}`);
+        message.error(
+          `${i18n.t('errormessages:contactUsAPI.413.0', {
+            SUPPORT_EMAIL: SUPPORT_EMAIL,
+          })}`,
+        );
       },
       default: (err, parames) => {
-        message.error(`${i18n.t('errormessages:contactUsAPI.default.0')}`);
+        message.error(
+          `${i18n.t('errormessages:contactUsAPI.default.0', {
+            SUPPORT_EMAIL: SUPPORT_EMAIL,
+          })}`,
+        );
       },
     },
 
@@ -555,7 +599,7 @@ ErrorMessager.prototype.triggerMsg = function (errorCode, err, params) {
       : this.messageObj['default'];
   _.isFunction(messageFunc) && messageFunc(err, params);
   if (
-    this.namespace === namespace?.dataset?.files?.preUpload &&
+    this.namespace === namespace?.project?.files?.preUpload &&
     parseInt(errorCode) === 409
   ) {
     return;

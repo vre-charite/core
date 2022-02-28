@@ -5,9 +5,9 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
-    <meta http-equiv='cache-control' content='no-cache'>
-    <meta http-equiv='expires' content='0'>
-    <meta http-equiv='pragma' content='no-cache'>
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="pragma" content="no-cache" />
     <meta
       name="description"
       content="Charité/BIH Virtual Research Environment (VRE) – a module for the Health Data Platform (HDP)"
@@ -34,15 +34,17 @@
     <script>
       function msieversion() {
         var ua = window.navigator.userAgent;
-        var msie = ua.indexOf("MSIE ");
+        var msie = ua.indexOf('MSIE ');
 
         if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) {
           // If Internet Explorer, return version number
-          alert('IE is not supported, please use the latest Chrome, Firefox or Edge')
+          alert(
+            'IE is not supported, please use the latest Chrome, Firefox or Edge',
+          );
         } // If another browser, return 0
         return false;
       }
-      msieversion()
+      msieversion();
     </script>
     <div id="root"></div>
     <!--

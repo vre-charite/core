@@ -15,7 +15,7 @@
       },
       "dataset_code": {
         "type": "string",
-        "title": "Code",
+        "title": "Dataset Code",
         "maxLength": 32
       },
       "dataset_description": {
@@ -25,7 +25,7 @@
       },
       "dataset_authors": {
         "type": "array",
-        "title": "Author",
+        "title": "Authors",
         "uniqueItems": true,
         "maxItems": 10,
         "minItems": 1,
@@ -36,7 +36,7 @@
       },
       "dataset_type": {
         "type": "string",
-        "title": "Dataset Type",
+        "title": "Type",
         "enum": ["GENERAL", "BIDS"]
       },
       "dataset_modality": {
@@ -134,12 +134,12 @@
     "ui:order": [
       "dataset_title",
       "dataset_code",
-      "dataset_description",
-      "dataset_authors",
       "dataset_type",
+      "dataset_authors",
+      "dataset_description",
       "dataset_modality",
-      "dataset_license",
       "dataset_collection_method",
+      "dataset_license",
       "dataset_tags",
       "dataset_subject_number",
       "dataset_identifier",

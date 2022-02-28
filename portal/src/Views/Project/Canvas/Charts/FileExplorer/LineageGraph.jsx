@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import G6 from '@antv/g6';
 import moment from 'moment';
+import { PORTAL_PREFIX } from '../../../../../config';
+import _ from 'lodash';
 const { detect } = require('detect-browser');
 const browser = detect();
 const toolBarNotSupported =
@@ -35,8 +37,7 @@ const fittingString = (str, maxWidth, fontSize) => {
   return res;
 };
 const fileTypeMap = (labels) => {
-  console.log(labels);
-  if (labels.indexOf('VRECore') !== -1 && labels.indexOf('TrashFile') !== -1) {
+  if (hasCore(labels) && labels.indexOf('TrashFile') !== -1) {
     return 'Core Trash File';
   }
   if (
@@ -49,11 +50,17 @@ const fileTypeMap = (labels) => {
   if (labels.indexOf('Greenroom') !== -1 && labels.indexOf('File') !== -1) {
     return 'Green Room File';
   }
-  if (labels.indexOf('VRECore') !== -1 && labels.indexOf('File') !== -1) {
+  if (hasCore(labels) && labels.indexOf('File') !== -1) {
     return 'Core File';
   }
 };
-
+const hasCore = (labels) => {
+  for (const label of labels) {
+    console.log(label, _.lowerCase(label).includes('core'));
+    if (_.lowerCase(label).includes('core')) return true;
+  }
+  return false;
+};
 const isContainSpace = (text) => {
   if (text.includes(' ')) return true;
 
@@ -94,15 +101,17 @@ export default function LineageGraph(props) {
       let location;
       let fileType;
       let isCurrentNode = attributes.displayPath === record.displayPath;
-      let pipelineImg = '/vre/operation.svg';
+      let pipelineImg = PORTAL_PREFIX + '/operation.svg';
       const isPipeline = nodeInfo.typeName === 'Process';
       if (nodeInfo.typeName === 'Process') {
         textArr = nodeInfo.attributes?.name.split(':');
         label = textArr && textArr.length > 1 && textArr[1];
 
-        if (label === 'dicom_edit') pipelineImg = '/vre/path.svg';
-        if (label === 'data_transfer') pipelineImg = '/vre/copy2.svg';
-        if (label === 'data_delete') pipelineImg = '/vre/delete2.svg';
+        if (label === 'dicom_edit') pipelineImg = PORTAL_PREFIX + '/path.svg';
+        if (label === 'data_transfer')
+          pipelineImg = PORTAL_PREFIX + '/copy2.svg';
+        if (label === 'data_delete')
+          pipelineImg = PORTAL_PREFIX + '/delete2.svg';
 
         let time = null;
 
@@ -141,7 +150,7 @@ export default function LineageGraph(props) {
         size: 40,
         icon: {
           show: true,
-          img: '/vre/file.svg',
+          img: PORTAL_PREFIX + '/file.svg',
           width: 12,
         },
         style: {
@@ -296,7 +305,7 @@ export default function LineageGraph(props) {
       if (node.isCurrentNode) {
         node.style.fill = '#43B7EA';
         node.style.stroke = '#43B7EA';
-        node.icon.img = '/vre/file-white.svg';
+        node.icon.img = PORTAL_PREFIX + '/file-white.svg';
       }
     });
     // eslint-disable-next-line

@@ -144,7 +144,7 @@ class APINeo4j2ESScript(metaclass=MetaAPI):
                         "time_created": time_created_timestamp,
                         "atlas_guid": atlas_guid,
                         "full_path": item["full_path"],
-                        "generate_id": item["generate_id"],
+                        "dcm_id": item["dcm_id"],
                         "project_code": project_code,
                         "priority": 20
                     }

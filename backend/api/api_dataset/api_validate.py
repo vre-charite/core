@@ -52,9 +52,14 @@ class APIValidator(metaclass=MetaAPI):
                     _res.set_result('Dataset is not BIDS type')
                     return _res.to_dict, _res.code
 
-                relations = get_relation('User', 'Dataset', {
-                                         "name": current_identity['username']}, {"id": node[0]['id']})
-                if len(relations) == 0:
+                payload = {
+                    'creator': current_identity["username"],
+                    'id': node[0]['id'],
+                }
+                owner_res = http_query_node('Dataset', payload)
+                nodes_owned = owner_res.json()
+
+                if len(nodes_owned) == 0:
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_result("no permission for this dataset")
                     return _res.to_dict, _res.code
@@ -102,9 +107,14 @@ class APIValidator(metaclass=MetaAPI):
                     _res.set_result('Dataset is not exist')
                     return _res.to_dict, _res.code
 
-                relations = get_relation('User', 'Dataset', {
-                                         "name": current_identity['username']}, {"id": node[0]['id']})
-                if len(relations) == 0:
+                payload = {
+                    'creator': current_identity["username"],
+                    'id': node[0]['id'],
+                }
+                node_res = http_query_node('Dataset', payload)
+                node = node_res.json()
+
+                if not node:
                     _res.set_code(EAPIResponseCode.forbidden)
                     _res.set_result("no permission for this dataset")
                     return _res.to_dict, _res.code

@@ -24,8 +24,7 @@ const DeleteFilesPlugin = ({
         fileName: v.fileName,
         uploader: v.owner,
         geid: v.geid,
-        generate_id:
-          v.generateId && v.generateId !== 'undefined' ? v.generateId : null,
+        dcm_id: v["dcmId"] && v["dcmId"] !== 'undefined' ? v["dcmId"] : null,
       };
     })
     .filter((v) => !!v);

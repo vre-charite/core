@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useReducer } from 'react';
 import { Col, Row, Layout } from 'antd';
 import { useCurrentProject } from '../../../Utility';
-import FileExplorerTable from '../../../Components/FileExplorer/FileExplorerTable';
+import {
+  FileExplorerTable,
+  ExplorerStateProvider,
+} from '../../../Components/FileExplorer';
 import styles from './request.module.scss';
 import { useSelector, useDispatch } from 'react-redux';
 import { pluginsContainer } from './TablePlugins';
+import { useDataFetcher } from './useDataFetcher/useDataFetcher';
+import { dcmProjectCode, DcmSpaceID } from '../../../config';
 
 const { Content } = Layout;
 
 function Request() {
   const { activeReq, status } = useSelector((state) => state.request2Core);
   const [currentDataset] = useCurrentProject();
+  const [explorerState, explorerDispatch] = useReducer();
+  const dataFetcher = useDataFetcher('request2core-' + activeReq.id);
   const projectGeid = currentDataset?.globalEntityId;
   const columns = [
     { title: '', dataIndex: 'label', key: 'label' },
@@ -59,11 +66,11 @@ function Request() {
       },
     );
   } else {
-    if (currentDataset.code === 'generate') {
+    if (currentDataset.code === dcmProjectCode) {
       columns.splice(2, 0, {
-        title: 'Generate ID',
-        dataIndex: 'generateId',
-        key: 'generateId',
+        title: DcmSpaceID,
+        dataIndex: 'dcmId',
+        key: 'dcmId',
       });
     }
   }
@@ -78,7 +85,7 @@ function Request() {
       return {
         label: 60,
         fileName: '40%',
-        generateId: '20%',
+        dcmId: '20%',
         owner: '20%',
         createTime: 120,
         fileSize: 100,
@@ -96,7 +103,7 @@ function Request() {
       return {
         label: 60,
         fileName: '15%',
-        generateId: '14%',
+        dcmId: '14%',
         owner: '17%',
         reviewedAt: '15%',
         reviewedBy: '15%',
@@ -116,7 +123,7 @@ function Request() {
       return {
         label: 60,
         fileName: '15%',
-        generateId: '14%',
+        dcmId: '14%',
         owner: '17%',
         reviewedAt: '15%',
         reviewedBy: '15%',
@@ -140,31 +147,40 @@ function Request() {
 
     return classArr.join(' ');
   };
+
   return (
     <Content className={styles.content}>
-      <FileExplorerTable
-        columns={columns}
-        columnsLayout={status === 'complete' ? columnsLayoutCompletedList : columnsLayoutNewList}
-        reduxKey={'request2core-' + activeReq.id}
-        initDataSource={{
-          type: 'request',
-          value: activeReq,
-        }}
-        columnsDisplayCfg={{
-          deleteIndicator: true,
-          // hideSelectBox: status === 'complete',
-        }}
-        rowClassName={rowClassName}
-        routing={{
-          startGeid: activeReq.sourceFolderGeid,
-        }}
-        projectGeid={projectGeid}
-        pluginsContainer={pluginsContainer}
-        sidePanelCfg={{
-          showSystemTags: true,
-          allowTagEdit: false,
-        }}
-      />
+      <ExplorerStateProvider value={explorerState}>
+        <FileExplorerTable
+          //
+          columns={columns}
+          columnsLayout={
+            status === 'complete'
+              ? columnsLayoutCompletedList
+              : columnsLayoutNewList
+          }
+          reduxKey={'request2core-' + activeReq.id}
+          initDataSource={{
+            type: 'request',
+            value: activeReq,
+          }}
+          dataFetcher={dataFetcher}
+          columnsDisplayCfg={{
+            deleteIndicator: true,
+            // hideSelectBox: status === 'complete',
+          }}
+          rowClassName={rowClassName}
+          routing={{
+            startGeid: activeReq.sourceFolderGeid,
+          }}
+          projectGeid={projectGeid}
+          pluginsContainer={pluginsContainer}
+          sidePanelCfg={{
+            showSystemTags: true,
+            allowTagEdit: false,
+          }}
+        />
+      </ExplorerStateProvider>
     </Content>
   );
 }

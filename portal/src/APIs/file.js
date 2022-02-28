@@ -10,6 +10,7 @@ import { objectKeysToSnakeCase, checkGreenAndCore } from '../Utility';
 import { message } from 'antd';
 import _ from 'lodash';
 import { keycloak } from '../Service/keycloak';
+import { API_PATH, dcmId, dcm_id } from '../config';
 
 function uploadFileApi(containerId, data, cancelToken) {
   return devOpAxios({
@@ -72,7 +73,7 @@ function checkUploadStatus(projectCode, operator, sessionId) {
 }
 
 function deleteUploadStatus(containerId, sessionId) {
-  return devOpAxios({
+  return axios({
     url: `/v1/upload/containers/${containerId}/upload-state`,
     method: 'DELETE',
     headers: {
@@ -123,7 +124,7 @@ function getFilesAPI(datasetId) {
 /**
  * This API allows the member of a usecase(or dataset) to list all file/folder name inside.
  *
- *  https://indocconsortium.atlassian.net/browse/VRE-152
+ *  ticket-152
  * @param {number} datasetId
  * @param {string} path
  */
@@ -210,9 +211,9 @@ async function getRequestFiles(
       path: item.path,
       location: item.location,
       folderRelativePath: item.folderRelativePath,
-      generateId:
-        item.generateId && typeof item.generateId !== 'undefined'
-          ? item.generateId
+      dcmId:
+        item['dcmId'] && typeof item['dcmId'] !== 'undefined'
+          ? item['dcmId']
           : undefined,
       tags: [],
       reviewedAt: item.reviewedAt,
@@ -247,14 +248,14 @@ async function getRequestFilesDetailByGeid(geids) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1314
+ * ticket-1314
  * @param {string} geid the geid of a virtual folder or folder, like bcae46e0-916c-11eb-be94-eaff9e667817-1617118177
  * @param {number} page the nth page. start from ?
  * @param {number} pageSize the number of items in each page
  * @param {string} orderBy order by which column. should be one of the column name
  * @param {"desc"|"asc"} orderType
  * @param {*} filters the query filter like {"name":"hello"}
- * @param {"Greenroom"|"VRECore"|"All"} zone if the sourceType is "Trash", the zone is All
+ * @param {"Greenroom"|"Core"|"All"} zone if the sourceType is "Trash", the zone is All
  * @param {"Project"|"Folder"|"TrashFile"|"Collection"} sourceType The Folder are the folders inside file explorer.
  * @param {string[]} partial what queries should be partial search.
  */
@@ -312,9 +313,9 @@ async function getFiles(
         path: item.path,
         location: item.location,
         folderRelativePath: item.folderRelativePath,
-        generateId:
-          item.generateId && typeof item.generateId !== 'undefined'
-            ? item.generateId
+        dcmId:
+          item['dcmId'] && typeof item['dcmId'] !== 'undefined'
+            ? item['dcmId']
             : 'undefined',
       },
       labels:
@@ -341,20 +342,21 @@ function checkDownloadStatusAPI(
   setSuccessNumDispatcher,
   successNum,
 ) {
-  const urlNameSpace = namespace === 'greenroom' ? 'gr' : 'vre';
   return axios({
-    url: `/download/${urlNameSpace}/v1/download/status/${hashCode}`,
+    url: `/download/gr/v1/download/status/${hashCode}`,
     method: 'GET',
   })
     .then((res) => {
       const { status } = res.data.result;
       if (status === 'READY_FOR_DOWNLOADING') {
+        const namespaceUrl =
+          namespace.toLowerCase() === 'greenroom' ? 'gr' : 'core';
         updateDownloadItemDispatch({ key: taskId, status: 'success' });
         const hashCode = res.data.result?.payload?.hashCode;
-        const urlNameSpace =
-          res.data.result?.payload?.zone === 'vre' ? 'vre' : 'gr';
-        const url = `/vre/api/vre/portal/download/${urlNameSpace}/v1/download/${hashCode}`;
+        const url =
+          API_PATH + `/download/${namespaceUrl}/v1/download/${hashCode}`;
         // Start to download zip file
+        console.log(API_PATH, url);
         window.open(url, '_blank');
         setTimeout(() => {
           setSuccessNumDispatcher(successNum + 1);
@@ -368,32 +370,6 @@ function checkDownloadStatusAPI(
     .catch((err) => {
       console.log(err);
     });
-  /*   if (namespace === 'greenroom') {
-
-  } else {
-    return axios({
-      url: `/download/vre/v1/download/status/${hashCode}`,
-      method: 'GET',
-    })
-      .then((res) => {
-        const { status } = res.data.result;
-        if (status === 'READY_FOR_DOWNLOADING') {
-          updateDownloadItemDispatch({ key: taskId, status: 'success' });
-
-          // Start to download zip file
-          const url = `${VRE_CORE_DOWNLOAD_URL}/${hashCode}`;
-          window.open(url, '_blank');
-          setTimeout(() => {
-            setSuccessNumDispatcher(successNum + 1);
-          }, 3000);
-        } else if (status === 'error') {
-          // Stop check status
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  } */
 }
 
 /**
@@ -412,9 +388,10 @@ async function downloadFilesAPI(
   projectCode,
   operator,
   namespace,
+  requestId, // only for request to core table
 ) {
-  const urlNameSpace = namespace === 'greenroom' ? 'gr' : 'vre';
-  return axios({
+  console.log(namespace);
+  const options = {
     url: `/v2/download/pre`,
     method: 'post',
     headers: { 'Refresh-token': keycloak.refreshToken },
@@ -424,15 +401,21 @@ async function downloadFilesAPI(
       operator: operator,
       session_id: sessionId,
     },
-  }).then((res) => {
+  };
+  if (requestId) {
+    options.data['approval_request_id'] = requestId;
+  }
+  return axios(options).then((res) => {
     let fileName = res.data.result.source;
     const status = res.data.result.status;
     const fileNamesArr = fileName.split('/') || [];
     fileName = fileNamesArr.length && fileNamesArr[fileNamesArr.length - 1];
-
+    const namespaceUrl =
+      namespace.toLowerCase() === 'greenroom' ? 'gr' : 'core';
     if (status === 'READY_FOR_DOWNLOADING') {
       const hashCode = res.data.result.payload.hashCode;
-      const url = `/vre/api/vre/portal/download/${urlNameSpace}/v1/download/${hashCode}`;
+      const url =
+        API_PATH + `/download/${namespaceUrl}/v1/download/${hashCode}`;
       return url;
     }
 
@@ -503,7 +486,6 @@ function emailUploadedFileListAPI(fileList, uploader) {
  * Get total number of the raw files and processed files
  *
  * @param {int} containerId containerId
- * @VRE-314
  */
 function projectFileCountTotal(geid, params) {
   return axios({
@@ -517,7 +499,6 @@ function projectFileCountTotal(geid, params) {
  *
  * @param {int} containerId containerId
  * @param {dict} data data
- * @VRE-314
  */
 function updateProjectTagsAPI(fileType, geid, data) {
   return axios({
@@ -542,7 +523,6 @@ function batchTagsAPI(data) {
  * @param {str} tag tag
  * @param {array} taglist taglist
  * @param {str} guid
- * @VRE-314
  */
 function deleteProjectTagsAPI(containerId, params) {
   return axios({
@@ -560,28 +540,6 @@ function fileLineageAPI(key, typeName, direction) {
   });
 }
 
-function fileAuditLogsAPI(params) {
-  return devOpAxios({
-    url: `/v1/file/actions/logs`,
-    method: 'GET',
-    params,
-  });
-}
-
-function copyFiles(inputFiles, projectCode, operator, sessionId, opType) {
-  return devOpAxios({
-    url: `/v1/file/actions/transfer-to-core`,
-    method: 'POST',
-    data: {
-      input_files: inputFiles,
-      project_code: projectCode,
-      operator: operator,
-      session_id: sessionId,
-      operation_type: opType,
-    },
-  });
-}
-
 function addToVirtualFolder(collectionGeid, geids) {
   return axios({
     url: `/v1/collections/${collectionGeid}/files`,
@@ -593,7 +551,7 @@ function addToVirtualFolder(collectionGeid, geids) {
 }
 
 /**
- * https://indocconsortium.atlassian.net/browse/VRE-1499
+ * ticket-1499
  * @param {string} collectionGeid the vfolder geid
  * @param {string} geids the files/folders geid
  * @returns
@@ -627,9 +585,11 @@ function deleteFileAPI(data) {
   });
 }
 
-function searchFilesAPI(params, datasetId) {
+function searchFilesAPI(params, projectGeid) {
+  if (params?.query?.zone?.value)
+    params.query.zone.value = _.lowerCase(params.query.zone.value);
   return axios({
-    url: `/v1/${datasetId}/files/search`,
+    url: `/v1/${projectGeid}/files/search`,
     method: 'GET',
     params,
   });
@@ -751,10 +711,8 @@ export {
   fileLineageAPI,
   checkDownloadStatus,
   deleteDownloadStatus,
-  copyFiles,
   addToVirtualFolder,
   removeFromVirtualFolder,
-  fileAuditLogsAPI,
   getZipContentAPI,
   deleteFileAPI,
   getFileManifestAttrs,

@@ -44,6 +44,7 @@ import TermsOfUse from './Views/TermsOfUse/TermsOfUse';
 import semver from 'semver';
 import AccountDisabled from './Views/AccountDisabled/AccountDisabled';
 import { JOB_STATUS } from './Components/Layout/FilePanel/jobStatus';
+import { dcmID, PORTAL_PREFIX } from './config';
 
 // router change
 history.listen(() => {
@@ -118,7 +119,8 @@ function Portal(props) {
       try {
         const res = await getUserstatusAPI();
         if (res && res.data) {
-          setUserStatusDispather(res.data.status);
+          console.log(res.data);
+          setUserStatusDispather(res.data.result.status);
         }
       } catch (err) {
         message.error('User not found');
@@ -143,7 +145,11 @@ function Portal(props) {
       const args = {
         message: (
           <>
-            <img alt="release note" width={30} src="/vre/Rocket.svg"></img>{' '}
+            <img
+              alt="release note"
+              width={30}
+              src={PORTAL_PREFIX + '/Rocket.svg'}
+            ></img>{' '}
             <b>{' Release ' + version}</b>
           </>
         ), //,
@@ -388,7 +394,15 @@ function Portal(props) {
             const { code, result } = res.data;
             if (code === 200) {
               let fileName = item.fileName;
-              if (item.generateID) fileName = `${item.generateID}_${fileName}`;
+
+              if (item['dcmID']) {
+                let fileNameArr = item.fileName.split('/');
+                let fileNameTxt = fileNameArr[fileNameArr.length - 1];
+                fileNameArr[
+                  fileNameArr.length - 1
+                ] = `${item['dcmID']}_${fileNameTxt}`;
+                fileName = fileNameArr.join('/');
+              }
               const fileStatus = result?.find((el) => el.jobId === item.jobId);
               const isSuccess = fileStatus && fileStatus.status === 'SUCCEED';
               if (isSuccess) {
@@ -456,7 +470,8 @@ function Portal(props) {
                   exact={item.exact || false}
                   render={(props) => {
                     if (!keycloak.authenticated) {
-                      window.location.href = window.location.origin + '/vre';
+                      window.location.href =
+                        window.location.origin + PORTAL_PREFIX;
                       return null;
                     }
                     if (!containersPermission) {
@@ -476,7 +491,8 @@ function Portal(props) {
                     } else if (res) {
                       return <item.component />;
                     } else {
-                      window.location.href = window.location.origin + '/vre';
+                      window.location.href =
+                        window.location.origin + PORTAL_PREFIX;
                       return null;
                     }
                   }}

@@ -16,7 +16,7 @@ class SetUpTest:
             payload = {
                 "username": "admin",
                 "password": "admin",
-                "realm": "vre"
+                "realm": ConfigClass.KEYCLOAK_REALM
             }
         response = requests.post(ConfigClass.AUTH_SERVICE + "users/auth", json=payload)
         data = response.json()
@@ -27,8 +27,8 @@ class SetUpTest:
         if not payload:
             payload = {
                 "username": "jzhang10",
-                "password": "CMDvrecli2021!",
-                "realm": "vre"
+                "password": ConfigClass.COLLAB_TEST_PASS,
+                "realm": ConfigClass.KEYCLOAK_REALM
             }
         response = requests.post(ConfigClass.AUTH_SERVICE + "users/auth", json=payload)
         data = response.json()
@@ -155,7 +155,7 @@ class SetUpTest:
             payload = {
                 "project_roles": ["admin", "contributor", "collaborator"],
                 "project_code": project_node["code"],
-                "realm": "vre",
+                "realm": ConfigClass.KEYCLOAK_REALM,
             }
             response = requests.post(ConfigClass.AUTH_SERVICE + f"admin/users/realm-roles", json=payload)
             if response.status_code != 200:
@@ -167,7 +167,7 @@ class SetUpTest:
         # Add keycloak role to user
         payload = {
             "email": user_node["email"],
-            "realm": "vre",
+            "realm": ConfigClass.KEYCLOAK_REALM,
         }
         # Add the correct role and remove the other project roles
         for project_role in ["admin", "contributor", "collaborator"]:
@@ -206,7 +206,7 @@ class SetUpTest:
         # remove keycloak role from user
         payload = {
             "email": user_node["email"],
-            "realm": "vre",
+            "realm": ConfigClass.KEYCLOAK_REALM,
         }
         # Add the correct role and remove the other project roles
         for project_role in ["admin", "contributor", "collaborator"]:

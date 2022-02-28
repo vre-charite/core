@@ -1,47 +1,51 @@
-from flask import Flask, request
-import requests
-from flask_cors import CORS
-from config import ConfigClass
-from flask_executor import Executor
-from flask_jwt import JWT,  JWTError
-from flask_sqlalchemy import SQLAlchemy
-import jwt as pyjwt
 import importlib
 import json
+
+import jwt as pyjwt
+import requests
+from flask import request
+from flask_cors import CORS
+from flask_executor import Executor
+from flask_jwt import JWT
+from flask_jwt import JWTError
+from flask_sqlalchemy import SQLAlchemy
+from opentelemetry import trace
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+from app.flask import Flask
+from config import ConfigClass
+from config import get_settings
 from services.logger_services.logger_factory_service import SrvLoggerFactory
 
-# from hdfs import InsecureClient
-# from hdfs.ext.kerberos import KerberosClient
-
-# from neo4j import GraphDatabase
-
-# neo4j_connection = GraphDatabase.driver(
-#     ConfigClass.NEO4J_URL, auth=('neo4j', 'neo4j'), encrypted=False)
-
-# hdfs_client = InsecureClient(ConfigClass.HDFS_DATANODE, user=ConfigClass.HDFS_USER)
-# hdfs_client = KerberosClient(url=ConfigClass.HDFS_DATANODE, proxy=ConfigClass.HDFS_USER)
 
 def create_db(app):
     db = SQLAlchemy()
     db.init_app(app)
     return db
 
+
 executor = Executor()
-app = Flask(__name__, static_folder="../build/static",
-            template_folder="../build")
+app = Flask(__name__, static_folder="../build/static", template_folder="../build")
 app.config['SQLALCHEMY_DATABASE_URI'] = ConfigClass.SQLALCHEMY_DATABASE_URI
 db = create_db(app)
 
-def create_app(extra_config_settings={}):
+
+def create_app():
     # initialize app and config app
-    app.config.from_object(__name__+'.ConfigClass')
+    app.config.from_object(__name__ + '.ConfigClass')
     CORS(
         app,
         origins="*",
-        allow_headers=["Content-Type", "Authorization",
-                       "Access-Control-Allow-Credentials"],
+        allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
         supports_credentials=True,
-        intercept_exceptions=False)
+        intercept_exceptions=False,
+    )
 
     # initialize flask executor
     executor.init_app(app)
@@ -52,16 +56,6 @@ def create_app(extra_config_settings={}):
         api = importlib.import_module(apis)
         api.module_api.init_app(app)
 
-    # # create the default dataset folder
-    # hdfs_client.makedirs(ConfigClass.DATASET_PATH)
-    # # enforce the db constrain for dataset name uniqueness
-    # neo4j_connection.session().run("""
-    #     CREATE CONSTRAINT
-    #     ON (n:Dataset)
-    #     ASSERT n.name IS UNIQUE
-    # """)
-
-    # enable JWT
     jwt = JWT(app)
 
     @jwt.jwt_error_handler
@@ -102,7 +96,7 @@ def create_app(extra_config_settings={}):
         _logger = SrvLoggerFactory('jwt_identify').get_logger()
 
         # check if preferred_username is encoded in token
-        if(not username):
+        if not username:
             raise Exception("preferred_username is required in jwt token.")
 
         try:
@@ -112,10 +106,10 @@ def create_app(extra_config_settings={}):
                 url=url,
                 json={"name": username}
             )
-            if(res.status_code != 200):
+            if res.status_code != 200:
                 raise Exception("Neo4j service: " + json.loads(res.text))
             users = json.loads(res.text)
-            if(len(users) == 0):
+            if len(users) == 0:
                 raise Exception(
                     "Neo4j service: User %s does not exist." % username)
             user_id = users[0]['id']
@@ -139,13 +133,36 @@ def create_app(extra_config_settings={}):
             realm_roles = []
 
         return {
-            "user_id": user_id, 
-            "username": username, 
-            "role": role, 
-            "email": email, 
-            "first_name": first_name, 
+            "user_id": user_id,
+            "username": username,
+            "role": role,
+            "email": email,
+            "first_name": first_name,
             "last_name": last_name,
-            "realm_roles": realm_roles
+            "realm_roles": realm_roles,
         }
 
+    instrument_app(app)
+
     return app
+
+
+def instrument_app(app: Flask) -> None:
+    """Instrument the application with OpenTelemetry tracing."""
+
+    settings = get_settings()
+
+    if not settings.OPEN_TELEMETRY_ENABLED:
+        return
+
+    tracer_provider = TracerProvider(resource=Resource.create({SERVICE_NAME: settings.APP_NAME}))
+    trace.set_tracer_provider(tracer_provider)
+
+    FlaskInstrumentor().instrument_app(app)
+    RequestsInstrumentor().instrument()
+
+    jaeger_exporter = JaegerExporter(
+        agent_host_name=settings.OPEN_TELEMETRY_HOST, agent_port=settings.OPEN_TELEMETRY_PORT
+    )
+
+    tracer_provider.add_span_processor(BatchSpanProcessor(jaeger_exporter))

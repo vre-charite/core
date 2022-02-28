@@ -97,14 +97,15 @@ def add_user_to_ad_group(user_email, project_code, logger, access_token):
     return res.json().get("entry")
 
 
+# NOT USED FUNCTION
 def add_user_to_project_group(container_id, username, logger):
     # Add user to keycloak group with the same name as the project
     res = requests.get(
         url=ConfigClass.NEO4J_SERVICE + f"nodes/Container/node/{container_id}",
     )
-    project_name = 'vre-' + json.loads(res.content)[0]["code"]
+    project_name = ConfigClass.AD_PROJECT_GROUP_PREFIX + json.loads(res.content)[0]["code"]
     payload = {
-        "realm": "vre",
+        "realm": ConfigClass.KEYCLOAK_REALM,
         "username": username,
         "groupname": project_name,
     }
@@ -120,7 +121,7 @@ def add_user_to_project_group(container_id, username, logger):
 def add_admin_to_project_group(groupname, username, logger):
     # Add user to keycloak group with the same name as the project
     payload = {
-        "realm": "vre",
+        "realm": ConfigClass.KEYCLOAK_REALM,
         "username": username,
         "groupname": groupname,
     }
@@ -135,7 +136,7 @@ def add_admin_to_project_group(groupname, username, logger):
 
 def assign_project_role(email, project_role, logger):
     payload = {
-        "realm": "vre",
+        "realm": ConfigClass.KEYCLOAK_REALM,
         "email": email,
         "project_role": project_role
     }

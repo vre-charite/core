@@ -21,7 +21,6 @@ def permissions_check(resource, zone, operation):
         return wrapper
     return inner
 
-
 # this is temperory function to check the operation
 # on the dataset. Any post/put action will ONLY require the owner
 def dataset_permission():
@@ -30,22 +29,18 @@ def dataset_permission():
             dateset_geid = kwargs.get("dataset_geid")
 
             # here we have to find the parent node and delete the relationship
-            relation_query_url = ConfigClass.NEO4J_SERVICE + "relations/query"
+            query_url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query"
             query_payload = {
-                "label": "own",
-                "end_label": "Dataset",
-                "end_params": {"global_entity_id":dateset_geid},
-                "start_label": "User",
-                "start_params": {"name":current_identity.get("username")},
+                "global_entity_id": dateset_geid,
+                "creator": current_identity.get("username"),
             }
-            response = requests.post(relation_query_url, json=query_payload)
+            response = requests.post(query_url, json=query_payload)
 
             # if not the owner and not the platform admin
             if len(response.json()) == 0:
                 return {'result': 'Permission Denied', 'error_msg': 'Permission Denied'}, 403
 
             return function(*args, **kwargs)
-            
         return wrapper
     return inner
 
@@ -54,20 +49,15 @@ def dataset_permission():
 def dataset_permission_bycode():
     def inner(function):
         def wrapper(*args, **kwargs):
-            # print(args)
-            # print(kwargs)
             dataset_code = kwargs.get("dataset_code")
 
             # here we have to find the parent node and delete the relationship
-            relation_query_url = ConfigClass.NEO4J_SERVICE + "relations/query"
+            query_url = ConfigClass.NEO4J_SERVICE + "nodes/Dataset/query"
             query_payload = {
-                "label": "own",
-                "end_label": "Dataset",
-                "end_params": {"code": dataset_code},
-                "start_label": "User",
-                "start_params": {"name":current_identity.get("username")},
+                "code": dataset_code,
+                "creator": current_identity.get("username"),
             }
-            response = requests.post(relation_query_url, json=query_payload)
+            response = requests.post(query_url, json=query_payload)
             # print(response.json())
 
             # if not the owner and not the platform admin
@@ -78,3 +68,4 @@ def dataset_permission_bycode():
             
         return wrapper
     return inner
+

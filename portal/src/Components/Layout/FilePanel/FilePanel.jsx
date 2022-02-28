@@ -506,11 +506,11 @@ function FilePanel(props) {
       const nameZone = (item) => {
         if (!item.payload) {
           if (item.namespace === 'greenroom') return 'Green Room';
-          return 'VRE Core';
+          return 'Core';
         }
 
-        if (item.payload.frontendZone === 'Vre Core') {
-          return 'VRE Core';
+        if (item.payload.frontendZone === 'Core') {
+          return 'Core';
         }
 
         return item.payload.frontendZone;

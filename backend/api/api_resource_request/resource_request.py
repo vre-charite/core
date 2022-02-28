@@ -371,7 +371,7 @@ def send_email(resource_request, dataset_node, user_role):
         "project_name": resource_request.project_name,
         "project_code": dataset_node["code"],
         "admin_email": ConfigClass.EMAIL_SUPPORT,
-        "vre_portal_url": ConfigClass.VRE_DOMAIN,
+        "portal_url": ConfigClass.SITE_DOMAIN,
         "user_role": user_role.title()
     }
     try:

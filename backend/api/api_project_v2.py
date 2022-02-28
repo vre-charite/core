@@ -13,8 +13,18 @@ import json
 import requests
 import ldap
 import re
+import os
 import ldap.modlist as modlist
-from resources.utils import bulk_add_user, fetch_geid, add_user_to_ad_group, add_admin_to_project_group, assign_project_role
+from resources.utils import bulk_add_user, fetch_geid, add_user_to_ad_group, add_admin_to_project_group, \
+    assign_project_role
+from minio.sseconfig import Rule
+from minio.sseconfig import SSEConfig
+from minio.versioningconfig import ENABLED
+from minio.versioningconfig import VersioningConfig
+from resources.minio import Minio_Client
+from resources.minio import create_admin_policy
+from resources.minio import create_collaborator_policy
+from resources.minio import create_contributor_policy
 
 api_ns_projects = module_api.namespace(
     'Project Restful', description='For project feature', path='/v1')
@@ -26,8 +36,7 @@ _logger = SrvLoggerFactory('api_project').get_logger()
 -> duplicate_check()
     -> create_container_node()
         -> add_admins()
-            -> create_folder_in_gr()
-            -> create_folder_in_core()
+            -> create_minio_bucket
               -> ldap_create_user_group
                 -> neo4j_add_platform_admins
                   -> keyclock_create_roles()
@@ -63,7 +72,7 @@ class APIProjectV2(metaclass=MetaAPI):
             _res = APIResponse()
             _logger.info(
                 'Calling API for creating project: {}'.format(post_data))
-            
+
             container_type = post_data.get("type", None)
             description = post_data.get("description", None)
             dataset_code = post_data.get("code", None)
@@ -71,7 +80,7 @@ class APIProjectV2(metaclass=MetaAPI):
             headers = {
                 'Authorization': access_token
             }
-            
+
             try:
                 is_valid, message = validate_post_data(post_data)
                 if not is_valid:
@@ -95,7 +104,7 @@ class APIProjectV2(metaclass=MetaAPI):
                 if post_data.get('parent_id', None):
                     post_data.update({'parent_relation': 'PARENT'})
                 if not post_data.get('discoverable', None):
-                    post_data.update({"discoverable":True})
+                    post_data.update({"discoverable": True})
                 is_container, container_result, code = create_container_node(
                     post_data)
                 if not is_container:
@@ -104,7 +113,7 @@ class APIProjectV2(metaclass=MetaAPI):
                     _res.set_error_msg("Error when creating Container node in neo4j")
                     return _res.to_dict, _res.code
                 result = container_result.json()[0]
-                
+
                 # Add admin users relationship in neo4j
                 is_valid, res = add_admins(headers, result)
                 if not is_valid:
@@ -113,12 +122,12 @@ class APIProjectV2(metaclass=MetaAPI):
                     _res.set_error_msg(res["result"])
                     return _res.to_dict, _res.code
 
-                # Create folder (project) in Green Room
-                is_valid, res, code = create_folder_gr(result, container_type)
-                if not is_valid:
-                    _logger.error("Error when creating name folders into project")
-                    _res.set_code(code)
-                    _res.set_error_msg(res["result"])
+                # Create MinIO bucket for project with name based on zone and dataset_code
+                zone = post_data.get("zone", None)
+                is_created, result, status_code = create_minio_bucket(dataset_code, zone)
+                if not is_created:
+                    _res.set_code(status_code)
+                    _res.set_error_msg(result["result"])
                     return _res.to_dict, _res.code
 
                 # Create Project User Group in ldap
@@ -146,7 +155,7 @@ class APIProjectV2(metaclass=MetaAPI):
                 _res.set_code(EAPIResponseCode.forbidden)
                 _res.set_error_msg('Error %s' % str(e))
                 return _res.to_dict, _res.code
-            
+
             _res.set_result(container_result.json())
             return _res.to_dict, _res.code
 
@@ -161,14 +170,14 @@ def validate_post_data(post_data):
     if not name or not code:
         _logger.error('Field name and code field is required.')
         return False, {'result': "Error the name and code field is required"}
-    
+
     project_code_pattern = re.compile(ConfigClass.PROJECT_CODE_REGEX)
     is_match = re.search(project_code_pattern, code)
 
     if not is_match:
         _logger.error('Project code does not match the pattern.')
         return False, {'result': "Project code does not match the pattern."}
-    
+
     project_name_pattern = re.compile(ConfigClass.PROJECT_NAME_REGEX)
     is_match = re.search(project_name_pattern, name)
 
@@ -181,7 +190,7 @@ def validate_post_data(post_data):
         if len(post_data.get("icon")) > ConfigClass.ICON_SIZE_LIMIT:
             return False, {'result': 'icon too large'}
 
-    return True, {} 
+    return True, {}
 
 
 def duplicate_check(code):
@@ -215,41 +224,45 @@ def add_admins(headers, result):
     return True, {}
 
 
-def create_folder_gr(result, container_type):
-    url = ConfigClass.DATA_SERVICE + "folders"
-    root = result['path']
-    if container_type == "Usecase":
-        path = [root, root + "/processed"]  # Top-level folders
-        vre_path = [root]
-    else:
-        path = [root]
-        vre_path = [root]
+def create_minio_bucket(project_code, zone):
+    try:
+        prefixs = ["gr-", "core-"]
+        for bucket_prefix in prefixs:
 
-    for p in path:
-        payload = {
-            "path": p
-        }
-        res = requests.post(
-            url=url,
-            json=payload
-        )
-        if res.status_code != 200:
-            return False, {'result': json.loads(res.text)}, res.status_code
-    is_valid, res, code =create_folder_vre(vre_path)
-    if not is_valid:
-        return False, res, code
-    return True, {}, 200
+            # establish bucket name
+            bucket_name = bucket_prefix + project_code
+            # initialize MinIO client
+            mc = Minio_Client()
 
+            # if bucket name does not already exist, create it in minio
+            if not mc.client.bucket_exists(bucket_name):
+                mc.client.make_bucket(bucket_name)
+                mc.client.set_bucket_versioning(bucket_name, VersioningConfig(ENABLED))
+                mc.client.set_bucket_encryption(
+                    bucket_name, SSEConfig(Rule.new_sse_s3_rule()),
+                )
+                _logger.info(f"MinIO bucket created: {bucket_name}")
+            else:
+                error_msg = "MinIO bucket already exists"
+                _logger.error(error_msg)
+                status_code = EAPIResponseCode.conflict
+                return False, {'result': error_msg}, status_code
 
-def create_folder_vre(vre_path):
-    url = ConfigClass.DATA_SERVICE + "folders"
-    for p in vre_path:
-        res = requests.post(url=url, json={
-            'path': p,
-            'service': 'VRE'
-        })
-        if res.status_code != 200:
-            return False, {'result': json.loads(res.text)}, res.status_code
+            # add MinIO policies for respective bucket (admin, collaborator, contributor)
+            policy_name = create_admin_policy(project_code)
+            stream = os.popen('mc admin policy add minio %s %s' % (project_code + "-admin", policy_name))
+            policy_name = create_contributor_policy(project_code)
+            stream = os.popen('mc admin policy add minio %s %s' % (project_code + "-contributor", policy_name))
+            policy_name = create_collaborator_policy(project_code)
+            stream = os.popen('mc admin policy add minio %s %s' % (project_code + "-collaborator", policy_name))
+            _logger.info(f"MinIO policies successfully applied for: {bucket_name}")
+
+    except Exception as e:
+        error_msg = f"Error when creating MinIO bucket: {str(e)}"
+        _logger.error(error_msg)
+        status_code = EAPIResponseCode.internal_error
+        return False, {'result': error_msg}, status_code
+
     return True, {}, 200
 
 
@@ -260,13 +273,19 @@ def ldap_create_user_group(code, description):
         conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN,
                            ConfigClass.LDAP_ADMIN_SECRET)
 
-        dn = "cn=vre-{},ou=Gruppen,ou={},dc={},dc={}".format(code, ConfigClass.LDAP_OU, ConfigClass.LDAP_DC1,
-                                                             ConfigClass.LDAP_DC2)
+        dn = "cn={}{},ou=Gruppen,ou={},dc={},dc={}".format(
+            ConfigClass.AD_PROJECT_GROUP_PREFIX,
+            code,
+            ConfigClass.LDAP_OU,
+            ConfigClass.LDAP_DC1,
+            ConfigClass.LDAP_DC2
+        )
 
         # NOTE here LDAP client will require the BINARY STRING for the payload
         # Please remember to convert all string to utf-8
         objectclass = [ConfigClass.LDAP_objectclass.encode('utf-8')]
-        attrs = {'objectclass': objectclass, 'sAMAccountName': f'vre-{code}'.encode('utf-8')}
+        attrs = {'objectclass': objectclass,
+                 'sAMAccountName': f'{ConfigClass.AD_PROJECT_GROUP_PREFIX}-{code}'.encode('utf-8')}
         if description:
             attrs['description'] = description.encode('utf-8')
         ldif = modlist.addModlist(attrs)
@@ -295,7 +314,7 @@ def neo4j_add_platform_admins(code):
 
 def keycloak_create_roles(code):
     payload = {
-        "realm": "vre",
+        "realm": ConfigClass.KEYCLOAK_REALM,
         "project_roles": ["admin", "collaborator", "contributor"],
         "project_code": code
     }
@@ -309,17 +328,15 @@ def keycloak_create_roles(code):
 
 def keycloak_add_group_role(code, origin_users):
     for user in origin_users:
-        add_admin_to_project_group(
-            "vre-{}".format(code), user["name"], _logger)
+        add_admin_to_project_group("{}-{}".format(ConfigClass.AD_PROJECT_GROUP_PREFIX, code), user["name"], _logger)
         _logger.info('user email: {}'.format(user["email"]))
 
 
 def create_folder_usernamespace(users, project_code):
     for user in users:
         try:
-            _logger.info(
-                f"creating namespace folder in greenroom and vrecore for user : {user['name']}")
-            zone_list = ["greenroom", "vrecore"]
+            _logger.info(f"creating namespace folder in greenroom and core for user : {user['name']}")
+            zone_list = ["greenroom", "core"]
             for zone in zone_list:
                 payload = {
                     "folder_name": user["name"],
@@ -328,7 +345,7 @@ def create_folder_usernamespace(users, project_code):
                     "uploader": user["name"],
                     "tags": []
                 }
-                folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_GREENROOM+'/folder'
+                folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_GREENROOM + '/folder'
                 res = requests.post(
                     url=folder_creation_url,
                     json=payload
@@ -343,7 +360,7 @@ def create_folder_usernamespace(users, project_code):
 
 def bulk_create_folder_usernamespace(users, project_code):
     try:
-        zone_list = ["greenroom", "vrecore"]
+        zone_list = ["greenroom", "core"]
         for zone in zone_list:
             folders = []
             for user in users:
@@ -354,7 +371,7 @@ def bulk_create_folder_usernamespace(users, project_code):
                     "tags": []
                 })
 
-            folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_GREENROOM+'/folder/bulk'
+            folder_creation_url = ConfigClass.DATA_UPLOAD_SERVICE_GREENROOM + '/folder/bulk'
             payload = {
                 "folders": folders,
                 "zone": zone,

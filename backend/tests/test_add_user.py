@@ -1,6 +1,7 @@
 import unittest
 from tests.prepare_test import SetUpTest, PrepareTest
 from tests.logger import Logger
+from config import ConfigClass
 
 
 class TestContainerUser(unittest.TestCase):
@@ -15,7 +16,7 @@ class TestContainerUser(unittest.TestCase):
         payload = {
             "username": "admin",
             "password": "admin",
-            "realm": "vre"
+            "realm": ConfigClass.KEYCLOAK_REALM
         }
         cls.headers["Authorization"] = cls.test.auth_member(payload)
         cls.user = cls.test.get_user_by_name("amyguindoc12")

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Layout } from 'antd';
 import AppHeader from '../../Components/Layout/Header';
+import { SUPPORT_EMAIL } from '../../config';
 
 const { Content } = Layout;
 function AccountDisabled() {
@@ -20,8 +21,8 @@ function AccountDisabled() {
           }}
         >
           Your account has been disabled, please contact{' '}
-          <a href="mailto:vre-support@charite.de">vre-support@charite.de</a> if
-          any questions.
+          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> if any
+          questions.
         </p>
       </Content>
     </Layout>

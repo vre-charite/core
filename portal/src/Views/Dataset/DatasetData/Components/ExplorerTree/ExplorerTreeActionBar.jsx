@@ -24,6 +24,7 @@ import _ from 'lodash';
 import { ExplorerTreeDeleteModal } from './ExplorerTreeDeleteModal';
 import { useTranslation } from 'react-i18next';
 import { getFileSize } from '../../../../../Utility';
+import { API_PATH, DOWNLOAD_PREFIX_V1 } from '../../../../../config';
 export default function ExplorerTreeActionBar({
   title,
   nodeKey,
@@ -50,10 +51,13 @@ export default function ExplorerTreeActionBar({
   const datasetGeid = datasetInfo.geid;
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const supportFormats = ['tsv', 'csv', 'json', 'txt', 'yml', 'yaml', 'log'];
   const previewNode = () => {
+    const fileFormat =
+      supportFormats.indexOf(format) !== -1 ? format.toLowerCase() : null;
     dispatch(
       datasetDataActions.setPreviewFile({
-        type: format.toLowerCase(),
+        type: fileFormat,
         geid: nodeKey,
         name: title,
         size: fileSize,
@@ -92,7 +96,7 @@ export default function ExplorerTreeActionBar({
       clearInterval(timer);
       const hashCode = res.data.result?.payload?.hashCode;
       if (hashCode) {
-        const url = `/vre/api/vre/portal/download/vre/v1/download/${hashCode}`;
+        const url = API_PATH + DOWNLOAD_PREFIX_V1 + '/' + hashCode;
         window.open(url, '_blank');
       } else {
         message.error(t('errormessages:datasetDownloadFile.default.0'));
@@ -187,8 +191,7 @@ export default function ExplorerTreeActionBar({
     title,
   };
   const nameArr = title.toLowerCase().split('.');
-  const namePostfix = nameArr[nameArr.length - 1];
-  const supportFormats = ['tsv', 'csv', 'json', 'txt', 'yml', 'yaml', 'log'];
+
   return (
     <>
       <div className={'tree-node-custom-title'}>
@@ -240,13 +243,11 @@ export default function ExplorerTreeActionBar({
                 e.stopPropagation();
               }}
             >
-              {supportFormats.indexOf(namePostfix) !== -1 && (
-                <EyeOutlined
-                  onClick={(e) => {
-                    previewNode();
-                  }}
-                />
-              )}
+              <EyeOutlined
+                onClick={(e) => {
+                  previewNode();
+                }}
+              />
               {downloading ? (
                 <LoadingOutlined />
               ) : (

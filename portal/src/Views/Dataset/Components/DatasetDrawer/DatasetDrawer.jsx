@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { DownloadOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import styles from './DatasetDrawer.module.scss';
-
+import { namespace, ErrorMessager } from '../../../../ErrorMessages';
 const DatasetDrawer = (props) => {
   const { datasetDrawerVisibility, setDatasetDrawerVisibility } = props;
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,8 +24,14 @@ const DatasetDrawer = (props) => {
     try {
       const res = await datasetDownloadReturnURLAPI(basicInfo.geid, version);
       await datasetDownloadAPI(res.data.result.downloadHash);
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      if (err.response) {
+        const errorMessager = new ErrorMessager(
+          namespace.dataset.files.downloadFilesAPI,
+        );
+        errorMessager.triggerMsg(err.response.status);
+      }
+      return;
     }
   };
 

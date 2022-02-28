@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Layout, Button } from 'antd';
 import AppHeader from '../../Components/Layout/Header';
 import TermsOfUseModal from '../../Components/Modals/TermsOfUseModal';
 import { useKeycloak } from '@react-keycloak/web';
-import { changeUserStatusAPI, createSubFolderApi } from '../../APIs';
+import { changeUserStatusAPI, lastLoginAPI } from '../../APIs';
+import { PORTAL_PREFIX } from '../../config';
+
 const { Content } = Layout;
 function TermsOfUse(props) {
   const { keycloak } = useKeycloak();
   const [visible, setVisible] = useState(true);
   const [btnDisable, setBtnDisable] = useState(true);
   const [acceptLoading, setAcceptLoading] = useState(false);
+  const username = useSelector((state) => state.username);
   const onCancel = () => {
     setVisible(false);
     setBtnDisable(true);
@@ -47,7 +51,7 @@ function TermsOfUse(props) {
       //         globalEntityId,
       //         projectDetails[i].projectCode,
       //         name,
-      //         'VRECore',
+      //         'Core',
       //       );
       //     }
       //     setAcceptLoading(false);
@@ -58,6 +62,7 @@ function TermsOfUse(props) {
       // }
       setAcceptLoading(false);
       setVisible(false);
+      await lastLoginAPI(username);
       window.location.reload();
     }
   };
@@ -114,7 +119,9 @@ function TermsOfUse(props) {
               style={{ float: 'left' }}
             >
               <a
-                href="/vre/files/VRE Website Privacy Policy draft.pdf"
+                href={
+                  PORTAL_PREFIX + '/files/Website Privacy Policy draft.pdf'
+                }
                 download
                 target="_self"
               >

@@ -343,7 +343,7 @@ const Copy2CoreModal = ({
               onClick={handleCancel}
               style={{ borderRadius: '6px' }}
             >
-              Ok
+              OK
             </Button>
           </div>
         );

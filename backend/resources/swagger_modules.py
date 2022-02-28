@@ -116,7 +116,7 @@ dataset_sample_return = '''
             ],
             "time_lastmodified": "2020-07-15T19:10:28",
             "_key2": "value2",
-            "path": "Carsten Finke Generate/dataset-test-1",
+            "path": "dataset-test-1",
             "id": 97,
             "time_created": "2020-07-15T19:10:28",
             "name": "dataset-test-1",

@@ -162,7 +162,7 @@ export default function CreateFolderModal(props) {
 
 function getZone(panelKey) {
   if (panelKey === PanelKey.CORE_HOME || panelKey === PanelKey.CORE) {
-    return 'vrecore';
+    return 'Core';
   }
   if (panelKey === PanelKey.GREENROOM_HOME || panelKey === PanelKey.GREENROOM) {
     return 'greenroom';

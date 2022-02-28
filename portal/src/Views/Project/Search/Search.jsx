@@ -152,19 +152,19 @@ function Search(props) {
       setFiles(res.data.result);
       if (query['zone']['value'] === 'greenroom') {
         setGreenRoomTotal(res.data.total);
-      } else if (query['zone']['value'] === 'vrecore') {
+      } else if (query['zone']['value'] === 'core') {
         setCoreTotal(res.data.total);
       }
       setLoading(false);
 
       if (query['zone']['value'] === 'greenroom') {
         newQuery = _.cloneDeep(query);
-        newQuery['zone']['value'] = 'vrecore';
+        newQuery['zone']['value'] = 'core';
         if (permission === 'collaborator') {
           // collaborator can check all files/folders in core
           delete newQuery['display_path'];
         }
-      } else if (query['zone']['value'] === 'vrecore') {
+      } else if (query['zone']['value'] === 'core') {
         newQuery = _.cloneDeep(query);
         newQuery['zone']['value'] = 'greenroom';
         if (permission === 'collaborator') {
@@ -182,7 +182,7 @@ function Search(props) {
       ).then((res) => {
         if (newQuery['zone']['value'] === 'greenroom') {
           setGreenRoomTotal(res.data.total);
-        } else if (newQuery['zone']['value'] === 'vrecore') {
+        } else if (newQuery['zone']['value'] === 'core') {
           setCoreTotal(res.data.total);
         }
       });
@@ -208,19 +208,19 @@ function Search(props) {
       setFiles(res.data.result);
       if (newLastSearchQuery['zone']['value'] === 'greenroom') {
         setGreenRoomTotal(res.data.total);
-      } else if (newLastSearchQuery['zone']['value'] === 'vrecore') {
+      } else if (newLastSearchQuery['zone']['value'] === 'core') {
         setCoreTotal(res.data.total);
       }
       setLoading(false);
       if (newLastSearchQuery['zone']['value'] === 'greenroom') {
         newQuery = _.cloneDeep(newLastSearchQuery);
-        newQuery['zone']['value'] = 'vrecore';
+        newQuery['zone']['value'] = 'Core';
         if (permission === 'collaborator') {
           delete newQuery['display_path'];
         }
-      } else if (newLastSearchQuery['zone']['value'] === 'vrecore') {
+      } else if (newLastSearchQuery['zone']['value'] === 'core') {
         newQuery = _.cloneDeep(newLastSearchQuery);
-        newQuery['zone']['value'] = 'greenroom';
+        //newQuery['zone']['value'] = 'greenroom';
         if (permission === 'collaborator') {
           newQuery['display_path'] = {
             value: username,
@@ -230,17 +230,17 @@ function Search(props) {
       }
 
       // this api call is to get greenroom/core total number
-      setLastSearchQuery(newQuery)
+      /* setLastSearchQuery(newQuery);
       searchFilesAPI(
         { query: newQuery, ...pagination },
         props.currentProject.globalEntityId,
       ).then((res) => {
         if (newQuery['zone']['value'] === 'greenroom') {
           setGreenRoomTotal(res.data.total);
-        } else if (newQuery['zone']['value'] === 'vrecore') {
+        } else if (newQuery['zone']['value'] === 'core') {
           setCoreTotal(res.data.total);
         }
-      });
+      }); */
     });
   };
 

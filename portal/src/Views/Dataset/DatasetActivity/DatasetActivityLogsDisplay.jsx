@@ -67,7 +67,7 @@ const datasetCreateInfoDisplay = () => {
   return (
     <div style={{ display: 'flex', alignItems: 'center' }}>
       <PlusOutlined style={{ color: '#003262', marginRight: '10px' }} />
-      <p style={{ margin: '0px' }}>Create a Dataset</p>
+      <p style={{ margin: '0px' }}>Created a Dataset</p>
     </div>
   );
 };
@@ -85,9 +85,9 @@ const datasetAddAndRemoveInfoDisplayHelper = (caseType, action, details) => {
   } else if (caseType === 'Dataset.Authors' && action === 'REMOVE') {
     diffArr = details.from.filter((el) => !details.to.includes(el));
     if (diffArr.length > 1) {
-      displayInfo = 'Removed Dataset Authors:' + ' ';
+      displayInfo = 'Deleted Dataset Authors:' + ' ';
     } else {
-      displayInfo = 'Removed a Dataset Author:' + ' ';
+      displayInfo = 'Deleted a Dataset Author:' + ' ';
     }
   } else if (caseType === 'Dataset.Tags' && action === 'ADD') {
     diffArr = details.to.filter((el) => !details.from.includes(el));
@@ -99,9 +99,9 @@ const datasetAddAndRemoveInfoDisplayHelper = (caseType, action, details) => {
   } else if (caseType === 'Dataset.Tags' && action === 'REMOVE') {
     diffArr = details.from.filter((el) => !details.to.includes(el));
     if (diffArr.length > 1) {
-      displayInfo = 'Removed Dataset Tags:' + ' ';
+      displayInfo = 'Deleted Dataset Tags:' + ' ';
     } else {
-      displayInfo = 'Removed a Dataset Tag:' + ' ';
+      displayInfo = 'Deleted a Dataset Tag:' + ' ';
     }
   } else if (caseType === 'Dataset.Modality' && action === 'ADD') {
     diffArr = details.to.filter((el) => !details.from.includes(el));
@@ -113,9 +113,9 @@ const datasetAddAndRemoveInfoDisplayHelper = (caseType, action, details) => {
   } else if (caseType === 'Dataset.Modality' && action === 'REMOVE') {
     diffArr = details.from.filter((el) => !details.to.includes(el));
     if (diffArr.length > 1) {
-      displayInfo = 'Removed Dataset Modalities:' + ' ';
+      displayInfo = 'Deleted Dataset Modalities:' + ' ';
     } else {
-      displayInfo = 'Removed a Dataset Modality:' + ' ';
+      displayInfo = 'Deleted a Dataset Modality:' + ' ';
     }
   } else if (caseType === 'Dataset.CollectionMethod' && action === 'ADD') {
     diffArr = details.to.filter((el) => !details.from.includes(el));
@@ -127,9 +127,9 @@ const datasetAddAndRemoveInfoDisplayHelper = (caseType, action, details) => {
   } else if (caseType === 'Dataset.CollectionMethod' && action === 'REMOVE') {
     diffArr = details.from.filter((el) => !details.to.includes(el));
     if (diffArr.length > 1) {
-      displayInfo = 'Removed Dataset Collection Methods:' + ' ';
+      displayInfo = 'Deleted Dataset Collection Methods:' + ' ';
     } else {
-      displayInfo = 'Removed a Dataset Collection Method:' + ' ';
+      displayInfo = 'Deleted a Dataset Collection Method:' + ' ';
     }
   }
 
@@ -272,7 +272,7 @@ const schemaInfoDisplay = {
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <PlusOutlined style={{ color: '#003262', marginRight: '10px' }} />
         <p style={{ margin: '0px' }}>
-          Create a schema:{' '}
+          Created a schema:{' '}
           <span style={{ fontWeight: 600 }}>
             {details.name.length > 40 ? (
               <Tooltip title={details.name}>{`${details.name.slice(
@@ -292,7 +292,7 @@ const schemaInfoDisplay = {
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <CloseOutlined style={{ color: '#FF6D72', marginRight: '10px' }} />
         <p style={{ margin: '0px' }}>
-          Removed a schema:{' '}
+          Deleted a schema:{' '}
           <span style={{ fontWeight: 600 }}>
             {details.name.length > 40 ? (
               <Tooltip title={details.name}>{`${details.name.slice(
@@ -414,7 +414,7 @@ const fileInfoDisplay = (caseType, action, details) => {
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <CloseOutlined style={{ color: '#FF6D72', marginRight: '10px' }} />
           <p style={{ margin: '0px' }}>
-            Removed a file/folder:{' '}
+            Deleted a file/folder:{' '}
             <span style={{ fontWeight: 600 }}>{details.sourceList[0]}</span>
           </p>
         </div>

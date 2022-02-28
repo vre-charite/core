@@ -125,7 +125,7 @@ function CoreDirTree(props) {
       'name',
       'asc',
       { archived: false },
-      'VRECore',
+      'Core',
       isHome ? 'Project' : 'Folder',
       null,
       PanelKey.CORE_HOME,

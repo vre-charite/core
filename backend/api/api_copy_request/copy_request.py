@@ -137,7 +137,7 @@ class APICopyRequest(metaclass=MetaAPI):
 
     class CopyRequestPending(Resource):
         @jwt_required()
-        @permissions_check("copyrequest", "*", "view")
+        @permissions_check("copyrequest", "*", "update") # API is only used when admin is updating 
         def get(self, project_geid):
             api_response = APIResponse()
             try:

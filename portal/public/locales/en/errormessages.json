@@ -169,6 +169,17 @@
       "Something went wrong while trying to download files, please try again later."
     ]
   },
+  "downloadDatasetFilesAPI": {
+    "400": ["Folder is empty"],
+    "404": ["File does not exist"],
+    "403": ["You do not have permission to download files from this dataset."],
+    "500": [
+      "Something went wrong while trying to download files, please try again later. Error code: 500"
+    ],
+    "default": [
+      "Something went wrong while trying to download files, please try again later."
+    ]
+  },
   "processingFile": {
     "default": [
       "Something went wrong while trying to upload your file",
@@ -310,16 +321,16 @@
   },
   "contactUsAPI": {
     "401": [
-      "You do not have the correct permissions to submit a request, please contact an administrator or email the team directly at vre-support@charite.de"
+      "You do not have the correct permissions to submit a request, please contact an administrator or email the team directly at {{ SUPPORT_EMAIL }}"
     ],
     "404": [
-      "Something went wrong while trying to submit your support request, please try again later or email the team directly at vre-support@charite.de"
+      "Something went wrong while trying to submit your support request, please try again later or email the team directly at {{ SUPPORT_EMAIL }}"
     ],
     "413": [
-      "Total file size is over the limit, please reduce the file size or email the team directly at vre-support@charite.de"
+      "Total file size is over the limit, please reduce the file size or email the team directly at {{ SUPPORT_EMAIL }}"
     ],
     "default": [
-      "Something went wrong while trying to submit your support request, please try again later or email the team directly at vre-support@charite.de"
+      "Something went wrong while trying to submit your support request, please try again later or email the team directly at {{ SUPPORT_EMAIL }}"
     ]
   },
   "inviteUserApi": {
@@ -522,7 +533,7 @@
       "title": "User already invited",
       "content": [
         "A user with the email address",
-        "has already been invited to the VRE, you can see their invitation status in the Invitations tab."
+        "has already been invited to the {{ PLATFORM }}, you can see their invitation status in the Invitations tab."
       ]
     }
   },
@@ -576,11 +587,6 @@
     "409": ["This dataset code has been taken, please try another."],
     "default": [
       "Something went wrong while trying to create the dataset, please try again later."
-    ]
-  },
-  "updateDatasetInfo": {
-    "default": [
-      "Something went wrong while trying to update the dataset info, please try again later."
     ]
   },
   "getDatasetInfo": {
@@ -647,5 +653,20 @@
     "noOpenMindsTemplate": ["No OpenMINDS template found"],
     "fileSizeOverLimit": ["File size must be smaller than 1MB"],
     "uploadFailed": ["Failed to upload the selected schema."]
+  },
+  "createNotification": {
+    "default": [
+      "Something went wrong while trying to create the notification, please try again later."
+    ]
+  },
+  "disableNotification": {
+    "default": [
+      "Something went wrong while trying to disable the notification, please try again later."
+    ]
+  },
+  "updateNotification": {
+    "default": [
+      "Something went wrong while trying to update the notification, please try again later."
+    ]
   }
 }

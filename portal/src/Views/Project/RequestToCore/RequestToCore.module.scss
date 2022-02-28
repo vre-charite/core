@@ -116,7 +116,12 @@
 
 .complete_modal_content {
   padding: 0px 24px;
+  .complete_note {
+    margin-bottom: 4px;
+  }
   .review_note_section {
+    margin-top: 20px;
+    margin-bottom: 10px;
     p {
       margin-bottom: 5px;
     }

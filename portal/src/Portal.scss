@@ -13,7 +13,7 @@
   top: 50vh;
   transform: translateY(-50%);
 }
-.vre-modal-wrapper {
+.global-modal-wrapper {
   .ant-modal-content {
     border-radius: 10px;
   }
@@ -102,4 +102,8 @@
 /* cursor fix for select in dataset modal */
 .ant-select-multiple .ant-select-selection-search-input {
   min-width: 5px;
+}
+
+.ant-picker-now {
+  display: none !important;
 }

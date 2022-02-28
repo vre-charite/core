@@ -48,7 +48,7 @@ class APIArchive(metaclass=MetaAPI):
             if "Greenroom" in file_node["labels"]:
                 zone = 'greenroom'
             else:
-                zone = 'vrecore'
+                zone = 'core'
 
             project_code = get_project_code_from_request({})
             if not has_permission(project_code, 'file', zone, 'view'):

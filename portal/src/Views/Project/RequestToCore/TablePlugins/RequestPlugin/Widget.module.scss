@@ -35,9 +35,10 @@
       font-style: normal;
     }
     .deny-btn {
-      background-color: #ff6d72;
-      border-color: #ff6d72;
-      &:hover {
+      background-color: #ff6d72 !important;
+      border-color: #ff6d72 !important;
+      &:hover,
+      &:visited {
         background-color: #ff6d72 !important;
         border-color: #ff6d72 !important;
         opacity: 0.8;
@@ -83,9 +84,10 @@
       font-style: normal;
     }
     .approve-btn {
-      background-color: #5b8c00;
-      border-color: #5b8c00;
-      &:hover {
+      background-color: #5b8c00 !important;
+      border-color: #5b8c00 !important;
+      &:hover,
+      &:visited {
         background-color: #5b8c00 !important;
         border-color: #5b8c00 !important;
         opacity: 0.8;

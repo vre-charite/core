@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tree, Modal, Button } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { nestedLoop, pathsMap } from '../../../../../../../Utility';
+import { nestedLoop } from '../../../../../../../Utility';
 const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 const { DirectoryTree } = Tree;
 
@@ -9,10 +9,7 @@ const ZipContentPlugin = (props) => {
   const [data, setData] = useState([]);
   const [defaultKeys, setDefaultKeys] = useState([]);
   const fileName = props.record.fileName;
-  const filePaths = props.record.path;
-  const key = props.record.key;
-  const location = key && pathsMap(key);
-
+  const location = props.record.displayPath;
   const upperZipContent = props.record.zipContent || {};
 
   const [loading, setLoading] = useState(false);
@@ -42,7 +39,7 @@ const ZipContentPlugin = (props) => {
   };
 
   const titile = (
-    <div>
+    <div style={{ display: 'flex' }}>
       <span style={{ fontSize: '16px', fontWeight: 500, lineHeight: '22px' }}>
         Zip File Previewer
       </span>
@@ -52,6 +49,11 @@ const ZipContentPlugin = (props) => {
           fontWeight: 300,
           lineHeight: '22px',
           marginLeft: 10,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          flex: 1,
+          marginRight: 20,
         }}
       >
         - {location}

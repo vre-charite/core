@@ -1,29 +1,42 @@
 import React, { Component } from 'react';
-import { Layout, Menu, Button, Modal, Alert, Badge } from 'antd';
+import { Layout, Menu, Button, Modal, Alert, Badge, message } from 'antd';
 import styles from './index.module.scss';
+import { PORTAL_PREFIX } from '../../config';
 import {
   ContainerOutlined,
   UserOutlined,
   ExclamationCircleOutlined,
   ControlOutlined,
   DeploymentUnitOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { withCookies } from 'react-cookie';
 import { withRouter } from 'react-router-dom';
+import moment from 'moment';
+
 import {
   cleanDatasetCreator,
   userLogoutCreator,
   setUploadListCreator,
   setServiceRequestRedDot,
+  notificationActions,
 } from '../../Redux/actions';
 import { connect } from 'react-redux';
 import ResetPasswordModal from '../Modals/ResetPasswordModal';
 import SupportDrawer from '../Tools/SupportDrawer';
 import { UploadQueueContext } from '../../Context';
-import { logout } from '../../Utility';
+import { logout, convertUTCDateToLocalDate } from '../../Utility';
 import FilePanel from './FilePanel/FilePanel';
-import { getResourceRequestsAPI } from '../../APIs';
+import {
+  getResourceRequestsAPI,
+  getFilteredNotifications,
+  postUnsubscribeNotifications,
+} from '../../APIs/index';
+import { BellNotifications, BannerNotifications } from '../Notifications';
+import UpcomingMaintenanceModal from '../Modals/UpcomingMaintenanceModal';
+import { tokenManager } from '../../Service/tokenManager';
+import { BRANDING_PREFIX } from '../../config';
 
 const { confirm } = Modal;
 const { Header } = Layout;
@@ -45,6 +58,9 @@ class AppHeader extends Component {
       projectId: '',
       projectRole: '',
       projectCode: '',
+      showBellNotifications: false,
+      notificationModalVisible: false,
+      modalBellNotification: {},
     };
   }
 
@@ -93,6 +109,7 @@ class AppHeader extends Component {
         }
       }
     }
+    this.getNotificationsForUser();
   };
 
   logout = async () => {
@@ -101,8 +118,8 @@ class AppHeader extends Component {
       icon: <ExclamationCircleOutlined />,
       content: (
         <>
-          By clicking on "OK", you will be logged out on all the opened VRE
-          tabs. <br />
+          By clicking on "OK", you will be logged out on all the opened tabs.{' '}
+          <br />
           Any ongoing file activities progress will be lost.
         </>
       ),
@@ -168,6 +185,10 @@ class AppHeader extends Component {
     ) {
       // this.setState({ showNotifications: ['notifications'] });
     }
+
+    if (prevProps.notificationList !== this.props.notificationList) {
+      this.getNotificationsForUser();
+    }
   }
   showDrawer = () => {
     this.updatedSelectedKeys('add', 'support');
@@ -199,24 +220,91 @@ class AppHeader extends Component {
     });
   };
 
+  showBellNotifications = () => {
+    this.setState((prevState) => ({
+      showBellNotifications: !prevState.showBellNotifications,
+    }));
+  };
+
+  openNotificationModal = (id, dataset) => {
+    const foundNotification = dataset.find(
+      (notification) => notification.id === id,
+    );
+    this.setState({ modalBellNotification: foundNotification });
+    this.setState({ notificationModalVisible: true });
+  };
+
+  closeNotificationModal = () => {
+    this.setState({ notificationModalVisible: false });
+  };
+
+  removeBannerNotification = (id) => {
+    const filteredNotifications = this.props.userNotifications.filter(
+      (notification) => notification.id !== id,
+    );
+    this.props.setUserNotifications(filteredNotifications);
+  };
+
+  getNotificationsForUser = async () => {
+    if (this.props.user.status !== 'pending') {
+      try {
+        const { data } = await getFilteredNotifications(this.props.username);
+        let filteredNotifications = data.result.result;
+
+        const cookieNotifications = tokenManager.getCookie(
+          'closedNotifications',
+        );
+        if (cookieNotifications) {
+          filteredNotifications = filteredNotifications.filter(
+            (notification) => !cookieNotifications.includes(notification.id),
+          );
+        }
+
+        this.props.setUserNotifications(filteredNotifications);
+      } catch (e) {
+        message.error(
+          'Something went wrong while attempting to retrieve notifications',
+        );
+      }
+    }
+  };
+
+  closeNotificationPerm = async (id) => {
+    try {
+      await postUnsubscribeNotifications(this.props.username, id);
+    } catch (e) {
+      message.error(
+        'Something went wrong while attempting to unsubscribe to this notification',
+      );
+    }
+    this.removeBannerNotification(id);
+  };
+
+  closeNotificationSession = (id) => {
+    const currentCookie = tokenManager.getCookie('closedNotifications');
+    const newCookie = currentCookie ? [...currentCookie, id] : [id];
+
+    tokenManager.setCookies({ closedNotifications: newCookie });
+    this.removeBannerNotification(id);
+  };
+
   render() {
     const username = this.props.username;
     const withRedDot = (
       <div className={styles.user_management}>
         <Badge status="error">
-          <ControlOutlined /> User Management
+          <ControlOutlined /> Platform Management
         </Badge>
       </div>
     );
     const withoutRedDot = (
       <div>
         <ControlOutlined />
-        User Management
+        Platform Management
       </div>
     );
     return (
       <Header
-        className={styles.siteHeader}
         style={{
           background: 'white',
           boxShadow: '0 0 14px 1px rgba(0, 0, 0, 0.1)',
@@ -229,14 +317,6 @@ class AppHeader extends Component {
         }}
         id="global_site_header"
       >
-        {/* <div style={{ marginLeft: -50 }}>
-          <Alert
-            message="This release of the VRE is exclusively for testing purposes. The upload of files containing clinical and/or research data of any type is strictly forbidden. By proceeding, you are agreeing to these terms."
-            type="warning"
-            showIcon
-            style={{ fontSize: '12px' }}
-          />
-        </div> */}
         <Menu
           mode="horizontal"
           getPopupContainer={(node) => node.parentNode}
@@ -256,9 +336,9 @@ class AppHeader extends Component {
             key="logo"
             style={{ marginRight: '27px', borderBottom: 0 }}
           >
-            <a href="/vre">
+            <a href={BRANDING_PREFIX}>
               <img
-                src={require('../../Images/vre-logo.png')}
+                src={PORTAL_PREFIX + '/platform-logo.png'}
                 style={{ height: '40px', marginLeft: -45 }}
                 alt="indoc-icon"
               />
@@ -302,6 +382,7 @@ class AppHeader extends Component {
                 type="link"
                 onClick={() => {
                   this.setState({ modalVisible: true });
+                  console.log('reset pw');
                 }}
               >
                 <span>Reset Password</span>
@@ -321,7 +402,9 @@ class AppHeader extends Component {
             Support
           </Menu.Item>
           {this.props.match.params.datasetId && (
-            <Menu.Item style={{ float: 'right', padding: 0 }}>
+            <Menu.Item
+              style={{ float: 'right', padding: 0, marginTop: '-3px' }}
+            >
               <FilePanel
                 className={styles.filePanel}
                 projectRole={this.state.projectRole}
@@ -329,13 +412,39 @@ class AppHeader extends Component {
               />
             </Menu.Item>
           )}
+          <Menu.Item
+            key="bell-notificiation"
+            style={{ float: 'right', color: '#FF8B18', position: 'relative' }}
+            onClick={this.showBellNotifications}
+          >
+            <BellOutlined style={{ marginRight: '6px' }} />
+            <span>{this.props.notificationList.length}</span>
+            {this.state.showBellNotifications && (
+              <BellNotifications
+                data={this.props.notificationList}
+                handleClick={this.openNotificationModal}
+              />
+            )}
+          </Menu.Item>
         </Menu>
+        <BannerNotifications
+          data={this.props.userNotifications}
+          openModal={this.openNotificationModal}
+          closeNotificationPerm={this.closeNotificationPerm}
+          closeNotificationSession={this.closeNotificationSession}
+        />
         <ResetPasswordModal
           visible={this.state.modalVisible}
           username={username || 'Error'}
           handleCancel={this.handleCancel}
         />
         <SupportDrawer onClose={this.onClose} visible={this.state.drawer} />
+        <UpcomingMaintenanceModal
+          visible={this.state.notificationModalVisible}
+          onOk={this.closeNotificationModal}
+          onCancel={this.closeNotificationModal}
+          data={this.state.modalBellNotification}
+        />
       </Header>
     );
   }
@@ -355,11 +464,15 @@ export default connect(
     username: state.username,
     containersPermission: state.containersPermission,
     showRedDot: state.serviceRequestRedDot.showRedDot,
+    userNotifications: state.notifications.userNotifications,
+    notificationList: state.notifications.notificationList,
+    user: state.user,
   }),
   {
     cleanDatasetCreator,
     userLogoutCreator,
     setUploadListCreator,
     setServiceRequestRedDot,
+    setUserNotifications: notificationActions.setUserNotifications,
   },
 )(withCookies(withRouter(AppHeader)));

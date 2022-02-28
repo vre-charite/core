@@ -7,6 +7,7 @@ import styles from './index.module.scss';
 import { sendUsernameEmailAPI } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { useTranslation } from 'react-i18next';
+import { BRANDING_PREFIX, PLATFORM, PORTAL_PREFIX } from '../../config';
 
 const { Content } = Layout;
 const { Title } = Typography;
@@ -47,9 +48,9 @@ function Login() {
         <Card style={{ paddingLeft: '40px', paddingRight: '40px' }}>
           <div style={{ textAlign: 'center' }}>
             <img
-              src={require('../../Images/vre-logo.png')}
+              src={PORTAL_PREFIX + '/platform-logo.png'}
               style={{ height: '50px' }}
-              alt="vre-icon"
+              alt="icon"
             />
           </div>
           <br />
@@ -79,7 +80,7 @@ function Login() {
                 },
               ]}
               className="mb-2"
-              extra="Please provide the email address associated with your VRE user account.   Once verified as an authentic VRE account, an email will be sent to you containing your username.​"
+              extra={`Please provide the email address associated with your ${PLATFORM} user account.   Once verified as an authentic ${PLATFORM} account, an email will be sent to you containing your username.​`}
             >
               <Input placeholder="Your email address" />
             </Form.Item>
@@ -97,7 +98,7 @@ function Login() {
                 Submit
               </Button>
               <Button disabled={loading}>
-                <a href="/vre">Back to Home Page</a>
+                <a href={BRANDING_PREFIX}>Back to Home Page</a>
               </Button>
             </Form.Item>
           </Form>

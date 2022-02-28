@@ -17,6 +17,7 @@ import {
 } from '@ant-design/icons';
 import { getUsersOnDatasetAPI, getAdminsOnDatasetAPI } from '../../../../APIs';
 import { objectKeysToCamelCase, getTags } from '../../../../Utility';
+import { PLATFORM } from '../../../../config';
 
 const { Content } = Layout;
 const { Paragraph } = Typography;
@@ -76,7 +77,7 @@ function ProjectItemCard({ item, currentRole, platformRole }) {
           userListOnDataset.map((el, index) => (
             <a
               href={
-                'mailto:' + el.email + `?subject=[VRE Platform: ${item.name}]`
+                'mailto:' + el.email + `?subject=[${PLATFORM} Platform: ${item.name}]`
               }
               target="_blank"
               style={{ paddingRight: '5px' }}

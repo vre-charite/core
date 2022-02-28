@@ -105,7 +105,7 @@ class APIAuthService(metaclass=MetaAPI):
                 operation_type = req_body.get('operation_type', None)
                 user_email = req_body.get('user_email', None)
                 user_geid = req_body.get('user_geid', None)
-                realm = req_body.get('realm', 'vre')
+                realm = req_body.get('realm', ConfigClass.KEYCLOAK_REALM)
                 operation_payload = req_body.get('payload', {})
                 # check parameters
                 if not operation_type:
@@ -131,7 +131,7 @@ class APIAuthService(metaclass=MetaAPI):
                 user_mgr = SrvUserManager()
                 user_info = user_mgr.get_user_by_email(user_email)
                 if operation_type == "enable":
-                    subject = "VRE User enabled"
+                    subject = "User enabled"
                     email_sender = SrvEmail()
                     email_result = email_sender.send(
                         subject,
@@ -153,7 +153,7 @@ class APIAuthService(metaclass=MetaAPI):
                         self.create_usernamespace_folder_admin(username=user_info['name'])
 
                 elif operation_type == "disable":
-                    subject = "VRE User disabled"
+                    subject = "User disabled"
                     email_sender = SrvEmail()
                     email_result = email_sender.send(
                         subject,
@@ -172,7 +172,7 @@ class APIAuthService(metaclass=MetaAPI):
                     container_mgr = SrvContainerManager()
                     project = container_mgr.get_by_project_code(project_code)[
                         1][0]
-                    subject = "VRE access restored to {}".format(
+                    subject = "Access restored to {}".format(
                         project["name"])
                     email_sender = SrvEmail()
                     email_result = email_sender.send(
@@ -206,8 +206,8 @@ class APIAuthService(metaclass=MetaAPI):
         def create_folder(self, folder_name, project_code):
             try:
                 _logger.info(
-                    f"creating namespace folder in greenroom and vrecore for user : {folder_name} under {project_code}")
-                zone_list = ["greenroom", "vrecore"]
+                    f"creating namespace folder in greenroom and core for user : {folder_name} under {project_code}")
+                zone_list = ["greenroom", "core"]
                 for zone in zone_list:
                     payload = {
                         "folder_name": folder_name,

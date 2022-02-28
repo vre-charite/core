@@ -119,7 +119,7 @@ class FileTags(Resource):
                             return response.json()
                     
                     elif project_role == 'contributor':
-                        if 'Greenroom' in file_labels and uploader == current_identity['username']:
+                        if ConfigClass.GREENROOM_ZONE_LABEL in file_labels and uploader == current_identity['username']:
                             response = requests.post(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to attach tags to file:   '+ str(response.text))
@@ -151,7 +151,7 @@ class FileTags(Resource):
                             return _res.to_dict, _res.code
 
                     elif project_role == 'collaborator':
-                        if (uploader == current_identity['username']) or ('VRECore' in file_labels):
+                        if (uploader == current_identity['username']) or (ConfigClass.CORE_ZONE_LABEL in file_labels):
                             response = requests.post(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to attach tags to file:   '+ str(response.text))
@@ -292,7 +292,7 @@ class FileTags(Resource):
                             return response.json()
                     
                     elif project_role == 'contributor':
-                        if 'Greenroom' in file_labels and uploader == current_identity['username']:
+                        if ConfigClass.GREENROOM_ZONE_LABEL in file_labels and uploader == current_identity['username']:
                             response = requests.delete(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to delete tags from file:   '+ str(response.text))
@@ -324,7 +324,7 @@ class FileTags(Resource):
                             return _res.to_dict, _res.code
 
                     elif project_role == 'collaborator':
-                        if (uploader == current_identity['username']) or ('VRECore' in file_labels in file_labels):
+                        if (uploader == current_identity['username']) or (ConfigClass.CORE_ZONE_LABEL in file_labels in file_labels):
                             response = requests.delete(url, json=data)
                             if response.status_code != 200:
                                 _logger.error('Failed to delete tags from file:   '+ str(response.text))

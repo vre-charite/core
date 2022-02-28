@@ -20,5 +20,7 @@
       }
     }
   },
-  "ui": {}
+  "ui": {
+    "ui:order": ["dataset_distribution_landing_page", "*"]
+  }
 }

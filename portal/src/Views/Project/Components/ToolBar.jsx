@@ -356,6 +356,7 @@ const ToolBar = ({
   return (
     <>
       <Menu
+        id="side-bar"
         mode="inline"
         selectedKeys={[pathname.split('/')[3]]}
         className={style.upperMenu}

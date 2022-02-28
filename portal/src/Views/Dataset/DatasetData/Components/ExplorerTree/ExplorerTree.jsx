@@ -21,6 +21,7 @@ export function ExplorerTree(props) {
   const editorMode = useSelector((state) => state.datasetData.mode);
   const hightLighted = useSelector((state) => state.datasetData.hightLighted);
   const selectedData = useSelector((state) => state.datasetData.selectedData);
+  const previewNode = useSelector((state) => state.datasetData.previewFile);
   const treeData = useSelector((state) => state.datasetData.treeData);
   const datasetInfo = useSelector((state) => state.datasetInfo.basicInfo);
   const treeKey = useSelector((state) => state.datasetData.treeKey);
@@ -125,10 +126,15 @@ export function ExplorerTree(props) {
     );
   };
   const onSelect = (selectedKeysValue, _info) => {
+    console.log(selectedKeysValue, 'selectedKeyValues');
     if (selectedKeysValue && selectedKeysValue[0]) {
+      if (selectedKeysValue[0] !== previewNode.geid) {
+        dispatch(datasetDataActions.setPreviewFile({}));
+      }
       dispatch(datasetDataActions.setHightLighted(selectedKeysValue[0]));
     } else {
       dispatch(datasetDataActions.setHightLighted(null));
+      dispatch(datasetDataActions.setPreviewFile({}));
     }
   };
   const treeDataElm = getTreeDataElm(_.cloneDeep(treeData));

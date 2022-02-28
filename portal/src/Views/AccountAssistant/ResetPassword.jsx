@@ -8,6 +8,7 @@ import styles from './index.module.scss';
 import { resetForgottenPasswordAPI, checkTokenAPI } from '../../APIs';
 import { namespace, ErrorMessager } from '../../ErrorMessages';
 import { useTranslation } from 'react-i18next';
+import { BRANDING_PREFIX, PORTAL_PREFIX } from '../../config';
 
 const { Content } = Layout;
 const { Title } = Typography;
@@ -80,9 +81,9 @@ function Login(props) {
         <Card style={{ paddingLeft: '40px', paddingRight: '40px' }}>
           <div style={{ textAlign: 'center' }}>
             <img
-              src={require('../../Images/vre-logo.png')}
+              src={PORTAL_PREFIX + '/platform-logo.png'}
               style={{ height: '50px' }}
-              alt="vre-icon"
+              alt="icon"
             />
           </div>
           <br />
@@ -186,7 +187,7 @@ function Login(props) {
                 Submit
               </Button>
               <Button disabled={loading}>
-                <a href="/vre">Back to Home Page</a>
+                <a href={BRANDING_PREFIX}>Back to Home Page</a>
               </Button>
             </Form.Item>
           </Form>

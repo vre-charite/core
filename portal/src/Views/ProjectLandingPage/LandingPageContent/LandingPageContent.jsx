@@ -62,6 +62,8 @@ class LandingPageContent extends Component {
       filters: {},
       allProjects: [],
       myProjects: [],
+      myProjectsLoading: false,
+      allProjectsLoading: false,
       allNums: 0,
       myNums: 0,
     };
@@ -72,10 +74,17 @@ class LandingPageContent extends Component {
       params['end_params'] = filters;
 
     if (selectedTab === 'My Projects') {
+      this.setState({
+        myProjectsLoading: true,
+      });
       listUsersContainersPermission(this.props.username, params).then((res) => {
         let { code, result, total } = res.data;
         if (code === 200) {
-          this.setState({ myProjects: result, myNums: total });
+          this.setState({
+            myProjects: result,
+            myNums: total,
+            myProjectsLoading: false,
+          });
         }
       });
     } else if (selectedTab === 'All Projects') {
@@ -83,16 +92,29 @@ class LandingPageContent extends Component {
 
       getDatasetsAPI(params).then((res) => {
         const { code, result, total } = res.data;
-
+        this.setState({
+          allProjectsLoading: true,
+        });
         if (code === 200) {
-          this.setState({ allProjects: result, allNums: total });
+          this.setState({
+            allProjects: result,
+            allNums: total,
+            allProjectsLoading: false,
+          });
         }
       });
     } else {
+      this.setState({
+        myProjectsLoading: true,
+      });
       listUsersContainersPermission(this.props.username, params).then((res) => {
         let { code, result, total } = res.data;
         if (code === 200) {
-          this.setState({ myProjects: result, myNums: total });
+          this.setState({
+            myProjects: result,
+            myNums: total,
+            myProjectsLoading: false,
+          });
         }
       });
 
@@ -363,19 +385,30 @@ class LandingPageContent extends Component {
       delete params['end_params']['date'];
       delete params4All['date'];
     }
-
+    this.setState({
+      myProjectsLoading: true,
+      allProjectsLoading: true,
+    });
     listUsersContainersPermission(this.props.username, params).then((res) => {
       const { code, result, total } = res.data;
 
       if (code === 200) {
-        this.setState({ myProjects: result, myNums: total });
+        this.setState({
+          myProjects: result,
+          myNums: total,
+          myProjectsLoading: false,
+        });
       }
     });
     getDatasetsAPI(params4All).then((res) => {
       const { code, result, total } = res.data;
 
       if (code === 200) {
-        this.setState({ allProjects: result, allNums: total });
+        this.setState({
+          allProjects: result,
+          allNums: total,
+          allProjectsLoading: false,
+        });
       }
     });
   };
@@ -412,6 +445,11 @@ class LandingPageContent extends Component {
           id="uploadercontent_project_list"
           itemLayout="horizontal"
           size="large"
+          loading={
+            this.state.selectedTab === 'My Projects'
+              ? this.state.myProjectsLoading
+              : this.state.allProjectsLoading
+          }
           pagination={{
             onShowSizeChange: (current, pageSize) => {
               this.setState({ pageSize, page: 0 });

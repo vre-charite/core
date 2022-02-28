@@ -1,10 +1,12 @@
 import { authedRoutes, unAuthedRoutes } from './app';
 import projectRoutes from './project';
-import {datasetRoutes} from './dataset'
+import { datasetRoutes } from './dataset';
 import accountAssistant from './account';
 import errorPageRoutes from './errorPage';
 import { createBrowserHistory } from 'history';
-const basename = '/vre';
+import { PORTAL_PREFIX } from '../config';
+
+const basename = PORTAL_PREFIX;
 const history = createBrowserHistory({ basename });
 export {
   authedRoutes,
@@ -13,5 +15,6 @@ export {
   accountAssistant,
   errorPageRoutes,
   history,
-  basename,datasetRoutes
+  basename,
+  datasetRoutes,
 };

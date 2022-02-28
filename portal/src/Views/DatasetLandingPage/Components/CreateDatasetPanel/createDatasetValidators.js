@@ -1,6 +1,5 @@
 import _ from 'lodash';
 
-//https://indocconsortium.atlassian.net/wiki/spaces/VRE/pages/2611216975/Dataset+Creation+and+Configurations
 //tip: return Promise.reject() won't trigger the validation. You should put a string in the reject();
 //also, you should use {validator:()=>{}} rather than {validators:()=>{}}
 //you can assume there are no duplicated items in array because of the Antd component's limitation
@@ -102,7 +101,7 @@ export const validators = {
           if (tag.length > 20)
             return Promise.reject('Maximum length 20 characters');
           if (tag.includes(' ')) {
-            return Promise.reject('Tag should not include white space');
+            return Promise.reject('Tag must not include white space');
           }
         }
 

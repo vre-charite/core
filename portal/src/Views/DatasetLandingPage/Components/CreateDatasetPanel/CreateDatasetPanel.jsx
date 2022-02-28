@@ -3,13 +3,13 @@ import {
   Form,
   Card,
   Input,
-  Checkbox,
   Select,
   Button,
   Space,
   Row,
   Col,
   message,
+  Tooltip,
 } from 'antd';
 import { useSelector } from 'react-redux';
 import styles from './CreateDatasetPanel.module.scss';
@@ -19,7 +19,7 @@ import { modalityOptions } from './selectOptions';
 import { fetchMyDatasets } from '../../Components/MyDatasetList/fetchMyDatasets';
 import { useTranslation } from 'react-i18next';
 import { useQueryParams } from '../../../../Utility';
-import { FileAddOutlined } from '@ant-design/icons';
+import { FileAddOutlined, InfoCircleOutlined } from '@ant-design/icons';
 const { Option } = Select;
 
 const layout = {
@@ -40,7 +40,6 @@ export default function CreateDatasetPanel(props) {
 
   const onSubmit = async () => {
     setSubmitting(true);
-
     try {
       const values = await form.validateFields();
       const {
@@ -60,7 +59,7 @@ export default function CreateDatasetPanel(props) {
         title,
         code,
         authors,
-        type ? 'BIDS' : 'GENERAL',
+        type,
         modality,
         collectionMethod,
         license,
@@ -100,7 +99,20 @@ export default function CreateDatasetPanel(props) {
           <Form.Item
             rules={validators.title}
             name="title"
-            label="Title"
+            label={
+              <>
+                Title{' '}
+                <div className={styles['tooltip']}>
+                  <Tooltip
+                    title={
+                      'Name of the Dataset. Maximum length 100 characters.'
+                    }
+                  >
+                    <InfoCircleOutlined />
+                  </Tooltip>{' '}
+                </div>
+              </>
+            }
             required
           >
             <Input
@@ -115,8 +127,21 @@ export default function CreateDatasetPanel(props) {
                 required
                 labelCol={{ xs: 20, sm: 8, lg: 8, xl: 6 }}
                 name="code"
-                label="Dataset Code"
                 rules={validators.datasetCode}
+                label={
+                  <>
+                    Dataset Code
+                    <div className={styles['tooltip']}>
+                      <Tooltip
+                        title={
+                          'Platform-wise Dataset unique ID. 3-32 lower case numbers or letters with no white space.'
+                        }
+                      >
+                        <InfoCircleOutlined />
+                      </Tooltip>
+                    </div>
+                  </>
+                }
               >
                 <Input className={styles['input']}></Input>
               </Form.Item>
@@ -125,27 +150,74 @@ export default function CreateDatasetPanel(props) {
               <Form.Item
                 labelCol={{ xs: 20, sm: 8, lg: 8, xl: 4 }}
                 name="authors"
-                label="Authors"
                 required
                 rules={validators.authors}
                 allowClear
+                label={
+                  <>
+                    Authors
+                    <div className={styles['tooltip']}>
+                      <Tooltip
+                        title={
+                          'One or several authors of the Dataset. 10 maximum authors, each author maximum length 50 characters.'
+                        }
+                      >
+                        <InfoCircleOutlined />
+                      </Tooltip>
+                    </div>
+                  </>
+                }
               >
                 <Select placeholder="Enter authors" mode="tags" />
               </Form.Item>
             </Col>{' '}
           </Row>
 
-          <Form.Item valuePropName="checked" name="type" label="Dataset Type">
-            <Checkbox value="BIDS">BIDS</Checkbox>
+          <Form.Item
+            valuePropName="checked"
+            name="type"
+            label={
+              <>
+                Dataset Type{' '}
+                <div className={styles['tooltip']}>
+                  <Tooltip
+                    title={
+                      'Terms to describe the nature of the Dataset. "GENERAL" is default type.'
+                    }
+                  >
+                    <InfoCircleOutlined />
+                  </Tooltip>
+                </div>
+              </>
+            }
+          >
+            <Select defaultValue="GENERAL">
+              <Select.Option value="GENERAL">GENERAL</Select.Option>
+              <Select.Option value="BIDS">BIDS</Select.Option>
+            </Select>
           </Form.Item>
 
           <div className={styles['spacing']}></div>
 
           <h2>Description</h2>
           <Form.Item
+            className={styles.description_form_item}
             rules={validators.description}
             name="description"
-            label="Description of Dataset"
+            label={
+              <>
+                <p>Dataset Description</p>
+                <div className={styles['tooltip']}>
+                  <Tooltip
+                    title={
+                      'A textual narrative statement describing the Dataset. Maximum length 5000 characters.'
+                    }
+                  >
+                    <InfoCircleOutlined />
+                  </Tooltip>
+                </div>
+              </>
+            }
             required
           >
             <Input.TextArea
@@ -156,7 +228,20 @@ export default function CreateDatasetPanel(props) {
           <Form.Item
             rules={validators.modality}
             name="modality"
-            label="Modality"
+            label={
+              <>
+                Modality
+                <div className={styles['tooltip']}>
+                  <Tooltip
+                    title={
+                      'One or several modalities of the Dataset. Multiple-choice from drop-down list.'
+                    }
+                  >
+                    <InfoCircleOutlined />
+                  </Tooltip>
+                </div>
+              </>
+            }
           >
             <Select
               mode="multiple"
@@ -164,7 +249,7 @@ export default function CreateDatasetPanel(props) {
               placeholder="Select Modality"
               allowClear
             >
-              {modalityOptions.map((value) => (
+              {modalityOptions.sort().map((value) => (
                 <Option key={value} value={value}>
                   {value}
                 </Option>
@@ -174,8 +259,21 @@ export default function CreateDatasetPanel(props) {
           <Form.Item
             className={styles['collection-method']}
             name="collectionMethod"
-            label={<CollectionMethodLabel />}
             rules={validators.collectionMethod}
+            label={
+              <>
+                <CollectionMethodLabel />
+                <div className={styles['tooltip']}>
+                  <Tooltip
+                    title={
+                      'One or several collection methods of the Dataset. 10 maximum methods, each method maximum length 20 characters.'
+                    }
+                  >
+                    <InfoCircleOutlined />
+                  </Tooltip>
+                </div>
+              </>
+            }
           >
             <Select
               className={styles['select']}
@@ -184,17 +282,60 @@ export default function CreateDatasetPanel(props) {
               allowClear
             ></Select>
           </Form.Item>
-          <Form.Item rules={validators.license} name="license" label="License">
+          <Form.Item
+            rules={validators.license}
+            name="license"
+            label={
+              <>
+                License
+                <div className={styles['tooltip']}>
+                  <Tooltip
+                    title={
+                      <p>
+                        The license under which this dataset is shared. The use
+                        of license name abbreviations is suggested for
+                        specifying a license. Please visit
+                        <a
+                          style={{ margin: '0px 5px' }}
+                          href="https://creativecommons.org/share-your-work/"
+                        >
+                          Creative Commons
+                        </a>
+                        to choose the right license. Maximum length 20
+                        characters.
+                      </p>
+                    }
+                  >
+                    <InfoCircleOutlined />
+                  </Tooltip>
+                </div>
+              </>
+            }
+          >
             <Input
               className={styles['input']}
               placeholder="Enter License"
             ></Input>
           </Form.Item>
 
-          <div className={styles['spacing']}></div>
-
-          <h2>Tags</h2>
-          <Form.Item rules={validators.tags} name="tags" label="Tags">
+          <Form.Item
+            rules={validators.tags}
+            name="tags"
+            label={
+              <>
+                Tags
+                <div className={styles['tooltip']}>
+                  <Tooltip
+                    title={
+                      'Tags associated with the Dataset, which will help in its discovery. These should be well known terms by the research community. 10 maximum tags, each tag maximum length 20 characters with no white space. '
+                    }
+                  >
+                    <InfoCircleOutlined />
+                  </Tooltip>
+                </div>
+              </>
+            }
+          >
             <Select placeholder="Enter tag" mode="tags"></Select>
           </Form.Item>
         </Form>

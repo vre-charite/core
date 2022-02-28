@@ -166,7 +166,6 @@ export default function SchemaForm({ pane }) {
     setFormData(formDataOriginal);
   }
   const transformErrors = (errors) => {
-    console.log(errors, 'errors');
     return errors.map((error) => {
       if (
         error.property === '.dataset_description' &&
@@ -345,6 +344,7 @@ export default function SchemaForm({ pane }) {
                 schemaTPL={schemaSel.content.schema}
                 uiSchema={schemaSel.content.ui}
                 formData={formDataOriginal}
+                xpath={''}
               />
             </div>
           </>

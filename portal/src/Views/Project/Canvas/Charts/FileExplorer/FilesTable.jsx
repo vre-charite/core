@@ -191,12 +191,12 @@ class FilesTable extends React.Component {
         value: filters.fileName[0],
       });
     }
-    if (filters.generateID && filters.generateID.length > 0) {
+    if (filters["dcmID"] && filters["dcmID"].length > 0) {
       isSearchingFile = true;
 
       searchText.push({
-        value: filters.generateID[0],
-        key: 'generateID',
+        value: filters["dcmID"][0],
+        key: "dcmID",
       });
     }
 

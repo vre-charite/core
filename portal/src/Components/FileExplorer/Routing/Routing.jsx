@@ -3,7 +3,6 @@ import { Tooltip as Tip, Breadcrumb } from 'antd';
 import styles from '../index.module.scss';
 import FileExplorerContext from '../FileExplorerContext';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchTableData } from '../DataFetcher';
 import { fileExplorerTableActions } from '../../../Redux/actions';
 export default function Routing(props) {
   const fileExplorerCtx = useContext(FileExplorerContext);
@@ -11,10 +10,8 @@ export default function Routing(props) {
   const fileExplorerTableStates = useSelector(
     (state) => state.fileExplorerTable,
   );
-  const routing = fileExplorerCtx.routing;
-  const initDataSource = fileExplorerCtx.initDataSource;
-  const projectGeid = fileExplorerCtx.projectGeid;
-  const reduxKey = fileExplorerCtx.reduxKey;
+  const { routing, initDataSource, projectGeid, reduxKey, dataFetcher } =
+    fileExplorerCtx;
   const { route } = fileExplorerTableStates[fileExplorerCtx.reduxKey] || [];
 
   const orderRouting =
@@ -57,19 +54,7 @@ export default function Routing(props) {
                 param: 0,
               }),
             );
-            await fetchTableData(
-              initDataSource.type,
-              true,
-              initDataSource.value.id,
-              0,
-              10,
-              'uploaded_at',
-              'desc',
-              {},
-              projectGeid,
-              dispatch,
-              reduxKey,
-            );
+            await dataFetcher.goToRoute(initDataSource.value.id,true);
             dispatch(
               fileExplorerTableActions.setHardFreshKey({
                 geid: reduxKey,
@@ -128,19 +113,6 @@ export default function Routing(props) {
                     param: 0,
                   }),
                 );
-                await fetchTableData(
-                  initDataSource.type,
-                  false,
-                  v.globalEntityId,
-                  0,
-                  10,
-                  'uploaded_at',
-                  'desc',
-                  {},
-                  projectGeid,
-                  dispatch,
-                  reduxKey,
-                );
                 dispatch(
                   fileExplorerTableActions.setHardFreshKey({
                     geid: reduxKey,
@@ -170,6 +142,7 @@ export default function Routing(props) {
                     param: 'desc',
                   }),
                 );
+                dataFetcher.goToRoute(v.globalEntityId,false);
               }}
             >
               {v.name.length > 23 ? (

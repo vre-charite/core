@@ -48,7 +48,6 @@ const superset = {
 
 const cardsAttr = {
   initial: [],
-  //  vre cards
   //admin: [info, fileStats, files, userStats,superset],
   admin: [fileStats, files, userStats],
   contributor: [

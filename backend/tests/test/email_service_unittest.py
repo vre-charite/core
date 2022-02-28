@@ -8,7 +8,7 @@ class TestEmailSrv(unittest.TestCase):
     def test_01_send(self):
         url = "http://10.3.9.240:5065/v1/email"
         payload = {
-            "sender": "notification@vre",
+            "sender": "notification@test",
             "receiver": "kang.huang.ut+111@gmail.com",
             "message": "You've been invited to a new PROJECT:  http://10.3.9.240:5065/v1/emai"
         }

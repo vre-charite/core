@@ -16,7 +16,7 @@ class TestDataset(unittest.TestCase):
 
     # Base URL
     # base_url = "http://0.0.0.0:6061/v1" # PILOT
-    base_url = "http://0.0.0.0:5060/v1" # VRE
+    base_url = "http://0.0.0.0:5060/v1" 
 
 
     # generate the test dataset infomation

@@ -278,7 +278,7 @@ export default function CustomizedSchema(props) {
         const draftCreatedRes = await createSchemaData(
           datasetGeid,
           false,
-          'vre',
+          'default',
           newDraftName,
           filterdDataJSON,
           newTPL.geid,
@@ -310,7 +310,7 @@ export default function CustomizedSchema(props) {
             key: draftCreated.geid,
             tplKey: newTPL.geid,
             systemDefined: false,
-            standard: 'vre',
+            standard: 'default',
           }),
         );
         dispatch(schemaTemplatesActions.setDefaultActiveKey(newTPL.geid));

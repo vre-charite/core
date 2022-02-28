@@ -22,6 +22,7 @@ export default function Action({ text, record }) {
   const dispatch = useDispatch();
   const fileExplorerContext = useContext(FileExplorerContext);
   const { username, successNum } = useSelector((state) => state);
+  const { activeReq } = useSelector((state) => state.request2Core);
   const [currentProject] = useCurrentProject();
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [zipContent, setZipContent] = useState(null);
@@ -81,6 +82,7 @@ export default function Action({ text, record }) {
               },
             ];
             const sessionId = tokenManager.getCookie('sessionId');
+            console.log(activeReq, 'activeReq');
             downloadFilesAPI(
               fileExplorerContext.projectGeid,
               files,
@@ -90,6 +92,7 @@ export default function Action({ text, record }) {
               currentProject.code,
               username,
               'greenroom',
+              activeReq.id,
             )
               .then((res) => {
                 if (res) {
@@ -103,7 +106,7 @@ export default function Action({ text, record }) {
               .catch((err) => {
                 if (err.response) {
                   const errorMessager = new ErrorMessager(
-                    namespace.dataset.files.downloadFilesAPI,
+                    namespace.project.files.downloadFilesAPI,
                   );
                   errorMessager.triggerMsg(err.response.status);
                 }

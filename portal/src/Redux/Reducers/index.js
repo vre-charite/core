@@ -35,6 +35,7 @@ import { datasetFileOperations } from './datasetFileOperations';
 import { schemaTemplatesInfo } from './schemaTemplatesInfo';
 import { fileExplorerTable } from './fileExplorerTable';
 import request2Core from './request2Core';
+import notifications from './notification';
 
 const appReducer = combineReducers({
   datasetList,
@@ -72,6 +73,7 @@ const appReducer = combineReducers({
   schemaTemplatesInfo,
   fileExplorerTable,
   request2Core,
+  notifications,
 });
 
 const rootReducer = (state, action) => {

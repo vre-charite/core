@@ -1,6 +1,7 @@
 import unittest
 from tests.prepare_test import SetUpTest, PrepareTest
 from tests.logger import Logger
+from config import ConfigClass
 
 
 class TestGetProject(unittest.TestCase):
@@ -17,17 +18,17 @@ class TestGetProject(unittest.TestCase):
         admin_payload = {
             "username": "admin",
             "password": "admin",
-            "realm": "vre"
+            "realm": ConfigClass.KEYCLOAK_REALM,
         }
         member_payload = {
             "username": "amyguindoc13",
             "password": "indoc2021!",
-            "realm": "vre"
+            "realm": ConfigClass.KEYCLOAK_REALM,
         }
         not_member_payload = {
             "username": "amyguindoc1120",
             "password": "indoc2021!",
-            "realm": "vre"
+            "realm": ConfigClass.KEYCLOAK_REALM,
         }
         cls.admin_headers["Authorization"] = cls.test.auth_member(admin_payload)
         cls.member_headers["Authorization"] = cls.test.auth_member(member_payload)

@@ -134,7 +134,7 @@ function Dataset(props) {
                     datasetId={params.datasetId}
                     userListOnDataset={userListOnDataset}
                     containerDetails={containerDetails}
-                    getUsersOnDatasetAPI={getUserOnProjectAPI}
+                    getUserOnProjectAPI={getUserOnProjectAPI}
                     setUserListOnDataset={setUserListOnDataset}
                     rolesDetail={rolesDetail}
                   />

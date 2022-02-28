@@ -4,6 +4,7 @@ import _ from 'lodash';
 import camelcaseKeys from 'camelcase-keys';
 import { activeManager } from '../Service/activeManager';
 import { keycloak } from '../Service/keycloak';
+import { API_PATH, PORTAL_PREFIX, UPLOAD_URL } from '../config';
 
 /**
  * For axios to handle the success response
@@ -39,7 +40,7 @@ function errorHandler(error) {
       case 401: {
         if (data.result === 'Permission Denied') {
           message.warning('User permission denied.');
-        } else if (window.location.pathname !== '/vre/') {
+        } else if (window.location.pathname !== PORTAL_PREFIX + '/') {
           console.log('logout in config.js since 401');
         }
 
@@ -62,25 +63,10 @@ function errorHandler(error) {
   }
   return new Promise((resolve, reject) => reject(error));
 }
-
-let kongAPI = '/vre/api/vre/portal';
-let devOpServerUrl = '/vre/api/vre/portal/dataops';
-// let devOpServerUrl = 'http://10.3.7.234:5063';
-let uploadGrUrl = "/vre/api/vre/upload/gr"
-/* // for staging env
-if (process.env.REACT_APP_ENV === 'staging') {
-  kongAPI = 'https://vre-staging.indocresearch.org/vre/api/vre/portal';
-  devOpServerUrl =
-    'https://vre-staging.indocresearch.org/vre/api/vre/portal/dataops';
-  uploadGrUrl = 'https://vre-staging.indocresearch.org/vre/api/vre/upload/gr';
-}
-
-// for charite env
-if (process.env.REACT_APP_ENV === 'charite') {
-  kongAPI = 'https://vre.charite.de/vre/api/vre/portal';
-  devOpServerUrl = 'https://vre.charite.de/vre/api/vre/portal/dataops';
-  uploadGrUrl = "https://vre.charite.de/vre/api/vre/upload/gr"
-} */
+console.log('REACT_APP_', process.env);
+let kongAPI = API_PATH;
+let devOpServerUrl = API_PATH + '/dataops';
+let uploadGrUrl = UPLOAD_URL;
 
 const authService = 'http://auth.utility:5061';
 const serverAxios = axios.create({

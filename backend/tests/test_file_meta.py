@@ -4,6 +4,7 @@ from tests.logger import Logger
 from unittest import mock
 from services.notifier_services.email_service import SrvEmail
 import json
+from config import ConfigClass
 
 
 class TestFileMetaProxy(unittest.TestCase):
@@ -133,7 +134,7 @@ class TestFileMetaProxy(unittest.TestCase):
             'order_type': 'desc',
             'query': '{"uploader": "jzhang10"}',
             'source_type': 'Project',
-            'zone': 'VRECore',
+            'zone': ConfigClass.CORE_ZONE_LABEL,
             'project_geid': self.project3["global_entity_id"],
         }
         geid = self.project3["global_entity_id"]
@@ -309,7 +310,7 @@ class TestFolderFileProxy(unittest.TestCase):
         cls.folder_3_core = cls.test.create_folder(
             "unit_test_folder_3_core", 
             cls.project3["code"], 
-            zone="vrecore", 
+            zone="core", 
             path=cls.user["username"],
             parent_geid=cls.folder_root_3["global_entity_id"],
         )
@@ -455,7 +456,7 @@ class TestFolderFileProxy(unittest.TestCase):
             'order_type': 'desc',
             'query': '{"uploader": "jzhang10"}',
             'source_type': 'Folder',
-            'zone': 'VRECore',
+            'zone': ConfigClass.CORE_ZONE_LABEL,
             'project_geid': self.project3["global_entity_id"],
         }
         geid = self.folder_3_core["global_entity_id"]
@@ -701,7 +702,7 @@ class TestFolderFileProxy(unittest.TestCase):
             'order_by': 'name',
             'order_type': 'desc',
             'source_type': 'Folder',
-            'zone': 'VRECore',
+            'zone': ConfigClass.CORE_ZONE_LABEL,
             'project_geid': self.project3["global_entity_id"]
         }
         response = self.app.get("/v1/files/entity/meta/", query_string=payload, headers=self.headers)

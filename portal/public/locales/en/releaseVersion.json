@@ -1,6 +1,11 @@
 {
   "versions": [
     {
+      "version": "1.8.0",
+      "date": "28.02.2022",
+      "note": "<h3>What's new</h3><ul> <li> Platform Administrators can now use “Notifications” feature to publish notification banners and modals to inform all platform users about upcoming maintenance. </li> <li> Platform-wise metrics on the VRE Home Page give an overview of platform users, Projects, data and resources. </li></ul><h3>Improvements</h3><ul> <li> Improved platform automated deployment resulting in shorter maintenance windows. </li></ul><h3>Bug Fixes</h3><ul> <li> Fixed bug that caused invited pending users to display on Project Members pages. </li> <li> Fixed bug that caused approved copy tasks to not carry parent folder structure. </li> <li> Fixed bug that caused failure when downloading files and/or folders within a copy request. </li> <li>Fixed bug that caused failure when uploading files from Safari.</li></ul>"
+    },
+    {
       "version": "1.7.0",
       "date": "07.12.2021",
       "note": "<h3>What's new</h3> <ul> <li> Users with Project Collaborator role can now use a “Request to Core” feature to submit requests to have their data copied from their Project Green Room folder to the Core. The requests will be reviewed and approved by a Project Administrator. </li> <li> File Lock mechanism implemented within Project and Dataset file operations to avoid synchronous file operation conflicts. </li> <li> The VRE Command Line interface now supports basic operations on the Charité High Performance Computing cluster (HPC@Charité) including user authentication, job submission, and job status monitoring. </li> </ul> <h3>Improvements</h3> <ul> <li> Adopted the pydantic Basesettings class to manage application settings and configurations. </li> <li> Deployed new backup tasks for more granular database snapshotting. </li> <li> Improved Command Line Interface print out message for large data operations. </li> <li> Updated the default data copy rule for duplicate file/folder name handling. </li> </ul> <h3>Bug Fixes</h3> <ul> <li> Fixed bug that caused incorrect file path within file activities advanced search interface. </li> <li> Fixed bug that caused system tag to be missing from file/folders in Green Room. </li> <li> Fixed bug that caused failure when sorting by Create Time in File Explorer. </li> <li> Fixed bug that caused data lineage graph to display wrong deleted file name. </li> </ul>"
@@ -54,7 +59,7 @@
     {
       "version": "0.2.0",
       "date": "30.11.2020",
-      "note": "<h3>What's new</h3><ul><li>Enhanced file tagging &amp; annotation</li><li>Data lineage graph</li><li>Search Project attributes</li><li>Platform Administrators user management console, Search Panel and Properties Side Panel</li><li>Updated URL to include “/vre”extension</li><li>Revised content for clarity and flow.</li></ul>"
+      "note": "<h3>What's new</h3><ul><li>Enhanced file tagging &amp; annotation</li><li>Data lineage graph</li><li>Search Project attributes</li><li>Platform Administrators user management console, Search Panel and Properties Side Panel</li><li>Updated URL to include “/VRE”extension</li><li>Revised content for clarity and flow.</li></ul>"
     },
     {
       "version": "0.1.0",

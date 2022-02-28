@@ -13,7 +13,6 @@
   left: 50%;
   transform: translate(-50%, -50%);
 
-  //background: url("../../Images/tech.png") !important;
   background-repeat: no-repeat !important;
   background-size: 50% !important;
   background-attachment: fixed;
@@ -28,7 +27,7 @@
 }
 
 .form {
- /*  background: wheat; */
+  /*  background: wheat; */
 }
 
 .icon {
@@ -56,7 +55,7 @@
 
 .intro {
   color: white;
-  font-family: Georgia, "Times New Roman", Times, serif;
+  font-family: Georgia, 'Times New Roman', Times, serif;
   padding: 60px 30px;
 
   .title {

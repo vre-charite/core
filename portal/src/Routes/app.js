@@ -8,7 +8,7 @@ import ErrorPage from '../Views/ErrorPage/ErrorPage';
 import General404Page from '../Views/GeneralPage/General404Page';
 import SelfRegistration from '../Views/Self-Registration/Self-Registration';
 import AccountAssistant from '../Views/AccountAssistant/AccountAssistant';
-import UserManagement from '../Views/UserManagement';
+import PlatformManagement from '../Views/PlatformManagement/PlatformManagement';
 // render whenever user is authorized
 const authedRoutes = [
   {
@@ -23,7 +23,7 @@ const authedRoutes = [
   },
   {
     path: '/users',
-    component: UserManagement,
+    component: PlatformManagement,
     protectedType: 'PlatformAdmin',
   },
   {

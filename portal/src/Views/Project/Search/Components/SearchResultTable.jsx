@@ -49,7 +49,7 @@ function SearchResultTable({
     } else if (
       filesQuery &&
       filesQuery['zone'] &&
-      filesQuery['zone']['value'] === 'vrecore'
+      filesQuery['zone']['value'] === 'core'
     ) {
       return coreTotal;
     } else {
@@ -162,7 +162,7 @@ function SearchResultTable({
   return (
     <div style={{ position: 'relative' }}>
       <div className={styles.search_result_actions}>
-        {zone.value === 'vrecore' ? (
+        {zone.value === 'Core' ? (
           <Button
             type="link"
             //style={{border: '0px'}}
@@ -210,7 +210,7 @@ function SearchResultTable({
                   '-'
                 )}
               </Radio>
-              <Radio value="vrecore">
+              <Radio value="Core">
                 <CloudServerOutlined style={{ margin: '0px 5px 0px 3px' }} />
                 Core{' '}
                 {typeof coreTotal === 'number' ? (
@@ -300,7 +300,7 @@ function SearchResultTable({
                       value={locationValue}
                       onChange={locationOnChange}
                     >
-                      <Radio value="vrecore">Core</Radio>
+                      <Radio value="Core">Core</Radio>
                       <Radio value="greenroom">Green Room</Radio>
                     </Radio.Group>
                   </Panel>
