@@ -13,3 +13,4 @@ COPY page/ ./maintenance-page/
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 EXPOSE 80
+
