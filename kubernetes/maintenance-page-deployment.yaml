@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: maintenance-page
-          image: registry-gitlab.indocresearch.org/pilot/core/maintenance-page:<VERSION>
+          image: s-hdp-vre-v007.charite.de/maintenance-page:<VERSION>
           ports:
             - containerPort: 80
           env:
