@@ -16,7 +16,7 @@ export function FilePanelItem(props) {
           {/** add \u200E,which is Left-to-right mark https://en.wikipedia.org/wiki/Left-to-right_mark.
            * Since we use direction:rtl in css,without \u200E,
            *  the punctuation at the end will be moved to the left */}
-          <div>{originalFullPath + '\u200E'}</div>
+          <div>{originalFullPath}</div>
         </div>
       </Tooltip>{' '}
       <i className={styles['status']}>

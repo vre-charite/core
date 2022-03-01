@@ -140,14 +140,16 @@ export default function AnnouncementButton({ currentProject }) {
             userRes.data.result[
               _.camelCase(`announcement_${currentProject?.code}`)
             ];
-          if (!latestAnnouncementId && announcementsRaw[0]?.id) {
-            setUnread(true);
-          }
-          if (
-            latestAnnouncementId &&
-            announcementsRaw[0]?.id !== latestAnnouncementId
-          ) {
-            setUnread(true);
+          if (announcementsRaw.length) {
+            if (!latestAnnouncementId && announcementsRaw[0]?.id) {
+              setUnread(true);
+            }
+            if (
+              latestAnnouncementId &&
+              announcementsRaw[0]?.id !== latestAnnouncementId
+            ) {
+              setUnread(true);
+            }
           }
         } catch (err) {
           console.log(err);
