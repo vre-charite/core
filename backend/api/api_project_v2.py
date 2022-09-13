@@ -1,3 +1,23 @@
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
 from flask_restx import Api, Resource, fields
 from flask_jwt import jwt_required, current_identity
 from config import ConfigClass
@@ -7,6 +27,7 @@ from services.logger_services.logger_factory_service import SrvLoggerFactory
 from services.container_services.container_manager import SrvContainerManager
 from services.neo4j_service.neo4j_client import Neo4jClient
 from services.permissions_service.decorators import permissions_check
+from services.data_providers.ldap_client import LdapClient
 from api import module_api
 from flask import request
 import json
@@ -14,6 +35,7 @@ import requests
 import ldap
 import re
 import os
+import time
 import ldap.modlist as modlist
 from resources.utils import bulk_add_user, fetch_geid, add_user_to_ad_group, add_admin_to_project_group, \
     assign_project_role
@@ -130,13 +152,17 @@ class APIProjectV2(metaclass=MetaAPI):
                     _res.set_error_msg(result["result"])
                     return _res.to_dict, _res.code
 
-                # Create Project User Group in ldap
-                ldap_create_user_group(dataset_code, description)
+                try:
+                    # Create Project User Group in ldap
+                    ldap_create_user_group(dataset_code, description)
+                    # Add admin to new group in keycloak and assign project-admin role
+                    origin_users = neo4j_add_platform_admins(dataset_code)
+                    _logger.info(f"Creating and adding users to AD groups completed for {dataset_code}")
+                except Exception as e:
+                    error_msg = str(e)
+                    _logger.error(f"Error creating and adding users to AD group: {error_msg}")
 
-                # Add admin to new group in keycloak and assign project-admin role
-                origin_users = neo4j_add_platform_admins(dataset_code)
-                is_created, res, status_code = keycloak_create_roles(
-                    dataset_code)
+                is_created, res, status_code = keycloak_create_roles(dataset_code)
                 if not is_created:
                     _logger.error("Error when creating project roles in keycloak")
                     _res.set_code(status_code)
@@ -273,7 +299,7 @@ def ldap_create_user_group(code, description):
         conn.simple_bind_s(ConfigClass.LDAP_ADMIN_DN,
                            ConfigClass.LDAP_ADMIN_SECRET)
 
-        dn = "cn={}{},ou=Gruppen,ou={},dc={},dc={}".format(
+        dn = "cn={}-{},ou=Gruppen,ou={},dc={},dc={}".format(
             ConfigClass.AD_PROJECT_GROUP_PREFIX,
             code,
             ConfigClass.LDAP_OU,
@@ -289,7 +315,9 @@ def ldap_create_user_group(code, description):
         if description:
             attrs['description'] = description.encode('utf-8')
         ldif = modlist.addModlist(attrs)
-        conn.add_s(dn, ldif)
+        result = conn.add_s(dn, ldif)
+        conn.unbind_s()
+        _logger.info(f"Create group {code} successfully: {result}")
     except Exception as error:
         _logger.error(f"Error while creating user group in ldap : {error}")
 
@@ -305,10 +333,24 @@ def neo4j_add_platform_admins(code):
     # exclude the admin user
     origin_users = users
     users = [user for user in users if user['name'] != 'admin']
-
-    access_token = request.headers.get("Authorization", None)
+    ldap_client = LdapClient()
+    ldap_client.connect(code)
     for user in users:
-        add_user_to_ad_group(user["email"], code, _logger, access_token)
+        for retry in range(0, 3):
+            try:
+                ldap_users_gotten = ldap_client.get_user_by_email(user["email"])
+                user_dn = ldap_users_gotten[0]
+                result = ldap_client.add_user_to_group(user_dn)
+                _logger.info(str(result))
+                _logger.info(f"Added user to group {code}, user: {user}")
+                break
+            except Exception as e:
+                error_msg = str(e)
+                _logger.error(f"Error adding user to AD group on retry {retry}, user: {user}, error: {error_msg}")
+                time.sleep(1)
+                if retry == 3:
+                    _logger.error(f"Max retries execeded for {code}, user: {user}")
+    ldap_client.disconnect()
     return origin_users
 
 
