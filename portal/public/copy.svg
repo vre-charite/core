@@ -1,1 +1,23 @@
+<!--
+ Copyright 2022 Indoc Research
+ 
+ Licensed under the EUPL, Version 1.2 or – as soon they
+ will be approved by the European Commission - subsequent
+ versions of the EUPL (the "Licence");
+ You may not use this work except in compliance with the
+ Licence.
+ You may obtain a copy of the Licence at:
+ 
+ https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ 
+ Unless required by applicable law or agreed to in
+ writing, software distributed under the Licence is
+ distributed on an "AS IS" basis,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ express or implied.
+ See the Licence for the specific language governing
+ permissions and limitations under the Licence.
+ 
+-->
+
 <svg role="img" xmlns="http://www.w3.org/2000/svg" width="80px" height="80px" viewBox="0 0 24 24" aria-labelledby="copyIconTitle" stroke="#000000" stroke-width="0.6" stroke-linecap="square" stroke-linejoin="miter" fill="none" color="#000000"> <title id="copyIconTitle">Copy</title> <rect width="12" height="14" x="8" y="7"/> <polyline points="16 3 4 3 4 17"/> </svg>
