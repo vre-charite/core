@@ -47,7 +47,7 @@ function uploadFileApi2(data, sessionId, cancelToken) {
     method: 'POST',
     data,
     cancelToken,
-    timeout: 30 * 1000,
+    timeout: 60 * 1000,
     headers: {
       'Session-ID': sessionId,
     },
@@ -71,6 +71,7 @@ function combineChunksApi(data, sessionId) {
     url: `/v1/files`,
     method: 'POST',
     data,
+    timeout: 60 * 1000,
     headers: {
       'Session-ID': sessionId,
       'Refresh-token': keycloak.refreshToken,
