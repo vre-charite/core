@@ -1,14 +1,14 @@
 // Copyright 2022 Indoc Research
-// 
+//
 // Licensed under the EUPL, Version 1.2 or – as soon they
 // will be approved by the European Commission - subsequent
 // versions of the EUPL (the "Licence");
 // You may not use this work except in compliance with the
 // Licence.
 // You may obtain a copy of the Licence at:
-// 
+//
 // https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
-// 
+//
 // Unless required by applicable law or agreed to in
 // writing, software distributed under the Licence is
 // distributed on an "AS IS" basis,
@@ -16,7 +16,7 @@
 // express or implied.
 // See the Licence for the specific language governing
 // permissions and limitations under the Licence.
-// 
+//
 
 import React, { useState } from 'react';
 import { Modal, Select, BackTop } from 'antd';
@@ -28,7 +28,6 @@ import { useDispatch } from 'react-redux';
 import { setIsReleaseNoteShownCreator } from '../../Redux/actions';
 import parse from 'html-react-parser';
 import { PORTAL_PREFIX } from '../../config';
-
 
 const { Option } = Select;
 function ReleaseNoteModal({ currentVersion, visible }) {
@@ -70,7 +69,7 @@ function ReleaseNoteModal({ currentVersion, visible }) {
           <img
             alt="release note"
             width={25}
-            src={PORTAL_PREFIX + '/Rocket.svg'}
+            src={PORTAL_PREFIX + '/Rocket.png'}
           ></img>{' '}
           <b>
             {`Release Note ${version === 'all' ? ' (all)' : version}` +

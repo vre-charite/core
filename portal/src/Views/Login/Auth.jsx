@@ -1,14 +1,14 @@
 // Copyright 2022 Indoc Research
-// 
+//
 // Licensed under the EUPL, Version 1.2 or – as soon they
 // will be approved by the European Commission - subsequent
 // versions of the EUPL (the "Licence");
 // You may not use this work except in compliance with the
 // Licence.
 // You may obtain a copy of the Licence at:
-// 
+//
 // https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
-// 
+//
 // Unless required by applicable law or agreed to in
 // writing, software distributed under the Licence is
 // distributed on an "AS IS" basis,
@@ -16,7 +16,7 @@
 // express or implied.
 // See the Licence for the specific language governing
 // permissions and limitations under the Licence.
-// 
+//
 
 import React, { Component } from 'react';
 import { Card, Col, Row } from 'antd';
@@ -429,15 +429,38 @@ class Auth extends Component {
             >
               Documentation
             </a>
-            Copyright © {new Date().getFullYear()},{' '}
+            VRE is a product developed jointly by{' '}
+            <a
+              href="https://www.charite.de/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Charité
+            </a>
+            /
+            <a
+              href="https://www.bihealth.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              BIH
+            </a>{' '}
+            and{' '}
             <a
               href="https://www.indocresearch.org/"
               target="_blank"
               rel="noopener noreferrer"
             >
               Indoc Research
+            </a>{' '}
+            and powered by{' '}
+            <a
+              href="https://github.com/PilotDataPlatform"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Indoc Pilot
             </a>
-            . All Rights Reserved.
           </small>
         </div>
       </>
