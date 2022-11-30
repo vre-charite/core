@@ -7,7 +7,7 @@ variables:
   MAINTENANCE_PAGE_CONTAINER_IMAGE: ${REGISTRY}/vre/core/maintenance-page:${CI_COMMIT_SHORT_SHA}
   TARGET_RELEASE_PORTAL: portal
   TARGET_RELEASE_MAINTENANCE_PAGE: maintenance-page
-  MAINTENANCE_PAGE_BFF: bff
+  TARGET_RELEASE_BFF: bff
 
 build-portal:
   stage: build
