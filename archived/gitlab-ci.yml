@@ -1,0 +1,187 @@
+image: docker:latest
+
+variables:
+  REGISTRY_DEV: 10.3.7.221:5000
+  REGISTRY_STAGING: 10.3.7.241:5000
+  PORTAL_CONTAINER_IMAGE_DEV: ${REGISTRY_DEV}/portal:${CI_COMMIT_SHORT_SHA}
+  BFF_CONTAINER_IMAGE_DEV: ${REGISTRY_DEV}/bff:${CI_COMMIT_SHORT_SHA}
+  PORTAL_CONTAINER_IMAGE_STAGING: ${REGISTRY_STAGING}/portal:${CI_COMMIT_SHORT_SHA}
+  BFF_CONTAINER_IMAGE_STAGING: ${REGISTRY_STAGING}/bff:${CI_COMMIT_SHORT_SHA}
+
+#dev-build-portal:
+#  stage: build
+#  tags:
+#    - deployment
+#  only:
+#    refs:
+#      - k8s-dev
+#    changes:
+#      - kubernetes/dev-portal-deployment.yaml
+#      - portal/public/*
+#      - portal/src/*
+#      - portal/src/*/*
+#      - portal/src/*/*/*
+#      - portal/src/*/*/*/*
+#      - portal/src/*/*/*/*/*
+#      - portal/*.json
+#      - portal/yarn.lock
+#  script:
+#    - export PORTAL_ENV=build-dev
+#    - docker login ${REGISTRY_DEV} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+#    - docker build -t ${PORTAL_CONTAINER_IMAGE_DEV} --build-arg PORTAL_ENV portal/.
+#    - docker push ${PORTAL_CONTAINER_IMAGE_DEV}
+#
+#dev-deploy-portal:
+#  stage: deploy
+#  tags:
+#    - deployment
+#  only:
+#    refs:
+#      - k8s-dev
+#    changes:
+#      - kubernetes/dev-portal-deployment.yaml
+#      - portal/public/*
+#      - portal/src/*
+#      - portal/src/*/*
+#      - portal/src/*/*/*
+#      - portal/src/*/*/*/*
+#      - portal/src/*/*/*/*/*
+#      - portal/*.json
+#      - portal/yarn.lock
+#  image: dtzar/helm-kubectl
+#  script:
+#    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/dev-portal-deployment.yaml
+#    - kubectl config use-context dev
+#    - kubectl apply -f kubernetes/dev-portal-deployment.yaml
+#
+#dev-build-bff:
+#  stage: build
+#  tags:
+#    - deployment
+#  only:
+#    refs:
+#      - k8s-dev
+#    changes:
+#      - kubernetes/dev-bff-deployment.yaml
+#      - portal/backend/*
+#      - portal/backend/*/*
+#      - portal/backend/*/*/*
+#      - portal/backend/*/*/*/*
+#      - portal/backend/*/*/*/*/*
+#      - portal/backend/*/*/*/*/*/*
+#      - portal/backend/*/*/*/*/*/*/*
+#  script:
+#    - docker login ${REGISTRY_DEV} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+#    - docker build -t ${BFF_CONTAINER_IMAGE_DEV} portal/backend/.
+#    - docker push ${BFF_CONTAINER_IMAGE_DEV}
+#
+#dev-deploy-bff:
+#  stage: deploy
+#  tags:
+#    - deployment
+#  only:
+#    refs:
+#      - k8s-dev
+#    changes:
+#      - kubernetes/dev-bff-deployment.yaml
+#      - portal/backend/*
+#      - portal/backend/*/*
+#      - portal/backend/*/*/*
+#      - portal/backend/*/*/*/*
+#      - portal/backend/*/*/*/*/*
+#      - portal/backend/*/*/*/*/*/*
+#      - portal/backend/*/*/*/*/*/*/*
+#  image: dtzar/helm-kubectl
+#  script:
+#    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/dev-bff-deployment.yaml
+#    - kubectl config use-context dev
+#    - kubectl apply -f kubernetes/dev-bff-deployment.yaml
+
+staging-build-portal:
+  stage: build
+  tags:
+    - deployment
+  only:
+    refs:
+      - k8s-staging
+    changes:
+      - kubernetes/staging-portal-deployment.yaml
+      - portal/public/*
+      - portal/src/*
+      - portal/src/*/*
+      - portal/src/*/*/*
+      - portal/src/*/*/*/*
+      - portal/src/*/*/*/*/*
+      - portal/*.json
+      - portal/yarn.lock
+  script:
+    - export PORTAL_ENV=build-staging
+    - docker login ${REGISTRY_STAGING} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${PORTAL_CONTAINER_IMAGE_STAGING} --build-arg PORTAL_ENV portal/.
+    - docker push ${PORTAL_CONTAINER_IMAGE_STAGING}
+
+staging-deploy-portal:
+  stage: deploy
+  tags:
+    - deployment
+  only:
+    refs:
+      - k8s-staging
+    changes:
+      - kubernetes/staging-portal-deployment.yaml
+      - portal/public/*
+      - portal/src/*
+      - portal/src/*/*
+      - portal/src/*/*/*
+      - portal/src/*/*/*/*
+      - portal/src/*/*/*/*/*
+      - portal/*.json
+      - portal/yarn.lock
+  image: dtzar/helm-kubectl
+  script:
+    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/staging-portal-deployment.yaml
+    - kubectl config use-context staging
+    - kubectl apply -f kubernetes/staging-portal-deployment.yaml
+
+staging-build-bff:
+  stage: build
+  tags:
+    - deployment
+  only:
+    refs:
+      - k8s-staging
+    changes:
+      - kubernetes/staging-bff-deployment.yaml
+      - portal/backend/*
+      - portal/backend/*/*
+      - portal/backend/*/*/*
+      - portal/backend/*/*/*/*
+      - portal/backend/*/*/*/*/*
+      - portal/backend/*/*/*/*/*/*
+      - portal/backend/*/*/*/*/*/*/*
+  script:
+    - docker login ${REGISTRY_STAGING} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${BFF_CONTAINER_IMAGE_STAGING} portal/backend/.
+    - docker push ${BFF_CONTAINER_IMAGE_STAGING}
+
+staging-deploy-bff:
+  stage: deploy
+  tags:
+    - deployment
+  only:
+    refs:
+      - k8s-staging
+    changes:
+      - kubernetes/staging-bff-deployment.yaml
+      - portal/backend/*
+      - portal/backend/*/*
+      - portal/backend/*/*/*
+      - portal/backend/*/*/*/*
+      - portal/backend/*/*/*/*/*
+      - portal/backend/*/*/*/*/*/*
+      - portal/backend/*/*/*/*/*/*/*
+  image: dtzar/helm-kubectl
+  script:
+    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/staging-bff-deployment.yaml
+    - kubectl config use-context staging
+    - kubectl apply -f kubernetes/staging-bff-deployment.yaml
