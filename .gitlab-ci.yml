@@ -1,10 +1,13 @@
 image: docker:latest
 
 variables:
-  REGISTRY: s-hdp-vre-v007.charite.de
-  PORTAL_CONTAINER_IMAGE: ${REGISTRY}/portal:${CI_COMMIT_SHORT_SHA}
-  BFF_CONTAINER_IMAGE: ${REGISTRY}/bff:${CI_COMMIT_SHORT_SHA}
-  MAINTENANCE_PAGE_CONTAINER_IMAGE: ${REGISTRY}/maintenance-page:${CI_COMMIT_SHORT_SHA}
+  REGISTRY: registry.bihealth.org
+  PORTAL_CONTAINER_IMAGE: ${REGISTRY}/vre/core/portal:${CI_COMMIT_SHORT_SHA}
+  BFF_CONTAINER_IMAGE: ${REGISTRY}/vre/core/bff:${CI_COMMIT_SHORT_SHA}
+  MAINTENANCE_PAGE_CONTAINER_IMAGE: ${REGISTRY}/vre/core/maintenance-page:${CI_COMMIT_SHORT_SHA}
+  TARGET_RELEASE_PORTAL: portal
+  TARGET_RELEASE_MAINTENANCE_PAGE: maintenance-page
+  MAINTENANCE_PAGE_BFF: bff
 
 build-portal:
   stage: build
@@ -24,7 +27,7 @@ build-portal:
       - portal/*/*/*/*/*/*/*/*/*
   script:
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-    - docker build --build-arg PORTAL_ENV="build-production" --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${PORTAL_CONTAINER_IMAGE} portal/.
+    - docker build --build-arg pip_username=${DOCKER_USERNAME} --build-arg pip_password=${DOCKER_PASSWORD} --build-arg PORTAL_ENV="build-production" --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${PORTAL_CONTAINER_IMAGE} portal/.
     - docker push ${PORTAL_CONTAINER_IMAGE}
 
 deploy-portal:
@@ -44,46 +47,71 @@ deploy-portal:
       - portal/*/*/*/*/*/*/*/*
       - portal/*/*/*/*/*/*/*/*/*
   script:
-    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/portal-deployment.yaml
-    - kubectl apply -f kubernetes/portal-deployment.yaml
+    - pwd
+    - cd .. && ls 
+    - rm -rf vre-infra
+    - git clone https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git
+    - sed -r -i -e "s/(^${TARGET_RELEASE}_app_version\s*=\s*).*/\1\"${CI_COMMIT_SHORT_SHA}\"/" vre-infra/terraform/config/charite/charite.tfvars
+    - cat vre-infra/terraform/config/charite/charite.tfvars|grep -i ^${TARGET_RELEASE}_app_version
+    - cd vre-infra
+    - 'git config user.name ${DOCKER_USERNAME} && git config user.email "indoc-devops@indocresearch.org"'
+    - 'git config --global user.password ${DOCKER_PASSWORD}'
+    - git diff 
+    - git stage terraform/config/charite/charite.tfvars
+    - git status
+    - git pull https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git HEAD:refs/heads/main
+    - 'git commit  -m "[ci skip] Terraform Deployment: ${TARGET_RELEASE_PORTAL} to ${CI_COMMIT_SHORT_SHA} "'
+    - git push https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git HEAD:refs/heads/main
 
+build-bff:
+  stage: build
+  tags:
+    - VRE-Deployment
+  only:
+    changes:
+      - kubernetes/bff-deployment.yaml
+      - backend/*
+      - backend/*/*
+      - backend/*/*/*
+      - backend/*/*/*/*
+      - backend/*/*/*/*/*
+      - backend/*/*/*/*/*/*
+      - backend/*/*/*/*/*/*/*
+  script:
+    - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+    - docker build --build-arg pip_username=${DOCKER_USERNAME} --build-arg pip_password=${DOCKER_PASSWORD} --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${BFF_CONTAINER_IMAGE} backend/.
+    - docker push ${BFF_CONTAINER_IMAGE}
 
-#build-bff:
-#  stage: build
-#  tags:
-#    - VRE-Deployment
-#  only:
-#    changes:
-#      - kubernetes/bff-deployment.yaml
-#      - backend/*
-#      - backend/*/*
-#      - backend/*/*/*
-#      - backend/*/*/*/*
-#      - backend/*/*/*/*/*
-#      - backend/*/*/*/*/*/*
-#      - backend/*/*/*/*/*/*/*
-#  script:
-#    - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-#    - docker build --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${BFF_CONTAINER_IMAGE} backend/.
-#    - docker push ${BFF_CONTAINER_IMAGE}
-#
-#deploy-bff:
-#  stage: deploy
-#  tags:
-#    - VRE-Deployment
-#  only:
-#    changes:
-#      - kubernetes/bff-deployment.yaml
-#      - backend/*
-#      - backend/*/*
-#      - backend/*/*/*
-#      - backend/*/*/*/*
-#      - backend/*/*/*/*/*
-#      - backend/*/*/*/*/*/*
-#      - backend/*/*/*/*/*/*/*
-#  script:
-#    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/bff-deployment.yaml
-#    - kubectl apply -f kubernetes/bff-deployment.yaml
+deploy-bff:
+  stage: deploy
+  tags:
+    - VRE-Deployment
+  only:
+    changes:
+      - kubernetes/bff-deployment.yaml
+      - backend/*
+      - backend/*/*
+      - backend/*/*/*
+      - backend/*/*/*/*
+      - backend/*/*/*/*/*
+      - backend/*/*/*/*/*/*
+      - backend/*/*/*/*/*/*/*
+  script:
+    - pwd
+    - cd .. && ls 
+    - rm -rf vre-infra
+    - git clone https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git
+    - sed -r -i -e "s/(^${TARGET_RELEASE}_app_version\s*=\s*).*/\1\"${CI_COMMIT_SHORT_SHA}\"/" vre-infra/terraform/config/charite/charite.tfvars
+    - cat vre-infra/terraform/config/charite/charite.tfvars|grep -i ^${TARGET_RELEASE}_app_version
+    - cd vre-infra
+    - 'git config user.name ${DOCKER_USERNAME} && git config user.email "indoc-devops@indocresearch.org"'
+    - 'git config --global user.password ${DOCKER_PASSWORD}'
+    - git diff 
+    - git stage terraform/config/charite/charite.tfvars
+    - git status
+    - git pull https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git HEAD:refs/heads/main
+    - 'git commit  -m "[ci skip] Terraform Deployment: ${TARGET_RELEASE_BFF} to ${CI_COMMIT_SHORT_SHA} "'
+    - git push https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git HEAD:refs/heads/main
 
 build-maintenance_page:
   stage: build
@@ -101,7 +129,7 @@ build-maintenance_page:
       - maintenance-page/*/*/*/*/*/*/*
   script:
     - docker login ${REGISTRY} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
-    - docker build --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${MAINTENANCE_PAGE_CONTAINER_IMAGE} maintenance-page/.
+    - docker build --build-arg pip_username=${DOCKER_USERNAME} --build-arg pip_password=${DOCKER_PASSWORD} --build-arg http_proxy=http://proxy.charite.de:8080/ --build-arg https_proxy=http://proxy.charite.de:8080/ -t ${MAINTENANCE_PAGE_CONTAINER_IMAGE} maintenance-page/.
     - docker push ${MAINTENANCE_PAGE_CONTAINER_IMAGE}
 
 deploy-maintenance_page:
@@ -119,5 +147,20 @@ deploy-maintenance_page:
       - maintenance-page/*/*/*/*/*/*
       - maintenance-page/*/*/*/*/*/*/*
   script:
-    - sed -i "s/<VERSION>/${CI_COMMIT_SHORT_SHA}/g" kubernetes/maintenance-page-deployment.yaml
-    - kubectl apply -f kubernetes/maintenance-page-deployment.yaml
+    - VRE-Deployment
+  script:
+    - pwd
+    - cd .. && ls 
+    - rm -rf vre-infra
+    - git clone https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git
+    - sed -r -i -e "s/(^${TARGET_RELEASE}_app_version\s*=\s*).*/\1\"${CI_COMMIT_SHORT_SHA}\"/" vre-infra/terraform/config/charite/charite.tfvars
+    - cat vre-infra/terraform/config/charite/charite.tfvars|grep -i ^${TARGET_RELEASE}_app_version
+    - cd vre-infra
+    - 'git config user.name ${DOCKER_USERNAME} && git config user.email "indoc-devops@indocresearch.org"'
+    - 'git config --global user.password ${DOCKER_PASSWORD}'
+    - git diff 
+    - git stage terraform/config/charite/charite.tfvars
+    - git status
+    - git pull https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git HEAD:refs/heads/main
+    - 'git commit  -m "[ci skip] Terraform Deployment: ${TARGET_RELEASE_MAINTENANCE_PAGE} to ${CI_COMMIT_SHORT_SHA} "'
+    - git push https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git HEAD:refs/heads/main
