@@ -52,7 +52,7 @@ deploy-portal:
     - rm -rf vre-infra
     - git clone https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git
     - sed -r -i -e "s/(^${TARGET_RELEASE_PORTAL}_app_version\s*=\s*).*/\1\"${CI_COMMIT_SHORT_SHA}\"/" vre-infra/terraform/config/charite/charite.tfvars
-    - cat vre-infra/terraform/config/charite/charite.tfvars|grep -i ^${TARGET_RELEASE}_app_version
+    - cat vre-infra/terraform/config/charite/charite.tfvars|grep -i ^${TARGET_RELEASE_PORTAL}_app_version
     - cd vre-infra
     - 'git config user.name ${DOCKER_USERNAME} && git config user.email "indoc-devops@indocresearch.org"'
     - 'git config --global user.password ${DOCKER_PASSWORD}'
@@ -102,7 +102,7 @@ deploy-bff:
     - rm -rf vre-infra
     - git clone https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git
     - sed -r -i -e "s/(^${TARGET_RELEASE_BFF}_app_version\s*=\s*).*/\1\"${CI_COMMIT_SHORT_SHA}\"/" vre-infra/terraform/config/charite/charite.tfvars
-    - cat vre-infra/terraform/config/charite/charite.tfvars|grep -i ^${TARGET_RELEASE}_app_version
+    - cat vre-infra/terraform/config/charite/charite.tfvars|grep -i ^${TARGET_RELEASE_BFF}_app_version
     - cd vre-infra
     - 'git config user.name ${DOCKER_USERNAME} && git config user.email "indoc-devops@indocresearch.org"'
     - 'git config --global user.password ${DOCKER_PASSWORD}'
@@ -154,7 +154,7 @@ deploy-maintenance_page:
     - rm -rf vre-infra
     - git clone https://${DOCKER_USER}:${DOCKER_PASSWORD}@git.bihealth.org/vre/vre-infra.git
     - sed -r -i -e "s/(^${TARGET_RELEASE_MAINTENANCE_PAGE}_app_version\s*=\s*).*/\1\"${CI_COMMIT_SHORT_SHA}\"/" vre-infra/terraform/config/charite/charite.tfvars
-    - cat vre-infra/terraform/config/charite/charite.tfvars|grep -i ^${TARGET_RELEASE}_app_version
+    - cat vre-infra/terraform/config/charite/charite.tfvars|grep -i ^${TARGET_RELEASE_MAINTENANCE_PAGE}_app_version
     - cd vre-infra
     - 'git config user.name ${DOCKER_USERNAME} && git config user.email "indoc-devops@indocresearch.org"'
     - 'git config --global user.password ${DOCKER_PASSWORD}'

@@ -48,3 +48,4 @@ ENV PATH="/home/deploy/.local/bin:${PATH}"
 ENV MINIO_USERNAME=$MINIO_USERNAME
 ENV MINIO_PASSWORD=$MINIO_PASSWORD
 CMD ["sh", "-c", "mc alias set minio http://minio.minio:9000 $MINIO_USERNAME $MINIO_PASSWORD && ./gunicorn_starter.sh"]
+
